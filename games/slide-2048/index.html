@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffc1d8" />
+    <title>두배두배</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="slide-2048">
+    <div class="app">
+      <header class="top">
+        <a class="home" href="/">← 홈</a>
+        <div class="scores">
+          <div class="score-box">점수 <b id="score">0</b></div>
+          <div class="score-box">최고 <b id="best">0</b></div>
+        </div>
+      </header>
+      <div class="hero-bit">
+        <h1>두배두배</h1>
+        <p>같은 숫자를 합쳐 2048을 만들어요</p>
+      </div>
+      <div class="board-wrap">
+        <div class="grid-bg" id="grid-bg"></div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+      <p class="hint">← → ↑ ↓ 또는 스와이프 · 한 방향으로 밀면 그 줄의 타일이 함께 움직여요</p>
+      <button type="button" class="btn ghost" id="new-btn">새 게임</button>
+    </div>
+
+    <div class="overlay" id="title">
+      <img class="hero-art" src="assets/thumb.png" alt="" width="140" height="140" />
+      <div class="badge">PUZZLE</div>
+      <h2>두배두배</h2>
+      <p>젤리 타일을 밀어 합쳐<br />2048을 만들어요</p>
+      <button type="button" class="btn" id="start-btn">시작!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="win">
+      <div class="badge soft">CLEAR</div>
+      <h2>2048 달성!</h2>
+      <p>계속 플레이할 수 있어요</p>
+      <button type="button" class="btn" id="continue-btn">계속하기</button>
+      <button type="button" class="btn ghost-light" id="win-new-btn">새 게임</button>
+    </div>
+
+    <div class="overlay hidden" id="over">
+      <div class="badge">GAME OVER</div>
+      <h2>더 이상 못 움직여요</h2>
+      <p id="over-detail"></p>
+      <button type="button" class="btn" id="retry-btn">다시!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+:root {
+  --wood: #8b5a2b;
+  --ink: #3d2814;
+  --muted: #6a5038;
+  --stone: #1a1410;
+  --sakura: #ffb4c8;
+  --gold: #ffd700;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(255, 180, 200, 0.25), transparent 40%),
+    radial-gradient(ellipse at 85% 80%, rgba(255, 200, 180, 0.18), transparent 38%),
+    linear-gradient(165deg, #2a1c14, #1a1410 55%, #241810);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.557));
+  height: min(100dvh, calc(100vw / 0.557));
+  max-width: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.55),
+    0 0 0 3px rgba(196, 142, 77, 0.35);
+  background: #c48e4d;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 3;
+}
+
+.panel {
+  background: rgba(40, 24, 12, 0.55);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 180, 200, 0.18);
+  border-radius: 14px;
+  padding: 8px 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  min-width: 96px;
+  pointer-events: none;
+}
+
+.panel.right {
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.undo-btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(255, 180, 200, 0.28);
+  cursor: pointer;
+}
+
+.undo-btn:active {
+  background: rgba(255, 180, 200, 0.45);
+}
+
+.undo-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(255, 250, 230, 0.55), transparent 48%),
+    radial-gradient(circle at 12% 80%, rgba(255, 180, 200, 0.4), transparent 32%),
+    radial-gradient(circle at 90% 25%, rgba(255, 200, 160, 0.35), transparent 30%),
+    linear-gradient(180deg, rgba(210, 160, 100, 0.94), rgba(245, 230, 210, 0.97));
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.hero-art {
+  width: min(42vw, 168px);
+  height: min(42vw, 168px);
+  object-fit: cover;
+  border-radius: 28px;
+  margin-bottom: 10px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(255, 215, 0, 0.35);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--wood);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.badge.soft {
+  background: linear-gradient(180deg, #ffe27a, #e8b020);
+  color: #4a3010;
+  box-shadow: 0 3px 0 #a87820;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(34px, 9vw, 46px);
+  color: var(--wood);
+  text-shadow: 0 3px 0 #fff;
+}
+
+.overlay p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.diff-picker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.diff-btn {
+  appearance: none;
+  border: 2px solid rgba(139, 90, 43, 0.35);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.diff-btn.active {
+  border-color: var(--wood);
+  color: #fff;
+  background: var(--wood);
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 32px;
+  font: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #a87038, #7a5020);
+  box-shadow: 0 7px 0 #4a3010;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 4px 0 #4a3010;
+}
+
+a {
+  margin-top: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}

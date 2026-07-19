@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>팝팝 방울</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="bubble-pop">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>목표 <b id="hud-goal">36</b></span>
+          <span>시간 <b id="hud-time">34</b></span>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+
+      <div class="overlay" id="title">
+        <div class="badge">POP POP</div>
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="120" height="120" />
+        <h1>팝팝 방울</h1>
+        <p>반짝 방울은 터뜨리고<br />까만 방울은 피해요</p>
+        <div class="icons">별방울이 팡!</div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">TIME OVER</div>
+        <h1>시간 끝!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h1>방울 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

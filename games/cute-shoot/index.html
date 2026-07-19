@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#9fd8ff" />
+    <title>귀염뽀짝 쏘세요 · 1탄</title>
+    <base href="/games/cute-shoot/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Nunito:wght@600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-bgm="cute-shoot">
+    <div id="app">
+      <div class="stage">
+        <canvas id="game" width="390" height="700"></canvas>
+
+        <div class="hud" id="hud" aria-hidden="true">
+          <div class="panel">
+            <div class="label">SCORE</div>
+            <div class="value" id="hud-score">0</div>
+            <div class="label" style="margin-top: 4px">POWER</div>
+            <div class="power-meter"><i id="power-bar" style="width: 20%"></i></div>
+          </div>
+          <div class="panel" style="text-align: right">
+            <div class="label">STAGE</div>
+            <div class="value">1-<span id="hud-level">1</span></div>
+            <div class="label" style="margin-top: 4px">BOSS <span id="hud-boss">0/10</span></div>
+            <div class="label" style="margin-top: 4px">LIFE · NEXT <span id="hud-survive">12s</span></div>
+            <div class="lives" id="hud-lives"></div>
+          </div>
+        </div>
+
+        <div class="touch-hint" id="touch-hint">화면을 드래그해서 이동해요</div>
+        <button type="button" class="sound-btn" id="sound-btn" aria-label="소리 켜기/끄기" title="소리">🔊</button>
+
+        <div class="overlay" id="title-screen">
+          <div class="badge">EPISODE 1</div>
+          <img class="title-thumb" src="assets/thumb.png" alt="" width="120" height="120" />
+          <h1>귀염뽀짝 쏘세요</h1>
+          <p class="subtitle">중간보스 50마리 클리어하면 엔딩!<br />클리어할수록 더 빨라져요</p>
+
+          <div class="char-grid" id="char-grid"></div>
+
+          <button class="btn" id="start-btn" disabled>쏘세요!</button>
+          <p class="hint">
+            중간보스 처치 → 난이도 UP · 50단계 클리어<br />
+            ★ 파워업 · ◆ 미사일 · ● 실드
+          </p>
+          <p class="hint">
+            <a href="/" class="home-link">← 오늘의 게임</a>
+          </p>
+        </div>
+
+        <div class="overlay hidden" id="gameover-screen">
+          <div class="badge" id="result-badge">GAME OVER</div>
+          <h1 id="result-title">수고했어요!</h1>
+          <div class="result-score" id="final-score">0</div>
+          <p class="result-detail" id="final-detail"></p>
+          <button class="btn" id="retry-btn">다시 쏘세요</button>
+          <p class="hint">
+            <button
+              id="home-btn"
+              style="
+                appearance: none;
+                border: none;
+                background: none;
+                color: #7a5a6a;
+                font: inherit;
+                font-size: 14px;
+                text-decoration: underline;
+                cursor: pointer;
+                margin-top: 8px;
+              "
+            >
+              캐릭터 다시 고르기
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="js/ads.js?v=6"></script>
+    <script src="js/game.js?v=6"></script>
+  </body>
+</html>

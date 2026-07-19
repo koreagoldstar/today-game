@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0c" />
+    <title>홀짝 팡</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="odd-even">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>연속 <b id="hud-streak">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>코인 <b id="hud-coins">0</b></span>
+          <span>최고 <b id="hud-best">0</b></span>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+      <div class="goal-label">목표 <b id="hud-goal">3</b>연속</div>
+
+      <div class="pick-bar" id="pick-bar">
+        <button type="button" class="pick odd" data-guess="odd" aria-label="홀">
+          <span class="pick-big">홀</span>
+          <span class="pick-sub">ODD</span>
+        </button>
+        <button type="button" class="pick even" data-guess="even" aria-label="짝">
+          <span class="pick-big">짝</span>
+          <span class="pick-sub">EVEN</span>
+        </button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+        <div class="badge">CORE ODD / EVEN</div>
+        <h1>홀짝 팡</h1>
+        <p>
+          네온 코어가 스핀해요!<br />
+          홀·짝을 맞춰 도파민 연승을 쌓으세요
+        </p>
+        <div class="icons">홀 RED · 짝 CYAN · 코인 러시</div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>홀짝 레전드!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

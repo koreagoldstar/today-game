@@ -1,0 +1,273 @@
+:root {
+  --ink: #5a4050;
+  --muted: #9a7a88;
+  --pink: #ff8ab5;
+  --cream: #fff8f2;
+  --cell: #f5e4dc;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Jua", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 226, 122, 0.55) 0 8px, transparent 10px),
+    radial-gradient(circle at 88% 12%, rgba(255, 138, 181, 0.45) 0 6px, transparent 8px),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 200, 220, 0.7), transparent 55%),
+    linear-gradient(180deg, #ffd6e8 0%, #ffe8f5 40%, #fff5fb 100%);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+.app {
+  width: min(420px, 100%);
+  margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom));
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.home,
+.link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.scores {
+  display: flex;
+  gap: 8px;
+}
+
+.score-box {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  box-shadow: 0 3px 0 rgba(200, 120, 150, 0.2);
+}
+
+.hero-bit {
+  text-align: center;
+  margin: 10px 0 14px;
+}
+
+.hero-bit h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 32px;
+  color: var(--pink);
+  text-shadow: 0 3px 0 #fff;
+}
+
+.hero-bit p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.hero-art {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 28px;
+  border: 4px solid #ff8ab5;
+  box-shadow: 0 8px 0 rgba(240, 106, 154, 0.35);
+  margin-bottom: 6px;
+}
+
+.board-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 28px;
+  padding: 12px;
+  background: #fff0f5;
+  border: 5px solid #ff8ab5;
+  box-shadow:
+    0 10px 0 #f06a9a,
+    0 16px 36px rgba(180, 100, 130, 0.25);
+  touch-action: none;
+}
+
+.grid-bg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  height: 100%;
+}
+
+.cell {
+  background: var(--cell);
+  border-radius: 18px;
+}
+
+.tiles {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+}
+
+.tile {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  transition: left 0.14s ease-out, top 0.14s ease-out;
+  will-change: left, top;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.06),
+    0 4px 0 rgba(200, 120, 150, 0.18);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.tile-face {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.tile-num {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 0 rgba(90, 50, 70, 0.25);
+  color: #fff;
+}
+
+.tile-glow {
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(255, 138, 181, 0.7),
+    0 4px 0 rgba(200, 120, 150, 0.2);
+}
+
+.tile.spawn {
+  animation: pop 0.2s ease-out;
+}
+
+.tile.merge {
+  animation: merge 0.18s ease-out;
+}
+
+@keyframes pop {
+  from { transform: scale(0.4); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes merge {
+  50% { transform: scale(1.12); }
+}
+
+.hint {
+  text-align: center;
+  margin: 12px 0 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-family: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9ec4, var(--pink));
+  box-shadow: 0 6px 0 #d93f74;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--pink);
+  box-shadow: 0 4px 0 rgba(200, 120, 150, 0.25);
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #d93f74;
+}
+
+.btn.ghost:active {
+  box-shadow: 0 2px 0 rgba(200, 120, 150, 0.25);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: rgba(74, 53, 69, 0.5);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.badge {
+  background: linear-gradient(180deg, #ff8ab5, var(--pink));
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  box-shadow: 0 4px 0 #e03f74;
+}
+
+.badge.soft {
+  background: linear-gradient(180deg, #9ed4ff, #5b9fff);
+  box-shadow: 0 4px 0 #2f6fd4;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 32px;
+  color: #fff;
+}
+
+.overlay p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.btn.ghost-light {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: none;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#030508" />
+    <title>핀볼팡팡</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="pinball">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>목표 <b id="hud-goal">14000</b></span>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+      <div class="combo-bar hidden" id="combo-bar">COMBO x<span id="hud-combo">0</span></div>
+
+      <div class="touch-hint" id="touch-hint" aria-hidden="true">
+        <span class="th-left">◀ 플립</span>
+        <span class="th-plunger">플런저 ↓</span>
+        <span class="th-right">플립 ▶</span>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+        <div class="badge">NEON PINBALL</div>
+        <h1>핀볼팡팡</h1>
+        <p>
+          플런저로 쏘고, 플립퍼로 올려쳐요!<br />
+          Z / X 또는 ← → · 범퍼를 맞히면 콤보
+        </p>
+        <div class="icons">길게 눌러 파워 충전 · 터치로도 조작</div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>핀볼왕!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

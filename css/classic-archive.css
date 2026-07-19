@@ -1,0 +1,151 @@
+/**
+ * Shared classic Archive-link page stylesheet
+ * Used by: prince, lemmings, bubble-bobble, pacman-classic, galaga, lode-runner
+ */
+:root {
+  --bg: #14101c;
+  --ink: #fff6e8;
+  --muted: #c4b4d4;
+  --accent: #ff8a5c;
+  --line: rgba(255, 180, 120, 0.28);
+  --card: rgba(36, 28, 48, 0.9);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% 0%, #3a2850, var(--bg) 55%);
+  color: var(--ink);
+  font-family: "Jua", system-ui, sans-serif;
+}
+
+.shell {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 20px 16px 36px;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.back {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.titles h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(32px, 9vw, 52px);
+  color: var(--accent);
+  text-shadow: 0 3px 0 #3a1820;
+  line-height: 1.05;
+}
+
+.titles p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.hero {
+  width: min(200px, 46vw);
+  height: min(200px, 46vw);
+  object-fit: cover;
+  border-radius: 24px;
+  display: block;
+  margin: 0 auto 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.desc {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 15px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: #2a1430;
+  font-size: 17px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe08a, #ff8a5c);
+  box-shadow: 0 7px 0 #c45440;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 4px 0 #c45440;
+}
+
+.btn-secondary {
+  color: #fff;
+  background: linear-gradient(180deg, #7a6588, #5a4668);
+  box-shadow: 0 7px 0 #3a2a48;
+}
+
+.help {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.help h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #ffd56a;
+}
+
+.help ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.help .note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (min-width: 560px) {
+  .actions {
+    flex-direction: row;
+  }
+  .btn {
+    flex: 1;
+  }
+}

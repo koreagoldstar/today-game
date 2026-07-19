@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#05050c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>펄스 탭</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span class="song-name" id="hud-title">곡 선택</span>
+          <span><b id="hud-song">1</b> / 20</span>
+        </div>
+        <div class="combo-burst" id="combo-burst">
+          <em id="hud-combo-big">0</em>
+          <span>COMBO</span>
+        </div>
+        <div class="panel right">
+          <span>SCORE</span>
+          <b id="hud-score">0</b>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+
+      <div class="judge-flash" id="judge-flash" aria-live="polite"></div>
+
+      <button type="button" class="tap-pad hidden" id="tap-pad" aria-label="탭">
+        <span class="tap-ring" aria-hidden="true"></span>
+        <span class="tap-label">TAP</span>
+      </button>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">PULSE TAP</div>
+        <h1>펄스 탭</h1>
+        <p class="lead">한 버튼으로 비트에 맞춰 탭!</p>
+
+        <div class="howto" aria-label="플레이 방법">
+          <div class="howto-title">HOW TO PLAY</div>
+          <ol class="howto-steps">
+            <li>
+              <span class="num">1</span>
+              <span>가운데에 <b class="c-cyan">고정 링(타겟)</b>이 있어요</span>
+            </li>
+            <li>
+              <span class="num">2</span>
+              <span><b class="c-mag">바깥 링</b>이 작아지며 타겟으로 다가와요</span>
+            </li>
+            <li>
+              <span class="num">3</span>
+              <span>두 원이 <b class="c-lime">겹치고 「지금!」</b> 뜰 때 탭 · 아래 게이지도 보세요</span>
+            </li>
+            <li>
+              <span class="num">4</span>
+              <span>너무 이르거나 늦으면 MISS · 하트 5개가 다 닳으면 실패</span>
+            </li>
+          </ol>
+          <div class="howto-demo" aria-hidden="true">
+            <span class="demo-ring outer"></span>
+            <span class="demo-ring target"></span>
+            <span class="demo-hint">겹칠 때 탭!</span>
+          </div>
+          <p class="howto-keys">휴대폰 · 아무 곳이나 탭 &nbsp;|&nbsp; PC · <kbd>SPACE</kbd> / 클릭</p>
+        </div>
+
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <button type="button" class="btn" id="start-btn">START</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">곡 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">FAILED</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">RETRY</button>
+        <button type="button" class="btn ghost" id="menu-btn2">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>펄스 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/hip-core.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

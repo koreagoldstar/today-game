@@ -1,0 +1,297 @@
+:root {
+  --ink: #4a3a58;
+  --muted: #7a6a88;
+  --pink: #e87888;
+  --lavender: #b6a6d3;
+  --mint: #7ec8a0;
+  --cream: #f7f1e8;
+  --wood: #e8d7c3;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 200, 210, 0.45), transparent 42%),
+    radial-gradient(ellipse at 85% 80%, rgba(170, 220, 170, 0.35), transparent 40%),
+    linear-gradient(165deg, #d8c8e8 0%, #f0e4d4 55%, #c8dcc8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, 420px);
+  height: min(100dvh, 820px);
+  max-height: 100dvh;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 18px 50px rgba(80, 50, 90, 0.28),
+    0 0 0 4px rgba(232, 215, 195, 0.85);
+  background:
+    radial-gradient(circle at 12% 88%, rgba(255, 180, 190, 0.35), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(160, 210, 150, 0.3), transparent 26%),
+    linear-gradient(180deg, #f5efe6 0%, #e8dcc8 100%);
+  display: flex;
+  flex-direction: column;
+  padding: max(8px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.home {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.diff-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pill {
+  border: 1px solid rgba(120, 90, 140, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pill.active {
+  color: #fff;
+  background: linear-gradient(180deg, #f0a0a8, var(--pink));
+  border-color: transparent;
+  box-shadow: 0 3px 0 #c05868;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 8px;
+  flex-shrink: 0;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(180, 150, 120, 0.28);
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 96px;
+  box-shadow: 0 3px 0 rgba(182, 166, 211, 0.35);
+}
+
+.panel.right {
+  align-items: flex-end;
+}
+
+.panel b {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.board-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, #efe0cc, #dcc4a8);
+  padding: 10px;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  box-shadow:
+    inset 0 0 0 3px rgba(200, 170, 130, 0.55),
+    inset 0 2px 8px rgba(255, 255, 255, 0.35);
+}
+
+.board-wrap.scrollable {
+  box-shadow:
+    inset 0 0 0 3px rgba(182, 166, 211, 0.45),
+    inset 0 2px 8px rgba(255, 255, 255, 0.35);
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  touch-action: manipulation;
+  border-radius: 12px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.tool-btn {
+  flex: 1;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(120, 90, 140, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tool-btn.active {
+  background: rgba(249, 200, 192, 0.85);
+  border-color: rgba(231, 90, 90, 0.4);
+  box-shadow: 0 0 0 2px rgba(231, 90, 90, 0.18);
+}
+
+.tool-btn.soft {
+  flex: 0.65;
+  background: rgba(126, 200, 160, 0.28);
+  border-color: rgba(100, 170, 130, 0.4);
+  color: #3a8060;
+}
+
+.tool-btn:active {
+  transform: translateY(2px);
+}
+
+.tool-ico {
+  font-size: 18px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 22px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(255, 255, 255, 0.75), transparent 48%),
+    radial-gradient(circle at 15% 85%, rgba(255, 180, 190, 0.45), transparent 30%),
+    radial-gradient(circle at 88% 20%, rgba(170, 220, 160, 0.4), transparent 28%),
+    linear-gradient(180deg, rgba(245, 239, 230, 0.96), rgba(220, 200, 230, 0.97));
+  backdrop-filter: blur(6px);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.hero-art {
+  width: min(42vw, 168px);
+  height: min(42vw, 168px);
+  object-fit: cover;
+  border-radius: 28px;
+  margin-bottom: 10px;
+  box-shadow:
+    0 12px 28px rgba(80, 50, 90, 0.25),
+    0 0 0 3px rgba(182, 166, 211, 0.45);
+}
+
+.badge {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #7a5aa0;
+  background: rgba(182, 166, 211, 0.28);
+  border: 1px solid rgba(182, 166, 211, 0.55);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.badge.soft {
+  color: #3a8060;
+  background: rgba(126, 200, 160, 0.28);
+  border-color: rgba(100, 170, 130, 0.45);
+}
+
+.overlay h1 {
+  margin: 4px 0 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: clamp(34px, 9vw, 46px);
+  font-weight: 400;
+  line-height: 1.05;
+  color: #6a4a88;
+  text-shadow: 0 3px 0 rgba(255, 255, 255, 0.8);
+}
+
+.overlay p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.title-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 8px;
+  font-size: 13px;
+  color: #6a5a78;
+  opacity: 0.9;
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-family: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #f0a8b0, var(--pink));
+  box-shadow: 0 5px 0 #c05868;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #c05868;
+}
+
+.overlay a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-top: 4px;
+}

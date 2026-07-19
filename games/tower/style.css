@@ -1,0 +1,168 @@
+:root {
+  --ink: #4a3548;
+  --muted: #8a6a7a;
+  --accent: #ff8ab5;
+  --cream: #fff5fb;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Jua", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.85), transparent 50%),
+    linear-gradient(180deg, #a8dcff 0%, #ffe0f0 55%, #fff5fb 100%);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+.app {
+  width: min(420px, 100%);
+  margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom));
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.home,
+.link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.stat {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.hero-bit {
+  text-align: center;
+  margin: 8px 0 12px;
+}
+
+.hero-bit h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 34px;
+  color: var(--accent);
+  text-shadow: 0 3px 0 #fff;
+}
+
+.hero-bit p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.hero-art {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 28px;
+  border: 4px solid #ff8ab5;
+  box-shadow: 0 8px 0 rgba(255, 120, 160, 0.35);
+  margin-bottom: 6px;
+}
+
+.canvas-wrap {
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 4px #ff8ab5,
+    0 12px 0 rgba(255, 120, 160, 0.3),
+    0 18px 40px rgba(60, 100, 160, 0.18);
+  background: #7ec8ff;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.hint {
+  text-align: center;
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: rgba(20, 35, 60, 0.55);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.badge {
+  background: linear-gradient(180deg, #7eb8ff, var(--accent));
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  box-shadow: 0 4px 0 #2f6fd4;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 32px;
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.overlay p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.5;
+}
+
+.btn {
+  margin-top: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-family: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9ec4, #ff6b9d);
+  box-shadow: 0 6px 0 #d93f74;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #d93f74;
+}

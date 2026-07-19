@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>다른 그림 찾기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="diff">
+    <div class="stage">
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b>/<b id="hud-total">50</b></span>
+          <span>찾은 차이 <b id="hud-found">0</b>/<b id="hud-need">3</b></span>
+        </div>
+        <div class="panel right">
+          <span>목숨 <b id="hud-lives">♥♥♥♥♥</b></span>
+          <span>시간 <b id="hud-time">0:00</b></span>
+        </div>
+      </div>
+
+      <div class="boards" id="boards">
+        <div class="board">
+          <div class="board-label">A</div>
+          <canvas id="left" width="480" height="360"></canvas>
+        </div>
+        <div class="board">
+          <div class="board-label">B</div>
+          <canvas id="right" width="480" height="360"></canvas>
+        </div>
+      </div>
+
+      <div class="item-bar" id="item-bar" aria-label="아이템">
+        <button type="button" class="item-btn" id="item-hint" data-item="hint" disabled>
+          <span class="item-ico">💡</span>
+          <span class="item-name">힌트</span>
+          <b class="item-count" id="count-hint">0</b>
+        </button>
+        <button type="button" class="item-btn" id="item-reveal" data-item="reveal" disabled>
+          <span class="item-ico">🔍</span>
+          <span class="item-name">찾아주기</span>
+          <b class="item-count" id="count-reveal">0</b>
+        </button>
+        <button type="button" class="item-btn" id="item-heart" data-item="heart" disabled>
+          <span class="item-ico">❤️</span>
+          <span class="item-name">하트</span>
+          <b class="item-count" id="count-heart">0</b>
+        </button>
+        <button type="button" class="item-btn" id="item-shield" data-item="shield" disabled>
+          <span class="item-ico">🛡️</span>
+          <span class="item-name">실드</span>
+          <b class="item-count" id="count-shield">0</b>
+        </button>
+      </div>
+      <p class="hint" id="hint">다른 곳을 찾아 눌러요!</p>
+
+      <div class="overlay" id="title">
+        <div class="badge">SPOT</div>
+        <img class="title-art" src="assets/thumb.png" alt="" />
+        <h1>다른 그림 찾기</h1>
+        <p>벚꽃 공원 속 귀여운 소품들<br />다른 곳을 찾아요</p>
+        <div class="title-controls">
+          <span>📱 왼쪽·오른쪽 그림 아무 곳이나 탭</span>
+          <span>💡 힌트 · 🔍 찾아주기 · ❤️ 하트 · 🛡️ 실드</span>
+          <span>❌ 틀리면 목숨이 줄어요 (실드 있으면 1회 보호)</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 단계</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">MISS</div>
+        <h1>목숨이 없어요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>전부 찾았어요!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

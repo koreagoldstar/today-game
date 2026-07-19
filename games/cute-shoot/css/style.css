@@ -1,0 +1,328 @@
+:root {
+  --sky-top: #9fd8ff;
+  --sky-mid: #c8e9ff;
+  --sky-bot: #ffe8f0;
+  --ink: #4a3545;
+  --pink: #ff6b9d;
+  --cream: #fff8f2;
+  --card: rgba(255, 248, 242, 0.92);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", "Nunito", system-ui, sans-serif;
+  background: linear-gradient(180deg, #9fd8ff 0%, #ffd6ec 55%, #ffc0e0 100%);
+  color: var(--ink);
+  touch-action: none;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.5625), calc(100vh * 0.5625));
+  height: min(100dvh, 100vh, calc(100vw / 0.5625));
+  max-width: 480px;
+  max-height: 100dvh;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(180, 100, 150, 0.35);
+  background: #9fd8ff;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+}
+
+canvas#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.55), transparent 55%),
+    linear-gradient(180deg, rgba(159, 216, 255, 0.88), rgba(255, 232, 240, 0.95));
+  z-index: 5;
+  text-align: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: var(--pink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+}
+
+.title-thumb {
+  border-radius: 24px;
+  margin-bottom: 8px;
+  box-shadow: 0 8px 0 rgba(255, 107, 157, 0.3);
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(28px, 8vw, 40px);
+  line-height: 1.15;
+  color: #ff4f8b;
+  text-shadow: 0 3px 0 #fff, 0 6px 18px rgba(255, 107, 157, 0.35);
+}
+
+.subtitle {
+  margin: 0 0 18px;
+  font-size: 15px;
+  color: #6a4a5a;
+}
+
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: min(320px, 86%);
+  margin-bottom: 16px;
+}
+
+.char-btn {
+  appearance: none;
+  border: 3px solid transparent;
+  border-radius: 18px;
+  background: var(--card);
+  padding: 10px 8px 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 8px 20px rgba(90, 50, 70, 0.08);
+}
+
+.char-btn img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 6px;
+  pointer-events: none;
+}
+
+.char-btn span {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.char-btn.selected {
+  border-color: var(--pink);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(255, 107, 157, 0.28);
+}
+
+.char-btn:active {
+  transform: scale(0.97);
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff8ab5, #ff5f97);
+  color: #fff;
+  font: inherit;
+  font-size: 18px;
+  padding: 14px 36px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #e03f74, 0 14px 28px rgba(255, 95, 151, 0.35);
+  transition: transform 0.12s ease;
+}
+
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 #e03f74, 0 8px 16px rgba(255, 95, 151, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hint {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #7a5a6a;
+  line-height: 1.45;
+}
+
+.home-link {
+  color: #7a5a6a;
+  text-decoration: underline;
+  font: inherit;
+  font-size: 14px;
+}
+
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 12px 0;
+  pointer-events: none;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.hud .panel {
+  background: rgba(74, 53, 69, 0.35);
+  backdrop-filter: blur(6px);
+  border-radius: 14px;
+  padding: 8px 12px;
+  min-width: 88px;
+}
+
+.hud .label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.hud .value {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.lives {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.life-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff8ab5;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
+.life-pip.empty {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.power-meter {
+  margin-top: 4px;
+  height: 6px;
+  width: 72px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.power-meter > i {
+  display: block;
+  height: 100%;
+  width: 20%;
+  background: linear-gradient(90deg, #ffe27a, #ff6b9d);
+  border-radius: inherit;
+}
+
+.touch-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(74, 53, 69, 0.35);
+  padding: 8px 14px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.touch-hint.show {
+  opacity: 1;
+}
+
+.sound-btn {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  appearance: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(74, 53, 69, 0.35);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.sound-btn:active {
+  transform: translateX(-50%) scale(0.94);
+}
+
+.result-score {
+  font-size: 42px;
+  color: #ff4f8b;
+  margin: 8px 0 4px;
+  text-shadow: 0 3px 0 #fff;
+}
+
+.result-detail {
+  margin: 0 0 18px;
+  color: #6a4a5a;
+  font-size: 15px;
+}
+
+@media (max-height: 640px) {
+  .char-btn img {
+    width: 56px;
+    height: 56px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+}

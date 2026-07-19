@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#05060f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>리듬 톡톡</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span class="song-name" id="hud-title">곡 선택</span>
+          <span><b id="hud-song">1</b> / 50</span>
+        </div>
+        <div class="combo-burst" id="combo-burst">
+          <em id="hud-combo-big">0</em>
+          <span>COMBO</span>
+        </div>
+        <div class="panel right">
+          <span>SCORE</span>
+          <b id="hud-score">0</b>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+
+      <div class="lane-pads hidden" id="lane-pads">
+        <button type="button" class="lane-pad c0" data-lane="0" aria-label="레인 1"><span></span></button>
+        <button type="button" class="lane-pad c1" data-lane="1" aria-label="레인 2"><span></span></button>
+        <button type="button" class="lane-pad c2" data-lane="2" aria-label="레인 3"><span></span></button>
+        <button type="button" class="lane-pad c3" data-lane="3" aria-label="레인 4"><span></span></button>
+      </div>
+
+      <div class="overlay" id="title">
+        <div class="scanlines" aria-hidden="true"></div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="176" height="176" />
+        <div class="badge">STAR STAGE</div>
+        <h1>리듬 톡톡</h1>
+        <p>노트가 판정선에 닿을 때<br /><b>아래 패드를 탭!</b></p>
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST</span>
+            <span id="pick-label">1. 병아리 산책</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <div class="controls">
+          <div class="pad-preview">
+            <i class="c0"></i><i class="c1"></i><i class="c2"></i><i class="c3"></i>
+          </div>
+          <p class="sub">휴대폰 · 터치 패드 &nbsp;|&nbsp; PC · D F J K</p>
+        </div>
+        <button type="button" class="btn" id="start-btn">PLAY</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">곡 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">FAILED</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">RETRY</button>
+        <button type="button" class="btn ghost" id="menu-btn2">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>리듬 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>

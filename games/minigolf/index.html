@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#a5e6ba" />
+    <title>홀인원 골프</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="minigolf">
+    <div class="stage">
+      <canvas id="game" width="390" height="620"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>홀 <b id="hud-hole">1</b>/50</span>
+          <span>타수 <b id="hud-strokes">0</b></span>
+        </div>
+        <div class="panel mid">
+          <span id="hud-name">파4 페어웨이</span>
+          <span>남은 거리 <b id="hud-dist">0</b>야드</span>
+          <span>바람 <b id="hud-wind">없음</b></span>
+        </div>
+        <div class="panel right">
+          <span>파 <b id="hud-par">4</b></span>
+          <span>별 <b id="hud-stars">0</b></span>
+          <span>합계 <b id="hud-total">0</b></span>
+        </div>
+      </div>
+
+      <div class="club-bar" id="club-bar">
+        <button type="button" class="club" data-club="driver">드라이버</button>
+        <button type="button" class="club" data-club="iron">아이언</button>
+        <button type="button" class="club" data-club="wedge">웨지</button>
+        <button type="button" class="club" data-club="putter">퍼터</button>
+      </div>
+      <div class="power-bar hidden" id="power-bar"><i id="power-fill"></i></div>
+
+      <div class="overlay" id="title">
+        <div class="badge">CHICK GOLF</div>
+        <img class="title-mascot" src="assets/mascot.png" alt="삐약 골퍼" />
+        <h1>홀인원 골프</h1>
+        <p>50홀 챔피언십 코스<br />바람·벙커·별을 뚫고 공략해요</p>
+        <div class="tip">멀리서 드라이버 → 그린에선 퍼터 · 별도 모아봐요!</div>
+        <button type="button" class="btn" id="start-btn">라운드 시작</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">HOLE OUT</div>
+        <h1 id="clear-title">홀 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 홀</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h1>챔피언 라운드!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">다시 라운드</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

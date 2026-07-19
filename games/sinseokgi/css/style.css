@@ -1,0 +1,140 @@
+:root {
+  --bg: #1a1410;
+  --ink: #fff6e8;
+  --muted: #cbb79f;
+  --accent: #ff8a3d;
+  --line: rgba(255, 213, 106, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% 0%, #3a2a20, var(--bg) 55%);
+  color: var(--ink);
+  font-family: "Jua", system-ui, sans-serif;
+}
+
+.shell {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 20px 16px 36px;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.back {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.back:hover {
+  color: #fff;
+}
+
+.titles h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(40px, 10vw, 58px);
+  color: var(--accent);
+  text-shadow: 0 3px 0 #3a1a08;
+  line-height: 1;
+}
+
+.titles p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.card {
+  background: rgba(42, 33, 26, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.desc {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 15px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  font-size: 18px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffb067, var(--accent));
+  box-shadow: 0 7px 0 #c45412;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 4px 0 #c45412;
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, #7a6554, #5a4638);
+  box-shadow: 0 7px 0 #3a2a20;
+}
+
+.help {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.help h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #ffd56a;
+}
+
+.help ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.help .note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (min-width: 560px) {
+  .actions {
+    flex-direction: row;
+  }
+
+  .btn {
+    flex: 1;
+  }
+}

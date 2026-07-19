@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>땅땅 차지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="ttamogi">
+    <div class="shell">
+      <header class="topbar">
+        <a class="home" href="/">← 홈</a>
+        <div class="title-wrap">
+          <h1>땅땅 차지</h1>
+          <p>선을 그어 땅을 확보하고 귀여운 친구들을 찾아요</p>
+        </div>
+        <div class="stats">
+          <div class="stat">STAGE <b id="hud-stage">1</b>/38</div>
+          <div class="stat">영역 <b id="hud-pct">0</b>% / <b id="hud-goal">65</b>%</div>
+          <div class="stat">생명 <span id="hud-lives"></span></div>
+        </div>
+      </header>
+
+      <div class="meter"><i id="meter-fill"></i></div>
+
+      <div class="playfield">
+        <canvas id="game" width="1000" height="640"></canvas>
+        <div class="controls" id="controls">
+          <button type="button" class="ctrl" data-dir="up">▲</button>
+          <div class="mid">
+            <button type="button" class="ctrl" data-dir="left">◀</button>
+            <button type="button" class="ctrl" data-dir="down">▼</button>
+            <button type="button" class="ctrl" data-dir="right">▶</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">
+        📱 화면 스와이프 또는 방향 버튼 · ⌨️ ←→↑↓ · 땅 밖으로 선을 그어 돌아오면 영역 확보!
+        리본 드래곤·선에 닿으면 생명 -1
+      </p>
+    </div>
+
+    <div class="overlay" id="title">
+      <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+      <div class="badge">CUTE LAND</div>
+      <h2>땅땅 차지</h2>
+      <p>
+        38단계 · 분홍 토끼로 땅을 확보하고<br />
+        숨겨진 마법 동산을 드러내요
+      </p>
+      <button type="button" class="btn" id="start-btn">시작!</button>
+      <a href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="clear">
+      <div class="badge soft">CLEAR</div>
+      <h2 id="clear-title">STAGE CLEAR!</h2>
+      <p id="clear-detail"></p>
+      <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+    </div>
+
+    <div class="overlay hidden" id="over">
+      <div class="badge">GAME OVER</div>
+      <h2>아쉬워요</h2>
+      <p id="over-detail"></p>
+      <button type="button" class="btn" id="retry-btn">다시!</button>
+      <a href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="allclear">
+      <div class="badge">ALL CLEAR</div>
+      <h2>38판 완주!</h2>
+      <p id="all-detail"></p>
+      <button type="button" class="btn" id="again-btn">처음부터</button>
+      <a href="/">← 오늘의 게임</a>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffc1d8" />
+    <title>팝샷 버블</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="puzzle-bubble">
+    <div class="stage">
+      <canvas id="game" width="390" height="620"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>남은 <b id="hud-left">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="200" height="200" />
+        <div class="badge">PUZZLE</div>
+        <h1>팝샷 버블</h1>
+        <p>같은 색 3개 이상 맞춰 터뜨려요<br />위험선 아래로 내려오면 끝!</p>
+        <div class="title-controls">
+          <span>📱 드래그로 조준 · 손을 떼면 발사</span>
+          <span>⌨️ ← → 조준 · Space 발사 · 콤보로 점수 UP!</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>버블이 가득!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>버블 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

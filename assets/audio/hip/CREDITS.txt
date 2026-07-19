@@ -1,0 +1,18 @@
+CC0 / Public Domain music for hip rhythm games
+
+hip01.mp3 — "Electric Step" by Technodono (CC0)
+https://opengameart.org/content/electric-step
+
+hip02.mp3 — "Game Emulation" by iamoneabe (CC0)
+https://opengameart.org/content/game-emulation
+
+hip03.mp3 — "Bouncer" by Of Far Different Nature (CC0)
+https://opengameart.org/content/bouncer-0
+
+hip04.mp3 — "Funky House" by Of Far Different Nature (CC0)
+https://opengameart.org/content/funky-house
+
+hip05.mp3 — "Liquid Flame" by Of Far Different Nature (CC0)
+https://opengameart.org/content/liquid-flame
+
+cyber01–cyber07 — see games/rhythm/audio/CREDITS.txt

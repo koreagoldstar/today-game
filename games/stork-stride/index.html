@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#3a2820" />
+    <title>서빙왕</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Pretendard:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="stork-stride">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <header class="hud">
+        <div class="stat">
+          <em>거리</em>
+          <b id="hud-dist">0</b>
+        </div>
+        <div class="stat mid">
+          <em>콤보</em>
+          <b id="hud-combo">0</b>
+        </div>
+        <div class="stat end">
+          <em>최고</em>
+          <b id="hud-best">0</b>
+        </div>
+      </header>
+
+      <div class="meter hidden" id="balance-meter">
+        <div class="bar"><i class="safe"></i><i class="knob" id="meter-needle"></i></div>
+        <p id="mood-label">안정</p>
+      </div>
+
+      <p class="toast" id="toast"></p>
+
+      <div class="pads hidden" id="controls">
+        <button type="button" class="pad" data-dir="-1">뒤로</button>
+        <button type="button" class="pad" data-dir="1">앞으로</button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/serving-king-thumb.png" alt="" width="160" height="160" />
+        <p class="eyebrow">FINE DINING</p>
+        <h1>서빙왕</h1>
+        <p class="lead">왕실 고양이에게 고급 요리를<br />접시 탑으로 안전하게 배달하세요.</p>
+        <ul class="tips">
+          <li>기울면 <b>반대 방향</b>을 짧게 보정</li>
+          <li>오래 누르면 반대로 무너집니다</li>
+          <li>손님·돌풍이 나오면 미리 대비</li>
+        </ul>
+        <button type="button" class="btn" id="start-btn">서빙 시작</button>
+        <a href="/">홈으로</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <p class="eyebrow">DROP</p>
+        <h1 id="over-title">접시가…</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시 서빙</button>
+        <a href="/">홈으로</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

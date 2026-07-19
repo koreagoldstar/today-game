@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#e8d7c3" />
+    <title>지뢰찾기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="minesweeper">
+    <div class="stage">
+      <header class="top-bar">
+        <a class="home" href="/">← 홈</a>
+        <div class="diff-pills" id="diff-pills">
+          <button type="button" class="pill active" data-diff="easy">초급</button>
+          <button type="button" class="pill" data-diff="medium">중급</button>
+          <button type="button" class="pill" data-diff="hard">고급</button>
+        </div>
+      </header>
+
+      <div class="hud">
+        <div class="panel">
+          <span>지뢰 <b id="hud-mines">10</b></span>
+          <span>깃발 <b id="hud-flags">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>시간 <b id="hud-time">0</b>초</span>
+        </div>
+      </div>
+
+      <div class="board-wrap" id="board-wrap">
+        <canvas id="game"></canvas>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" class="tool-btn" id="flag-btn" aria-pressed="false">
+          <span class="tool-ico">🚩</span>
+          깃발 모드
+        </button>
+        <button type="button" class="tool-btn soft" id="restart-btn">새 게임</button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+        <div class="badge">MINESWEEPER</div>
+        <h1>지뢰찾기</h1>
+        <p>
+          탭해서 칸을 열어요<br />
+          길게 누르거나 깃발 모드로 표시!
+        </p>
+        <div class="title-controls">
+          <span>숫자 주변 깃발이 맞으면 빠른 열기</span>
+          <span>첫 클릭은 항상 안전해요</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="win">
+        <div class="badge soft">CLEAR</div>
+        <h1>성공!</h1>
+        <p id="win-detail"></p>
+        <button type="button" class="btn" id="again-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="lose">
+        <div class="badge">BOOM</div>
+        <h1>아야… 지뢰!</h1>
+        <p id="lose-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1630" />
+    <title>닌자 표창 피하기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="ninja-dodge">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>레벨 <b id="hud-stage">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>최고 <b id="hud-best">0</b></span>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+
+      <div class="pad" id="pad" aria-hidden="true">
+        <button type="button" class="pad-btn" id="btn-crouch">숙여!</button>
+        <button type="button" class="pad-btn slash" id="btn-slash">베기</button>
+        <button type="button" class="pad-btn" id="btn-jump">점프!</button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+        <div class="badge">NINJA DODGE</div>
+        <h1>닌자 표창 피하기</h1>
+        <p>
+          무한 수행 · 점점 빨라져요 · 랭킹<br />
+          높은 건 숙이고 · 낮은 건 점프 · 황금은 베기!
+        </p>
+        <div class="title-controls">
+          <span>←→ 이동 · ↓ 숙이기 · ↑/스페이스 점프</span>
+          <span>Z / 베기 버튼으로 황금 표창 튕기기</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">수행 시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>아야… 맞았어요</h1>
+        <p id="over-detail"></p>
+        <form class="rank-form" id="rank-form">
+          <label for="player-name">랭킹 이름 (2~8자)</label>
+          <input id="player-name" name="name" maxlength="8" minlength="2" autocomplete="nickname" placeholder="닉네임" required />
+          <button type="submit" class="btn" id="submit-btn">랭킹 등록</button>
+          <p class="rank-msg" id="rank-msg"></p>
+        </form>
+        <button type="button" class="btn soft" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

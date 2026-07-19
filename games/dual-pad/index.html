@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#120818" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>DUAL PAD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <div class="scanlines stage-scan" aria-hidden="true"></div>
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span class="song-name" id="hud-title">곡 선택</span>
+          <span><b id="hud-song">1</b> / 20</span>
+        </div>
+        <div class="combo-burst" id="combo-burst">
+          <em id="hud-combo-big">0</em>
+          <span>COMBO</span>
+        </div>
+        <div class="panel right">
+          <span>SCORE</span>
+          <b id="hud-score">0</b>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+
+      <div class="dual-pads hidden" id="dual-pads">
+        <button type="button" class="pad pad-left" data-side="0" aria-label="Left pad">
+          <span class="pad-label">L</span>
+          <span class="pad-glow"></span>
+        </button>
+        <button type="button" class="pad pad-right" data-side="1" aria-label="Right pad">
+          <span class="pad-label">R</span>
+          <span class="pad-glow"></span>
+        </button>
+      </div>
+
+      <div class="overlay" id="title">
+        <div class="scanlines" aria-hidden="true"></div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">DUAL</div>
+        <h1>DUAL PAD</h1>
+        <p>노트가 판정선에 닿을 때<br /><b>양쪽 패드를 탭!</b></p>
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <div class="controls">
+          <div class="pad-preview">
+            <i class="left"></i><i class="right"></i>
+          </div>
+          <p class="sub">모바일 · 양손 엄지 &nbsp;|&nbsp; PC · A F / J L</p>
+        </div>
+        <button type="button" class="btn" id="start-btn">PLAY</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">곡 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">FAILED</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">RETRY</button>
+        <button type="button" class="btn ghost" id="menu-btn2">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>DUAL MASTER!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/hip-core.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

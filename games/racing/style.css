@@ -1,0 +1,236 @@
+:root {
+  --pink: #ff6b9a;
+  --yellow: #ffd839;
+  --blue: #48a9ff;
+  --ink: #26324d;
+  --muted: #65708a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 50% 10%, #8ad8ff 0%, transparent 46%),
+    radial-gradient(circle at 80% 70%, rgba(255, 170, 200, 0.35), transparent 36%),
+    linear-gradient(160deg, #3a7ab8, #1a4068);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, 390px, calc(100dvh * 0.609375));
+  aspect-ratio: 390 / 640;
+  height: auto;
+  max-height: 100dvh;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.42),
+    0 0 0 7px rgba(255, 216, 57, 0.18);
+  background: #5f6878;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.panel {
+  background: rgba(22, 40, 70, 0.78);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  padding: 8px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  min-width: 96px;
+  box-shadow:
+    0 3px 0 rgba(255, 216, 57, 0.45),
+    0 8px 20px rgba(12, 18, 30, 0.24);
+}
+
+.panel.right {
+  align-items: flex-end;
+}
+
+.panel b {
+  color: #ffe365;
+  font-size: 17px;
+  text-shadow: 0 1px 8px rgba(255, 216, 57, 0.35);
+}
+
+.controls {
+  position: absolute;
+  bottom: 28px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.pad-btn {
+  border: 2px solid rgba(255, 255, 255, 0.76);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-family: inherit;
+  font-size: 24px;
+  color: #fff;
+  background: linear-gradient(155deg, rgba(255, 216, 57, 0.95), rgba(255, 140, 60, 0.96));
+  box-shadow:
+    0 5px 0 #c87820,
+    0 10px 24px rgba(14, 35, 76, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.pad-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #c87820;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.75), transparent 24%),
+    radial-gradient(circle at 82% 30%, rgba(255, 180, 210, 0.4), transparent 25%),
+    radial-gradient(circle at 50% 85%, rgba(255, 216, 57, 0.28), transparent 30%),
+    repeating-linear-gradient(125deg, transparent 0 44px, rgba(255,255,255,.12) 44px 48px),
+    linear-gradient(180deg, rgba(140, 210, 255, 0.98), rgba(255, 220, 235, 0.98));
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(180deg, #ffd86b, #ffb020);
+  color: #5a3a10;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 0 #d09020;
+}
+
+.badge.soft {
+  background: linear-gradient(180deg, #b8e0ff, #6eb8ff);
+  color: #fff;
+  box-shadow: 0 4px 0 #4a90d9;
+}
+
+.title-mascot {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  margin: -4px 0 -8px;
+  filter: drop-shadow(0 14px 13px rgba(46, 66, 102, 0.3));
+  animation: mascot-float 1.8s ease-in-out infinite;
+}
+
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(2deg);
+  }
+}
+
+h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(26px, 7.5vw, 38px);
+  color: #e84878;
+  text-shadow:
+    0 3px 0 #fff,
+    0 8px 20px rgba(217, 79, 130, 0.2);
+}
+
+.overlay p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.title-controls {
+  display: grid;
+  gap: 5px;
+  margin: -2px 0 14px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 32px;
+  font: inherit;
+  font-size: 18px;
+  color: #5a3a10;
+  background: linear-gradient(180deg, #ffe27a, #ffb020);
+  box-shadow: 0 6px 0 #d09020;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #d09020;
+}
+
+a {
+  margin-top: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}

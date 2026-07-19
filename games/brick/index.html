@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2a1f4a" />
+    <title>별똥별 벽돌깨기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="brick">
+    <div class="app">
+      <header class="top">
+        <a class="home" href="/">← 홈</a>
+        <div class="stat">STAGE <b id="stage">1</b></div>
+        <div class="stat">점수 <b id="score">0</b></div>
+        <div class="stat" id="lives">♥♥♥</div>
+      </header>
+      <div class="hero-bit">
+        <h1>별똥별 벽돌깨기</h1>
+        <p id="stage-name">첫 번째 밤하늘</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="game" width="390" height="560"></canvas>
+      </div>
+      <p class="hint">📱 손가락으로 바 이동 · 탭하면 공 발사 &nbsp;|&nbsp; ⌨️ ←→ · 스페이스</p>
+    </div>
+
+    <div class="overlay" id="title">
+      <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+      <div class="badge">ARCADE</div>
+      <h2>별똥별 벽돌깨기</h2>
+      <p>별빛 공으로 젤리 벽돌을 깨고<br />50단계 밤하늘을 지나가요</p>
+      <button type="button" class="btn" id="start-btn">시작!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="clear">
+      <div class="badge soft">CLEAR</div>
+      <h2 id="clear-title">스테이지 클리어!</h2>
+      <p id="clear-detail"></p>
+      <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+    </div>
+
+    <div class="overlay hidden" id="over">
+      <div class="badge">GAME OVER</div>
+      <h2>별이 떨어졌어요</h2>
+      <p id="over-detail"></p>
+      <button type="button" class="btn" id="retry-btn">다시!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="allclear">
+      <div class="badge">ALL CLEAR</div>
+      <h2>모든 밤하늘 클리어!</h2>
+      <p id="all-detail"></p>
+      <button type="button" class="btn" id="again-btn">처음부터</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

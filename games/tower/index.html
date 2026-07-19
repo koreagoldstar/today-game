@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>흔들흔들 스카이</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="tower">
+    <div class="app">
+      <header class="top">
+        <a class="home" href="/">← 홈</a>
+        <div class="stat">점수 <b id="score">0</b></div>
+        <div class="stat">최고 <b id="best">0</b></div>
+      </header>
+      <div class="hero-bit">
+        <h1>흔들흔들 스카이</h1>
+        <p>딱 맞게 떨어뜨려 탑을 쌓아요</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="game" width="390" height="620"></canvas>
+      </div>
+      <p class="hint">탭 / 클릭 / 스페이스로 블록 떨어뜨리기</p>
+    </div>
+
+    <div class="overlay" id="title">
+      <img class="hero-art" src="assets/thumb.png" alt="" width="140" height="140" />
+      <div class="badge">STACK</div>
+      <h2>흔들흔들 스카이</h2>
+      <p>귀여운 젤리 블록을 맞춰<br />하늘 높이 탑을 쌓아보세요</p>
+      <button type="button" class="btn" id="start-btn">시작!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="over">
+      <div class="badge">GAME OVER</div>
+      <h2>탑이 무너졌어요</h2>
+      <p id="over-detail"></p>
+      <button type="button" class="btn" id="retry-btn">다시!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

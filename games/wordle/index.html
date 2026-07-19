@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffc1d8" />
+    <title>오늘의 워들</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="wordle">
+    <div class="app">
+      <header class="top">
+        <a class="home" href="/">← 홈</a>
+        <div class="day-pill" id="day-pill">오늘</div>
+        <button type="button" class="help-btn" id="help-btn" aria-label="도움말">?</button>
+      </header>
+
+      <div class="hero">
+        <img class="hero-thumb" src="assets/thumb.png" alt="" width="72" height="72" />
+        <h1>오늘의 워들</h1>
+        <p id="sub">5글자 · 하루 100문제</p>
+      </div>
+
+      <div class="hint-card" id="hint-card" aria-live="polite">
+        <span class="hint-label">힌트</span>
+        <p class="hint-text" id="hint-text">…</p>
+        <button type="button" class="hint-more" id="hint-more">글자 힌트 받기</button>
+        <p class="hint-extra" id="hint-extra" hidden></p>
+      </div>
+
+      <div class="board" id="board" aria-label="워들 보드"></div>
+      <p class="msg" id="msg" role="status"></p>
+      <div class="keyboard" id="keyboard" aria-label="키보드"></div>
+    </div>
+
+    <div class="overlay" id="help">
+      <div class="sheet">
+        <div class="badge">HOW TO</div>
+        <h2>이렇게 해요</h2>
+        <p>힌트를 보고 영어 5글자 단어를 맞춰요.<br />하루 <b>100문제</b>까지 풀 수 있어요!<br />5글자 입력 후 <b>입력</b>을 누르세요.</p>
+        <div class="demo">
+          <span class="tile correct">C</span>
+          <span class="tile present">A</span>
+          <span class="tile absent">N</span>
+          <span class="tile absent">D</span>
+          <span class="tile absent">Y</span>
+        </div>
+        <ul class="rules">
+          <li><b class="g">초록</b> — 자리까지 맞아요</li>
+          <li><b class="y">노랑</b> — 글자는 맞지만 자리가 달라요</li>
+          <li><b class="x">회색</b> — 단어에 없어요</li>
+        </ul>
+        <button type="button" class="btn" id="help-close">알겠어요!</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="result">
+      <div class="sheet result-sheet">
+        <div class="badge" id="result-badge">CLEAR</div>
+        <h2 id="result-title">맞췄어요!</h2>
+        <p id="result-detail"></p>
+        <pre class="share-grid" id="share-grid"></pre>
+        <p class="soft progress-line" id="result-progress">0 / 100</p>
+        <div class="result-actions">
+          <button type="button" class="btn" id="next-btn">다음 문제</button>
+          <button type="button" class="btn btn-secondary" id="share-btn">결과 복사</button>
+        </div>
+        <p class="soft" id="result-next">이어서 풀어요</p>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="words.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

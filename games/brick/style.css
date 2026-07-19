@@ -1,0 +1,169 @@
+:root {
+  --ink: #e8e4ff;
+  --muted: #b8b0d8;
+  --accent: #ffe27a;
+  --night: #1a1430;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Jua", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at 50% 0%, #3a2a6a 0%, transparent 55%),
+    linear-gradient(180deg, #1a1430 0%, #2a1f4a 50%, #3d2f6a 100%);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+.app {
+  width: min(420px, 100%);
+  margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom));
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.home,
+.link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.stat {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hero-bit {
+  text-align: center;
+  margin: 8px 0 10px;
+}
+
+.hero-bit h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 30px;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(255, 226, 122, 0.4);
+}
+
+.hero-bit p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.canvas-wrap {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px rgba(255, 226, 122, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.hint {
+  text-align: center;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: rgba(10, 8, 24, 0.72);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.hero-art {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow: 0 0 0 3px rgba(255, 226, 122, 0.45), 0 12px 28px rgba(0, 0, 0, 0.35);
+  margin-bottom: 4px;
+}
+
+.badge {
+  background: linear-gradient(180deg, #ffe89a, var(--accent));
+  color: #4a3545;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  box-shadow: 0 4px 0 #c9a030;
+}
+
+.badge.soft {
+  background: linear-gradient(180deg, #b5a0ff, #8b6fff);
+  color: #fff;
+  box-shadow: 0 4px 0 #5a3fd4;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: 30px;
+  color: #fff;
+}
+
+.overlay p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.btn {
+  margin-top: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-family: inherit;
+  font-size: 18px;
+  color: #4a3545;
+  background: linear-gradient(180deg, #ffe89a, var(--accent));
+  box-shadow: 0 6px 0 #c9a030;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #c9a030;
+}

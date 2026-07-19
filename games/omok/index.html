@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#c48e4d" />
+    <title>오목</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="omok">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span id="hud-turn">흑돌 차례</span>
+          <span id="hud-diff">난이도: 보통</span>
+        </div>
+        <div class="panel right">
+          <button type="button" class="undo-btn" id="undo-btn">↩ 무르기</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+        <div class="badge">FIVE IN A ROW</div>
+        <h1>오목</h1>
+        <p>15×15 바둑판에서<br />다섯 알을 먼저 놓으세요</p>
+        <div class="diff-picker">
+          <button type="button" class="diff-btn active" data-diff="easy">쉬움</button>
+          <button type="button" class="diff-btn" data-diff="normal">보통</button>
+          <button type="button" class="diff-btn" data-diff="hard">어려움</button>
+        </div>
+        <button type="button" class="btn" id="start-btn">대국 시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="result">
+        <div class="badge soft" id="result-badge">WIN</div>
+        <h1 id="result-title">승리!</h1>
+        <p id="result-detail"></p>
+        <button type="button" class="btn" id="retry-btn">한 판 더</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

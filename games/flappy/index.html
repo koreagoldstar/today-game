@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>펄럭 병아리</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="flappy">
+    <div class="stage">
+      <div class="hud">
+        <a class="home" href="/">← 홈</a>
+        <div class="score-pill">점수 <b id="hud-score">0</b></div>
+        <div class="score-pill soft">최고 <b id="hud-best">0</b></div>
+      </div>
+      <canvas id="game" width="390" height="700"></canvas>
+      <p class="hint">탭 / 스페이스로 펄럭!</p>
+
+      <div class="overlay" id="title">
+        <div class="badge">FLAP</div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="140" height="140" />
+        <h1>펄럭 병아리</h1>
+        <p>파이프 사이로 멀리 날아가<br />랭킹에 이름을 남겨요</p>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">CRASH</div>
+        <h1>떨어졌어요!</h1>
+        <p id="over-detail"></p>
+        <form class="rank-form" id="rank-form">
+          <label for="player-name">랭킹 이름 (2~8자)</label>
+          <input id="player-name" name="name" maxlength="8" minlength="2" autocomplete="nickname" placeholder="닉네임" required />
+          <button type="submit" class="btn" id="submit-btn">랭킹 등록</button>
+          <p class="rank-msg" id="rank-msg"></p>
+        </form>
+        <button type="button" class="btn soft" id="retry-btn">다시!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

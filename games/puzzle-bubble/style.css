@@ -1,0 +1,175 @@
+:root {
+  --pink: #ff6b9d;
+  --ink: #3d2a45;
+  --muted: #8a6a7a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background: #1a1020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.629));
+  height: min(100dvh, calc(100vw / 0.629));
+  max-width: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg, #c8e9ff 0%, #ffe8f5 100%);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 96px;
+  box-shadow: 0 3px 0 rgba(200, 120, 150, 0.18);
+}
+
+.panel.right {
+  align-items: flex-end;
+}
+
+.panel b {
+  color: var(--pink);
+  font-size: 16px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.55), transparent 50%),
+    linear-gradient(180deg, rgba(255, 193, 216, 0.94), rgba(230, 244, 255, 0.96));
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.hero-art {
+  width: min(48vw, 200px);
+  height: min(48vw, 200px);
+  object-fit: cover;
+  border-radius: 28px;
+  margin-bottom: 10px;
+  box-shadow:
+    0 12px 28px rgba(80, 40, 80, 0.28),
+    0 0 0 3px rgba(255, 255, 255, 0.7);
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(180deg, #ff9ec4, var(--pink));
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 0 #d93f74;
+}
+
+.badge.soft {
+  background: linear-gradient(180deg, #9ed4ff, #5b9fff);
+  box-shadow: 0 4px 0 #2f6fd4;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(30px, 8vw, 42px);
+  color: var(--pink);
+  text-shadow: 0 3px 0 #fff;
+}
+
+.overlay p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.title-controls {
+  display: grid;
+  gap: 5px;
+  margin: -2px 0 14px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 32px;
+  font: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9ec4, var(--pink));
+  box-shadow: 0 6px 0 #d93f74;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #d93f74;
+}
+
+a {
+  margin-top: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}

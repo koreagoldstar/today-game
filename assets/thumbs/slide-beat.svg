@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="440" viewBox="0 0 440 440">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#061018"/>
+      <stop offset="100%" stop-color="#02060a"/>
+    </linearGradient>
+  </defs>
+  <rect width="440" height="440" fill="url(#bg)"/>
+  <rect x="40" y="190" width="360" height="18" rx="9" fill="#123"/>
+  <circle cx="90" cy="199" r="28" fill="#00f5ff"/>
+  <circle cx="180" cy="199" r="22" fill="#ff2d95"/>
+  <circle cx="270" cy="199" r="26" fill="#c8ff00"/>
+  <rect x="330" y="160" width="10" height="80" rx="4" fill="#fff" opacity="0.85"/>
+  <text x="220" y="390" text-anchor="middle" fill="#00f5ff" font-family="Arial Black, sans-serif" font-size="34">SLIDE</text>
+</svg>

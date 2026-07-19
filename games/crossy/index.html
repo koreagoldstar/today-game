@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#a8e6a0" />
+    <title>삐약이 건너기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="crossy">
+    <div class="stage">
+      <canvas id="game" width="390" height="620"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>목표 <b id="hud-goal">20</b></span>
+        </div>
+        <div class="panel right">
+          <span>점수 <b id="hud-score">0</b></span>
+          <span>최고 <b id="hud-best">0</b></span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button type="button" class="pad-btn" data-dir="left" aria-label="왼쪽">◀</button>
+        <button type="button" class="pad-btn big" data-dir="up" aria-label="앞으로">↑</button>
+        <button type="button" class="pad-btn" data-dir="right" aria-label="오른쪽">▶</button>
+      </div>
+
+      <div class="overlay" id="title">
+        <div class="badge">CROSS</div>
+        <img class="title-mascot" src="assets/thumb.png" alt="삐약이" />
+        <h1>삐약이 건너기</h1>
+        <p>횡단보도를 건너며 점수를 모아요<br />알록달록 차를 피해 목표까지!</p>
+        <div class="title-controls">
+          <span>📱 ↑버튼 · 좌우패드 · 스와이프</span>
+          <span>⌨️ WASD / 방향키</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>목표 달성!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">SQUISH</div>
+        <h1>앗, 다쳤어요!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ENDLESS</div>
+        <h1>무한 모드!</h1>
+        <p>50단계 클리어! 이제 끝없이 달려요</p>
+        <button type="button" class="btn" id="endless-btn">계속!</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

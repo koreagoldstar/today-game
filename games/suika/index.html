@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffb3c8" />
+    <title>수박 합치기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="suika">
+    <div class="app">
+      <canvas id="game" width="390" height="640"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>점수 <b id="hud-score">0</b></span>
+          <span>최고 <b id="hud-best">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>다음</span>
+          <canvas id="preview" width="56" height="56"></canvas>
+        </div>
+      </div>
+
+      <div class="danger-label">위험선</div>
+      <div class="control-help">
+        <b>조작</b> 손가락으로 좌우 드래그 후 <b>손을 떼면</b> 떨어져요<br />
+        PC · 마우스 드래그/클릭 · ← → · Space
+      </div>
+
+      <div class="overlay" id="title">
+        <div class="badge">MERGE</div>
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="120" height="120" />
+        <h1>수박 합치기</h1>
+        <p>
+          위치를 정하고 과일을 떨어뜨리세요.<br />
+          같은 과일끼리 닿으면 더 크게 합쳐져요!
+        </p>
+        <div class="title-controls">
+          <span>📱 좌우 위치를 탭하면 놓기</span>
+          <span>⌨️ ← → 이동 · Space 놓기</span>
+        </div>
+        <div class="icons">🍒 → 🍉</div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a class="home" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">WATERMELON!</div>
+        <h1>수박 완성!</h1>
+        <p id="clear-detail">대단해요! 계속 합쳐볼까요?</p>
+        <button type="button" class="btn" id="continue-btn">계속하기</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>그릇이 가득!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a class="home" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

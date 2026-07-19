@@ -1,0 +1,10 @@
+{
+  "name": "today-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "오늘의 게임 — 귀여운 미니게임 모음",
+  "scripts": {
+    "start": "npx --yes serve . -l 3456",
+    "deploy": "npx vercel deploy --prod --yes"
+  }
+}

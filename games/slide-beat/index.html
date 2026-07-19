@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#05050c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>슬라이드 비트</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span class="song-name" id="hud-title">곡 선택</span>
+          <span><b id="hud-song">1</b> / 20</span>
+        </div>
+        <div class="combo-burst" id="combo-burst">
+          <em id="hud-combo-big">0</em>
+          <span>COMBO</span>
+        </div>
+        <div class="panel right">
+          <span>SCORE</span>
+          <b id="hud-score">0</b>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+
+      <div class="judge-flash" id="judge-flash" aria-live="polite"></div>
+
+      <button type="button" class="tap-bar hidden" id="tap-bar" aria-label="탭">
+        <span class="tap-bar-glow" aria-hidden="true"></span>
+        <span class="tap-bar-scan" aria-hidden="true"></span>
+        <span class="tap-bar-label">TAP</span>
+        <span class="tap-bar-hint">노트가 판정선에 닿을 때!</span>
+      </button>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">SLIDE BEAT</div>
+        <h1>슬라이드 비트</h1>
+        <p class="lead">노트가 판정선에 닿을 때 탭!</p>
+
+        <div class="howto" aria-label="플레이 방법">
+          <div class="howto-title">HOW TO PLAY</div>
+          <ol class="howto-steps">
+            <li>
+              <span class="num">1</span>
+              <span>노트가 <b class="c-cyan">왼쪽 → 오른쪽</b>으로 흘러가요</span>
+            </li>
+            <li>
+              <span class="num">2</span>
+              <span>레인은 <b class="c-mag">위·가운데·아래</b> 3줄이에요</span>
+            </li>
+            <li>
+              <span class="num">3</span>
+              <span>오른쪽 <b class="c-lime">노란 HIT 칸</b>에 들어오면 탭 · 「지금 탭!」이 뜨면 OK</span>
+            </li>
+            <li>
+              <span class="num">4</span>
+              <span>어느 줄이든 같은 TAP · 하트 5개가 다 닳으면 실패</span>
+            </li>
+          </ol>
+          <div class="howto-demo" aria-hidden="true">
+            <span class="demo-lane"></span>
+            <span class="demo-lane mid"></span>
+            <span class="demo-lane"></span>
+            <span class="demo-note n0"></span>
+            <span class="demo-note n1"></span>
+            <span class="demo-note n2"></span>
+            <span class="demo-judge"></span>
+            <span class="demo-hint">선에 닿을 때 탭!</span>
+          </div>
+          <p class="howto-keys">휴대폰 · 하단 TAP &nbsp;|&nbsp; PC · <kbd>J</kbd> / <kbd>SPACE</kbd> / 클릭</p>
+        </div>
+
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <button type="button" class="btn" id="start-btn">START</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">곡 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">FAILED</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">RETRY</button>
+        <button type="button" class="btn ghost" id="menu-btn2">곡 목록</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>슬라이드 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/hip-core.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+:root {
+  --warm: #e07a2f;
+  --ink: #5a3d28;
+  --muted: #8a6848;
+  --grass: #7ec86a;
+  --sand: #e8c896;
+  --sand-deep: #d4a66a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background: #2a2018;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.557));
+  height: min(100dvh, calc(100vw / 0.557));
+  max-width: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  background: var(--sand);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.panel {
+  background: rgba(74, 48, 28, 0.42);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 8px 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  min-width: 96px;
+}
+
+.panel.right {
+  align-items: flex-end;
+}
+
+.panel b {
+  font-size: 16px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(255, 248, 230, 0.72), transparent 48%),
+    linear-gradient(180deg, rgba(240, 217, 176, 0.94), rgba(232, 200, 150, 0.97));
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.hero-art {
+  width: min(48vw, 196px);
+  height: min(48vw, 196px);
+  object-fit: cover;
+  border-radius: 32px;
+  margin-bottom: 12px;
+  box-shadow:
+    0 14px 32px rgba(90, 55, 25, 0.38),
+    0 0 0 4px rgba(255, 248, 230, 0.55),
+    0 0 0 6px rgba(212, 166, 106, 0.45);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--warm);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.badge.soft {
+  background: var(--grass);
+}
+
+h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-weight: 400;
+  font-size: clamp(38px, 10vw, 52px);
+  color: #d4682a;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 3px 0 #fff8e6,
+    0 6px 14px rgba(90, 55, 25, 0.22);
+}
+
+.overlay p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.icons {
+  font-size: 15px;
+  margin-bottom: 14px;
+  color: var(--muted);
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 32px;
+  font: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #f0a04a, #d87428);
+  box-shadow: 0 7px 0 #a85618;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 4px 0 #a85618;
+}
+
+a {
+  margin-top: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}

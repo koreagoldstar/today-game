@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2a2038" />
+    <title>짝짝 사천성</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="memory">
+    <div class="app">
+      <header class="top">
+        <a class="home" href="/">← 홈</a>
+        <div class="stage-pill">STAGE <span id="stage-num">1</span>/60</div>
+        <div class="stat">남은 <b id="remain">0</b></div>
+      </header>
+
+      <div class="hud-row">
+        <div class="meter"><i id="time-fill"></i></div>
+        <div class="time"><b id="time">99</b>초</div>
+      </div>
+      <p class="stage-name" id="goal-text">같은 그림을 선으로 연결해요</p>
+
+      <div class="board-wrap">
+        <canvas id="game" width="480" height="720"></canvas>
+      </div>
+
+      <div class="items" id="items">
+        <button type="button" class="item" data-item="hint" title="연결 가능한 짝 보여주기">
+          <span class="item-ico">💡</span>
+          <span class="item-name">힌트</span>
+          <span class="item-n" id="n-hint">3</span>
+        </button>
+        <button type="button" class="item" data-item="shuffle" title="타일 다시 섞기">
+          <span class="item-ico">🔀</span>
+          <span class="item-name">섞기</span>
+          <span class="item-n" id="n-shuffle">3</span>
+        </button>
+        <button type="button" class="item" data-item="bolt" title="아무 짝이나 자동 제거">
+          <span class="item-ico">⚡</span>
+          <span class="item-name">번개</span>
+          <span class="item-n" id="n-bolt">2</span>
+        </button>
+        <button type="button" class="item" data-item="clock" title="시간 +20초">
+          <span class="item-ico">⏰</span>
+          <span class="item-name">시계</span>
+          <span class="item-n" id="n-clock">2</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="overlay" id="title">
+      <img class="hero-art" src="assets/thumb.png" alt="" width="160" height="160" />
+      <div class="badge">CONNECT</div>
+      <h2>짝짝 사천성</h2>
+      <p>귀여운 동물 타일을 선으로 연결해요<br />60단계 · 링·십자·섬·벽·폭탄·이동맵</p>
+      <button type="button" class="btn" id="start-btn">시작하기</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="clear">
+      <div class="badge soft">CLEAR</div>
+      <h2 id="clear-title">스테이지 클리어!</h2>
+      <p id="clear-detail"></p>
+      <div class="stars" id="stars">★★★</div>
+      <p class="reward" id="reward-text"></p>
+      <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+    </div>
+
+    <div class="overlay hidden" id="over">
+      <div class="badge">TIME OVER</div>
+      <h2>시간이 끝났어요</h2>
+      <p id="over-detail"></p>
+      <button type="button" class="btn" id="retry-btn">다시!</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <div class="overlay hidden" id="allclear">
+      <div class="badge">ALL CLEAR</div>
+      <h2>사천성 마스터!</h2>
+      <p id="all-detail"></p>
+      <button type="button" class="btn" id="again-btn">처음부터</button>
+      <a class="link" href="/">← 오늘의 게임</a>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

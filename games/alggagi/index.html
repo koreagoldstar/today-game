@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#e8c896" />
+    <title>알까기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="alggagi">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>승 <b id="hud-wins">0</b></span>
+        </div>
+        <div class="panel right">
+          <span id="hud-turn">내 차례</span>
+          <span>남은 구슬 <b id="hud-mine">3</b> : <b id="hud-enemy">3</b></span>
+        </div>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="196" height="196" />
+        <div class="badge">모래 위 구슬 대결</div>
+        <h1>알까기</h1>
+        <p>
+          구슬을 <b>뒤로 당겨</b> 힘을 모은 뒤<br />
+          손을 떼면 반대 방향으로 굴러가요!
+        </p>
+        <div class="icons">50단계 · 랜덤 배치 대결</div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="round">
+        <div class="badge soft" id="round-badge">ROUND WIN</div>
+        <h1 id="round-title">라운드 승리!</h1>
+        <p id="round-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 라운드</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>알까기왕!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
