@@ -83,6 +83,8 @@
 
   let state = "title";
   let stageIndex = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let endless = false;
   let score = 0;
   let bonusScore = 0;
@@ -396,6 +398,10 @@
         document.getElementById("over-detail").textContent =
           `${Math.floor(stageDist)}m 달림 · 점수 ${score}`;
         showOverlay("over");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "racing", gameTitle: "스피드 삐약이", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
         updateHud();
         return;
       }
@@ -403,12 +409,18 @@
     enemies = enemies.filter((e) => e.y < H + 100);
 
     if (!endless && stageDist >= st.goal) {
+      const elapsed = (performance.now() - stageStartedAt) / 1000;
+      score += Math.max(0, Math.floor(20 - elapsed)) * 8;
       state = "clear";
       burst(W / 2, H / 2, ["#9ed4ff", "#ff9ec4", "#fff"], 20);
       document.getElementById("clear-detail").textContent =
         `${st.goal}m 달성! 점수 ${score}`;
       if (stageIndex >= 19) {
         showOverlay("all");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "racing", gameTitle: "스피드 삐약이", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       } else {
         showOverlay("clear");
       }
@@ -531,7 +543,10 @@
       score = 0;
       bonusScore = 0;
       totalDist = 0;
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
+    stageStartedAt = performance.now();
     resetRun();
     state = "play";
     showOverlay(null);
@@ -596,4 +611,12 @@
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "racing",
+      gameTitle: "스피드 삐약이",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

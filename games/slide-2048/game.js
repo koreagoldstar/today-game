@@ -281,7 +281,13 @@
       spawnTile();
       render();
       busy = false;
-      if (won && !keepPlaying) overlays.win.classList.remove("hidden");
+      if (won && !keepPlaying) {
+      overlays.win.classList.remove("hidden");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "slide-2048", gameTitle: "두배두배", formParent: overlays.win });
+      TodayGameRank.open(score);
+    }
+    }
       else if (!canMove()) showGameOver();
     }, 150);
 
@@ -305,6 +311,10 @@
 
   function showGameOver() {
     document.getElementById("over-detail").textContent = `점수 ${score}`;
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "slide-2048", gameTitle: "두배두배", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
     overlays.over.classList.remove("hidden");
   }
 
@@ -330,6 +340,7 @@
   }
 
   function startGame() {
+    if (window.TodayGameRank) TodayGameRank.reset();
     overlays.title.classList.add("hidden");
     newGame();
   }
@@ -377,4 +388,12 @@
     overlays.win.classList.add("hidden");
     newGame();
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "slide-2048",
+      gameTitle: "두배두배",
+      formParent: overlays.over || overlays.win || document.body,
+    });
+  }
 })();

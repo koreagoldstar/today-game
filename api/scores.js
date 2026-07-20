@@ -9,14 +9,50 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const ALLOWED = new Set(["flappy", "tetris", "doodle", "jump-run", "ninja-dodge"]);
+  const ALLOWED = new Set([
+    "flappy",
+    "tetris",
+    "doodle",
+    "jump-run",
+    "ninja-dodge",
+    "stork-stride",
+    "snake",
+    "minesweeper",
+    "alggagi",
+    "whack-mole",
+    "omok",
+    "rhythm",
+    "racing",
+    "drift-chick",
+    "crossy",
+    "cute-shoot",
+    "brick",
+    "puzzle-bubble",
+    "ttamogi",
+    "memory",
+    "diff",
+    "suika",
+    "slide-2048",
+    "tower",
+    "fruit-catch",
+    "bubble-pop",
+    "pinball",
+    "rps",
+    "odd-even",
+    "dual-pad",
+    "slide-beat",
+    "beat-tap",
+    "minigolf",
+    "wordle",
+    "sokoban",
+  ]);
   const PERIODS = new Set(["day", "week"]);
   const MAX_KEEP = 50;
   const MAX_NAME = 8;
   const MIN_NAME = 2;
   const TTL_DAY = 60 * 60 * 24 * 4; // 4일
   const TTL_WEEK = 60 * 60 * 24 * 16; // 16일
-  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f7846-1888-7eb1-b773-68a727ea2be8";
+  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f7fe7-84a1-7ac6-af4f-88e5fc99158e";
   const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
   function redisConfigured() {
@@ -117,13 +153,9 @@ module.exports = async function handler(req, res) {
   }
 
   function emptyGameBuckets() {
-    return {
-      flappy: {},
-      tetris: {},
-      doodle: {},
-      "jump-run": {},
-      "ninja-dodge": {},
-    };
+    const out = {};
+    for (const game of ALLOWED) out[game] = {};
+    return out;
   }
 
   function normalizeGameBuckets(raw) {

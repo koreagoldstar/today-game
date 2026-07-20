@@ -427,9 +427,14 @@
     document.getElementById("clear-detail").textContent =
       `${strokes}타 (파 ${hole.par}) · 별 ${starsGot}개 · 합계 ${totalStrokes}타`;
     if (holeIndex >= HOLES.length - 1) {
+      const rankScore = Math.max(1, totalStars * 200 + Math.max(0, 3000 - totalStrokes * 10));
       document.getElementById("all-detail").textContent =
-        `${HOLES.length}홀 완주! 총 ${totalStrokes}타 · 별 ${totalStars}개`;
+        `${HOLES.length}홀 완주! 총 ${totalStrokes}타 · 별 ${totalStars}개 · 점수 ${rankScore}`;
       showOverlay("all");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "minigolf", gameTitle: "홀인원 골프", formParent: overlays.all });
+      TodayGameRank.open(rankScore);
+    }
     } else {
       showOverlay("clear");
     }
@@ -1049,6 +1054,7 @@
       holeIndex = 0;
       totalStrokes = 0;
       totalStars = 0;
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
     parseHole(holeIndex);
     state = "play";
@@ -1078,4 +1084,12 @@
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "minigolf",
+      gameTitle: "홀인원 골프",
+      formParent: overlays.all || document.body,
+    });
+  }
 })();

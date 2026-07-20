@@ -2,7 +2,7 @@
 
 작고 귀여운 게임들을 모아두는 플레이룸입니다.
 
-**플레이:** https://today-game.vercel.app
+**플레이:** https://www.todaygame.co.kr
 
 ## 로컬 실행
 

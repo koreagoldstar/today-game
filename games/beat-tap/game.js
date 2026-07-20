@@ -369,13 +369,20 @@
     state = "over";
     audio.stop();
     showOverlay("over");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "beat-tap", gameTitle: "펄스 탭", formParent: document.getElementById("over") });
+      TodayGameRank.open(score);
+    }
     document.getElementById("over-detail").textContent =
       `SCORE ${score.toLocaleString()} · COMBO ${maxCombo} · ${SONGS[songIndex].name}`;
   }
 
   function startPlay(fresh) {
     state = "play";
-    if (fresh) score = 0;
+    if (fresh) {
+      score = 0;
+      if (window.TodayGameRank) TodayGameRank.reset();
+    }
     showOverlay(null);
     resetSong();
     last = performance.now();
@@ -754,6 +761,10 @@
       } else {
         state = "allclear";
         showOverlay("all");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "beat-tap", gameTitle: "펄스 탭", formParent: document.getElementById("allclear") });
+      TodayGameRank.open(score);
+    }
         document.getElementById("all-detail").textContent =
           `20곡 올클리어! · TOTAL SCORE ${score.toLocaleString()} · MAX COMBO ${maxCombo}`;
       }
@@ -827,4 +838,12 @@
   }
 
   init();
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "beat-tap",
+      gameTitle: "펄스 탭",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

@@ -667,9 +667,14 @@
     if (lives <= 0) {
       state = "over";
       setPicks(false);
+      const rankScore = Math.max(1, best * 100);
       document.getElementById("over-detail").textContent =
-        `연속 ${Math.max(stageWins, 0)}승 · 최고 ${best}연속`;
+        `연속 ${Math.max(stageWins, 0)}승 · 최고 ${best}연속 · 점수 ${rankScore}`;
       show(overlays.over, true);
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "rps", gameTitle: "가위바위보", formParent: overlays.over });
+      TodayGameRank.open(rankScore);
+    }
       return;
     }
     if (stageWins >= st.goal) {
@@ -679,6 +684,10 @@
         document.getElementById("all-detail").textContent =
           `최고 연속 ${best}승! 레전드 클리어`;
         show(overlays.all, true);
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "rps", gameTitle: "가위바위보", formParent: overlays.all });
+      TodayGameRank.open(Math.max(1, best * 100));
+    }
         confettiWin();
         return;
       }
@@ -736,6 +745,7 @@
   function startGame() {
     stageIndex = 0;
     streak = 0;
+    if (window.TodayGameRank) TodayGameRank.reset();
     state = "play";
     hideAll();
     resetStage();
@@ -779,4 +789,12 @@
   loadAssets().then(() => {
     requestAnimationFrame(loop);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "rps",
+      gameTitle: "가위바위보",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

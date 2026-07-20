@@ -388,9 +388,14 @@
     winLine = findWinningLine(r, c, color);
     show(overlays.result, true);
     if (winner === BLACK) {
+      const score = Math.max(1, 5000 - history.length * 10);
       document.getElementById("result-badge").textContent = "WIN";
       document.getElementById("result-title").textContent = "승리!";
-      document.getElementById("result-detail").textContent = "다섯 알을 먼저 연결했어요";
+      document.getElementById("result-detail").textContent = `다섯 알을 먼저 연결했어요 · 점수 ${score}`;
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "omok", gameTitle: "오목", formParent: overlays.result });
+      TodayGameRank.open(score);
+    }
     } else {
       document.getElementById("result-badge").textContent = "LOSE";
       document.getElementById("result-title").textContent = "패배…";
@@ -684,6 +689,7 @@
   }
 
   function startGame() {
+    if (window.TodayGameRank) TodayGameRank.reset();
     state = "play";
     show(overlays.title, false);
     show(overlays.result, false);
@@ -711,4 +717,12 @@
   updateHud();
   loadAssets();
   raf = requestAnimationFrame(loop);
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "omok",
+      gameTitle: "오목",
+      formParent: overlays.result || document.body,
+    });
+  }
 })();

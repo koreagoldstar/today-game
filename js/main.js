@@ -5,13 +5,14 @@
 
   /** @type {{ id: string, title: string, desc: string }[]} */
   const CATEGORIES = [
-    { id: "archive", title: "고전 게임", desc: "Internet Archive로 원작 플레이" },
     { id: "rhythm", title: "리듬 · 음악", desc: "비트에 맞춰 톡톡" },
     { id: "sports", title: "스포츠 · 레이싱", desc: "공 치고 달리고" },
     { id: "action", title: "액션 · 슈팅", desc: "손맛 있게 쏘고 피하는 게임" },
     { id: "puzzle", title: "퍼즐 · 두뇌", desc: "생각하고 맞추는 게임" },
     { id: "arcade", title: "아케이드 · 캐치", desc: "짧게 중독되는 캐주얼" },
   ];
+
+  /** 고전 게임은 오른쪽 레일로 분리 */
 
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
@@ -186,7 +187,7 @@
     {
       id: "stork-stride",
       title: "서빙왕",
-      tag: "균형 · 접시탑",
+      tag: "균형 · 무한 · 랭킹",
       href: "/games/stork-stride/",
       thumb: "/assets/thumbs/stork-stride.png",
       category: "arcade",
@@ -194,7 +195,7 @@
     {
       id: "tetris",
       title: "블록 팡팡",
-      tag: "퍼즐 · 단계/무한",
+      tag: "퍼즐 · 랭킹",
       href: "/games/tetris/",
       thumb: "/assets/thumbs/tetris.png",
       category: "puzzle",
@@ -245,6 +246,14 @@
       tag: "레이싱 · 50단계",
       href: "/games/racing/",
       thumb: "/assets/thumbs/racing.png",
+      category: "sports",
+    },
+    {
+      id: "drift-chick",
+      title: "드리프트 삐약이",
+      tag: "드리프트 · 원터치",
+      href: "/games/drift-chick/",
+      thumb: "/assets/thumbs/drift-chick.svg",
       category: "sports",
     },
     {
@@ -354,9 +363,24 @@
   ];
 
   const catalog = document.getElementById("catalog");
+  const archiveList = document.getElementById("archive-list");
   const todayLabel = document.getElementById("today-label");
   const sparkles = document.getElementById("sparkles");
   const visitCount = document.getElementById("visit-count");
+
+  const GAME_NAMES = Object.fromEntries(
+    (window.TodayRankMeta && TodayRankMeta.RANKABLE
+      ? TodayRankMeta.RANKABLE
+      : [
+          { id: "flappy", title: "펄럭 병아리" },
+          { id: "doodle", title: "폴짝 하늘" },
+          { id: "tetris", title: "블록 팡팡" },
+          { id: "jump-run", title: "콩콩 점프" },
+          { id: "ninja-dodge", title: "닌자 표창" },
+          { id: "stork-stride", title: "서빙왕" },
+        ]
+    ).map((g) => [g.id, g.title])
+  );
 
   function formatToday() {
     const now = new Date();
@@ -397,45 +421,189 @@
     visitCount.textContent = n.toLocaleString("ko-KR");
   }
 
-  function createGameSlot(game) {
-    const a = document.createElement("a");
-    a.className = game.thumb ? "slot has-photo" : "slot";
-    a.href = game.href;
-    a.setAttribute("aria-label", `${game.title} 플레이`);
-    const art = game.thumb
-      ? `<img src="${game.thumb}" alt="" loading="lazy" width="220" height="220" />`
-      : `<span class="slot-emoji" aria-hidden="true">${game.emoji || "🎮"}</span>`;
-    a.innerHTML = `
-      <div class="slot-art">${art}</div>
-      <div class="slot-meta">
-        <p class="slot-name">${game.title}</p>
-        <p class="slot-tag">${game.tag}</p>
-        <span class="slot-play">플레이</span>
-      </div>
-    `;
-    return a;
-  }
-
   function gameIndex(game) {
     return GAMES.indexOf(game);
   }
 
-  /** 고전: 고인돌 맨 앞 / 리듬: 리듬 톡톡 맨 앞, 나머지는 최신순 */
+  /** API 랭킹 등록 가능 게임 */
+  const RANKING_IDS = new Set(
+    window.TodayRankMeta && Array.isArray(TodayRankMeta.RANKABLE)
+      ? TodayRankMeta.RANKABLE.map((g) => g.id)
+      : ["flappy", "tetris", "doodle", "jump-run", "ninja-dodge", "stork-stride"]
+  );
+  /** 카탈로그 맨 아래 고정 */
+  const BOTTOM_IDS = new Set(["pinball", "rps", "odd-even"]);
+
+  /**
+   * 콜드스타트용 인기 시드 (실제 플레이 수가 쌓이면 자동으로 그 순서로 올라감)
+   * 앞쪽일수록 기본 인기 높음
+   */
+  const POPULAR_SEED = [
+    "flappy",
+    "tetris",
+    "doodle",
+    "jump-run",
+    "snake",
+    "slide-2048",
+    "suika",
+    "minesweeper",
+    "wordle",
+    "stork-stride",
+    "ninja-dodge",
+    "whack-mole",
+    "brick",
+    "puzzle-bubble",
+    "memory",
+    "cute-shoot",
+    "racing",
+    "drift-chick",
+    "crossy",
+    "bubble-pop",
+    "fruit-catch",
+    "tower",
+    "omok",
+    "alggagi",
+    "ttamogi",
+    "diff",
+    "sokoban",
+    "rhythm",
+    "minigolf",
+    "beat-tap",
+    "slide-beat",
+    "dual-pad",
+  ];
+  const SEED_RANK = Object.fromEntries(POPULAR_SEED.map((id, i) => [id, i]));
+
+  let playCounts = {};
+  let popularOrder = {};
+
+  function hasRanking(game) {
+    return RANKING_IDS.has(game.id);
+  }
+
+  function isBottom(game) {
+    return BOTTOM_IDS.has(game.id);
+  }
+
+  function playScore(game) {
+    return Number(playCounts[game.id]) || 0;
+  }
+
+  function seedRank(game) {
+    if (popularOrder[game.id] != null) return popularOrder[game.id];
+    return SEED_RANK[game.id] != null ? SEED_RANK[game.id] : 900 + gameIndex(game);
+  }
+
+  /** 하루 캐시된 인기순 → 시드 → 맨 아래 고정 */
   function sortShelfGames(catId, games) {
     return games.slice().sort((a, b) => {
-      if (catId === "archive") {
-        if (a.id === "goindol") return -1;
-        if (b.id === "goindol") return 1;
-      }
+      const bottomA = isBottom(a) ? 1 : 0;
+      const bottomB = isBottom(b) ? 1 : 0;
+      if (bottomA !== bottomB) return bottomA - bottomB;
+
+      const playA = playScore(a);
+      const playB = playScore(b);
+      if (playA !== playB) return playB - playA;
+
+      const seedA = seedRank(a);
+      const seedB = seedRank(b);
+      if (seedA !== seedB) return seedA - seedB;
+
       if (catId === "rhythm") {
         if (a.id === "rhythm") return -1;
         if (b.id === "rhythm") return 1;
+      }
+      if (catId === "archive") {
+        if (a.id === "goindol") return -1;
+        if (b.id === "goindol") return 1;
       }
       return gameIndex(a) - gameIndex(b);
     });
   }
 
+  function shelfPopularity(games) {
+    return games.reduce((sum, g) => sum + playScore(g), 0);
+  }
+
+  function shelfSeedBest(games) {
+    return games.reduce((best, g) => Math.min(best, seedRank(g)), Number.POSITIVE_INFINITY);
+  }
+
+  function applyPopularity(data) {
+    if (!data) return;
+    if (data.plays && typeof data.plays === "object") {
+      playCounts = data.plays;
+    }
+    if (Array.isArray(data.order) && data.order.length) {
+      popularOrder = Object.fromEntries(data.order.map((id, i) => [id, i]));
+    }
+  }
+
+  function popularityCacheKey() {
+    return `today-game-popularity-${todayKey()}`;
+  }
+
+  /** 브라우저·서버 모두 하루 1회만 갱신 */
+  async function loadPlayCounts() {
+    const key = popularityCacheKey();
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        applyPopularity(JSON.parse(raw));
+        return;
+      }
+    } catch (_) {
+      /* ignore */
+    }
+
+    try {
+      const res = await fetch("/api/plays", { cache: "default" });
+      const data = await res.json();
+      applyPopularity(data);
+      try {
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            day: data.day || todayKey(),
+            plays: playCounts,
+            order: data.order || [],
+          })
+        );
+      } catch (_) {
+        /* ignore */
+      }
+    } catch (_) {
+      /* seed fallback */
+    }
+  }
+
+  function createGameSlot(game, opts = {}) {
+    const a = document.createElement("a");
+    a.className = (game.thumb ? "slot has-photo" : "slot") + (opts.compact ? " slot-compact" : "");
+    a.href = game.href;
+    a.setAttribute("aria-label", `${game.title} 플레이`);
+    if (opts.external) {
+      a.classList.add("slot-external");
+    }
+    const art = game.thumb
+      ? `<img src="${game.thumb}" alt="" loading="lazy" width="220" height="220" />`
+      : `<span class="slot-emoji" aria-hidden="true">${game.emoji || "🎮"}</span>`;
+    const tag = opts.external
+      ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
+      : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
+    a.innerHTML = `
+      <div class="slot-art">${art}</div>
+      <div class="slot-meta">
+        <p class="slot-name">${game.title}</p>
+        ${tag}
+      </div>
+    `;
+    return a;
+  }
+
   function renderCatalog() {
+    if (!catalog) return;
+    catalog.innerHTML = "";
     const frag = document.createDocumentFragment();
 
     const shelves = CATEGORIES.map((cat) => {
@@ -443,17 +611,18 @@
         cat.id,
         GAMES.filter((g) => g.category === cat.id)
       );
-      // 카테고리 순서용: 고인돌은 제외하고 최신 게임 기준
-      const orderGames = cat.id === "archive" ? games.filter((g) => g.id !== "goindol") : games;
-      const newest = orderGames.length
-        ? Math.min(...orderGames.map(gameIndex))
-        : games.length
-          ? gameIndex(games[0])
-          : Number.POSITIVE_INFINITY;
-      return { cat, games, newest };
+      return {
+        cat,
+        games,
+        pops: shelfPopularity(games),
+        seed: shelfSeedBest(games),
+      };
     })
       .filter((shelf) => shelf.games.length > 0)
-      .sort((a, b) => a.newest - b.newest);
+      .sort((a, b) => {
+        if (a.pops !== b.pops) return b.pops - a.pops;
+        return a.seed - b.seed;
+      });
 
     shelves.forEach(({ cat, games }) => {
       const section = document.createElement("section");
@@ -482,6 +651,21 @@
     catalog.appendChild(frag);
   }
 
+  function renderArchiveRail() {
+    if (!archiveList) return;
+    const games = sortShelfGames(
+      "archive",
+      GAMES.filter((g) => g.category === "archive")
+    );
+    archiveList.innerHTML = "";
+    games.forEach((game) => {
+      archiveList.appendChild(createGameSlot(game, { compact: true, external: true }));
+    });
+  }
+
+  // createGameSlot: for archive, show external hint but stay on site wrappers
+  // (wrappers themselves open Internet Archive)
+
   function spawnSparkles() {
     for (let i = 0; i < 14; i += 1) {
       const s = document.createElement("span");
@@ -496,77 +680,230 @@
   }
 
   todayLabel.textContent = formatToday();
-  renderCatalog();
   spawnSparkles();
   loadVisitors();
+  // 오늘 캐시가 있으면 바로 인기순, 없으면 시드로 즉시 표시
+  try {
+    const raw = localStorage.getItem(popularityCacheKey());
+    if (raw) applyPopularity(JSON.parse(raw));
+  } catch (_) {
+    /* ignore */
+  }
+  renderCatalog();
+  renderArchiveRail();
+  loadPlayCounts().then(() => {
+    renderCatalog();
+    renderArchiveRail();
+  });
 
-  let activeScoreGame = "flappy";
-  let activeScorePeriod = "day";
-  const scoreList = document.getElementById("score-list");
-  const scoreNote = document.getElementById("score-note");
+  /** 챌린지 TOP10 — 랭킹 가능 게임은 scores API 우선 */
+  const RANKING_SCORE_GAMES = RANKING_IDS;
+  initChallenge();
 
-  async function renderScoreboard(game = activeScoreGame, period = activeScorePeriod) {
-    activeScoreGame = game;
-    activeScorePeriod = period;
-    if (!scoreList) return;
-    scoreList.innerHTML = `<li class="score-empty">불러오는 중…</li>`;
-    const gameNames = {
-      flappy: "펄럭 병아리",
-      doodle: "폴짝 하늘",
-      tetris: "블록 팡팡",
-      "jump-run": "콩콩 점프",
-      "ninja-dodge": "닌자 표창",
-    };
-    const gName = gameNames[game] || "게임";
-    if (scoreNote) {
-      scoreNote.textContent =
-        period === "week" ? `이번주 ${gName}` : `오늘의 ${gName}`;
-    }
-    if (!window.TodayScores) {
-      scoreList.innerHTML = `<li class="score-empty">랭킹 모듈을 불러오지 못했어요</li>`;
+  function formatRemain(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return `⏰ ${h}시간 ${String(m).padStart(2, "0")}분 남음`;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function setChallengeBest(el, name, label) {
+    if (!el) return;
+    if (!label) {
+      el.textContent = "기록 없음";
       return;
     }
-    const data = await window.TodayScores.fetchScores(game, 20, period);
-    if (!data.configured) {
-      scoreList.innerHTML = `<li class="score-empty">랭킹을 불러오지 못했어요</li>`;
+    if (name) {
+      el.innerHTML = `<span class="challenge-best-name">${escapeHtml(name)}</span>${escapeHtml(label)}`;
+    } else {
+      el.textContent = label;
+    }
+  }
+
+  function renderMyChallengeRank(el, playersEl, gameId, participants) {
+    if (!el) return;
+    let saved = null;
+    try {
+      if (window.TodayGameRank && TodayGameRank.loadLocal) {
+        saved = TodayGameRank.loadLocal(gameId);
+      } else {
+        const raw = localStorage.getItem(
+          `today-game-challenge-result-${todayKey()}-${gameId}`
+        );
+        if (raw) saved = JSON.parse(raw);
+      }
+    } catch (_) {
+      saved = null;
+    }
+    const total = Math.max(
+      Number(participants) || 0,
+      saved && saved.total != null ? Number(saved.total) : 0
+    );
+    if (saved && saved.rank != null) {
+      el.textContent = `${saved.rank} / ${total || "—"}`;
+    } else if (total > 0) {
+      el.textContent = `— / ${total}`;
+    } else {
+      el.textContent = "—";
+    }
+  }
+
+  function renderChallengeTop10(listEl, rows, metric) {
+    if (!listEl) return;
+    if (!rows || !rows.length) {
+      listEl.innerHTML = `<li class="score-empty">아직 기록이 없어요<br />첫 챌린저가 되어 보세요!</li>`;
       return;
     }
-    if (!data.scores.length) {
-      scoreList.innerHTML =
-        period === "week"
-          ? `<li class="score-empty">이번주 기록이 아직 없어요<br />첫 랭커가 되어 보세요!</li>`
-          : `<li class="score-empty">오늘 기록이 아직 없어요<br />오늘의 1등에 도전!</li>`;
-      return;
-    }
-    scoreList.innerHTML = data.scores
-      .map((entry, i) => {
-        const row = window.TodayScores.formatScoreRow(entry, i);
-        return `<li><span class="rank">${row.rank}</span><span class="name">${row.name}</span><span class="pts">${row.score.toLocaleString("ko-KR")}</span></li>`;
+    listEl.innerHTML = rows
+      .slice(0, 10)
+      .map((row, i) => {
+        const rank = row.rank || i + 1;
+        const name = escapeHtml(row.name || "???");
+        const label =
+          row.label ||
+          (metric === "time"
+            ? `${Number(row.score).toLocaleString("ko-KR")}초`
+            : `${Number(row.score).toLocaleString("ko-KR")}점`);
+        return `<li><span class="rank">${rank}</span><span class="name">${name}</span><span class="pts">${escapeHtml(label)}</span></li>`;
       })
       .join("");
   }
 
-  document.querySelectorAll(".period-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".period-tab").forEach((b) => {
-        const on = b === btn;
-        b.classList.toggle("on", on);
-        b.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      renderScoreboard(activeScoreGame, btn.dataset.period);
-    });
-  });
+  async function initChallenge() {
+    const root = document.getElementById("today-challenge");
+    const gameEl = document.getElementById("challenge-game");
+    const playersEl = document.getElementById("challenge-players");
+    const bestEl = document.getElementById("challenge-best");
+    const leftEl = document.getElementById("challenge-left");
+    const myRankEl = document.getElementById("challenge-my-rank");
+    const topEl = document.getElementById("challenge-top10");
+    const btn = document.getElementById("challenge-btn");
+    if (!root || !gameEl || !btn) return;
 
-  document.querySelectorAll(".score-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".score-tab").forEach((b) => {
-        const on = b === btn;
-        b.classList.toggle("on", on);
-        b.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      renderScoreboard(btn.dataset.game, activeScorePeriod);
-    });
-  });
+    let endsAt = Date.now() + 86400000;
+    let href = "#";
+    let gameId = "";
+    let metric = "score";
+    let participants = 0;
 
-  renderScoreboard("flappy", "day");
+    try {
+      const res = await fetch("/api/challenge", { cache: "no-store" });
+      const data = await res.json();
+      if (!data || !data.ok || !data.game) throw new Error("challenge");
+      gameId = data.game.id;
+      metric = data.game.metric || "score";
+      href = `${data.game.href}${data.game.href.includes("?") ? "&" : "?"}challenge=1`;
+      gameEl.textContent = data.game.title;
+      btn.href = href;
+      participants = data.participants == null ? 0 : Number(data.participants) || 0;
+      playersEl.textContent =
+        data.participants == null
+          ? "오늘 —명 도전중"
+          : `오늘 ${participants.toLocaleString("ko-KR")}명 도전중`;
+      endsAt = Number(data.endsAt) || endsAt;
+      renderMyChallengeRank(myRankEl, playersEl, gameId, participants);
+
+      const shareBtn = document.getElementById("challenge-share-btn");
+      let savedResult = null;
+      try {
+        if (window.TodayGameRank && TodayGameRank.loadLocal) {
+          savedResult = TodayGameRank.loadLocal(gameId);
+        }
+      } catch (_) {
+        savedResult = null;
+      }
+      if (shareBtn) {
+        if (savedResult && savedResult.score != null) {
+          shareBtn.hidden = false;
+          shareBtn.onclick = async () => {
+            if (!window.TodayScores || !TodayScores.shareRank) return;
+            const result = await TodayScores.shareRank({
+              gameTitle: `오늘의 챌린지 · ${data.game.title}`,
+              name: savedResult.name || "나",
+              score: savedResult.score,
+              rankDay: savedResult.rank,
+              rankWeek: null,
+              url: "https://www.todaygame.co.kr/",
+            });
+            if (result.mode === "copy") shareBtn.textContent = "복사됨!";
+            else if (result.ok) shareBtn.textContent = "공유 완료!";
+            setTimeout(() => {
+              shareBtn.textContent = "내 결과 공유";
+            }, 1600);
+          };
+        } else {
+          shareBtn.hidden = true;
+        }
+      }
+
+      let top10 = Array.isArray(data.top10) ? data.top10 : [];
+
+      if (RANKING_SCORE_GAMES.has(gameId) && window.TodayScores) {
+        const board = await window.TodayScores.fetchScores(gameId, 10, "day");
+        if (board.ok && board.scores && board.scores.length) {
+          top10 = board.scores.slice(0, 10).map((entry, i) => ({
+            rank: i + 1,
+            name: entry.name,
+            score: entry.score,
+            label: `${Number(entry.score).toLocaleString("ko-KR")}점`,
+          }));
+        }
+      }
+
+      if (top10.length) {
+        setChallengeBest(bestEl, top10[0].name, top10[0].label || null);
+      } else if (data.bestLabel) {
+        setChallengeBest(bestEl, data.bestName, data.bestLabel);
+      } else {
+        setChallengeBest(bestEl, null, null);
+      }
+      renderChallengeTop10(topEl, top10, metric);
+    } catch (_) {
+      gameEl.textContent = "준비 중";
+      playersEl.textContent = "오늘 —명 도전중";
+      bestEl.textContent = "—";
+      if (myRankEl) myRankEl.textContent = "—";
+      btn.href = "/";
+      if (topEl) topEl.innerHTML = `<li class="score-empty">불러오지 못했어요</li>`;
+    }
+
+    const tick = () => {
+      leftEl.textContent = formatRemain(endsAt - Date.now());
+    };
+    tick();
+    setInterval(tick, 15000);
+
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const day = todayKey();
+      const flag = `today-game-challenge-join-${day}-${gameId}`;
+      if (gameId && !localStorage.getItem(flag)) {
+        try {
+          const res = await fetch("/api/challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "join" }),
+          });
+          const data = await res.json();
+          if (data && data.participants != null) {
+            participants = Number(data.participants) || participants;
+            playersEl.textContent = `오늘 ${participants.toLocaleString("ko-KR")}명 도전중`;
+            renderMyChallengeRank(myRankEl, playersEl, gameId, participants);
+          }
+          localStorage.setItem(flag, "1");
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      window.location.href = href || btn.href;
+    });
+  }
 })();

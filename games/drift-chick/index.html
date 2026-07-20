@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>드리프트 삐약이</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="drift-chick">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>거리 <b id="hud-dist">0</b>m</span>
+          <span>콤보 <b id="hud-combo">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>점수 <b id="hud-score">0</b></span>
+          <span>최고 <b id="hud-best">0</b></span>
+        </div>
+      </div>
+      <p class="hint" id="hint">꾹 누르면 드리프트 · 떼면 직진</p>
+
+      <div class="overlay" id="title">
+        <div class="badge">DRIFT</div>
+        <h1>드리프트 삐약이</h1>
+        <p>자동으로 달리고<br />코너에서만 꾹 눌러 미끄러져요</p>
+        <div class="title-controls">
+          <span>📱 화면을 누르고 있기 = 드리프트</span>
+          <span>⌨️ 스페이스 / 클릭 홀드</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">출발!</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">SPIN OUT</div>
+        <h1>코스 아웃!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

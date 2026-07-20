@@ -871,6 +871,10 @@
     overlays.clear.classList.remove("hidden");
   }
 
+  function rankScoreNow() {
+    return Math.max(1, Math.floor(Math.max(0, timeLeft)) * 20 + stageIndex * 100);
+  }
+
   function fail() {
     state = "over";
     busy = false;
@@ -878,6 +882,10 @@
       `STAGE ${stageIndex + 1} · 남은 타일 ${remain}`;
     overlays.over.classList.remove("hidden");
     updateHud();
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "memory", gameTitle: "짝짝 사천성", formParent: overlays.over });
+      TodayGameRank.open(rankScoreNow());
+    }
   }
 
   function resetStage() {
@@ -891,6 +899,7 @@
   function startGame() {
     stageIndex = 0;
     matches = 0;
+    if (window.TodayGameRank) TodayGameRank.reset();
     items = { hint: 3, shuffle: 3, bolt: 2, clock: 2 };
     Object.values(overlays).forEach((el) => el.classList.add("hidden"));
     resetStage();
@@ -908,6 +917,10 @@
         `총 ${matches}쌍 연결 · ${TOTAL_STAGES}단계 완주!`;
       overlays.all.classList.remove("hidden");
       state = "all";
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "memory", gameTitle: "짝짝 사천성", formParent: overlays.all });
+      TodayGameRank.open(rankScoreNow());
+    }
       return;
     }
     stageIndex += 1;
@@ -1213,4 +1226,12 @@
     layout();
     draw();
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "memory",
+      gameTitle: "짝짝 사천성",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

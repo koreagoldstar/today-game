@@ -111,6 +111,8 @@
   let state = "title";
   let stageIndex = 0;
   let score = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let stageScore = 0;
   let ballsLeft = START_BALLS;
   let best = Number(localStorage.getItem(BEST_KEY) || 0) || 0;
@@ -319,7 +321,10 @@
     if (fromScratch) {
       stageIndex = 0;
       score = 0;
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
+    stageStartedAt = performance.now();
     stageScore = 0;
     ballsLeft = START_BALLS;
     particles = [];
@@ -338,6 +343,13 @@
   }
 
   function stageClear() {
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+    if (score > best) {
+      best = score;
+      localStorage.setItem(BEST_KEY, String(best));
+    }
+    updateHud();
     state = "clear";
     if (el.touchHint) el.touchHint.classList.add("hidden");
     el.clearDetail.textContent = `${STAGES[stageIndex].name} 클리어! 점수 ${score.toLocaleString()}`;
@@ -345,6 +357,10 @@
       state = "allclear";
       el.allDetail.textContent = `최종 ${score.toLocaleString()} · 최고 ${best.toLocaleString()}`;
       showOverlay("all");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "pinball", gameTitle: "핀볼팡팡", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
     } else {
       showOverlay("clear");
     }
@@ -362,6 +378,10 @@
       if (el.touchHint) el.touchHint.classList.add("hidden");
       el.overDetail.textContent = `점수 ${score.toLocaleString()} · 최고 ${best.toLocaleString()}`;
       showOverlay("over");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "pinball", gameTitle: "핀볼팡팡", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
       return;
     }
     setTimeout(() => {
@@ -371,6 +391,7 @@
 
   function nextStage() {
     stageIndex += 1;
+    stageStartedAt = performance.now();
     stageScore = 0;
     ballsLeft = Math.min(START_BALLS, ballsLeft + 1);
     particles = [];
@@ -1215,4 +1236,12 @@
   loadAssets().then(() => {
     requestAnimationFrame(tick);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "pinball",
+      gameTitle: "핀볼팡팡",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

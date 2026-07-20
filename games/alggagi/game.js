@@ -162,6 +162,9 @@
   let state = "title";
   let stageIndex = 0;
   let roundWins = 0;
+  let score = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let marbles = [];
   let turn = "player";
   let simulating = false;
@@ -448,16 +451,26 @@
       state = "over";
       hideAll();
       show(overlays.over, true);
-      document.getElementById("over-detail").textContent = `${STAGES[stageIndex].name} · 내 구슬이 모두 떨어졌어요`;
+      document.getElementById("over-detail").textContent = `${STAGES[stageIndex].name} · 내 구슬이 모두 떨어졌어요 · 점수 ${score}`;
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "alggagi", gameTitle: "알까기", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
       return;
     }
     if (e === 0) {
       roundWins += 1;
+      const elapsed = (performance.now() - stageStartedAt) / 1000;
+      score += 100 + Math.max(0, Math.floor(20 - elapsed)) * 8;
       if (stageIndex >= TOTAL_STAGES - 1) {
         state = "allclear";
         hideAll();
         show(overlays.all, true);
-        document.getElementById("all-detail").textContent = `${TOTAL_STAGES}단계 모두 정복! 총 ${roundWins}승`;
+        document.getElementById("all-detail").textContent = `${TOTAL_STAGES}단계 모두 정복! 총 ${roundWins}승 · 점수 ${score}`;
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "alggagi", gameTitle: "알까기", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
         return;
       }
       state = "roundwin";
@@ -465,7 +478,7 @@
       show(overlays.round, true);
       document.getElementById("round-badge").textContent = "ROUND WIN";
       document.getElementById("round-title").textContent = "라운드 승리!";
-      document.getElementById("round-detail").textContent = `${STAGES[stageIndex].name} 클리어 · 다음 AI가 더 강해져요`;
+      document.getElementById("round-detail").textContent = `${STAGES[stageIndex].name} 클리어 · 다음 AI가 더 강해져요 · 점수 ${score}`;
       return;
     }
     turn = turn === "player" ? "enemy" : "player";
@@ -832,6 +845,10 @@
   function startGame() {
     stageIndex = 0;
     roundWins = 0;
+    score = 0;
+    runStartedAt = performance.now();
+    stageStartedAt = performance.now();
+    if (window.TodayGameRank) TodayGameRank.reset();
     state = "play";
     hideAll();
     placeMarbles();
@@ -846,6 +863,7 @@
   document.getElementById("again-btn").addEventListener("click", startGame);
   document.getElementById("next-btn").addEventListener("click", () => {
     stageIndex += 1;
+    stageStartedAt = performance.now();
     state = "play";
     hideAll();
     placeMarbles();
@@ -863,4 +881,12 @@
     last = performance.now();
     raf = requestAnimationFrame(loop);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "alggagi",
+      gameTitle: "알까기",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

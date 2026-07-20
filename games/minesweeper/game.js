@@ -279,6 +279,11 @@
       draw();
       document.getElementById("win-detail").textContent = `${DIFFS[diffKey].label} · ${timer}초`;
       showOverlay("win");
+      const rankScore = Math.max(1, 10000 - timer * 10);
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "minesweeper", gameTitle: "지뢰찾기", formParent: document.getElementById("win") });
+      TodayGameRank.open(rankScore);
+    }
     }
   }
 
@@ -544,6 +549,7 @@
   function startPlay() {
     hideOverlays();
     state = "play";
+    if (window.TodayGameRank) TodayGameRank.reset();
     newGame();
   }
 
@@ -556,6 +562,41 @@
   document.getElementById("start-btn").addEventListener("click", startPlay);
   document.getElementById("retry-btn").addEventListener("click", startPlay);
   document.getElementById("again-btn").addEventListener("click", startPlay);
+  const challengeBestBtn = document.getElementById("challenge-best-btn");
+  if (challengeBestBtn) {
+    challengeBestBtn.addEventListener("click", async () => {
+      const nameInput = document.getElementById("win-name");
+      const msg = document.getElementById("win-rank-msg");
+      const name = String(nameInput && nameInput.value ? nameInput.value : "").trim();
+      if (name.length < 2 || name.length > 8) {
+        if (msg) msg.textContent = "이름은 2~8자로 적어 주세요";
+        return;
+      }
+      localStorage.setItem("today-game-name", name);
+      challengeBestBtn.disabled = true;
+      if (msg) msg.textContent = "등록 중…";
+      try {
+        const res = await fetch("/api/challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "best", game: "minesweeper", value: timer, name }),
+        });
+        const data = await res.json();
+        if (data.skipped) {
+          if (msg) msg.textContent = "오늘은 다른 챌린지 게임이에요";
+        } else if (data.ok && data.updated) {
+          if (msg) msg.textContent = data.bestLabel ? `최고기록 갱신! ${data.bestLabel}` : "등록 완료!";
+        } else if (data.ok) {
+          if (msg) msg.textContent = "등록됨 · 더 빠른 기록이 있어요";
+        } else {
+          if (msg) msg.textContent = "등록 실패 · 다시 시도해 주세요";
+        }
+      } catch (_) {
+        if (msg) msg.textContent = "등록 실패 · 다시 시도해 주세요";
+      }
+      challengeBestBtn.disabled = false;
+    });
+  }
   document.getElementById("restart-btn").addEventListener("click", () => {
     if (state === "title") return;
     startPlay();
@@ -611,4 +652,12 @@
   resizeCanvas();
   newGame();
   loadAssets().then(() => draw());
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "minesweeper",
+      gameTitle: "지뢰찾기",
+      formParent: document.getElementById("win") || document.body,
+    });
+  }
 })();

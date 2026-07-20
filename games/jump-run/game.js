@@ -578,6 +578,8 @@
     submitted = false;
     document.getElementById("rank-msg").textContent = "";
     document.getElementById("submit-btn").disabled = false;
+    const shareEl = document.getElementById("share-rank-btn");
+    if (shareEl) shareEl.hidden = true;
     resetStage();
     hintTimer = 2.5;
     document.getElementById("hint").classList.add("show");
@@ -1443,6 +1445,9 @@
     startGame();
   });
 
+  let lastRank = { rankDay: null, rankWeek: null };
+  const shareBtn = document.getElementById("share-rank-btn");
+
   document.getElementById("rank-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (submitted) return;
@@ -1463,17 +1468,54 @@
     const res = await window.TodayScores.submitScore("jump-run", name, Math.floor(score));
     if (res.ok) {
       submitted = true;
+      lastRank = { rankDay: res.rankDay || res.rank, rankWeek: res.rankWeek };
       document.getElementById("rank-msg").textContent =
         window.TodayScores.formatRankMessage
           ? window.TodayScores.formatRankMessage(res)
           : res.rank
             ? `오늘 ${res.rank}위에 등록됐어요!`
             : "등록 완료!";
+      if (shareBtn) shareBtn.hidden = false;
+      if (window.TodayGameRank && TodayGameRank.afterSubmit) {
+        await TodayGameRank.afterSubmit({
+          gameId: "jump-run",
+          gameTitle: "콩콩 점프",
+          name,
+          score: Math.floor(score),
+          rankDay: lastRank.rankDay,
+          label: `${Math.floor(score).toLocaleString("ko-KR")}점`,
+        });
+      }
     } else {
       document.getElementById("rank-msg").textContent = "등록 실패 · 다시 시도해 주세요";
       btn.disabled = false;
     }
   });
+
+  if (shareBtn) {
+    shareBtn.addEventListener("click", async () => {
+      const name = nameInput.value.trim() || "나";
+      const result = await window.TodayScores.shareRank({
+        gameTitle: "콩콩 점프",
+        name,
+        score: Math.floor(score),
+        rankDay: lastRank.rankDay,
+        rankWeek: lastRank.rankWeek,
+        url: "https://www.todaygame.co.kr/games/jump-run/",
+      });
+      const msg = document.getElementById("rank-msg");
+      msg.textContent = window.TodayScores.formatShareResult
+        ? window.TodayScores.formatShareResult(result)
+        : result.mode === "copy"
+          ? "복사됨! 카톡·SNS에 붙여넣기 하세요"
+          : result.error === "cancel"
+            ? "공유를 취소했어요"
+            : !result.ok
+              ? "공유에 실패했어요"
+              : "";
+      if (result.mode === "share") msg.textContent = "";
+    });
+  }
 
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;

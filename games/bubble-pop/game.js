@@ -20,8 +20,8 @@
 
   const STAGES = Array.from({ length: 50 }, (_, i) => ({
     // 초반부터 길게·빡세게: 목표↑, 시간 대비 밀도↑, 나쁜 방울↑
-    goal: 36 + i * 8,
-    time: Math.max(24, 34 - Math.floor(i * 0.45)),
+    goal: 40 + i * 8,
+    time: Math.max(22, 30 - Math.floor(i * 0.45)),
     spawn: Math.max(0.14, 0.36 - i * 0.011),
     speed: 1.15 + i * 0.085,
     badRate: Math.min(0.36, 0.14 + i * 0.012),
@@ -154,6 +154,7 @@
   function startGame() {
     stageIndex = 0;
     score = 0;
+    if (window.TodayGameRank) TodayGameRank.reset();
     makeClouds();
     resetStage();
     Object.values(overlays).forEach((el) => el.classList.add("hidden"));
@@ -164,6 +165,9 @@
   }
 
   function stageClear() {
+    const timeBonus = Math.floor(Math.max(0, timeLeft)) * 10;
+    score += timeBonus;
+    updateHud();
     state = "clear";
     document.getElementById("clear-title").textContent = `STAGE ${stageIndex + 1} CLEAR!`;
     document.getElementById("clear-detail").textContent = `${STAGES[stageIndex].name} · 점수 ${score}`;
@@ -178,6 +182,10 @@
       document.getElementById("all-detail").textContent = `총 점수 ${score}점으로 완주!`;
       overlays.all.classList.remove("hidden");
       state = "all";
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "bubble-pop", gameTitle: "팝팝 방울", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     stageIndex += 1;
@@ -192,6 +200,10 @@
     state = "over";
     document.getElementById("over-detail").textContent = `STAGE ${stageIndex + 1} · 점수 ${score}`;
     overlays.over.classList.remove("hidden");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "bubble-pop", gameTitle: "팝팝 방울", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
   }
 
   function update(dt) {
@@ -408,6 +420,14 @@
   document.getElementById("next-btn").addEventListener("click", nextStage);
   document.getElementById("retry-btn").addEventListener("click", startGame);
   document.getElementById("again-btn").addEventListener("click", startGame);
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "bubble-pop",
+      gameTitle: "팝팝 방울",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 
   loadBubbleAssets().then(() => {
     makeClouds();

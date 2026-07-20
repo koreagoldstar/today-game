@@ -284,9 +284,42 @@ canvas {
   cursor: pointer;
 }
 
+.btn.soft {
+  background: linear-gradient(180deg, #c8b8e8, #9a82d0);
+  box-shadow: 0 5px 0 #6e58a8;
+}
+
 .btn:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 #c05868;
+}
+
+.btn.soft:active {
+  box-shadow: 0 2px 0 #6e58a8;
+}
+
+.rank-label {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rank-input {
+  width: min(240px, 100%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.rank-msg {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 13px;
+  color: #2f7a45;
 }
 
 .overlay a {

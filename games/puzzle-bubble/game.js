@@ -27,7 +27,7 @@
   ctx.imageSmoothingEnabled = true;
   if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
 
-  const sprites = { bg: null, dino: null, nest: null };
+  const sprites = { bg: null, dino: null, nest: null, bubbles: [] };
 
   function loadImg(src) {
     return new Promise((resolve) => {
@@ -39,14 +39,21 @@
   }
 
   async function loadAssets() {
-    const [bg, dino, nest] = await Promise.all([
+    const [bg, dino, nest, ...bubbles] = await Promise.all([
       loadImg("assets/bg.png"),
       loadImg("assets/dino.png"),
       loadImg("assets/nest.png"),
+      loadImg("assets/b0.png"),
+      loadImg("assets/b1.png"),
+      loadImg("assets/b2.png"),
+      loadImg("assets/b3.png"),
+      loadImg("assets/b4.png"),
+      loadImg("assets/b5.png"),
     ]);
     sprites.bg = bg;
     sprites.dino = dino;
     sprites.nest = nest;
+    sprites.bubbles = bubbles;
   }
 
   const overlays = {
@@ -418,7 +425,15 @@
     updateHud();
   }
 
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
+
   function startGame(fromTitle) {
+    if (fromTitle) {
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
+    }
+    stageStartedAt = performance.now();
     if (fromTitle) {
       stageIndex = 0;
       score = 0;
@@ -520,10 +535,17 @@
 
   function checkEnd() {
     if (grid.size === 0) {
+      const elapsed = (performance.now() - stageStartedAt) / 1000;
+      score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+      updateHud();
       state = "clear";
       if (stageIndex >= TOTAL_STAGES - 1) {
         document.getElementById("all-detail").textContent = `최종 점수 ${score}점!`;
         showOverlay("all");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "puzzle-bubble", gameTitle: "팝샷 버블", formParent: document.getElementById("allclear") || overlays.all });
+      TodayGameRank.open(score);
+    }
       } else {
         document.getElementById("clear-detail").textContent = `점수 ${score}점 · ${stageIndex + 1}단계 완료`;
         showOverlay("clear");
@@ -540,6 +562,10 @@
       state = "over";
       document.getElementById("over-detail").textContent = `스테이지 ${stageIndex + 1} · 점수 ${score}점`;
       showOverlay("over");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "puzzle-bubble", gameTitle: "팝샷 버블", formParent: document.getElementById("over") || overlays.over });
+      TodayGameRank.open(score);
+    }
     }
   }
 
@@ -586,6 +612,10 @@
       state = "over";
       document.getElementById("over-detail").textContent = "보드가 가득 찼어요! 다시 도전해보세요.";
       showOverlay("over");
+      if (window.TodayGameRank) {
+        TodayGameRank.mount({ gameId: "puzzle-bubble", gameTitle: "팝샷 버블", formParent: overlays.over });
+        TodayGameRank.open(score);
+      }
       return;
     }
     grid.set(place, shot.color);
@@ -668,21 +698,9 @@
     return n - Math.floor(n);
   }
 
-  function drawBubble(x, y, color, scale = 1, face = true) {
-    const rad = R * scale;
+  function drawBubbleProcedural(x, y, color, rad, face, seed) {
     const style = BUBBLE_COLORS[color % BUBBLE_COLORS.length];
-    const seed = faceSeed(x, y);
 
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-
-    // soft shadow
-    ctx.fillStyle = "rgba(80, 50, 90, 0.18)";
-    ctx.beginPath();
-    ctx.ellipse(x + 1, y + rad * 0.78, rad * 0.75, rad * 0.22, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // glossy 3D body (thumbnail style)
     const g = ctx.createRadialGradient(
       x - rad * 0.35,
       y - rad * 0.4,
@@ -701,78 +719,19 @@
     ctx.fillStyle = g;
     ctx.fill();
 
-    // white outline glow like thumb
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = Math.max(2.4, rad * 0.14);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x, y, rad + 1.5, 0, Math.PI * 2);
-    ctx.stroke();
 
-    // big specular
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.beginPath();
     ctx.ellipse(x - rad * 0.28, y - rad * 0.34, rad * 0.28, rad * 0.16, -0.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.beginPath();
-    ctx.ellipse(x - rad * 0.08, y - rad * 0.12, rad * 0.1, rad * 0.06, -0.3, 0, Math.PI * 2);
-    ctx.fill();
 
-    // special decorations (star / candy swirl) like thumbnail
-    if (face && rad >= 11) {
-      if (color === 2 && seed > 0.72) {
-        // yellow star bubble
-        ctx.fillStyle = "#ffe27a";
-        ctx.strokeStyle = "#e8a820";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 0; i < 5; i += 1) {
-          const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
-          const b = a + Math.PI / 5;
-          const r1 = rad * 0.38;
-          const r2 = rad * 0.16;
-          if (i === 0) ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1 + rad * 0.05);
-          else ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1 + rad * 0.05);
-          ctx.lineTo(x + Math.cos(b) * r2, y + Math.sin(b) * r2 + rad * 0.05);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      } else if (color === 0 && seed > 0.78) {
-        // candy swirl
-        ctx.strokeStyle = "rgba(255,255,255,0.85)";
-        ctx.lineWidth = Math.max(1.5, rad * 0.08);
-        ctx.beginPath();
-        for (let t = 0; t < Math.PI * 2.2; t += 0.2) {
-          const rr = rad * (0.12 + t * 0.08);
-          const px = x + Math.cos(t) * rr * 0.35;
-          const py = y + Math.sin(t) * rr * 0.35;
-          if (t === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-      } else if (color === 4 && seed > 0.82) {
-        // rainbow spiral hint
-        const cols = ["#ff5a9a", "#ff8a40", "#ffd23a", "#5ae88a", "#3ec8ff"];
-        for (let i = 0; i < 5; i += 1) {
-          ctx.strokeStyle = cols[i];
-          ctx.lineWidth = Math.max(1.2, rad * 0.06);
-          ctx.beginPath();
-          ctx.arc(x, y, rad * (0.25 + i * 0.08), i * 0.4, i * 0.4 + 1.6);
-          ctx.stroke();
-        }
-      }
-    }
+    if (face && rad >= 10) drawBubbleFace(x, y, rad, style, seed);
+  }
 
-    if (!face || rad < 10) {
-      ctx.restore();
-      return;
-    }
-
-    // kawaii face like thumbnail
+  function drawBubbleFace(x, y, rad, style, seed) {
     const eyeY = y - rad * 0.02;
     const eyeR = Math.max(1.6, rad * 0.11);
     const wink = seed > 0.88;
@@ -806,13 +765,39 @@
       ctx.fill();
     }
 
-    // tiny u smile
     ctx.strokeStyle = style.eye;
     ctx.lineWidth = Math.max(1.4, rad * 0.08);
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.arc(x, y + rad * 0.22, rad * 0.18, 0.25, Math.PI - 0.25);
     ctx.stroke();
+  }
+
+  function drawBubble(x, y, color, scale = 1, face = true) {
+    const rad = R * scale;
+    const idx = color % BUBBLE_COLORS.length;
+    const style = BUBBLE_COLORS[idx];
+    const seed = faceSeed(x, y);
+    const sprite = sprites.bubbles[idx];
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+
+    // soft shadow
+    ctx.fillStyle = "rgba(80, 50, 90, 0.18)";
+    ctx.beginPath();
+    ctx.ellipse(x + 1, y + rad * 0.78, rad * 0.75, rad * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (sprite) {
+      // 썸네일용 광택 구슬 스프라이트
+      const size = rad * 2.12;
+      ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+      if (face && rad >= 10) drawBubbleFace(x, y, rad, style, seed);
+    } else {
+      drawBubbleProcedural(x, y, color, rad, face, seed);
+    }
 
     ctx.restore();
   }
@@ -1113,6 +1098,7 @@
   document.getElementById("start-btn").addEventListener("click", () => startGame(true));
   document.getElementById("next-btn").addEventListener("click", () => {
     stageIndex += 1;
+    stageStartedAt = performance.now();
     startGame(false);
   });
   document.getElementById("retry-btn").addEventListener("click", () => startGame(false));
@@ -1123,4 +1109,12 @@
   loadAssets().then(() => {
     raf = requestAnimationFrame(loop);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "puzzle-bubble",
+      gameTitle: "팝샷 버블",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

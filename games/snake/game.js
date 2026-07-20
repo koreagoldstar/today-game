@@ -24,7 +24,7 @@
   const STAGES = Array.from({ length: TOTAL_STAGES }, (_, i) => ({
     name: STAGE_NAMES[i] || `스테이지 ${i + 1}`,
     goal: 6 + i * 2,
-    interval: Math.max(0.07, 0.2 - i * 0.007),
+    interval: Math.max(0.055, 0.2 - i * 0.008),
     goldRate: Math.min(0.28, 0.1 + i * 0.01),
     lives: i < 10 ? 3 : 4,
   }));
@@ -125,6 +125,8 @@
   let endless = false;
   let stageIndex = 0;
   let score = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let best = 0;
   let stageEaten = 0;
   let lives = 3;
@@ -228,6 +230,7 @@
   }
 
   function resetStage() {
+    stageStartedAt = performance.now();
     const st = STAGES[stageIndex];
     stageEaten = 0;
     lives = st.lives;
@@ -248,6 +251,8 @@
     if (fromTitle) {
       stageIndex = 0;
       score = 0;
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
     hideOverlays();
     if (endless) {
@@ -321,6 +326,10 @@
         ? `무한 모드 · 점수 ${score} · 최고 ${best}`
         : `${STAGES[stageIndex].name} · 점수 ${score} · 최고 ${best}`;
       showOverlay("over");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "snake", gameTitle: "애플 스네이크", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
       return;
     }
     resetSnake();
@@ -329,11 +338,18 @@
   }
 
   function stageClear() {
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += Math.max(0, Math.floor(20 - elapsed)) * 8;
     saveBest();
+    updateHud();
     state = "clear";
     if (stageIndex >= TOTAL_STAGES - 1) {
       document.getElementById("all-detail").textContent = `총 ${score}점 · 최고 기록 ${best}점!`;
       showOverlay("all");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "snake", gameTitle: "애플 스네이크", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     document.getElementById("clear-detail").textContent = `${STAGES[stageIndex].name} · 점수 ${score}`;
@@ -745,4 +761,12 @@
     showOverlay("title");
     ensureLoop();
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "snake",
+      gameTitle: "애플 스네이크",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

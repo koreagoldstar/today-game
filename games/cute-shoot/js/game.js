@@ -384,6 +384,7 @@
   }
 
   function startGame() {
+    if (window.TodayGameRank) TodayGameRank.reset();
     if (!selectedId) return;
     ensureAudio();
     SFX.start();
@@ -411,6 +412,10 @@
       if (title) title.textContent = "수고했어요!";
     }
     document.getElementById("final-score").textContent = String(game.score);
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "cute-shoot", gameTitle: "귀염뽀짝 쏘세요", formParent: document.getElementById("gameover-screen") || document.body });
+      TodayGameRank.open(game.score);
+    }
     const sec = Math.floor(game.time);
     document.getElementById("final-detail").textContent =
       `중간보스 ${game.bossesCleared}/${TOTAL_BOSSES} · ${sec}초 · 처치 ${game.killCount}` +
@@ -1490,4 +1495,12 @@
       console.error(err);
       alert("이미지 로드에 실패했어요. 파일 경로를 확인해 주세요.");
     });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "cute-shoot",
+      gameTitle: "귀염뽀짝 쏘세요",
+      formParent: document.getElementById("gameover-screen") || document.body,
+    });
+  }
 })();

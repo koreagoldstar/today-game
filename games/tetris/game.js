@@ -210,6 +210,8 @@
   const rankName = document.getElementById("rank-name");
   const rankBtn = document.getElementById("rank-btn");
   const rankMsg = document.getElementById("rank-msg");
+  const shareRankBtn = document.getElementById("share-rank-btn");
+  let lastRank = { rankDay: null, rankWeek: null };
 
   let state = "title";
   let gameMode = "stage"; // "stage" | "endless"
@@ -715,6 +717,7 @@
       rankPanel.classList.remove("hidden");
       rankSubmitted = false;
       rankMsg.textContent = "";
+      if (shareRankBtn) shareRankBtn.hidden = true;
       rankName.value = "";
       rankBtn.disabled = false;
     } else {
@@ -742,11 +745,23 @@
     const result = await window.TodayScores.submitScore("tetris", name, score);
     if (result.ok) {
       rankSubmitted = true;
+      lastRank = { rankDay: result.rankDay || result.rank, rankWeek: result.rankWeek };
       rankMsg.textContent = window.TodayScores.formatRankMessage
         ? window.TodayScores.formatRankMessage(result)
         : result.rank
           ? `오늘 ${result.rank}위 등록!`
           : "등록 완료!";
+      if (shareRankBtn) shareRankBtn.hidden = false;
+      if (window.TodayGameRank && TodayGameRank.afterSubmit) {
+        await TodayGameRank.afterSubmit({
+          gameId: "tetris",
+          gameTitle: "블록 팡팡",
+          name,
+          score,
+          rankDay: lastRank.rankDay,
+          label: `${score.toLocaleString("ko-KR")}점`,
+        });
+      }
     } else {
       rankBtn.disabled = false;
       const err = result.error === "network" ? "네트워크 오류" : result.error || "등록 실패";
@@ -1191,6 +1206,25 @@
   document.getElementById("again-btn").addEventListener("click", startGame);
   document.getElementById("resume-btn").addEventListener("click", resumeGame);
   rankBtn.addEventListener("click", submitRank);
+  if (shareRankBtn) {
+    shareRankBtn.addEventListener("click", async () => {
+      const name = String(rankName.value || "").trim() || "나";
+      const result = await window.TodayScores.shareRank({
+        gameTitle: "블록 팡팡",
+        name,
+        score,
+        rankDay: lastRank.rankDay,
+        rankWeek: lastRank.rankWeek,
+        url: "https://www.todaygame.co.kr/games/tetris/",
+      });
+      if (result.mode === "copy") rankMsg.textContent = window.TodayScores.formatShareResult
+        ? window.TodayScores.formatShareResult(result)
+        : "복사됨! 카톡·SNS에 붙여넣기 하세요";
+      else if (result.error === "cancel") rankMsg.textContent = "공유를 취소했어요";
+      else if (!result.ok) rankMsg.textContent = "공유에 실패했어요";
+      else if (result.mode === "share") rankMsg.textContent = "";
+    });
+  }
 
   board = emptyBoard();
   updateHud();

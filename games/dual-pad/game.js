@@ -129,6 +129,7 @@
   let state = "title";
   let songIndex = 0;
   let score = 0;
+      if (window.TodayGameRank) TodayGameRank.reset();
   let combo = 0;
   let maxCombo = 0;
   let lives = MAX_LIVES;
@@ -258,6 +259,10 @@
       state = "over";
       document.getElementById("over-detail").textContent = `점수 ${score} · 최대 콤보 ${maxCombo}`;
       showOverlay("over");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "dual-pad", gameTitle: "듀얼 패드", formParent: document.getElementById("over") });
+      TodayGameRank.open(score);
+    }
     }
   }
 
@@ -338,6 +343,10 @@
         document.getElementById("all-detail").textContent =
           `20곡 완주! 총점 ${score} · 최대 콤보 ${maxCombo}`;
         showOverlay("all");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "dual-pad", gameTitle: "듀얼 패드", formParent: document.getElementById("allclear") });
+      TodayGameRank.open(score);
+    }
       } else {
         document.getElementById("clear-title").textContent = `${song.name} 클리어!`;
         document.getElementById("clear-detail").textContent =
@@ -677,4 +686,12 @@
   loadAssets().then(() => {
     raf = requestAnimationFrame(tick);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "dual-pad",
+      gameTitle: "듀얼 패드",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

@@ -30,6 +30,9 @@
 
   let state = "title";
   let stage = 1;
+  let score = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let lives = 3;
   let grid = null;
   let player = null;
@@ -257,10 +260,15 @@
       state = "over";
       document.getElementById("over-detail").textContent = `STAGE ${stage} · 영역 ${claimPct.toFixed(1)}%`;
       overlays.over.classList.remove("hidden");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "ttamogi", gameTitle: "땅땅 차지", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
     }
   }
 
   function resetStage() {
+    stageStartedAt = performance.now();
     const cfg = stageConfig(stage);
     makeGrid();
     makePlayer();
@@ -271,6 +279,9 @@
   function startGame() {
     stage = 1;
     lives = 3;
+    score = 0;
+    runStartedAt = performance.now();
+    if (window.TodayGameRank) TodayGameRank.reset();
     Object.values(overlays).forEach((el) => el.classList.add("hidden"));
     resetStage();
     state = "play";
@@ -280,9 +291,11 @@
   }
 
   function stageClear() {
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += stage * 100 + Math.max(0, Math.floor(20 - elapsed)) * 8;
     state = "clear";
     document.getElementById("clear-title").textContent = `STAGE ${stage} CLEAR!`;
-    document.getElementById("clear-detail").textContent = `영역 ${claimPct.toFixed(1)}% 확보`;
+    document.getElementById("clear-detail").textContent = `영역 ${claimPct.toFixed(1)}% 확보 · 점수 ${score}`;
     document.getElementById("next-btn").textContent = stage >= 38 ? "최종 결과" : "다음 스테이지";
     overlays.clear.classList.remove("hidden");
   }
@@ -290,9 +303,13 @@
   function nextStage() {
     overlays.clear.classList.add("hidden");
     if (stage >= 38) {
-      document.getElementById("all-detail").textContent = "숨겨진 귀여운 친구들을 모두 만났어요!";
+      document.getElementById("all-detail").textContent = `숨겨진 귀여운 친구들을 모두 만났어요! 점수 ${score}`;
       overlays.all.classList.remove("hidden");
       state = "all";
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "ttamogi", gameTitle: "땅땅 차지", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     stage += 1;
@@ -657,4 +674,12 @@
     makePlayer();
     draw(0);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "ttamogi",
+      gameTitle: "땅땅 차지",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

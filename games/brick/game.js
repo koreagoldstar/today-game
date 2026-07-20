@@ -72,6 +72,8 @@
   const keys = { left: false, right: false };
   let last = 0;
   let raf = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
 
   function makeStars() {
     stars = Array.from({ length: 40 }, () => ({
@@ -121,6 +123,7 @@
   }
 
   function resetStage() {
+    stageStartedAt = performance.now();
     makeBricks();
     resetBall();
     paddle.w = Math.max(64, 88 - stageIndex * 4);
@@ -173,12 +176,19 @@
       state = "over";
       document.getElementById("over-detail").textContent = `점수 ${score} · STAGE ${stageIndex + 1}`;
       overlays.over.classList.remove("hidden");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "brick", gameTitle: "별똥별 벽돌깨기", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
       return;
     }
     resetBall();
   }
 
   function stageClear() {
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+    updateHud();
     state = "clear";
     document.getElementById("clear-detail").textContent = `점수 ${score}`;
     document.getElementById("next-btn").textContent = stageIndex >= STAGES.length - 1 ? "최종 결과" : "다음 스테이지";
@@ -189,6 +199,8 @@
     stageIndex = 0;
     score = 0;
     lives = 3;
+    runStartedAt = performance.now();
+    if (window.TodayGameRank) TodayGameRank.reset();
     Object.values(overlays).forEach((el) => el.classList.add("hidden"));
     makeStars();
     resetStage();
@@ -204,6 +216,10 @@
       document.getElementById("all-detail").textContent = `최종 점수 ${score}`;
       overlays.all.classList.remove("hidden");
       state = "all";
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "brick", gameTitle: "별똥별 벽돌깨기", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     stageIndex += 1;
@@ -546,4 +562,12 @@
   makeStars();
   loadAssets().then(() => draw());
   draw();
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "brick",
+      gameTitle: "별똥별 벽돌깨기",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

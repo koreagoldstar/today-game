@@ -108,9 +108,14 @@
     }
     document.getElementById("over-detail").textContent = `점수 ${score} · 최고 ${best}`;
     overlays.over.classList.remove("hidden");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "tower", gameTitle: "흔들흔들 스카이", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
   }
 
   function startGame() {
+    if (window.TodayGameRank) TodayGameRank.reset();
     overlays.title.classList.add("hidden");
     overlays.over.classList.add("hidden");
     resetGame();
@@ -417,4 +422,12 @@
 
   loadAssets().then(() => draw());
   draw();
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "tower",
+      gameTitle: "흔들흔들 스카이",
+      formParent: overlays.over || document.body,
+    });
+  }
 })();

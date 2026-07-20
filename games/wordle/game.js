@@ -247,7 +247,7 @@
       );
     }
     lines.push("");
-    lines.push("https://today-game.vercel.app/games/wordle/");
+    lines.push("https://www.todaygame.co.kr/games/wordle/");
     return lines.join("\n");
   }
 
@@ -271,6 +271,12 @@
       document.getElementById("result-next").textContent = `남은 문제 ${total - puzzleIndex - 1}개`;
     }
     result.classList.remove("hidden");
+    const leftover = won ? Math.max(0, 5 - row) : 0;
+    const rankScore = Math.max(1, wins * 100 + leftover * 15);
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "wordle", gameTitle: "오늘의 워들", formParent: result });
+      TodayGameRank.open(rankScore);
+    }
   }
 
   function closeResult() {
@@ -490,5 +496,13 @@
 
   if (seoulDay() !== day) {
     showMsg("날짜가 바뀌었어요. 새로고침!", 0);
+  }
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "wordle",
+      gameTitle: "오늘의 워들",
+      formParent: result || document.body,
+    });
   }
 })();

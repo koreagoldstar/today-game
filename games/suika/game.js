@@ -105,6 +105,7 @@
   }
 
   function resetGame() {
+    if (window.TodayGameRank) TodayGameRank.reset();
     fruits = [];
     particles = [];
     floats = [];
@@ -231,6 +232,10 @@
         state = "clear";
         clearDetail.textContent = `점수 ${score}점! 수박을 만들었어요!`;
         showOverlay("clear");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("clear") });
+      TodayGameRank.open(score);
+    }
       }
     }
     return true;
@@ -327,6 +332,10 @@
         saveBest();
         overDetail.textContent = `점수 ${score}점 · 최고 ${best}점`;
         showOverlay("over");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("over") });
+      TodayGameRank.open(score);
+    }
       }
     } else {
       dangerTimer = Math.max(0, dangerTimer - dt * 2);
@@ -631,4 +640,12 @@
   });
   showOverlay("title");
   raf = requestAnimationFrame(tick);
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "suika",
+      gameTitle: "수박 합치기",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

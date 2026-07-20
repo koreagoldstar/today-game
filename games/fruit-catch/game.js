@@ -29,7 +29,7 @@
   const STAGES = Array.from({ length: 50 }, (_, i) => ({
     // 초반부터 길게·빡세게: 1스테이지 목표 30, 낙하·폭탄 증가
     goal: 30 + i * 7,
-    speed: 1.18 + i * 0.095,
+    speed: 1.18 + i * 0.11,
     bombRate: Math.min(0.4, 0.15 + i * 0.014),
     spawn: Math.max(0.26, 0.58 - i * 0.016),
     lives: i < 6 ? 3 : i < 14 ? 3 : 4,
@@ -92,6 +92,9 @@
   let last = 0;
   let raf = 0;
   let clouds = [];
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
+  const EXPECTED_SEC = 20 * STAGES.length;
   const basket = { x: W / 2, y: H - 88, w: 86, h: 36 };
 
   function makeClouds() {
@@ -105,6 +108,7 @@
 
   function resetStage() {
     const st = STAGES[stageIndex];
+    stageStartedAt = performance.now();
     stageScore = 0;
     lives = st.lives;
     items = [];
@@ -178,6 +182,8 @@
   function startGame() {
     stageIndex = 0;
     score = 0;
+    runStartedAt = performance.now();
+    if (window.TodayGameRank) TodayGameRank.reset();
     makeClouds();
     resetStage();
     Object.values(overlays).forEach((el) => el.classList.add("hidden"));
@@ -189,6 +195,9 @@
   }
 
   function stageClear() {
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+    updateHud();
     state = "clear";
     document.getElementById("clear-title").textContent = `STAGE ${stageIndex + 1} CLEAR!`;
     document.getElementById("clear-detail").textContent = `${STAGES[stageIndex].name} · 점수 ${score}`;
@@ -203,6 +212,10 @@
       document.getElementById("all-detail").textContent = `총 점수 ${score}점으로 과일왕 등극!`;
       overlays.all.classList.remove("hidden");
       state = "all";
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "fruit-catch", gameTitle: "과일 바스켓", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     stageIndex += 1;
@@ -217,6 +230,10 @@
     state = "over";
     document.getElementById("over-detail").textContent = `STAGE ${stageIndex + 1} · 점수 ${score}`;
     overlays.over.classList.remove("hidden");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "fruit-catch", gameTitle: "과일 바스켓", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
   }
 
   function update(dt) {
@@ -500,6 +517,14 @@
   document.getElementById("next-btn").addEventListener("click", nextStage);
   document.getElementById("retry-btn").addEventListener("click", startGame);
   document.getElementById("again-btn").addEventListener("click", startGame);
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "fruit-catch",
+      gameTitle: "과일 바스켓",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 
   loadFruitAssets().then(() => {
     makeClouds();

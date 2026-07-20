@@ -396,11 +396,18 @@
     showOverlay("over");
     document.getElementById("over-detail").textContent =
       `SCORE ${score.toLocaleString()} · COMBO ${maxCombo} · ${SONGS[songIndex].name}`;
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "slide-beat", gameTitle: "슬라이드 비트", formParent: document.getElementById("over") });
+      TodayGameRank.open(score);
+    }
   }
 
   function startPlay(fresh) {
     state = "play";
-    if (fresh) score = 0;
+    if (fresh) {
+      score = 0;
+      if (window.TodayGameRank) TodayGameRank.reset();
+    }
     showOverlay(null);
     resetSong();
     last = performance.now();
@@ -773,6 +780,10 @@
         showOverlay("all");
         document.getElementById("all-detail").textContent =
           `20곡 올클리어! · TOTAL SCORE ${score.toLocaleString()} · MAX COMBO ${maxCombo}`;
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "slide-beat", gameTitle: "슬라이드 비트", formParent: document.getElementById("allclear") });
+      TodayGameRank.open(score);
+    }
       }
     });
 
@@ -836,4 +847,12 @@
   }
 
   init();
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "slide-beat",
+      gameTitle: "슬라이드 비트",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

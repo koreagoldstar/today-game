@@ -186,6 +186,9 @@
   let lives = MAX_LIVES;
   let sceneTime = 0;
   let totalTime = 0;
+  let score = 0;
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
   let missRings = [];
   let sparkles = [];
   let hintFx = [];
@@ -304,16 +307,22 @@
   function checkStageClear() {
     const st = STAGES[stageIndex];
     if (found.size < st.need) return;
+    const elapsed = (performance.now() - stageStartedAt) / 1000;
+    score += 100 + Math.max(0, Math.floor(20 - elapsed)) * 8;
     state = "clear";
     totalTime += sceneTime;
     const bonus = grantClearBonus();
     const bonusText = bonus ? ` · ${bonus}` : "";
     document.getElementById("clear-detail").textContent =
-      `${st.name} · ${formatTime(sceneTime)} · 남은 목숨 ${lives}${bonusText}`;
+      `${st.name} · ${formatTime(sceneTime)} · 남은 목숨 ${lives}${bonusText} · 점수 ${score}`;
     if (stageIndex >= STAGE_COUNT - 1) {
       document.getElementById("all-detail").textContent =
-        `${STAGE_COUNT}단계 완주! 총 ${formatTime(totalTime)}`;
+        `${STAGE_COUNT}단계 완주! 총 ${formatTime(totalTime)} · 점수 ${score}`;
       showOverlay("all");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "diff", gameTitle: "다른 그림 찾기", formParent: document.getElementById("allclear") });
+      TodayGameRank.open(score);
+    }
     } else {
       showOverlay("clear");
     }
@@ -622,6 +631,10 @@
       document.getElementById("over-detail").textContent =
         `STAGE ${stageIndex + 1} · 찾은 차이 ${found.size}/${st.need}`;
       showOverlay("over");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "diff", gameTitle: "다른 그림 찾기", formParent: document.getElementById("over") });
+      TodayGameRank.open(score);
+    }
       updateItemBar();
     }
   }
@@ -630,8 +643,11 @@
     stageIndex = idx;
     if (resetAll) {
       totalTime = 0;
+      score = 0;
       lives = MAX_LIVES;
       items = { ...START_ITEMS };
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
     found = new Set();
     missRings = [];
@@ -642,6 +658,7 @@
     toastMsg = "";
     sceneTime = 0;
     state = "play";
+    stageStartedAt = performance.now();
     showOverlay(null);
     updateHud();
     redraw();
@@ -721,4 +738,12 @@
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "diff",
+      gameTitle: "다른 그림 찾기",
+      formParent: document.getElementById("over") || document.body,
+    });
+  }
 })();

@@ -177,6 +177,7 @@
   }
 
   function resetStage() {
+    stageStartedAt = performance.now();
     const st = STAGES[stageIndex];
     stageScore = 0;
     lives = st.lives;
@@ -242,14 +243,24 @@
     }
   }
 
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
+
   function checkClearOrOver() {
     const st = STAGES[stageIndex];
     if (stageScore >= st.goal && state === "play") {
+      const elapsed = (performance.now() - stageStartedAt) / 1000;
+      score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+      updateHud();
       state = stageIndex >= TOTAL_STAGES - 1 ? "allclear" : "clear";
       hideAll();
       if (state === "allclear") {
         show(overlays.all, true);
         document.getElementById("all-detail").textContent = `최종 점수 ${score}점 · ${TOTAL_STAGES}스테이지 완주!`;
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "whack-mole", gameTitle: "두더지 팡팡", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       } else {
         show(overlays.clear, true);
         document.getElementById("clear-detail").textContent = `${st.name} · ${score}점`;
@@ -261,6 +272,10 @@
       hideAll();
       show(overlays.over, true);
       document.getElementById("over-detail").textContent = `${st.name} · ${score}점`;
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "whack-mole", gameTitle: "두더지 팡팡", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
     }
   }
 
@@ -701,6 +716,8 @@
   function startGame() {
     stageIndex = 0;
     score = 0;
+    runStartedAt = performance.now();
+    if (window.TodayGameRank) TodayGameRank.reset();
     state = "play";
     hideAll();
     makeHoles();
@@ -724,6 +741,14 @@
   canvas.addEventListener("pointerdown", onTap);
   makeHoles();
   updateHud();
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "whack-mole",
+      gameTitle: "두더지 팡팡",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
+
   loadAssets().then(() => {
     last = performance.now();
     raf = requestAnimationFrame(loop);

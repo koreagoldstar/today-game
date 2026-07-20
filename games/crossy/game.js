@@ -160,7 +160,12 @@
     }
   }
 
+  let runStartedAt = 0;
+  let stageStartedAt = 0;
+
   function resetRun(fromTitle) {
+    stageStartedAt = performance.now();
+    if (fromTitle) runStartedAt = performance.now();
     if (fromTitle) {
       stageIndex = 0;
       endless = false;
@@ -186,6 +191,7 @@
   function startGame(fromTitle) {
     state = "play";
     showOverlay(null);
+    if (fromTitle && window.TodayGameRank) TodayGameRank.reset();
     resetRun(fromTitle);
     last = performance.now();
     cancelAnimationFrame(raf);
@@ -391,6 +397,9 @@
   function checkStageClear() {
     if (endless) return;
     if (score >= stageGoal(stageIndex)) {
+      const elapsed = (performance.now() - stageStartedAt) / 1000;
+      score += Math.max(0, Math.floor(20 - elapsed)) * 8;
+      updateHud();
       state = "clear";
       document.getElementById("clear-detail").textContent = `${score}칸 전진 · 스테이지 ${stageIndex + 1} 클리어!`;
       showOverlay("clear");
@@ -407,6 +416,10 @@
     spawnParticles(px, py, "#ff8ab5");
     document.getElementById("over-detail").textContent = `${reason} · ${score}칸 · 스테이지 ${endless ? "∞" : stageIndex + 1}`;
     showOverlay("over");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.over });
+      TodayGameRank.open(score);
+    }
   }
 
   /** Generous overlap: player body vs log (not "fully inside" which was too harsh). */
@@ -779,6 +792,10 @@
     stageIndex += 1;
     if (stageIndex >= STAGE_COUNT) {
       showOverlay("all");
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.all });
+      TodayGameRank.open(score);
+    }
       return;
     }
     startGame(false);
@@ -791,6 +808,14 @@
   document.getElementById("again-btn")?.addEventListener("click", () => startGame(true));
 
   hud.best.textContent = String(best);
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "crossy",
+      gameTitle: "삐약이 건너기",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
+
   loadAssets().then(() => {
     showOverlay("title");
     last = performance.now();

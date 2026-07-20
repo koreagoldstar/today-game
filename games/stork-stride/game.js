@@ -5,6 +5,8 @@
   const H = 700;
   const MAX_LEAN = 1;
   const BEST_KEY = "serving-king-best";
+  const NAME_KEY = "serving-king-name";
+  const GAME_ID = "stork-stride";
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -63,6 +65,13 @@
   let raf = 0;
   let titleT = 0;
   let plateCount = 5;
+  let submitted = false;
+  let lastRank = { rankDay: null, rankWeek: null };
+  let lastScore = 0;
+
+  const nameInput = document.getElementById("player-name");
+  const shareBtn = document.getElementById("share-rank-btn");
+  if (nameInput) nameInput.value = localStorage.getItem(NAME_KEY) || "";
 
   hudBest.textContent = String(Math.floor(best));
 
@@ -157,8 +166,11 @@
     meter.classList.toggle("hidden", name != null);
   }
 
+  /** 무한 난이도: 초반부터 조금 빡세고, 거리 따라 계속 상승 (상한만 부드럽게) */
   function difficulty() {
-    return clamp(distance / 60, 0, 1);
+    const soft = distance / 42;
+    const late = Math.max(0, distance - 40) / 55;
+    return Math.min(2.6, soft + late * 0.85);
   }
 
   function resetLamps() {
@@ -183,12 +195,20 @@
     warnT = 0;
     bumpT = 0;
     bumpDir = 0;
-    nextEvent = 6 + Math.random() * 3;
+    nextEvent = 5 + Math.random() * 2.5;
     floorOff = 0;
     lastMile = 0;
     plateCount = 5;
+    submitted = false;
+    lastRank = { rankDay: null, rankWeek: null };
+    lastScore = 0;
     resetLamps();
     updateHud();
+    const rankMsg = document.getElementById("rank-msg");
+    if (rankMsg) rankMsg.textContent = "";
+    const submitBtn = document.getElementById("submit-btn");
+    if (submitBtn) submitBtn.disabled = false;
+    if (shareBtn) shareBtn.hidden = true;
   }
 
   function mood() {
@@ -241,6 +261,7 @@
 
   function endGame() {
     state = "over";
+    lastScore = Math.floor(distance);
     if (distance > best) {
       best = distance;
       localStorage.setItem(BEST_KEY, String(best));
@@ -280,17 +301,17 @@
     if (state !== "play") return;
 
     const diff = difficulty();
-    const speed = 1.2 + diff * 1.6;
+    const speed = 1.35 + Math.min(diff, 2.2) * 1.85;
     distance += speed * dt;
     floorOff += speed * 42 * dt;
-    stepPhase += dt * (2.4 + diff * 1.6);
-    plateCount = 5 + Math.min(4, Math.floor(distance / 20));
+    stepPhase += dt * (2.5 + Math.min(diff, 2) * 1.8);
+    plateCount = 5 + Math.min(6, Math.floor(distance / 16));
 
-    // 이벤트: 경고 → 짧은 충격
+    // 이벤트: 경고 → 짧은 충격 (거리 갈수록 더 자주)
     nextEvent -= dt;
     if (nextEvent <= 0 && warnT <= 0 && bumpT <= 0) {
       bumpDir = Math.random() > 0.5 ? 1 : -1;
-      warnT = 1.25;
+      warnT = Math.max(0.7, 1.15 - diff * 0.12);
       toast(bumpDir > 0 ? "앞쪽 손님!" : "뒤쪽 손님!");
       guests.push({
         x: bumpDir > 0 ? W * 0.72 : W * 0.28,
@@ -300,12 +321,15 @@
     }
     if (warnT > 0) {
       warnT -= dt;
-      if (warnT <= 0) bumpT = 0.45;
+      if (warnT <= 0) bumpT = 0.4 + Math.min(0.25, diff * 0.08);
     }
     if (bumpT > 0) {
       bumpT -= dt;
-      leanVel += bumpDir * (1.4 + diff * 0.7) * dt;
-      if (bumpT <= 0) nextEvent = 7 + Math.random() * 4;
+      leanVel += bumpDir * (1.65 + diff * 0.95) * dt;
+      if (bumpT <= 0) {
+        const gap = Math.max(2.8, 6.2 - diff * 1.1);
+        nextEvent = gap + Math.random() * Math.max(1.2, 3.2 - diff * 0.5);
+      }
     }
 
     guests.forEach((g) => {
@@ -314,12 +338,12 @@
     guests = guests.filter((g) => g.y > H * 0.45);
 
     const steer = (held.right ? 1 : 0) + (held.left ? -1 : 0);
-    const tip = lean * (0.45 + diff * 1.35);
-    const noise = (Math.random() - 0.5) * (0.12 + diff * 0.55);
+    const tip = lean * (0.55 + Math.min(diff, 2.2) * 1.55);
+    const noise = (Math.random() - 0.5) * (0.18 + Math.min(diff, 2.2) * 0.72);
     leanVel += (tip + noise) * dt;
-    leanVel += steer * 7.0 * dt;
-    leanVel = clamp(leanVel, -2.0, 2.0);
-    leanVel *= Math.pow(0.08, dt);
+    leanVel += steer * 7.2 * dt;
+    leanVel = clamp(leanVel, -2.35, 2.35);
+    leanVel *= Math.pow(0.07, dt);
     lean += leanVel * dt;
 
     if (Math.abs(lean) < 0.2) {
@@ -678,6 +702,79 @@
   function bind() {
     document.getElementById("start-btn").addEventListener("click", startGame);
     document.getElementById("retry-btn").addEventListener("click", startGame);
+
+    const rankForm = document.getElementById("rank-form");
+    if (rankForm) {
+      rankForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (submitted) return;
+        const name = String(nameInput.value || "").trim();
+        if (name.length < 2 || name.length > 8) {
+          document.getElementById("rank-msg").textContent = "이름은 2~8자로 적어 주세요";
+          return;
+        }
+        localStorage.setItem(NAME_KEY, name);
+        const btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        document.getElementById("rank-msg").textContent = "등록 중…";
+        if (!window.TodayScores) {
+          document.getElementById("rank-msg").textContent = "랭킹 모듈을 불러오지 못했어요";
+          btn.disabled = false;
+          return;
+        }
+        const res = await window.TodayScores.submitScore(GAME_ID, name, lastScore);
+        if (res.ok) {
+          submitted = true;
+          lastRank = { rankDay: res.rankDay || res.rank, rankWeek: res.rankWeek };
+          document.getElementById("rank-msg").textContent =
+            window.TodayScores.formatRankMessage
+              ? window.TodayScores.formatRankMessage(res)
+              : res.rank
+                ? `오늘 ${res.rank}위에 등록됐어요!`
+                : "등록 완료!";
+          if (shareBtn) shareBtn.hidden = false;
+          if (window.TodayGameRank && TodayGameRank.afterSubmit) {
+            await TodayGameRank.afterSubmit({
+              gameId: GAME_ID,
+              gameTitle: "서빙왕",
+              name,
+              score: lastScore,
+              rankDay: lastRank.rankDay,
+              label: `${lastScore.toLocaleString("ko-KR")}m`,
+            });
+          }
+        } else {
+          document.getElementById("rank-msg").textContent = "등록 실패 · 다시 시도해 주세요";
+          btn.disabled = false;
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener("click", async () => {
+        if (!window.TodayScores || !window.TodayScores.shareRank) return;
+        const name = String(nameInput.value || "").trim() || "나";
+        const result = await window.TodayScores.shareRank({
+          gameTitle: "서빙왕",
+          name,
+          score: lastScore,
+          rankDay: lastRank.rankDay,
+          rankWeek: lastRank.rankWeek,
+          url: "https://www.todaygame.co.kr/games/stork-stride/",
+        });
+        const msg = document.getElementById("rank-msg");
+        msg.textContent = window.TodayScores.formatShareResult
+          ? window.TodayScores.formatShareResult(result)
+          : result.mode === "copy"
+            ? "복사됨! 카톡·SNS에 붙여넣기 하세요"
+            : result.error === "cancel"
+              ? "공유를 취소했어요"
+              : !result.ok
+                ? "공유에 실패했어요"
+                : "";
+        if (result.mode === "share") msg.textContent = "";
+      });
+    }
 
     document.querySelectorAll(".pad").forEach((btn) => {
       const dir = Number(btn.dataset.dir);

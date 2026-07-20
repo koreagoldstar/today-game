@@ -614,6 +614,10 @@
       document.getElementById("over-detail").textContent =
         `연속 ${stageStreak} · 코인 ${coins} · 최고 ${best}`;
       show(overlays.over, true);
+      if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "odd-even", gameTitle: "홀짝 팡", formParent: overlays.over });
+      TodayGameRank.open(Math.max(1, coins));
+    }
       return;
     }
     if (stageStreak >= st.goal) {
@@ -625,6 +629,10 @@
         document.getElementById("all-detail").textContent =
           `최고 연속 ${best} · 코인 ${coins}개!`;
         show(overlays.all, true);
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "odd-even", gameTitle: "홀짝 팡", formParent: overlays.all });
+      TodayGameRank.open(Math.max(1, coins));
+    }
         burst(W / 2, 300, [CORAL, CYAN, GOLD, "#fff"], 55);
         return;
       }
@@ -679,6 +687,7 @@
     stageIndex = 0;
     streak = 0;
     coins = 0;
+    if (window.TodayGameRank) TodayGameRank.reset();
     state = "play";
     hideAll();
     resetStage();
@@ -708,4 +717,12 @@
   last = performance.now();
   loadAssets();
   requestAnimationFrame(loop);
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "odd-even",
+      gameTitle: "홀짝 팡",
+      formParent: overlays.over || overlays.all || document.body,
+    });
+  }
 })();

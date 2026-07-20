@@ -4,8 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#7ec8ff" />
-    <meta name="description" content="오늘의 게임 — 작고 귀여운 게임들을 모아둔 플레이룸" />
+    <meta name="naver-site-verification" content="09ebc68b022f547b2446e9f892beb2e75b760293" />
+    <meta name="description" content="작고 귀여운 미니게임 모음 · 오늘의 챌린지에 도전해 보세요!" />
     <title>오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/" />
+    <meta property="og:title" content="오늘의 게임" />
+    <meta property="og:description" content="작고 귀여운 미니게임 모음 · 오늘 뭐하고 놀까?" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="오늘의 게임 — 오늘 뭐하고 놀까?" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="오늘의 게임" />
+    <meta name="twitter:description" content="작고 귀여운 미니게임 모음 · 오늘 뭐하고 놀까?" />
+    <meta name="twitter:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -22,52 +38,79 @@
       <div class="sparkles" id="sparkles"></div>
     </div>
 
-    <main class="page hub-layout">
-      <aside class="scoreboard" id="scoreboard" aria-label="랭킹">
-        <div class="scoreboard-head">
-          <h2 class="scoreboard-title">랭킹</h2>
+    <main class="page hub-layout hub-simple">
+      <header class="hero" id="hero">
+        <div class="hero-top">
+          <p class="date-chip" id="today-label">오늘</p>
           <div class="visit-inline" id="visit-chip" aria-live="polite">
             <span class="visit-label">오늘 방문</span>
             <strong class="visit-count" id="visit-count">…</strong>
           </div>
         </div>
-        <div class="period-tabs" role="tablist" aria-label="랭킹 기간">
-          <button type="button" class="period-tab on" role="tab" aria-selected="true" data-period="day">오늘</button>
-          <button type="button" class="period-tab" role="tab" aria-selected="false" data-period="week">이번주</button>
-        </div>
-        <div class="score-tabs" role="tablist">
-          <button type="button" class="score-tab on" role="tab" aria-selected="true" data-game="flappy">펄럭 병아리</button>
-          <button type="button" class="score-tab" role="tab" aria-selected="false" data-game="doodle">폴짝 하늘</button>
-          <button type="button" class="score-tab" role="tab" aria-selected="false" data-game="tetris">블록 팡팡</button>
-          <button type="button" class="score-tab" role="tab" aria-selected="false" data-game="jump-run">콩콩 점프</button>
-          <button type="button" class="score-tab" role="tab" aria-selected="false" data-game="ninja-dodge">닌자 표창</button>
-        </div>
-        <p class="score-note" id="score-note">오늘의 펄럭 병아리</p>
-        <ol class="score-list" id="score-list">
-          <li class="score-empty">불러오는 중…</li>
-        </ol>
-      </aside>
+        <h1 class="brand">오늘의 게임</h1>
+        <p class="tagline">작고 귀여운 게임들을 모아둔 플레이룸</p>
+        <p class="hero-links">
+          <a class="hero-link" href="/rankings/">전체 게임 랭킹</a>
+          <a class="hero-link hero-link-fame" href="/fame/">🏆 Hall of Fame</a>
+        </p>
 
-      <div class="hub-main">
-        <header class="hero">
-          <p class="date-chip" id="today-label">오늘</p>
-          <h1 class="brand">오늘의 게임</h1>
-          <p class="tagline">작고 귀여운 게임들을 모아둔 플레이룸</p>
-        </header>
+        <section class="challenge" id="today-challenge" aria-label="오늘의 챌린지">
+          <p class="challenge-eyebrow">🏆 오늘의 챌린지</p>
+          <div class="challenge-body">
+            <div class="challenge-main">
+              <p class="challenge-label">오늘 게임</p>
+              <h2 class="challenge-game" id="challenge-game">불러오는 중…</h2>
+            </div>
 
-        <section class="shelf" aria-label="게임 목록">
-          <h2 class="shelf-title">오늘 뭐하고 놀까</h2>
-          <div class="catalog" id="catalog"></div>
+            <p class="challenge-challengers" id="challenge-players">오늘 —명 도전중</p>
+
+            <div class="challenge-rank-box" id="challenge-rank-box">
+              <p class="challenge-rank-label">현재 순위</p>
+              <p class="challenge-rank-value" id="challenge-my-rank">—</p>
+            </div>
+
+            <p class="challenge-remain" id="challenge-left">⏰ — 남음</p>
+
+            <div class="challenge-stat-best challenge-best-box">
+              <p class="challenge-rank-label">최고기록</p>
+              <div id="challenge-best">—</div>
+            </div>
+
+            <a class="challenge-btn" id="challenge-btn" href="#">도전하기</a>
+            <button type="button" class="challenge-share-btn" id="challenge-share-btn" hidden>내 결과 공유</button>
+
+            <div class="challenge-top" aria-label="오늘의 챌린지 TOP10">
+              <h3 class="challenge-top-title">오늘의 챌린지 TOP10</h3>
+              <ol class="score-list challenge-top-list" id="challenge-top10">
+                <li class="score-empty">불러오는 중…</li>
+              </ol>
+            </div>
+          </div>
         </section>
+      </header>
 
-        <footer class="foot">
-          <p>goldstar가 만들었어요</p>
-        </footer>
-      </div>
+      <section class="shelf" aria-label="게임 목록">
+        <h2 class="shelf-title">오늘 뭐하고 놀까</h2>
+        <div class="catalog" id="catalog"></div>
+      </section>
+
+      <aside class="archive-rail" id="archive-rail" aria-label="고전 게임">
+        <div class="archive-rail-head">
+          <h2 class="archive-rail-title">고전 게임</h2>
+          <p class="archive-rail-hint">다른 곳으로 연결 · Internet Archive · PC 권장</p>
+        </div>
+        <div class="archive-rail-list" id="archive-list"></div>
+      </aside>
     </main>
+
+    <footer class="foot">
+      <p>goldstar가 만들었어요</p>
+    </footer>
 
     <script src="js/bgm.js"></script>
     <script src="js/scores.js"></script>
+    <script src="js/rankable.js"></script>
+    <script src="js/game-rank.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

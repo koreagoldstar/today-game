@@ -192,6 +192,11 @@
       scale: [311.13, 392.0, 466.16, 523.25, 622.25, 783.99],
       style: "race",
     },
+    "drift-chick": {
+      bpm: 148,
+      scale: [329.63, 392.0, 440.0, 523.25, 587.33, 698.46],
+      style: "race",
+    },
     minigolf: {
       bpm: 122,
       scale: [349.23, 392.0, 440.0, 523.25, 587.33, 659.25],
@@ -450,4 +455,31 @@
 
   const autoId = document.body && document.body.dataset ? document.body.dataset.bgm : null;
   if (autoId) bindAuto(autoId);
+
+  /** 게임 페이지 오픈 시 플레이 카운트 (+세션당 1회) */
+  function trackPlayOpen() {
+    try {
+      const path = String(location.pathname || "");
+      const m = path.match(/\/games\/([^/]+)\//);
+      const game = m ? m[1] : "";
+      if (!game || game === "hidden") return;
+      const flag = `today-game-play-hit-${game}`;
+      if (sessionStorage.getItem(flag)) return;
+      sessionStorage.setItem(flag, "1");
+      const body = JSON.stringify({ game });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/plays", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/plays", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true,
+        }).catch(() => {});
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  trackPlayOpen();
 })();

@@ -85,6 +85,8 @@
   let cell = 32;
   let offset = { x: 0, y: 0 };
   let moves = 0;
+  let runStartedAt = 0;
+  let score = 0;
   let totalMoves = 0;
   let history = [];
   let particles = [];
@@ -189,6 +191,8 @@
     if (fromTitle) {
       stageIndex = 0;
       totalMoves = 0;
+      runStartedAt = performance.now();
+      if (window.TodayGameRank) TodayGameRank.reset();
     }
     state = "play";
     showOverlay(null);
@@ -258,12 +262,18 @@
     draw();
 
     if (allCratesOnGoals()) {
+      const elapsedSec = (performance.now() - runStartedAt) / 1000;
+      score = Math.max(1, 50000 - totalMoves * 10 - Math.floor(elapsedSec) * 5);
       state = "clear";
       if (stageIndex >= TOTAL - 1) {
-        document.getElementById("all-detail").textContent = `${TOTAL}단계 완료 · 총 ${totalMoves}푸시`;
+        document.getElementById("all-detail").textContent = `${TOTAL}단계 완료 · 총 ${totalMoves}푸시 · 점수 ${score}`;
         showOverlay("all");
+        if (window.TodayGameRank) {
+      TodayGameRank.mount({ gameId: "sokoban", gameTitle: "상자야 굴러가", formParent: document.getElementById("allclear") });
+      TodayGameRank.open(score);
+    }
       } else {
-        document.getElementById("clear-detail").textContent = `스테이지 ${stageIndex + 1} · ${moves}푸시`;
+        document.getElementById("clear-detail").textContent = `스테이지 ${stageIndex + 1} · ${moves}푸시 · 점수 ${score}`;
         showOverlay("clear");
       }
     }
@@ -465,4 +475,12 @@
     };
     raf = requestAnimationFrame(tick);
   });
+
+  if (window.TodayGameRank) {
+    TodayGameRank.mount({
+      gameId: "sokoban",
+      gameTitle: "상자야 굴러가",
+      formParent: document.getElementById("allclear") || document.getElementById("clear") || document.body,
+    });
+  }
 })();

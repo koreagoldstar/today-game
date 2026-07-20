@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <meta name="description" content="오늘의 게임 — 명예의 전당 · Hall of Fame" />
+    <title>🏆 Hall of Fame · 오늘의 게임</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:title" content="🏆 Hall of Fame · 오늘의 게임" />
+    <meta property="og:description" content="게임별 1등만 모은 명예의 전당" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/fame/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body data-bgm="hub">
+    <div class="sky" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="blob blob-c"></span>
+    </div>
+
+    <main class="page fame-page">
+      <header class="fame-hero">
+        <a class="rankings-back" href="/">← 홈</a>
+        <h1 class="fame-title">🏆 Hall of Fame</h1>
+        <p class="fame-desc">게임별 1등만 모은 명예의 전당</p>
+      </header>
+
+      <nav class="fame-nav" aria-label="관련 페이지">
+        <a class="hero-link" href="/rankings/">전체 게임 랭킹</a>
+      </nav>
+
+      <div class="period-switch" role="tablist" aria-label="기간">
+        <button type="button" class="period-btn on" role="tab" aria-selected="true" data-period="day">오늘</button>
+        <button type="button" class="period-btn" role="tab" aria-selected="false" data-period="week">이번주</button>
+      </div>
+
+      <p class="fame-status" id="fame-status">불러오는 중…</p>
+      <div class="fame-grid" id="fame-grid" aria-label="명예의 전당"></div>
+    </main>
+
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/rankable.js"></script>
+    <script src="/js/fame.js"></script>
+  </body>
+</html>
