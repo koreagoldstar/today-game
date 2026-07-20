@@ -572,6 +572,7 @@
       ctx.arc(sR.x, sR.y, 2.2, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
 
   function drawSkids() {
     skids.forEach((s) => {

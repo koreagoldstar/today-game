@@ -253,7 +253,7 @@
       title: "드리프트 삐약이",
       tag: "드리프트 · 원터치",
       href: "/games/drift-chick/",
-      thumb: "/assets/thumbs/drift-chick.svg",
+      thumb: "/assets/thumbs/drift-chick.png",
       category: "sports",
     },
     {
