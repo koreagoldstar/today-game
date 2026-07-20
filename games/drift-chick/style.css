@@ -136,6 +136,16 @@ canvas {
   filter: drop-shadow(0 8px 0 rgba(255, 79, 139, 0.2));
 }
 
+.title-mascot {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffe8f2, #ffd0e4);
+  box-shadow: 0 8px 0 rgba(255, 79, 139, 0.2);
+  image-rendering: auto;
+}
+
 .overlay h1 {
   margin: 4px 0 0;
   font-family: "Bagel Fat One", "Jua", cursive;
