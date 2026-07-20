@@ -106,50 +106,58 @@
       pts.push({ x, y, ang, curve });
     };
 
-    // 여유 있는 직진 인트로
-    for (let i = 0; i < 32; i += 1) push(20, 0);
+    // 짧은 직진 인트로 후 바로 긴 곡선 연습
+    for (let i = 0; i < 20; i += 1) push(20, 0);
 
-    // 튜토리얼: 아주 완만한 좌→우
-    for (let i = 0; i < 22; i += 1) push(20, -0.011);
-    for (let i = 0; i < 12; i += 1) push(20, 0);
-    for (let i = 0; i < 22; i += 1) push(20, 0.011);
-    for (let i = 0; i < 14; i += 1) push(20, 0);
+    // 튜토리얼: 길고 완만한 좌→우 (드리프트 맛보기)
+    for (let i = 0; i < 34; i += 1) push(20, -0.010);
+    for (let i = 0; i < 6; i += 1) push(20, 0);
+    for (let i = 0; i < 34; i += 1) push(20, 0.010);
+    for (let i = 0; i < 8; i += 1) push(20, 0);
 
     let lastDir = 1;
-    while (pts.length < 900) {
-      const progress = pts.length / 900;
+    while (pts.length < 1000) {
+      const progress = pts.length / 1000;
       const roll = Math.random();
-      // 초반엔 직선 비중 높음
-      const curveBias = 0.38 + progress * 0.28;
+      // 곡선 비중 높게 — 직선은 짧게만
+      const curveBias = 0.72 + progress * 0.18;
 
       if (roll > curveBias) {
-        const len = 10 + Math.floor(Math.random() * Math.max(6, 18 - progress * 8));
+        const len = 4 + Math.floor(Math.random() * 7);
         for (let k = 0; k < len; k += 1) push(20, 0);
         continue;
       }
 
       const kind = Math.random();
-      const dir = Math.random() < 0.55 ? -lastDir : lastDir * (Math.random() < 0.45 ? 1 : -1);
+      const dir = Math.random() < 0.65 ? -lastDir : lastDir;
       lastDir = dir;
 
-      if (kind < 0.18) {
-        // 부드러운 큰 코너 (헤어핀 완화)
-        const sharp = (0.014 + Math.random() * 0.008) * (0.85 + progress * 0.35);
-        const len = 24 + Math.floor(Math.random() * 12);
+      if (kind < 0.22) {
+        // 길고 부드러운 대커브 (길게 홀드)
+        const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
+        const len = 36 + Math.floor(Math.random() * 20);
         for (let k = 0; k < len; k += 1) push(20, dir * sharp);
-      } else if (kind < 0.55) {
-        // 완만한 S
-        const sharp = (0.011 + Math.random() * 0.007) * (0.85 + progress * 0.35);
-        const a = 16 + Math.floor(Math.random() * 8);
-        const b = 16 + Math.floor(Math.random() * 8);
+      } else if (kind < 0.72) {
+        // 긴 S커브 — 좌우 연속 드리프트 액션
+        const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
+        const a = 28 + Math.floor(Math.random() * 16);
+        const b = 28 + Math.floor(Math.random() * 16);
         for (let k = 0; k < a; k += 1) push(20, dir * sharp);
-        for (let k = 0; k < 8; k += 1) push(20, 0);
+        for (let k = 0; k < 4; k += 1) push(20, 0);
         for (let k = 0; k < b; k += 1) push(20, -dir * sharp);
-        lastDir = -dir;
+        // 가끔 트리플 S
+        if (Math.random() < 0.35) {
+          for (let k = 0; k < 4; k += 1) push(20, 0);
+          const c = 22 + Math.floor(Math.random() * 12);
+          for (let k = 0; k < c; k += 1) push(20, dir * sharp);
+          lastDir = dir;
+        } else {
+          lastDir = -dir;
+        }
       } else {
-        // 일반 완만 커브
-        const sharp = (0.01 + Math.random() * 0.008) * (0.85 + progress * 0.35);
-        const len = 18 + Math.floor(Math.random() * 12);
+        // 중간~긴 일반 커브
+        const sharp = (0.009 + Math.random() * 0.006) * (0.9 + progress * 0.25);
+        const len = 26 + Math.floor(Math.random() * 18);
         for (let k = 0; k < len; k += 1) push(20, dir * sharp);
       }
     }
