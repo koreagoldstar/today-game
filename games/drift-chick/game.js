@@ -609,16 +609,23 @@
       const p = worldToScreen(d.x, d.y);
       if (p.y < -80 || p.y > H + 80 || p.x < -80 || p.x > W + 80) return;
       if (d.type === "tree") {
+        const s = 56 * d.s;
+        // soft ground shadow
+        ctx.fillStyle = "rgba(40,70,40,0.22)";
+        ctx.beginPath();
+        ctx.ellipse(p.x + 2, p.y + 6, s * 0.28, s * 0.1, 0, 0, Math.PI * 2);
+        ctx.fill();
         if (treeImg.complete && treeImg.naturalWidth) {
-          const s = 52 * d.s;
-          ctx.drawImage(treeImg, p.x - s / 2, p.y - s * 0.85, s, s);
+          ctx.drawImage(treeImg, p.x - s / 2, p.y - s * 0.88, s, s);
         } else {
-          ctx.fillStyle = "#3d8f4a";
+          ctx.fillStyle = "#4caa5a";
           ctx.beginPath();
-          ctx.arc(p.x, p.y - 10, 16 * d.s, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y - 12, 18 * d.s, 0, Math.PI * 2);
+          ctx.arc(p.x - 10 * d.s, p.y - 4, 12 * d.s, 0, Math.PI * 2);
+          ctx.arc(p.x + 10 * d.s, p.y - 4, 12 * d.s, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#8b5a2b";
-          ctx.fillRect(p.x - 3, p.y, 6, 12);
+          ctx.fillRect(p.x - 3, p.y - 2, 6, 14);
         }
       } else {
         ctx.fillStyle = "#5cb86a";
