@@ -92,94 +92,72 @@
     return a + angNorm(b - a) * t;
   }
 
-  function buildPath() {
-    const pts = [];
-    let x = 0;
-    let y = 0;
-    let ang = -Math.PI / 2;
-    pts.push({ x, y, ang, curve: 0 });
+  let pathGen = null; // { x, y, ang, lastDir }
+  let pathProgress = 0;
 
-    const push = (step, curve) => {
-      ang += curve;
-      x += Math.cos(ang) * step;
-      y += Math.sin(ang) * step;
-      pts.push({ x, y, ang, curve });
-    };
-
-    // 짧은 직진 인트로 후 바로 긴 곡선 연습
-    for (let i = 0; i < 20; i += 1) push(20, 0);
-
-    // 튜토리얼: 길고 완만한 좌→우 (드리프트 맛보기)
-    for (let i = 0; i < 34; i += 1) push(20, -0.010);
-    for (let i = 0; i < 6; i += 1) push(20, 0);
-    for (let i = 0; i < 34; i += 1) push(20, 0.010);
-    for (let i = 0; i < 8; i += 1) push(20, 0);
-
-    let lastDir = 1;
-    while (pts.length < 1000) {
-      const progress = pts.length / 1000;
-      const roll = Math.random();
-      // 곡선 비중 높게 — 직선은 짧게만
-      const curveBias = 0.72 + progress * 0.18;
-
-      if (roll > curveBias) {
-        const len = 4 + Math.floor(Math.random() * 7);
-        for (let k = 0; k < len; k += 1) push(20, 0);
-        continue;
-      }
-
-      const kind = Math.random();
-      const dir = Math.random() < 0.65 ? -lastDir : lastDir;
-      lastDir = dir;
-
-      if (kind < 0.22) {
-        // 길고 부드러운 대커브 (길게 홀드)
-        const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
-        const len = 36 + Math.floor(Math.random() * 20);
-        for (let k = 0; k < len; k += 1) push(20, dir * sharp);
-      } else if (kind < 0.72) {
-        // 긴 S커브 — 좌우 연속 드리프트 액션
-        const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
-        const a = 28 + Math.floor(Math.random() * 16);
-        const b = 28 + Math.floor(Math.random() * 16);
-        for (let k = 0; k < a; k += 1) push(20, dir * sharp);
-        for (let k = 0; k < 4; k += 1) push(20, 0);
-        for (let k = 0; k < b; k += 1) push(20, -dir * sharp);
-        // 가끔 트리플 S
-        if (Math.random() < 0.35) {
-          for (let k = 0; k < 4; k += 1) push(20, 0);
-          const c = 22 + Math.floor(Math.random() * 12);
-          for (let k = 0; k < c; k += 1) push(20, dir * sharp);
-          lastDir = dir;
-        } else {
-          lastDir = -dir;
-        }
-      } else {
-        // 중간~긴 일반 커브
-        const sharp = (0.009 + Math.random() * 0.006) * (0.9 + progress * 0.25);
-        const len = 26 + Math.floor(Math.random() * 18);
-        for (let k = 0; k < len; k += 1) push(20, dir * sharp);
-      }
-    }
-    return pts;
+  function pushPathPoint(step, curve) {
+    pathGen.ang += curve;
+    pathGen.x += Math.cos(pathGen.ang) * step;
+    pathGen.y += Math.sin(pathGen.ang) * step;
+    path.push({ x: pathGen.x, y: pathGen.y, ang: pathGen.ang, curve });
   }
 
-  function buildDecor() {
-    const items = [];
-    const blooms = [];
-    for (let i = 8; i < path.length - 8; i += 3) {
+  function appendCurveSegment() {
+    pathProgress += 1;
+    const progress = Math.min(1, pathProgress / 40);
+    const roll = Math.random();
+    const curveBias = 0.72 + progress * 0.18;
+
+    if (roll > curveBias) {
+      const len = 4 + Math.floor(Math.random() * 7);
+      for (let k = 0; k < len; k += 1) pushPathPoint(20, 0);
+      return;
+    }
+
+    const kind = Math.random();
+    const dir = Math.random() < 0.65 ? -pathGen.lastDir : pathGen.lastDir;
+    pathGen.lastDir = dir;
+
+    if (kind < 0.22) {
+      const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
+      const len = 36 + Math.floor(Math.random() * 20);
+      for (let k = 0; k < len; k += 1) pushPathPoint(20, dir * sharp);
+    } else if (kind < 0.72) {
+      const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
+      const a = 28 + Math.floor(Math.random() * 16);
+      const b = 28 + Math.floor(Math.random() * 16);
+      for (let k = 0; k < a; k += 1) pushPathPoint(20, dir * sharp);
+      for (let k = 0; k < 4; k += 1) pushPathPoint(20, 0);
+      for (let k = 0; k < b; k += 1) pushPathPoint(20, -dir * sharp);
+      if (Math.random() < 0.35) {
+        for (let k = 0; k < 4; k += 1) pushPathPoint(20, 0);
+        const c = 22 + Math.floor(Math.random() * 12);
+        for (let k = 0; k < c; k += 1) pushPathPoint(20, dir * sharp);
+        pathGen.lastDir = dir;
+      } else {
+        pathGen.lastDir = -dir;
+      }
+    } else {
+      const sharp = (0.009 + Math.random() * 0.006) * (0.9 + progress * 0.25);
+      const len = 26 + Math.floor(Math.random() * 18);
+      for (let k = 0; k < len; k += 1) pushPathPoint(20, dir * sharp);
+    }
+  }
+
+  function appendDecorFrom(startIdx) {
+    for (let i = Math.max(startIdx, 2); i < path.length - 2; i += 3) {
       const p = path[i];
       const side = i % 2 === 0 ? 1 : -1;
       const distOut = TRACK_HALF + 38 + (i % 5) * 10;
       const ox = Math.cos(p.ang + Math.PI / 2) * side * distOut;
       const oy = Math.sin(p.ang + Math.PI / 2) * side * distOut;
       if (i % 6 === 0) {
-        items.push({ type: "tree", x: p.x + ox, y: p.y + oy, s: 0.7 + (i % 4) * 0.08 });
+        decor.push({ type: "tree", x: p.x + ox, y: p.y + oy, s: 0.7 + (i % 4) * 0.08 });
       } else if (i % 4 === 0) {
-        items.push({ type: "bush", x: p.x + ox * 0.92, y: p.y + oy * 0.92, s: 14 + (i % 3) * 4 });
+        decor.push({ type: "bush", x: p.x + ox * 0.92, y: p.y + oy * 0.92, s: 14 + (i % 3) * 4 });
       }
       if (i % 2 === 0) {
-        blooms.push({
+        flowers.push({
           x: p.x + ox * (0.7 + (i % 5) * 0.05),
           y: p.y + oy * (0.7 + (i % 5) * 0.05),
           c: ["#ff8ab5", "#ffd24a", "#fff", "#7dffc2"][i % 4],
@@ -187,7 +165,46 @@
         });
       }
     }
-    return { items, blooms };
+    if (decor.length > 400) decor.splice(0, decor.length - 400);
+    if (flowers.length > 500) flowers.splice(0, flowers.length - 500);
+  }
+
+  function ensurePathAhead(minAhead = 90) {
+    if (!car || !pathGen) return;
+    while (path.length - 1 - car.idx < minAhead) {
+      const before = path.length;
+      appendCurveSegment();
+      appendDecorFrom(before);
+    }
+    // 너무 길면 뒤쪽 잘라 메모리 유지
+    if (car.idx > 180 && path.length > 420) {
+      const cut = car.idx - 80;
+      path = path.slice(cut);
+      car.idx -= cut;
+    }
+  }
+
+  function buildPath() {
+    path = [];
+    pathProgress = 0;
+    pathGen = { x: 0, y: 0, ang: -Math.PI / 2, lastDir: 1 };
+    path.push({ x: 0, y: 0, ang: pathGen.ang, curve: 0 });
+
+    for (let i = 0; i < 20; i += 1) pushPathPoint(20, 0);
+    for (let i = 0; i < 34; i += 1) pushPathPoint(20, -0.01);
+    for (let i = 0; i < 6; i += 1) pushPathPoint(20, 0);
+    for (let i = 0; i < 34; i += 1) pushPathPoint(20, 0.01);
+    for (let i = 0; i < 8; i += 1) pushPathPoint(20, 0);
+
+    while (path.length < 220) appendCurveSegment();
+    return path;
+  }
+
+  function buildDecor() {
+    decor = [];
+    flowers = [];
+    appendDecorFrom(0);
+    return { items: decor, blooms: flowers };
   }
 
   function nearestOnPath(px, py) {
@@ -225,10 +242,11 @@
   }
 
   function resetRun() {
-    path = buildPath();
-    const d = buildDecor();
-    decor = d.items;
-    flowers = d.blooms;
+    path = [];
+    decor = [];
+    flowers = [];
+    buildPath();
+    buildDecor();
     const p0 = path[8];
     car = {
       x: p0.x,
@@ -388,6 +406,7 @@
     hintTimer -= dt;
     if (hint && hintTimer <= 0) hint.classList.add("hidden");
 
+    ensurePathAhead(120);
     const near = nearestOnPath(car.x, car.y);
     car.idx = near.i;
     const pathAng = near.p.ang;
@@ -496,6 +515,7 @@
 
     const check = nearestOnPath(car.x, car.y);
     car.idx = check.i;
+    ensurePathAhead(100);
     if (check.dist > TRACK_HALF - CAR_R * 0.15) {
       gameOver();
       return;
