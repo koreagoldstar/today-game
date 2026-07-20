@@ -4,7 +4,7 @@
   const W = 390;
   const H = 700;
   const BEST_KEY = "drift-chick-best";
-  const TRACK_HALF = 62;
+  const TRACK_HALF = 66;
   const CAR_R = 18;
 
   const canvas = document.getElementById("game");
@@ -61,6 +61,10 @@
   let hintTimer = 4;
   let skidAcc = 0;
   let time = 0;
+  let floats = [];
+  let curveWarn = 0; // -1 left, 0 none, 1 right
+  let perfectStreak = 0;
+  let speedLines = 0;
 
   function show(id) {
     Object.keys(overlays).forEach((k) => overlays[k].classList.toggle("hidden", k !== id));
@@ -95,36 +99,55 @@
     let ang = -Math.PI / 2;
     pts.push({ x, y, ang, curve: 0 });
 
-    let targetCurve = 0;
-    let segment = 0;
-
-    for (let i = 0; i < 36; i += 1) {
-      x += Math.cos(ang) * 20;
-      y += Math.sin(ang) * 20;
-      pts.push({ x, y, ang, curve: 0 });
-    }
-
-    for (let i = 0; i < 900; i += 1) {
-      segment -= 1;
-      if (segment <= 0) {
-        const progress = i / 900;
-        const curveChance = 0.32 + progress * 0.38;
-        if (Math.random() > curveChance) {
-          targetCurve = 0;
-          segment = 14 + Math.floor(Math.random() * (28 - progress * 10));
-        } else {
-          const dir = Math.random() < 0.5 ? -1 : 1;
-          const sharp = (0.01 + Math.random() * 0.02) * (0.75 + progress * 0.5);
-          targetCurve = dir * sharp;
-          segment = 18 + Math.floor(Math.random() * (34 - progress * 12));
-        }
-      }
-      const prev = pts[pts.length - 1].curve;
-      const curve = lerp(prev, targetCurve, 0.16);
+    const push = (step, curve) => {
       ang += curve;
-      x += Math.cos(ang) * 20;
-      y += Math.sin(ang) * 20;
+      x += Math.cos(ang) * step;
+      y += Math.sin(ang) * step;
       pts.push({ x, y, ang, curve });
+    };
+
+    // 짧은 직진 인트로
+    for (let i = 0; i < 22; i += 1) push(20, 0);
+
+    // 튜토리얼: 완만한 좌→우 S
+    for (let i = 0; i < 18; i += 1) push(20, -0.018);
+    for (let i = 0; i < 8; i += 1) push(20, 0);
+    for (let i = 0; i < 18; i += 1) push(20, 0.018);
+    for (let i = 0; i < 10; i += 1) push(20, 0);
+
+    let lastDir = 1;
+    while (pts.length < 900) {
+      const progress = pts.length / 900;
+      const roll = Math.random();
+      const curveBias = 0.58 + progress * 0.32;
+
+      if (roll > curveBias) {
+        const len = 6 + Math.floor(Math.random() * Math.max(4, 12 - progress * 6));
+        for (let k = 0; k < len; k += 1) push(20, 0);
+        continue;
+      }
+
+      const kind = Math.random();
+      const dir = Math.random() < 0.6 ? -lastDir : lastDir * (Math.random() < 0.4 ? 1 : -1);
+      lastDir = dir;
+
+      if (kind < 0.3) {
+        const sharp = (0.026 + Math.random() * 0.016) * (0.9 + progress * 0.55);
+        const len = 20 + Math.floor(Math.random() * 12);
+        for (let k = 0; k < len; k += 1) push(18, dir * sharp);
+      } else if (kind < 0.68) {
+        const sharp = (0.019 + Math.random() * 0.014) * (0.9 + progress * 0.5);
+        const a = 13 + Math.floor(Math.random() * 9);
+        const b = 13 + Math.floor(Math.random() * 9);
+        for (let k = 0; k < a; k += 1) push(19, dir * sharp);
+        for (let k = 0; k < 3; k += 1) push(20, 0);
+        for (let k = 0; k < b; k += 1) push(19, -dir * sharp);
+        lastDir = -dir;
+      } else {
+        const sharp = (0.015 + Math.random() * 0.016) * (0.9 + progress * 0.55);
+        const len = 15 + Math.floor(Math.random() * 14);
+        for (let k = 0; k < len; k += 1) push(19, dir * sharp);
+      }
     }
     return pts;
   }
@@ -203,6 +226,7 @@
       idx: 8,
       drift: 0,
       slip: 0,
+      lastSteer: 0,
     };
     score = 0;
     dist = 0;
@@ -211,16 +235,31 @@
     smoke = [];
     sparks = [];
     skids = [];
+    floats = [];
     shake = 0;
     driftBoost = 0;
     cornerBonusReady = false;
     exitBonusReady = false;
-    hintTimer = 4;
+    hintTimer = 4.5;
     holding = false;
     steerInput = 0;
     skidAcc = 0;
     time = 0;
+    curveWarn = 0;
+    perfectStreak = 0;
+    speedLines = 0;
     updateHud();
+  }
+
+  function spawnFloat(text, color) {
+    floats.push({
+      text,
+      color: color || "#ff4f8b",
+      life: 0.9,
+      t: 0,
+      y: 0,
+    });
+    if (floats.length > 6) floats.shift();
   }
 
   function updateHud() {
@@ -287,28 +326,28 @@
   }
 
   function spawnSmoke(x, y, ang, side) {
-    const ox = Math.cos(ang + Math.PI / 2) * side * 12;
-    const oy = Math.sin(ang + Math.PI / 2) * side * 12;
+    const ox = Math.cos(ang + Math.PI / 2) * side * 14;
+    const oy = Math.sin(ang + Math.PI / 2) * side * 14;
     smoke.push({
-      x: x + ox - Math.cos(ang) * 8,
-      y: y + oy - Math.sin(ang) * 8,
-      r: 6 + Math.random() * 8,
-      life: 0.45 + Math.random() * 0.35,
+      x: x + ox - Math.cos(ang) * 10,
+      y: y + oy - Math.sin(ang) * 10,
+      r: 8 + Math.random() * 10,
+      life: 0.55 + Math.random() * 0.4,
       t: 0,
-      vx: Math.cos(ang + Math.PI) * (30 + Math.random() * 40) + ox,
-      vy: Math.sin(ang + Math.PI) * (30 + Math.random() * 40) + oy,
+      vx: Math.cos(ang + Math.PI) * (40 + Math.random() * 55) + ox * 1.2,
+      vy: Math.sin(ang + Math.PI) * (40 + Math.random() * 55) + oy * 1.2,
     });
   }
 
   function spawnSparks(x, y) {
-    for (let i = 0; i < 12; i += 1) {
+    for (let i = 0; i < 18; i += 1) {
       const a = Math.random() * Math.PI * 2;
       sparks.push({
         x,
         y,
-        vx: Math.cos(a) * (60 + Math.random() * 100),
-        vy: Math.sin(a) * (60 + Math.random() * 100),
-        life: 0.3 + Math.random() * 0.35,
+        vx: Math.cos(a) * (80 + Math.random() * 140),
+        vy: Math.sin(a) * (80 + Math.random() * 140),
+        life: 0.35 + Math.random() * 0.4,
         t: 0,
         c: Math.random() < 0.5 ? "#fff6a8" : "#7dffc2",
       });
@@ -341,85 +380,119 @@
     car.idx = near.i;
     const pathAng = near.p.ang;
     const curv = Math.abs(near.p.curve);
+    const curveDir = Math.sign(near.p.curve || 0);
+    const onCurve = curv > 0.008;
 
-    const base = 190 + Math.min(175, dist * 0.08);
-    car.speed = base + driftBoost * 60;
+    // 앞쪽 커브 예고
+    const look = path[Math.min(path.length - 1, car.idx + 18)];
+    const look2 = path[Math.min(path.length - 1, car.idx + 28)];
+    const aheadCurve = (look.curve + look2.curve) * 0.5;
+    curveWarn = Math.abs(aheadCurve) > 0.01 ? Math.sign(aheadCurve) : 0;
 
-    if (holding && Math.abs(steerInput) > 0.08) {
-      // 터치한 화면 방향으로 선회 (좌=-, 우=+)
-      // 차는 위쪽이 전방이므로, 화면 좌/우 = 진행 방향 기준 좌/우
-      const turn = steerInput * (2.8 + car.drift * 1.4);
-      car.ang += turn * dt;
-      car.drift = Math.min(1, car.drift + dt * 3.8);
-      car.slip = lerp(car.slip, steerInput * 28, 1 - Math.pow(0.001, dt));
+    const base = 210 + Math.min(200, dist * 0.11);
+    car.speed = base + driftBoost * 90 + car.drift * 35;
+    speedLines = lerp(speedLines, driftBoost > 0.2 || car.drift > 0.5 ? 1 : 0, 1 - Math.pow(0.01, dt));
 
-      // 옆으로 미끄러지는 드리프트
+    if (holding && Math.abs(steerInput) > 0.06) {
+      const steerSign = Math.sign(steerInput);
+      if (steerSign !== car.lastSteer) {
+        car.lastSteer = steerSign;
+        cornerBonusReady = true;
+      }
+      const turnPower = 3.6 + car.drift * 2.2 + (onCurve ? 0.8 : 0);
+      car.ang += steerInput * turnPower * dt;
+      car.drift = Math.min(1, car.drift + dt * 5.2);
+      const slipTarget = steerInput * (42 + car.drift * 28);
+      car.slip = lerp(car.slip, slipTarget, 1 - Math.pow(0.0004, dt));
+
       car.x += Math.cos(car.ang + Math.PI / 2) * car.slip * dt;
       car.y += Math.sin(car.ang + Math.PI / 2) * car.slip * dt;
 
+      // 올바른 방향으로 드리프트 중이면 트랙에 살짝 붙는 어시스트
+      const correct = onCurve && Math.sign(steerInput) === curveDir;
+      if (correct) {
+        car.ang = angLerp(car.ang, pathAng, clamp(dt * 2.4, 0, 1));
+        const pull = clamp(-near.lateral * 1.6, -50, 50);
+        car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
+        car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
+        score += dt * (70 + combo * 18);
+        driftBoost = Math.min(1.2, driftBoost + dt * 0.55);
+
+        if (cornerBonusReady && car.drift > 0.4) {
+          combo += 1;
+          maxCombo = Math.max(maxCombo, combo);
+          perfectStreak += 1;
+          score += 30 + combo * 8;
+          cornerBonusReady = false;
+          spawnSparks(car.x, car.y);
+          shake = Math.max(shake, 5 + Math.min(4, combo * 0.3));
+          const labels = ["DRIFT!", "NICE!", "SUPER!", "야호!", "PERFECT!"];
+          const idx = Math.min(labels.length - 1, perfectStreak - 1);
+          spawnFloat(labels[idx], perfectStreak >= 4 ? "#7dffc2" : "#ff4f8b");
+        }
+      } else if (onCurve && Math.sign(steerInput) === -curveDir) {
+        // 반대 방향 → 바깥으로 밀림
+        car.x += Math.cos(pathAng + Math.PI / 2) * (-curveDir) * 55 * dt;
+        car.y += Math.sin(pathAng + Math.PI / 2) * (-curveDir) * 55 * dt;
+        combo = 0;
+        perfectStreak = 0;
+      }
+
       skidAcc += dt;
-      if (skidAcc > 0.035) {
+      if (skidAcc > 0.022) {
         skidAcc = 0;
         pushSkid(car.x, car.y, car.ang);
         spawnSmoke(car.x, car.y, car.ang, Math.sign(steerInput) || 1);
         spawnSmoke(car.x, car.y, car.ang, -(Math.sign(steerInput) || 1));
-      }
-
-      if (curv > 0.003 && Math.sign(steerInput) === Math.sign(near.p.curve || steerInput)) {
-        score += dt * (50 + combo * 12);
-        if (cornerBonusReady && car.drift > 0.45) {
-          combo += 1;
-          maxCombo = Math.max(maxCombo, combo);
-          score += 20 + combo * 5;
-          driftBoost = 1;
-          cornerBonusReady = false;
-          spawnSparks(car.x, car.y);
-          shake = Math.max(shake, 4);
-        }
+        if (car.drift > 0.55) spawnSmoke(car.x, car.y, car.ang, Math.sign(steerInput) || 1);
       }
     } else {
-      if (exitBonusReady && car.drift > 0.4) {
-        score += 22 + combo * 2;
+      if (exitBonusReady && car.drift > 0.45 && !onCurve) {
+        score += 35 + combo * 4;
         exitBonusReady = false;
+        spawnFloat("클린!", "#7dffc2");
+        driftBoost = Math.max(driftBoost, 0.85);
       }
-      car.drift = Math.max(0, car.drift - dt * 4.5);
+      car.drift = Math.max(0, car.drift - dt * 3.2);
       car.slip = lerp(car.slip, 0, 1 - Math.pow(0.002, dt));
 
-      // 손 떼면 트랙 중앙·방향으로 자동 직진
-      car.ang = angLerp(car.ang, pathAng, clamp(dt * 3.2, 0, 1));
-      const pull = clamp(-near.lateral * 2.4, -70, 70);
-      car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
-      car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
+      if (onCurve) {
+        // 곡선에서 드리프트 안 하면 직진만 → 코스아웃
+        // (자동 조향/중앙 보정 없음)
+        combo = 0;
+        perfectStreak = 0;
+      } else {
+        // 직선에서만 중앙 자동 직진
+        car.ang = angLerp(car.ang, pathAng, clamp(dt * 4.2, 0, 1));
+        const pull = clamp(-near.lateral * 3.2, -90, 90);
+        car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
+        car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
+      }
     }
 
-    driftBoost = Math.max(0, driftBoost - dt * 0.8);
+    driftBoost = Math.max(0, driftBoost - dt * 0.55);
 
     car.x += Math.cos(car.ang) * car.speed * dt;
     car.y += Math.sin(car.ang) * car.speed * dt;
 
-    dist += (car.speed * dt) / 12;
-    score += dt * 8;
+    dist += (car.speed * dt) / 11;
+    score += dt * 6;
 
     const check = nearestOnPath(car.x, car.y);
     car.idx = check.i;
-    if (check.dist > TRACK_HALF - CAR_R * 0.25) {
+    if (check.dist > TRACK_HALF - CAR_R * 0.22) {
       gameOver();
       return;
     }
 
-    if (holding && Math.abs(steerInput) > 0.2 && Math.sign(steerInput) !== Math.sign(check.p.curve || 0) && Math.abs(check.p.curve) > 0.01) {
-      // 반대 방향 드리프트면 콤보 끊김
-      if (check.dist > TRACK_HALF * 0.45) combo = 0;
-    }
-
-    shake = Math.max(0, shake - dt * 20);
+    shake = Math.max(0, shake - dt * 18);
 
     smoke.forEach((s) => {
       s.t += dt;
       s.x += s.vx * dt;
       s.y += s.vy * dt;
-      s.vx *= 0.88;
-      s.vy *= 0.88;
+      s.vx *= 0.86;
+      s.vy *= 0.86;
     });
     smoke = smoke.filter((s) => s.t < s.life);
     sparks.forEach((s) => {
@@ -432,15 +505,21 @@
       s.t += dt;
     });
     skids = skids.filter((s) => s.t < s.life);
+    floats.forEach((f) => {
+      f.t += dt;
+      f.y -= 40 * dt;
+    });
+    floats = floats.filter((f) => f.t < f.life);
 
     updateHud();
   }
 
-  /** 월드 → 화면: 차는 항상 화면 하단 중앙, 전방이 위 */
+  /** 월드 → 화면: 차는 항상 화면 하단 중앙, 전방이 위 + 드리프트 롤 */
   function worldToScreen(x, y) {
     const dx = x - car.x;
     const dy = y - car.y;
-    const a = -car.ang - Math.PI / 2;
+    const roll = (car.slip || 0) * 0.006;
+    const a = -car.ang - Math.PI / 2 + roll;
     const c = Math.cos(a);
     const s = Math.sin(a);
     return {
@@ -623,7 +702,7 @@
   function drawChickCar() {
     const cx = W / 2;
     const cy = H * 0.72;
-    const tilt = car.slip * 0.014 + (holding ? steerInput * 0.22 : 0);
+    const tilt = car.slip * 0.02 + (holding ? steerInput * 0.32 : 0);
 
     ctx.save();
     ctx.translate(cx, cy);
@@ -761,28 +840,67 @@
   function drawSteerCue() {
     if (state !== "play") return;
 
+    // 커브 예고 화살표
+    if (curveWarn !== 0) {
+      const pulse = 0.65 + Math.sin(time * 10) * 0.35;
+      ctx.fillStyle = `rgba(255,79,139,${0.55 * pulse})`;
+      ctx.font = '800 28px "Bagel Fat One", "Jua", sans-serif';
+      ctx.textAlign = "center";
+      const label = curveWarn < 0 ? "◀ 드리프트" : "드리프트 ▶";
+      ctx.fillText(label, W / 2, 56);
+      ctx.fillStyle = `rgba(255,246,168,${0.8 * pulse})`;
+      ctx.font = '700 14px "Jua", sans-serif';
+      ctx.fillText("코너! 눌러서 미끄러지세요", W / 2, 78);
+    }
+
     // side zones
-    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
     ctx.fillRect(0, H * 0.55, W * 0.28, H * 0.45);
     ctx.fillRect(W * 0.72, H * 0.55, W * 0.28, H * 0.45);
 
-    if (!holding) return;
+    if (holding && Math.abs(steerInput) > 0.06) {
+      const side = steerInput < 0 ? "LEFT" : "RIGHT";
+      ctx.fillStyle = "rgba(255,79,139,0.14)";
+      if (steerInput < 0) ctx.fillRect(0, 0, W * 0.48, H);
+      else ctx.fillRect(W * 0.52, 0, W * 0.48, H);
 
-    const side = steerInput < -0.08 ? "LEFT" : steerInput > 0.08 ? "RIGHT" : "HOLD";
-    ctx.fillStyle = "rgba(255,79,139,0.12)";
-    if (steerInput < -0.08) ctx.fillRect(0, 0, W * 0.45, H);
-    if (steerInput > 0.08) ctx.fillRect(W * 0.55, 0, W * 0.45, H);
+      if (car.drift > 0.3) {
+        ctx.fillStyle = "rgba(255,79,139,0.95)";
+        ctx.font = '800 22px "Bagel Fat One", "Jua", sans-serif';
+        ctx.textAlign = "center";
+        ctx.fillText(`DRIFT ${side}`, W / 2, H * 0.18);
+      }
 
-    ctx.fillStyle = "rgba(255,79,139,0.95)";
-    ctx.font = '700 16px "Jua", sans-serif';
-    ctx.textAlign = "center";
-    ctx.fillText(car.drift > 0.35 ? `DRIFT ${side}` : side, W / 2, 58);
+      ctx.fillStyle = "rgba(255,79,139,0.6)";
+      ctx.beginPath();
+      ctx.arc(pointerX, H - 36, 18, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    // finger marker
-    ctx.fillStyle = "rgba(255,79,139,0.55)";
-    ctx.beginPath();
-    ctx.arc(pointerX, H - 36, 16, 0, Math.PI * 2);
-    ctx.fill();
+    // float texts
+    floats.forEach((f) => {
+      const a = 1 - f.t / f.life;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = f.color;
+      ctx.font = '800 26px "Bagel Fat One", "Jua", sans-serif';
+      ctx.textAlign = "center";
+      ctx.fillText(f.text, W / 2, H * 0.38 + f.y);
+      ctx.globalAlpha = 1;
+    });
+
+    // speed lines
+    if (speedLines > 0.05) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.18 * speedLines})`;
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 10; i += 1) {
+        const x = 20 + ((i * 41 + time * 180) % (W - 40));
+        const y = (i * 70 + time * 420) % H;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + 18 + speedLines * 22);
+        ctx.stroke();
+      }
+    }
   }
 
   function render() {
