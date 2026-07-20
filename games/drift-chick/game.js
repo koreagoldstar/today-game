@@ -104,43 +104,47 @@
 
   function appendCurveSegment() {
     pathProgress += 1;
-    const progress = Math.min(1, pathProgress / 40);
+    const progress = Math.min(1, pathProgress / 35);
     const roll = Math.random();
-    const curveBias = 0.72 + progress * 0.18;
+    const curveBias = 0.78 + progress * 0.15;
 
     if (roll > curveBias) {
-      const len = 4 + Math.floor(Math.random() * 7);
+      const len = 3 + Math.floor(Math.random() * 5);
       for (let k = 0; k < len; k += 1) pushPathPoint(20, 0);
       return;
     }
 
     const kind = Math.random();
-    const dir = Math.random() < 0.65 ? -pathGen.lastDir : pathGen.lastDir;
+    const dir = Math.random() < 0.7 ? -pathGen.lastDir : pathGen.lastDir;
     pathGen.lastDir = dir;
+    const scale = 0.95 + progress * 0.4;
 
-    if (kind < 0.22) {
-      const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
-      const len = 36 + Math.floor(Math.random() * 20);
-      for (let k = 0; k < len; k += 1) pushPathPoint(20, dir * sharp);
-    } else if (kind < 0.72) {
-      const sharp = (0.009 + Math.random() * 0.005) * (0.9 + progress * 0.25);
-      const a = 28 + Math.floor(Math.random() * 16);
-      const b = 28 + Math.floor(Math.random() * 16);
-      for (let k = 0; k < a; k += 1) pushPathPoint(20, dir * sharp);
-      for (let k = 0; k < 4; k += 1) pushPathPoint(20, 0);
-      for (let k = 0; k < b; k += 1) pushPathPoint(20, -dir * sharp);
-      if (Math.random() < 0.35) {
-        for (let k = 0; k < 4; k += 1) pushPathPoint(20, 0);
-        const c = 22 + Math.floor(Math.random() * 12);
-        for (let k = 0; k < c; k += 1) pushPathPoint(20, dir * sharp);
+    if (kind < 0.2) {
+      // 급커브 — 확실히 꺾임
+      const sharp = (0.018 + Math.random() * 0.01) * scale;
+      const len = 28 + Math.floor(Math.random() * 16);
+      for (let k = 0; k < len; k += 1) pushPathPoint(19, dir * sharp);
+    } else if (kind < 0.7) {
+      // 긴 S커브 — 좌우로 크게
+      const sharp = (0.015 + Math.random() * 0.008) * scale;
+      const a = 26 + Math.floor(Math.random() * 14);
+      const b = 26 + Math.floor(Math.random() * 14);
+      for (let k = 0; k < a; k += 1) pushPathPoint(19, dir * sharp);
+      for (let k = 0; k < 3; k += 1) pushPathPoint(20, 0);
+      for (let k = 0; k < b; k += 1) pushPathPoint(19, -dir * sharp);
+      if (Math.random() < 0.4) {
+        for (let k = 0; k < 3; k += 1) pushPathPoint(20, 0);
+        const c = 20 + Math.floor(Math.random() * 12);
+        for (let k = 0; k < c; k += 1) pushPathPoint(19, dir * sharp);
         pathGen.lastDir = dir;
       } else {
         pathGen.lastDir = -dir;
       }
     } else {
-      const sharp = (0.009 + Math.random() * 0.006) * (0.9 + progress * 0.25);
-      const len = 26 + Math.floor(Math.random() * 18);
-      for (let k = 0; k < len; k += 1) pushPathPoint(20, dir * sharp);
+      // 중간~긴 커브
+      const sharp = (0.014 + Math.random() * 0.009) * scale;
+      const len = 24 + Math.floor(Math.random() * 16);
+      for (let k = 0; k < len; k += 1) pushPathPoint(19, dir * sharp);
     }
   }
 
@@ -190,11 +194,11 @@
     pathGen = { x: 0, y: 0, ang: -Math.PI / 2, lastDir: 1 };
     path.push({ x: 0, y: 0, ang: pathGen.ang, curve: 0 });
 
-    for (let i = 0; i < 20; i += 1) pushPathPoint(20, 0);
-    for (let i = 0; i < 34; i += 1) pushPathPoint(20, -0.01);
+    for (let i = 0; i < 16; i += 1) pushPathPoint(20, 0);
+    for (let i = 0; i < 30; i += 1) pushPathPoint(20, -0.014);
+    for (let i = 0; i < 5; i += 1) pushPathPoint(20, 0);
+    for (let i = 0; i < 30; i += 1) pushPathPoint(20, 0.014);
     for (let i = 0; i < 6; i += 1) pushPathPoint(20, 0);
-    for (let i = 0; i < 34; i += 1) pushPathPoint(20, 0.01);
-    for (let i = 0; i < 8; i += 1) pushPathPoint(20, 0);
 
     while (path.length < 220) appendCurveSegment();
     return path;
