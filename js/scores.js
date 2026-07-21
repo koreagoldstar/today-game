@@ -101,7 +101,7 @@
     return lines.join("\n");
   }
 
-  const KAKAO_JS_KEY = "f6fb512f71d21477822045626aa315c9";
+  const KAKAO_JS_KEY = "5c663a08f5da3d805bb8a99f998b2996";
   const SHARE_IMAGE = "https://www.todaygame.co.kr/assets/og-share.png";
   const SITE_URL = "https://www.todaygame.co.kr/";
   let kakaoReady = null;
