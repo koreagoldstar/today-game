@@ -217,6 +217,7 @@
       gameTitle: isChallengeMode() ? `오늘의 챌린지 · ${cfg.gameTitle}` : cfg.gameTitle,
       name: String(nameInput.value || "").trim() || "나",
       score: lastScore,
+      scoreLabel: lastLabel || undefined,
       rankDay: lastRank.rankDay,
       rankWeek: lastRank.rankWeek,
       url: isChallengeMode()

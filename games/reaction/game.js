@@ -119,14 +119,12 @@
     showOverlay("result");
 
     if (window.TodayGameRank) {
-      // 랭킹은 높을수록 좋음 → ms가 짧을수록 점수↑
-      const rankScore = Math.max(1, 5000 - ms);
       TodayGameRank.mount({
         gameId: GAME_ID,
         gameTitle: GAME_TITLE,
         formParent: overlays.result,
       });
-      TodayGameRank.open(rankScore, { label: `${ms}ms` });
+      TodayGameRank.open(ms, { label: `${ms}ms` });
     }
   }
 

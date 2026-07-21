@@ -45,7 +45,10 @@ module.exports = async function handler(req, res) {
     "minigolf",
     "wordle",
     "sokoban",
+    "reaction",
   ]);
+  /** 점수가 낮을수록 좋은 게임 (반응속도 ms 등) */
+  const LOWER_BETTER = new Set(["reaction"]);
   const PERIODS = new Set(["day", "week"]);
   const MAX_KEEP = 50;
   const MAX_NAME = 8;
@@ -134,22 +137,26 @@ module.exports = async function handler(req, res) {
       }));
   }
 
-  function sortScores(list) {
-    return [...list].sort(
-      (a, b) => b.score - a.score || String(b.at || "").localeCompare(String(a.at || ""))
-    );
+  function sortScores(list, game) {
+    const lower = LOWER_BETTER.has(game);
+    return [...list].sort((a, b) => {
+      if (a.score !== b.score) return lower ? a.score - b.score : b.score - a.score;
+      return String(b.at || "").localeCompare(String(a.at || ""));
+    });
   }
 
-  /** 같은 닉네임은 기간 내 최고점만 유지 */
-  function upsertBest(list, entry) {
+  /** 같은 닉네임은 기간 내 최고점만 유지 (낮을수록 좋은 게임은 최저점) */
+  function upsertBest(list, entry, game) {
     const next = normalizeList(list);
+    const lower = LOWER_BETTER.has(game);
     const idx = next.findIndex((e) => e.name === entry.name);
     if (idx >= 0) {
-      if (entry.score > next[idx].score) next[idx] = entry;
+      const better = lower ? entry.score < next[idx].score : entry.score > next[idx].score;
+      if (better) next[idx] = entry;
     } else {
       next.push(entry);
     }
-    return sortScores(next).slice(0, MAX_KEEP);
+    return sortScores(next, game).slice(0, MAX_KEEP);
   }
 
   function emptyGameBuckets() {
@@ -289,7 +296,7 @@ module.exports = async function handler(req, res) {
     const ids = periodIds();
     const periodId = ids[period];
     const data = await readScores(game, period, periodId);
-    const scores = sortScores(data.scores).slice(0, limit);
+    const scores = sortScores(data.scores, game).slice(0, limit);
     res.status(200).json({
       game,
       period,
@@ -318,8 +325,8 @@ module.exports = async function handler(req, res) {
 
     const dayData = await readScores(game, "day", ids.day);
     const weekData = await readScores(game, "week", ids.week);
-    const dayNext = upsertBest(dayData.scores, entry);
-    const weekNext = upsertBest(weekData.scores, entry);
+    const dayNext = upsertBest(dayData.scores, entry, game);
+    const weekNext = upsertBest(weekData.scores, entry, game);
 
     const daySaved = await writeScores(game, "day", ids.day, dayNext);
     const weekSaved = await writeScores(game, "week", ids.week, weekNext);
