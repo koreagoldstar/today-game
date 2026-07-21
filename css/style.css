@@ -669,6 +669,16 @@ body {
   box-shadow: inset 0 0 0 1px rgba(255, 79, 139, 0.16);
 }
 
+.challenge-share-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.challenge-share-row[hidden] {
+  display: none;
+}
+
 .challenge-share-btn {
   appearance: none;
   border: none;
@@ -676,9 +686,10 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 44px;
+  padding: 0 12px;
   border-radius: 999px;
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #fff;
   cursor: pointer;
@@ -686,13 +697,19 @@ body {
   box-shadow: 0 5px 0 #2a6fa8;
 }
 
+.challenge-share-btn.challenge-share-kakao {
+  background: linear-gradient(180deg, #fee500, #f5d800);
+  color: #191919;
+  box-shadow: 0 5px 0 #c4a800;
+}
+
 .challenge-share-btn:active {
   transform: translateY(2px);
   box-shadow: 0 3px 0 #2a6fa8;
 }
 
-.challenge-share-btn[hidden] {
-  display: none;
+.challenge-share-btn.challenge-share-kakao:active {
+  box-shadow: 0 3px 0 #c4a800;
 }
 
 .challenge-stats {

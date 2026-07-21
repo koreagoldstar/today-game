@@ -101,6 +101,44 @@
     return lines.join("\n");
   }
 
+  const KAKAO_JS_KEY = "f6fb512f71d21477822045626aa315c9";
+  const SHARE_IMAGE = "https://www.todaygame.co.kr/assets/og-share.png";
+  const SITE_URL = "https://www.todaygame.co.kr/";
+  let kakaoReady = null;
+
+  function ensureKakao() {
+    if (kakaoReady) return kakaoReady;
+    kakaoReady = new Promise((resolve) => {
+      const boot = () => {
+        try {
+          if (!window.Kakao) return resolve(false);
+          if (!Kakao.isInitialized()) Kakao.init(KAKAO_JS_KEY);
+          resolve(Boolean(Kakao.isInitialized && Kakao.isInitialized()));
+        } catch (_) {
+          resolve(false);
+        }
+      };
+      if (window.Kakao) {
+        boot();
+        return;
+      }
+      const existing = document.querySelector('script[data-kakao-sdk="1"]');
+      if (existing) {
+        existing.addEventListener("load", boot);
+        existing.addEventListener("error", () => resolve(false));
+        return;
+      }
+      const s = document.createElement("script");
+      s.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
+      s.async = true;
+      s.dataset.kakaoSdk = "1";
+      s.onload = boot;
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+    return kakaoReady;
+  }
+
   /** 카카오·인스타 등 인앱 브라우저는 Web Share API를 막는 경우가 많음 */
   function isInAppBrowser() {
     const ua = navigator.userAgent || "";
@@ -117,15 +155,65 @@
    */
   function formatShareResult(result) {
     if (!result) return "공유에 실패했어요";
+    if (result.mode === "kakao") return "카카오톡 공유 창을 열었어요";
     if (result.mode === "share") return "공유 창을 열었어요";
     if (result.error === "cancel") return "공유를 취소했어요";
     if (result.mode === "copy") {
       if (result.inApp || isKakaoInApp()) {
-        return "카카오 앱 안에서는 공유 창이 막혀 있어요. 텍스트는 복사됐어요 — 채팅창에 붙여넣기 하세요";
+        return "텍스트는 복사됐어요 — 채팅창에 붙여넣기 하세요";
       }
       return "복사됨! 카톡·SNS에 붙여넣기 하세요";
     }
+    if (result.error === "kakao") return "카카오톡 공유를 열지 못했어요";
     return "공유에 실패했어요";
+  }
+
+  /**
+   * 카카오톡 피드 공유 (로그인 불필요 · 메시지 공유만)
+   */
+  async function shareToKakao(opts) {
+    const ok = await ensureKakao();
+    if (!ok || !window.Kakao || !Kakao.Share) {
+      return { ok: false, mode: "fail", error: "kakao" };
+    }
+    const gameTitle = opts.gameTitle || "오늘의 챌린지";
+    const name = opts.name || "나";
+    const score = Number(opts.score) || 0;
+    const rank = opts.rankDay || opts.rank;
+    const url = opts.url || SITE_URL;
+    const title = rank
+      ? `오늘의 챌린지 결과: ${rank}위!`
+      : `오늘의 게임 · ${gameTitle}`;
+    const description = rank
+      ? `${name} · ${score.toLocaleString("ko-KR")}점 · ${rank}위 달성! 너도 도전해봐`
+      : `${name} · ${score.toLocaleString("ko-KR")}점! 너도 도전해봐`;
+
+    try {
+      Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: {
+          title,
+          description,
+          imageUrl: SHARE_IMAGE,
+          link: {
+            mobileWebUrl: url,
+            webUrl: url,
+          },
+        },
+        buttons: [
+          {
+            title: "나도 도전하기",
+            link: {
+              mobileWebUrl: url,
+              webUrl: url,
+            },
+          },
+        ],
+      });
+      return { ok: true, mode: "kakao" };
+    } catch (_) {
+      return { ok: false, mode: "fail", error: "kakao" };
+    }
   }
 
   /**
@@ -135,7 +223,7 @@
   async function shareRank(opts) {
     const text = buildShareText(opts);
     const title = `오늘의 게임 · ${opts.gameTitle || "랭킹"}`;
-    const url = opts.url || "https://www.todaygame.co.kr/";
+    const url = opts.url || SITE_URL;
     const inApp = isInAppBrowser();
 
     // 카카오 등 인앱은 share가 있어도 깨지거나 바로 실패하는 경우가 많아 복사 우선
@@ -179,6 +267,7 @@
     formatShareResult,
     buildShareText,
     shareRank,
+    shareToKakao,
     isInAppBrowser,
     isKakaoInApp,
   };

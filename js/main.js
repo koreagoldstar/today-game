@@ -811,7 +811,9 @@
       endsAt = Number(data.endsAt) || endsAt;
       renderMyChallengeRank(myRankEl, playersEl, gameId, participants);
 
+      const shareRow = document.getElementById("challenge-share-row");
       const shareBtn = document.getElementById("challenge-share-btn");
+      const kakaoBtn = document.getElementById("challenge-share-kakao");
       let savedResult = null;
       try {
         if (window.TodayGameRank && TodayGameRank.loadLocal) {
@@ -820,27 +822,41 @@
       } catch (_) {
         savedResult = null;
       }
-      if (shareBtn) {
+      if (shareRow) {
         if (savedResult && savedResult.score != null) {
-          shareBtn.hidden = false;
-          shareBtn.onclick = async () => {
-            if (!window.TodayScores || !TodayScores.shareRank) return;
-            const result = await TodayScores.shareRank({
-              gameTitle: `오늘의 챌린지 · ${data.game.title}`,
-              name: savedResult.name || "나",
-              score: savedResult.score,
-              rankDay: savedResult.rank,
-              rankWeek: null,
-              url: "https://www.todaygame.co.kr/",
-            });
-            if (result.mode === "copy") shareBtn.textContent = "복사됨!";
-            else if (result.ok) shareBtn.textContent = "공유 완료!";
-            setTimeout(() => {
-              shareBtn.textContent = "내 결과 공유";
-            }, 1600);
+          shareRow.hidden = false;
+          const payload = {
+            gameTitle: `오늘의 챌린지 · ${data.game.title}`,
+            name: savedResult.name || "나",
+            score: savedResult.score,
+            rankDay: savedResult.rank,
+            rankWeek: null,
+            url: "https://www.todaygame.co.kr/",
           };
+          if (kakaoBtn) {
+            kakaoBtn.onclick = async () => {
+              if (!window.TodayScores || !TodayScores.shareToKakao) return;
+              const result = await TodayScores.shareToKakao(payload);
+              kakaoBtn.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+              setTimeout(() => {
+                kakaoBtn.textContent = "카카오톡 공유";
+              }, 1600);
+            };
+          }
+          if (shareBtn) {
+            shareBtn.onclick = async () => {
+              if (!window.TodayScores || !TodayScores.shareRank) return;
+              const result = await TodayScores.shareRank(payload);
+              if (result.mode === "copy") shareBtn.textContent = "복사됨!";
+              else if (result.ok) shareBtn.textContent = "공유 완료!";
+              else shareBtn.textContent = "공유 실패";
+              setTimeout(() => {
+                shareBtn.textContent = "다른 앱으로 공유";
+              }, 1600);
+            };
+          }
         } else {
-          shareBtn.hidden = true;
+          shareRow.hidden = true;
         }
       }
 

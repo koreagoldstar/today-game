@@ -59,6 +59,10 @@
 .today-rank-form .rank-msg{min-height:1.2em;margin:0;font-size:13px;color:#2f7a45}
 .today-rank-form .btn.soft{color:#fff;background:linear-gradient(180deg,#ff9ec4,#ff6b9d);box-shadow:0 6px 0 #d93f74}
 .today-rank-form .btn.soft:active{box-shadow:0 3px 0 #d93f74;transform:translateY(2px)}
+.today-rank-share-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(300px,100%);margin-top:4px}
+.today-rank-share-row[hidden]{display:none}
+.today-rank-form .btn.kakao{color:#191919;background:linear-gradient(180deg,#fee500,#f5d800);box-shadow:0 6px 0 #c4a800}
+.today-rank-form .btn.kakao:active{box-shadow:0 3px 0 #c4a800;transform:translateY(2px)}
 .challenge-done{width:min(300px,100%);margin:10px 0 4px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,240,248,.9));border:2px solid rgba(255,79,139,.35);text-align:center;color:#3d2a36}
 .challenge-done-title{margin:0 0 8px;font-size:18px;font-weight:700;color:#ff4f8b}
 .challenge-done-row{margin:4px 0;font-size:15px}
@@ -139,7 +143,10 @@
       <input id="today-rank-name" name="name" maxlength="8" minlength="2" autocomplete="nickname" placeholder="닉네임" required />
       <button type="submit" class="btn" id="today-rank-submit">랭킹 등록</button>
       <p class="rank-msg" id="today-rank-msg"></p>
-      <button type="button" class="btn soft" id="today-rank-share" hidden>내 결과 공유</button>
+      <div class="today-rank-share-row" id="today-rank-share-row" hidden>
+        <button type="button" class="btn kakao" id="today-rank-kakao">카카오톡 공유</button>
+        <button type="button" class="btn soft" id="today-rank-share">다른 앱으로</button>
+      </div>
     `;
     parent.appendChild(form);
     if (isChallengeMode()) ensureDoneBanner(parent);
@@ -173,8 +180,8 @@
           : res.rank
             ? `오늘 ${res.rank}위에 등록됐어요!`
             : "등록 완료!";
-        const share = form.querySelector("#today-rank-share");
-        if (share) share.hidden = false;
+        const shareRow = form.querySelector("#today-rank-share-row");
+        if (shareRow) shareRow.hidden = false;
 
         let challengeRank = lastRank.rankDay;
         let challengeTotal = null;
@@ -206,23 +213,37 @@
       }
     });
 
+    const sharePayload = () => ({
+      gameTitle: isChallengeMode() ? `오늘의 챌린지 · ${cfg.gameTitle}` : cfg.gameTitle,
+      name: String(nameInput.value || "").trim() || "나",
+      score: lastScore,
+      rankDay: lastRank.rankDay,
+      rankWeek: lastRank.rankWeek,
+      url: isChallengeMode()
+        ? "https://www.todaygame.co.kr/"
+        : `https://www.todaygame.co.kr/games/${cfg.gameId}/`,
+    });
+
     const shareBtn = form.querySelector("#today-rank-share");
     if (shareBtn) {
       shareBtn.addEventListener("click", async () => {
         if (!window.TodayScores || !window.TodayScores.shareRank) return;
-        const name = String(nameInput.value || "").trim() || "나";
-        const result = await window.TodayScores.shareRank({
-          gameTitle: cfg.gameTitle,
-          name,
-          score: lastScore,
-          rankDay: lastRank.rankDay,
-          rankWeek: lastRank.rankWeek,
-          url: `https://www.todaygame.co.kr/games/${cfg.gameId}/`,
-        });
+        const result = await window.TodayScores.shareRank(sharePayload());
         const msg = form.querySelector("#today-rank-msg");
         if (window.TodayScores.formatShareResult) {
           msg.textContent = window.TodayScores.formatShareResult(result);
           if (result.mode === "share") msg.textContent = "";
+        }
+      });
+    }
+    const kakaoBtn = form.querySelector("#today-rank-kakao");
+    if (kakaoBtn) {
+      kakaoBtn.addEventListener("click", async () => {
+        if (!window.TodayScores || !window.TodayScores.shareToKakao) return;
+        const result = await window.TodayScores.shareToKakao(sharePayload());
+        const msg = form.querySelector("#today-rank-msg");
+        if (window.TodayScores.formatShareResult) {
+          msg.textContent = window.TodayScores.formatShareResult(result);
         }
       });
     }
@@ -248,8 +269,8 @@
       if (btn) btn.disabled = false;
       const msg = form.querySelector("#today-rank-msg");
       if (msg) msg.textContent = "";
-      const share = form.querySelector("#today-rank-share");
-      if (share) share.hidden = true;
+      const shareRow = form.querySelector("#today-rank-share-row");
+      if (shareRow) shareRow.hidden = true;
       const done = document.getElementById("challenge-done");
       if (done) done.hidden = true;
     },
@@ -302,8 +323,8 @@
         if (btn) btn.disabled = false;
         const msg = form.querySelector("#today-rank-msg");
         if (msg) msg.textContent = "";
-        const share = form.querySelector("#today-rank-share");
-        if (share) share.hidden = true;
+        const shareRow = form.querySelector("#today-rank-share-row");
+        if (shareRow) shareRow.hidden = true;
       }
       const done = document.getElementById("challenge-done");
       if (done) done.hidden = true;
