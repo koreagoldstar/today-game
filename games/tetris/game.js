@@ -696,15 +696,17 @@
   function pauseGame() {
     if (state !== "play") return;
     state = "paused";
-    showOverlay("paused");
+    if (!window.TodayPause) showOverlay("paused");
+    if (window.TodayPause && TodayPause.sync) TodayPause.sync();
   }
 
   function resumeGame() {
     if (state !== "paused") return;
-    showOverlay(null);
+    if (!window.TodayPause) showOverlay(null);
     state = "play";
     last = performance.now();
     raf = requestAnimationFrame(loop);
+    if (window.TodayPause && TodayPause.sync) TodayPause.sync();
   }
 
   function endGame() {
@@ -1157,6 +1159,7 @@
       return;
     }
     if (e.code === "Escape" || e.code === "KeyP") {
+      if (window.TodayPause) return;
       if (state === "play") pauseGame();
       else if (state === "paused") resumeGame();
       return;
@@ -1229,6 +1232,22 @@
   board = emptyBoard();
   updateHud();
   showOverlay("title");
+  if (window.TodayPause) {
+    TodayPause.mount({
+      canPause: () => state === "play",
+      isPaused: () => state === "paused",
+      pause() {
+        if (state !== "play") return false;
+        pauseGame();
+        return true;
+      },
+      resume() {
+        if (state !== "paused") return false;
+        resumeGame();
+        return true;
+      },
+    });
+  }
   loadBlockAssets().then(() => {
     draw();
     drawSide();
