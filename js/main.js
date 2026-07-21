@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "reaction",
+      title: "번쩍 반응",
+      tag: "반사 · ms 기록",
+      href: "/games/reaction/",
+      thumb: "/assets/thumbs/reaction.png",
+      category: "rhythm",
+    },
+    {
       id: "wordle",
       title: "오늘의 워들",
       tag: "퍼즐 · 하루 100문제",

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>번쩍 반응</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="reaction">
+    <div class="stage">
+      <div class="hud">
+        <a class="home" href="/">← 홈</a>
+        <div class="score-pill soft">최고 <b id="hud-best">—</b></div>
+        <div class="score-pill">시도 <b id="hud-tries">0</b></div>
+      </div>
+
+      <button type="button" class="arena" id="arena" aria-label="반응 영역">
+        <div class="signal" id="signal" aria-hidden="true"></div>
+        <img class="mascot" id="mascot" src="assets/wait.png" alt="" width="180" height="180" />
+        <p class="arena-msg" id="arena-msg">준비가 되면 시작!</p>
+        <p class="arena-sub" id="arena-sub">초록이 되면 바로 탭</p>
+      </button>
+
+      <div class="overlay" id="title">
+        <div class="badge">REACT</div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
+        <h1>번쩍 반응</h1>
+        <p>빨강에선 참아요<br />초록이 되는 순간 바로 탭!</p>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="early">
+        <div class="badge warn">TOO FAST</div>
+        <img class="hero-art small" src="assets/wait.png" alt="" width="110" height="110" />
+        <h1>너무 빨라요!</h1>
+        <p>초록이 되기 전에 눌렀어요<br />다시 차분히 기다려요</p>
+        <button type="button" class="btn" id="early-btn">다시 대기</button>
+      </div>
+
+      <div class="overlay hidden" id="result">
+        <div class="badge soft">RECORD</div>
+        <img class="hero-art" src="assets/result.png" alt="" width="120" height="120" />
+        <p class="result-label">내 반응속도</p>
+        <p class="result-ms"><b id="result-ms">0</b><span>ms</span></p>
+        <p class="result-note" id="result-note"></p>
+        <p class="result-best" id="result-best"></p>
+        <button type="button" class="btn" id="retry-btn">한 번 더!</button>
+        <div class="share-row">
+          <button type="button" class="btn kakao" id="kakao-btn">카카오톡 공유</button>
+          <button type="button" class="btn soft" id="share-btn">다른 앱으로</button>
+        </div>
+        <p class="share-msg" id="share-msg"></p>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

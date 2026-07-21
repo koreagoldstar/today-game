@@ -92,8 +92,9 @@
     return "등록 완료!";
   }
 
-  function buildShareText({ gameTitle, name, score, rankDay, rankWeek, url }) {
-    const lines = [`오늘의 게임 · ${gameTitle}`, `${name} · ${Number(score).toLocaleString("ko-KR")}점`];
+  function buildShareText({ gameTitle, name, score, scoreLabel, rankDay, rankWeek, url }) {
+    const scoreLine = scoreLabel || `${Number(score).toLocaleString("ko-KR")}점`;
+    const lines = [`오늘의 게임 · ${gameTitle}`, `${name} · ${scoreLine}`];
     if (rankDay) lines.push(`오늘 ${rankDay}위`);
     if (rankWeek) lines.push(`이번주 ${rankWeek}위`);
     lines.push("");
@@ -179,14 +180,15 @@
     const gameTitle = opts.gameTitle || "오늘의 챌린지";
     const name = opts.name || "나";
     const score = Number(opts.score) || 0;
+    const scoreLabel = opts.scoreLabel || `${score.toLocaleString("ko-KR")}점`;
     const rank = opts.rankDay || opts.rank;
     const url = opts.url || SITE_URL;
     const title = rank
       ? `오늘의 챌린지 결과: ${rank}위!`
       : `오늘의 게임 · ${gameTitle}`;
     const description = rank
-      ? `${name} · ${score.toLocaleString("ko-KR")}점 · ${rank}위 달성! 너도 도전해봐`
-      : `${name} · ${score.toLocaleString("ko-KR")}점! 너도 도전해봐`;
+      ? `${name} · ${scoreLabel} · ${rank}위 달성! 너도 도전해봐`
+      : `${name} · ${scoreLabel}! 너도 도전해봐`;
 
     try {
       Kakao.Share.sendDefault({
