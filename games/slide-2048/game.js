@@ -32,6 +32,7 @@
   let won = false;
   let keepPlaying = false;
   let busy = false;
+  let paused = false;
   let touchStart = null;
   let cellSize = 0;
   let gap = 10;
@@ -259,7 +260,7 @@
   }
 
   function slide(direction) {
-    if (busy) return false;
+    if (paused || busy) return false;
     measure();
 
     let anyMoved = false;
@@ -331,6 +332,7 @@
     won = false;
     keepPlaying = false;
     busy = false;
+    paused = false;
     updateHud();
     spawnTile();
     spawnTile();
@@ -394,6 +396,31 @@
       gameId: "slide-2048",
       gameTitle: "두배두배",
       formParent: overlays.over || overlays.win || document.body,
+    });
+  }
+
+  function isPlaying() {
+    return (
+      overlays.title.classList.contains("hidden") &&
+      overlays.win.classList.contains("hidden") &&
+      overlays.over.classList.contains("hidden")
+    );
+  }
+
+  if (window.TodayPause) {
+    TodayPause.mount({
+      canPause: () => isPlaying() && !paused,
+      isPaused: () => paused,
+      pause() {
+        if (!isPlaying() || paused) return false;
+        paused = true;
+        return true;
+      },
+      resume() {
+        if (!paused) return false;
+        paused = false;
+        return true;
+      },
     });
   }
 })();

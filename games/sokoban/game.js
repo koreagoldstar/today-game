@@ -483,4 +483,23 @@
       formParent: document.getElementById("allclear") || document.getElementById("clear") || document.body,
     });
   }
+
+  if (window.TodayPause) {
+    TodayPause.mount({
+      canPause: () => state === "play",
+      isPaused: () => state === "paused",
+      pause() {
+        if (state !== "play") return false;
+        state = "paused";
+        return true;
+      },
+      resume() {
+        if (state !== "paused") return false;
+        state = "play";
+        if (typeof last !== "undefined") last = performance.now();
+        return true;
+      },
+    });
+  }
+
 })();

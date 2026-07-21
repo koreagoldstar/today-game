@@ -1506,16 +1506,16 @@
 
   if (window.TodayPause) {
     TodayPause.mount({
-      canPause: () => state === "play",
+      canPause: () => state === "playing",
       isPaused: () => state === "paused",
       pause() {
-        if (state !== "play") return false;
+        if (state !== "playing") return false;
         state = "paused";
         return true;
       },
       resume() {
         if (state !== "paused") return false;
-        state = "play";
+        state = "playing";
         lastTs = performance.now();
         return true;
       },

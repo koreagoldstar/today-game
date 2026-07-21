@@ -42,6 +42,7 @@
   let col = 0;
   let done = false;
   let won = false;
+  let paused = false;
   /** @type {Record<string, "correct"|"present"|"absent">} */
   let keyState = {};
   let letterHints = 0;
@@ -120,6 +121,7 @@
     col = 0;
     done = false;
     won = false;
+    paused = false;
     keyState = {};
     letterHints = 0;
   }
@@ -359,6 +361,7 @@
   }
 
   function onKey(k) {
+    if (paused) return;
     if (done) {
       openResult();
       return;
@@ -411,6 +414,7 @@
   }
 
   function giveLetterHint() {
+    if (paused) return;
     if (done || letterHints >= 3) return;
     letterHints += 1;
     fillHintLetters();
@@ -445,6 +449,7 @@
 
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (paused) return;
     if (!result.classList.contains("hidden")) {
       if (e.key === "Enter" && !nextBtn.disabled) {
         e.preventDefault();
@@ -503,6 +508,24 @@
       gameId: "wordle",
       gameTitle: "오늘의 워들",
       formParent: result || document.body,
+    });
+  }
+
+  if (window.TodayPause) {
+    TodayPause.mount({
+      canPause: () => !done && result.classList.contains("hidden") && help.classList.contains("hidden"),
+      isPaused: () => paused,
+      pause() {
+        if (done || paused) return false;
+        if (!result.classList.contains("hidden") || !help.classList.contains("hidden")) return false;
+        paused = true;
+        return true;
+      },
+      resume() {
+        if (!paused) return false;
+        paused = false;
+        return true;
+      },
     });
   }
 })();

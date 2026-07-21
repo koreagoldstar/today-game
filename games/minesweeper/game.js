@@ -106,6 +106,18 @@
   function startTimer() {
     if (timerOn) return;
     timerOn = true;
+    resumeTimerClock();
+  }
+
+  function pauseTimerClock() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function resumeTimerClock() {
+    if (!timerOn || timerId) return;
     timerId = setInterval(() => {
       timer += 1;
       document.getElementById("hud-time").textContent = String(timer);
@@ -658,6 +670,25 @@
       gameId: "minesweeper",
       gameTitle: "지뢰찾기",
       formParent: document.getElementById("win") || document.body,
+    });
+  }
+
+  if (window.TodayPause) {
+    TodayPause.mount({
+      canPause: () => state === "play",
+      isPaused: () => state === "paused",
+      pause() {
+        if (state !== "play") return false;
+        state = "paused";
+        pauseTimerClock();
+        return true;
+      },
+      resume() {
+        if (state !== "paused") return false;
+        state = "play";
+        resumeTimerClock();
+        return true;
+      },
     });
   }
 })();
