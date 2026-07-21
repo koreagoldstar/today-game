@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
   const MIN_NAME = 2;
   const TTL_DAY = 60 * 60 * 24 * 4; // 4일
   const TTL_WEEK = 60 * 60 * 24 * 16; // 16일
-  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f7fe7-84a1-7ac6-af4f-88e5fc99158e";
+  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f8512-50b8-7988-81f9-1b253cbf6c68";
   const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
   function redisConfigured() {
@@ -213,15 +213,19 @@ module.exports = async function handler(req, res) {
       }
       payload[game] = trimmed;
     }
-    const response = await fetch(JSONBLOB_URL, {
+    const body = JSON.stringify(payload);
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    let response = await fetch(JSONBLOB_URL, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers,
+      body,
     });
-    return response.ok;
+    if (response.ok) return true;
+    // 기존 blob이 사라졌을 때(404 등) 새 blob 생성은 env 갱신이 필요하므로 실패로 처리
+    return false;
   }
 
   async function readScores(game, period, periodId) {

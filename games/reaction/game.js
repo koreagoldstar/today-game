@@ -195,6 +195,8 @@
   arena.addEventListener("pointerdown", onArenaTap);
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
+    const tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
     if (e.code === "Space" || e.code === "Enter") {
       if (state === "title") {
         e.preventDefault();
@@ -207,8 +209,6 @@
         return;
       }
       if (state === "result") {
-        e.preventDefault();
-        document.getElementById("retry-btn").click();
         return;
       }
       if (state === "wait" || state === "ready") {
