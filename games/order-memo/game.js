@@ -43,7 +43,7 @@
   let playToken = 0;
   let inputReadyAt = 0;
   let inputBusy = false;
-  let armedIndex = -1;
+  let lastTapAt = 0;
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -137,27 +137,15 @@
       const img = document.createElement("img");
       img.src = `assets/icons/${id}.png`;
       img.alt = "";
+      img.draggable = false;
       img.width = 120;
       img.height = 120;
       btn.appendChild(img);
-      btn.addEventListener("pointerdown", (e) => {
-        if (state !== "input" || performance.now() < inputReadyAt) return;
+      // click 한 경로만 사용 (마우스 pointerup 중복/캡처 이슈 방지)
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
-        armedIndex = index;
-        try {
-          btn.setPointerCapture(e.pointerId);
-        } catch (_) {
-          /* ignore */
-        }
-      });
-      btn.addEventListener("pointerup", (e) => {
-        e.preventDefault();
-        if (armedIndex !== index) return;
-        armedIndex = -1;
+        e.stopPropagation();
         onTileTap(index);
-      });
-      btn.addEventListener("pointercancel", () => {
-        if (armedIndex === index) armedIndex = -1;
       });
       board.appendChild(btn);
     });
@@ -211,10 +199,10 @@
     if (token !== playToken) return;
     inputIndex = 0;
     inputBusy = false;
-    armedIndex = -1;
+    lastTapAt = 0;
     state = "input";
     // 보기 직후 남아 있는 터치/클릭이 자동 입력되지 않게
-    inputReadyAt = performance.now() + 380;
+    inputReadyAt = performance.now() + 420;
     setTilesEnabled(true);
     setPhase("따라 눌러요!", `${sequence.length}개 순서`);
   }
@@ -261,7 +249,11 @@
 
   function onTileTap(index) {
     if (state !== "input" || inputBusy) return;
-    if (performance.now() < inputReadyAt) return;
+    const now = performance.now();
+    if (now < inputReadyAt) return;
+    // 마우스 더블클릭/중복 이벤트 방지
+    if (now - lastTapAt < 220) return;
+    lastTapAt = now;
 
     const expect = sequence[inputIndex];
     const el = tileEl(index);
@@ -288,10 +280,9 @@
 
     inputIndex = next;
     setPhase("좋아요!", `${inputIndex}/${sequence.length}`);
-    // 한 번 누른 입력이 두 번 들어가지 않게 짧게 잠금
     setTimeout(() => {
       if (state === "input") inputBusy = false;
-    }, 160);
+    }, 180);
   }
 
   function startGame() {

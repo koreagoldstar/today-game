@@ -134,6 +134,7 @@ body {
   border-radius: 22px;
   padding: 0;
   cursor: pointer;
+  touch-action: manipulation;
   background: rgba(255, 255, 255, 0.72);
   box-shadow:
     0 6px 0 rgba(47, 63, 85, 0.16),
