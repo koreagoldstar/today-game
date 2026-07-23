@@ -6,7 +6,6 @@
   const GAME_ID = "chick-shield";
   const GAME_TITLE = "막아요 쏴요";
   const BEST_KEY = "today-chick-shield-best";
-  const NAME_KEY = "today-chick-shield-name";
 
   const ENEMY_KINDS = ["pink", "star", "candy"];
   const ITEM_KINDS = ["heart", "shield", "triple", "rapid"];
@@ -27,8 +26,6 @@
     over: document.getElementById("over"),
   };
   const hintEl = document.getElementById("hint");
-  const nameInput = document.getElementById("player-name");
-  nameInput.value = localStorage.getItem(NAME_KEY) || "";
 
   let best = Number(localStorage.getItem(BEST_KEY) || "0") || 0;
   document.getElementById("hud-best").textContent = String(best);
@@ -43,8 +40,6 @@
   let playTime = 0;
   let last = 0;
   let raf = 0;
-  let submitted = false;
-  let lastRank = { rankDay: null, rankWeek: null };
   let shield = false;
   let fireAcc = 0;
   let spawnAcc = 0;
@@ -270,11 +265,6 @@
     particles = [];
     floats = [];
     player.x = W / 2;
-    submitted = false;
-    lastRank = { rankDay: null, rankWeek: null };
-    document.getElementById("rank-msg").textContent = "";
-    const shareBtn = document.getElementById("share-rank-btn");
-    if (shareBtn) shareBtn.hidden = true;
     seedClouds();
     updateHud();
   }
@@ -295,6 +285,14 @@
     document.getElementById("over-detail").textContent =
       `웨이브 ${wave} · ${Math.floor(score).toLocaleString("ko-KR")}점`;
     showOverlay("over");
+    if (window.TodayGameRank) {
+      TodayGameRank.mount({
+        gameId: GAME_ID,
+        gameTitle: GAME_TITLE,
+        formParent: document.getElementById("over"),
+      });
+      TodayGameRank.open(score);
+    }
   }
 
   function spawnBurst(x, y, color, n) {
@@ -880,64 +878,6 @@
 
   document.getElementById("start-btn").addEventListener("click", startGame);
   document.getElementById("retry-btn").addEventListener("click", startGame);
-
-  document.getElementById("rank-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById("submit-btn");
-    const name = nameInput.value.trim();
-    if (name.length < 2) return;
-    localStorage.setItem(NAME_KEY, name);
-    if (submitted) {
-      document.getElementById("rank-msg").textContent = "이미 등록했어요";
-      return;
-    }
-    btn.disabled = true;
-    if (!window.TodayScores) {
-      document.getElementById("rank-msg").textContent = "랭킹 모듈을 불러오지 못했어요";
-      btn.disabled = false;
-      return;
-    }
-    const res = await window.TodayScores.submitScore(GAME_ID, name, Math.floor(score));
-    if (res.ok) {
-      submitted = true;
-      lastRank = { rankDay: res.rankDay || res.rank, rankWeek: res.rankWeek };
-      document.getElementById("rank-msg").textContent = window.TodayScores.formatRankMessage
-        ? window.TodayScores.formatRankMessage(res)
-        : "등록 완료!";
-      const shareBtn = document.getElementById("share-rank-btn");
-      if (shareBtn) shareBtn.hidden = false;
-      if (window.TodayGameRank && TodayGameRank.afterSubmit) {
-        await TodayGameRank.afterSubmit({
-          gameId: GAME_ID,
-          gameTitle: GAME_TITLE,
-          name,
-          score: Math.floor(score),
-          rankDay: lastRank.rankDay,
-          label: `${Math.floor(score).toLocaleString("ko-KR")}점`,
-        });
-      }
-    } else {
-      document.getElementById("rank-msg").textContent = res.error || "등록 실패";
-    }
-    btn.disabled = false;
-  });
-
-  document.getElementById("share-rank-btn").addEventListener("click", async () => {
-    const name = nameInput.value.trim() || "나";
-    const msg = document.getElementById("rank-msg");
-    if (!window.TodayScores || !TodayScores.shareRank) return;
-    const result = await window.TodayScores.shareRank({
-      gameTitle: GAME_TITLE,
-      name,
-      score: Math.floor(score),
-      rankDay: lastRank.rankDay,
-      rankWeek: lastRank.rankWeek,
-      url: `https://www.todaygame.co.kr/games/${GAME_ID}/`,
-    });
-    msg.textContent = window.TodayScores.formatShareResult
-      ? window.TodayScores.formatShareResult(result)
-      : "공유했어요!";
-  });
 
   if (window.TodayGameRank) {
     TodayGameRank.mount({

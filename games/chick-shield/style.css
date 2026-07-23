@@ -261,32 +261,3 @@ h1 {
   font-size: 14px;
   margin-top: 4px;
 }
-
-.rank-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: min(280px, 100%);
-  margin: 4px 0;
-}
-
-.rank-form label {
-  font-size: 13px;
-  color: var(--muted);
-  text-align: left;
-}
-
-.rank-form input {
-  font: inherit;
-  border: 2px solid #f0c8d8;
-  border-radius: 14px;
-  padding: 10px 12px;
-  background: #fff8f2;
-  color: var(--ink);
-}
-
-.rank-msg {
-  min-height: 1.2em;
-  font-size: 13px;
-  color: #2f7d4a;
-}
