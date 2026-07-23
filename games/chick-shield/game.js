@@ -225,7 +225,7 @@
       bulletSpeed: 145 + t * 125,
       fireRate: Math.max(0.14, 0.3 - t * 0.08),
       multi: t > 0.4 ? 2 : 1,
-      drop: 0.28 + t * 0.12,
+      drop: 0.08 + t * 0.04,
     };
   }
 
