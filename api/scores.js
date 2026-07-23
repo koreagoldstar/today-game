@@ -62,7 +62,10 @@ module.exports = async function handler(req, res) {
   if (!globalThis.__todayScoresBlobId) globalThis.__todayScoresBlobId = JSONBLOB_ID;
 
   function redisConfigured() {
-    return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+    return Boolean(
+      (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
+        (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN)
+    );
   }
 
   function activeBlobUrl() {
@@ -71,8 +74,8 @@ module.exports = async function handler(req, res) {
   }
 
   async function redis(command) {
-    const url = process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
     if (!url || !token) return { ok: false, configured: false };
     try {
       const response = await fetch(url, {
