@@ -56,11 +56,18 @@ module.exports = async function handler(req, res) {
   const MIN_NAME = 2;
   const TTL_DAY = 60 * 60 * 24 * 4; // 4일
   const TTL_WEEK = 60 * 60 * 24 * 16; // 16일
-  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f8512-50b8-7988-81f9-1b253cbf6c68";
+  const JSONBLOB_ID = process.env.SCORES_JSONBLOB_ID || "019f8f3d-13c0-7cfa-9589-bd251b3b85ef";
   const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
+  // warm 인스턴스에서 self-heal된 blob id 캐시
+  if (!globalThis.__todayScoresBlobId) globalThis.__todayScoresBlobId = JSONBLOB_ID;
 
   function redisConfigured() {
     return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  }
+
+  function activeBlobUrl() {
+    const id = globalThis.__todayScoresBlobId || JSONBLOB_ID;
+    return `https://jsonblob.com/api/jsonBlob/${id}`;
   }
 
   async function redis(command) {
@@ -192,7 +199,7 @@ module.exports = async function handler(req, res) {
 
   async function readBlobStore() {
     try {
-      const response = await fetch(JSONBLOB_URL, {
+      const response = await fetch(activeBlobUrl(), {
         headers: { Accept: "application/json" },
         cache: "no-store",
       });
@@ -219,14 +226,24 @@ module.exports = async function handler(req, res) {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
-    let response = await fetch(JSONBLOB_URL, {
+    let response = await fetch(activeBlobUrl(), {
       method: "PUT",
       headers,
       body,
     });
     if (response.ok) return true;
-    // 기존 blob이 사라졌을 때(404 등) 새 blob 생성은 env 갱신이 필요하므로 실패로 처리
-    return false;
+
+    // blob이 사라지면 새로 만들고 warm 캐시에 보관
+    response = await fetch("https://jsonblob.com/api/jsonBlob", {
+      method: "POST",
+      headers,
+      body,
+    });
+    if (!response.ok) return false;
+    const loc = response.headers.get("Location") || response.headers.get("location") || "";
+    const created = loc.split("/").filter(Boolean).pop();
+    if (created) globalThis.__todayScoresBlobId = created;
+    return true;
   }
 
   async function readScores(game, period, periodId) {
@@ -244,6 +261,7 @@ module.exports = async function handler(req, res) {
         }
       }
     }
+
     const store = await readBlobStore();
     const slot = blobSlot(period, periodId);
     return {
@@ -261,10 +279,10 @@ module.exports = async function handler(req, res) {
       const saved = await redis(["SET", key, payload, "EX", ttl]);
       if (saved.ok) return { ok: true, backend: "upstash" };
     }
+
     const store = await readBlobStore();
     if (!store[game]) store[game] = {};
     store[game][blobSlot(period, periodId)] = scores.slice(0, MAX_KEEP);
-    // 오래된 슬롯 정리 (같은 게임 최대 8개 유지)
     const slots = Object.keys(store[game]).sort();
     if (slots.length > 8) {
       for (const old of slots.slice(0, slots.length - 8)) {
