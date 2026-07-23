@@ -123,8 +123,17 @@ body {
   width: min(96%, 360px);
 }
 
-.board.cols-5 .tile {
-  border-radius: 16px;
+.board.locked {
+  pointer-events: none;
+}
+
+.board.locked .tile {
+  cursor: default;
+}
+
+.tile.dim {
+  filter: brightness(0.72) saturate(0.85);
+  opacity: 0.75;
 }
 
 .tile {

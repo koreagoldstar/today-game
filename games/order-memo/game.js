@@ -35,15 +35,13 @@
   let stage = 1;
   let score = 0;
   let best = Number(localStorage.getItem(BEST_KEY) || "0") || 0;
-  /** @type {string[]} */
+  /** @type {string[]} 화면에 보이는 아이콘 id */
   let tiles = [];
-  /** @type {number[]} */
+  /** @type {string[]} 눌러야 할 아이콘 id 순서 */
   let sequence = [];
   let inputIndex = 0;
   let playToken = 0;
-  let inputReadyAt = 0;
   let inputBusy = false;
-  let lastTapAt = 0;
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -60,12 +58,10 @@
     return shuffle(ICON_POOL).slice(0, Math.min(count, ICON_POOL.length, MAX_TILES));
   }
 
-  /** 1→3 … 점점 늘어 최대 20 */
   function seqLenForStage(s) {
     return Math.min(2 + s, MAX_SEQ);
   }
 
-  /** 초반 4 → 중반 6~8 → 후반 10 */
   function tileCountForStage(s) {
     if (s <= 3) return 4;
     if (s <= 8) return 6;
@@ -74,11 +70,11 @@
   }
 
   function flashMsForStage(s) {
-    return Math.max(220, 720 - (s - 1) * 10);
+    return Math.max(320, 820 - (s - 1) * 10);
   }
 
   function gapMsForStage(s) {
-    return Math.max(80, 220 - (s - 1) * 3);
+    return Math.max(140, 280 - (s - 1) * 3);
   }
 
   function showOverlay(name) {
@@ -101,7 +97,8 @@
     hint.textContent = sub;
   }
 
-  function setTilesEnabled(on) {
+  function setBoardInteractive(on) {
+    board.classList.toggle("locked", !on);
     board.querySelectorAll(".tile").forEach((btn) => {
       btn.disabled = !on;
     });
@@ -124,6 +121,10 @@
     TodayGameRank.open(score, { label: `${score}점 · ${stage}단계` });
   }
 
+  function indexOfIcon(iconId) {
+    return tiles.indexOf(iconId);
+  }
+
   function renderBoard() {
     board.innerHTML = "";
     board.classList.toggle("cols-3", tiles.length >= 6 && tiles.length < 10);
@@ -132,6 +133,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "tile";
+      btn.dataset.icon = id;
       btn.dataset.index = String(index);
       btn.setAttribute("aria-label", id);
       const img = document.createElement("img");
@@ -141,42 +143,51 @@
       img.width = 120;
       img.height = 120;
       btn.appendChild(img);
-      // click 한 경로만 사용 (마우스 pointerup 중복/캡처 이슈 방지)
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        onTileTap(index);
+        onTileTap(id);
       });
       board.appendChild(btn);
     });
   }
 
-  function tileEl(index) {
-    return board.querySelector(`.tile[data-index="${index}"]`);
+  function tileElByIcon(iconId) {
+    return board.querySelector(`.tile[data-icon="${iconId}"]`);
   }
 
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function flashTile(index, ms) {
-    const el = tileEl(index);
+  async function flashIcon(iconId, ms, step, total) {
+    const el = tileElByIcon(iconId);
     if (!el) return;
+    board.querySelectorAll(".tile").forEach((t) => t.classList.remove("lit", "dim"));
+    board.querySelectorAll(".tile").forEach((t) => {
+      if (t !== el) t.classList.add("dim");
+    });
     el.classList.add("lit");
+    setPhase("잘 보세요!", `${step}/${total}`);
     if (navigator.vibrate) navigator.vibrate(10);
     await sleep(ms);
     el.classList.remove("lit");
+    board.querySelectorAll(".tile").forEach((t) => t.classList.remove("dim"));
   }
 
   function buildRound() {
     const count = tileCountForStage(stage);
     tiles = pickUnique(count);
     const len = seqLenForStage(stage);
-    sequence = Array.from({ length: len }, () => Math.floor(Math.random() * tiles.length));
-    for (let i = 1; i < sequence.length; i += 1) {
-      if (sequence[i] === sequence[i - 1] && Math.random() < 0.55) {
-        sequence[i] = (sequence[i] + 1 + Math.floor(Math.random() * (tiles.length - 1))) % tiles.length;
+    sequence = [];
+    for (let i = 0; i < len; i += 1) {
+      let next = tiles[Math.floor(Math.random() * tiles.length)];
+      // 같은 그림이 연속으로 너무 자주 나오지 않게
+      if (i > 0 && next === sequence[i - 1] && tiles.length > 1 && Math.random() < 0.7) {
+        const others = tiles.filter((t) => t !== sequence[i - 1]);
+        next = others[Math.floor(Math.random() * others.length)];
       }
+      sequence.push(next);
     }
     renderBoard();
   }
@@ -184,33 +195,37 @@
   async function playSequence() {
     const token = ++playToken;
     state = "watch";
-    setTilesEnabled(false);
-    setPhase("잘 보세요!", `${sequence.length}개 · 칸 ${tiles.length}개`);
-    await sleep(450);
+    inputBusy = true;
+    setBoardInteractive(false);
+    setPhase("잘 보세요!", `${sequence.length}개 순서`);
+    await sleep(550);
     if (token !== playToken) return;
+
     const flash = flashMsForStage(stage);
     const gap = gapMsForStage(stage);
     for (let i = 0; i < sequence.length; i += 1) {
       if (token !== playToken) return;
-      await flashTile(sequence[i], flash);
+      await flashIcon(sequence[i], flash, i + 1, sequence.length);
       if (token !== playToken) return;
       await sleep(gap);
     }
     if (token !== playToken) return;
+
+    setPhase("준비…", "곧 따라 눌러요");
+    await sleep(500);
+    if (token !== playToken) return;
+
     inputIndex = 0;
     inputBusy = false;
-    lastTapAt = 0;
     state = "input";
-    // 보기 직후 남아 있는 터치/클릭이 자동 입력되지 않게
-    inputReadyAt = performance.now() + 420;
-    setTilesEnabled(true);
-    setPhase("따라 눌러요!", `${sequence.length}개 순서`);
+    setBoardInteractive(true);
+    setPhase("따라 눌러요!", `1 / ${sequence.length}`);
   }
 
   function allClear() {
     playToken += 1;
     state = "allclear";
-    setTilesEnabled(false);
+    setBoardInteractive(false);
     saveBest();
     document.getElementById("all-detail").textContent =
       `50단계 완료!\n점수 ${score}` + (best ? `\n최고 ${best}점` : "");
@@ -220,7 +235,7 @@
 
   function stageClear() {
     playToken += 1;
-    setTilesEnabled(false);
+    setBoardInteractive(false);
     const gained = sequence.length * 10 + stage * 5;
     score += gained;
     updateHud();
@@ -236,39 +251,40 @@
     showOverlay("clear");
   }
 
-  function gameOver() {
+  function gameOver(tappedIcon) {
     playToken += 1;
     state = "over";
-    setTilesEnabled(false);
+    setBoardInteractive(false);
     saveBest();
+    const expected = sequence[inputIndex] || "?";
     document.getElementById("over-detail").textContent =
-      `단계 ${stage}/${MAX_STAGE} · 점수 ${score}` + (best ? `\n최고 ${best}점` : "");
+      `단계 ${stage}/${MAX_STAGE} · 점수 ${score}\n` +
+      `${inputIndex + 1}번째에서 실패` +
+      (best ? `\n최고 ${best}점` : "");
     showOverlay("over");
     openRank(overlays.over);
   }
 
-  function onTileTap(index) {
+  function onTileTap(iconId) {
     if (state !== "input" || inputBusy) return;
-    const now = performance.now();
-    if (now < inputReadyAt) return;
-    // 마우스 더블클릭/중복 이벤트 방지
-    if (now - lastTapAt < 220) return;
-    lastTapAt = now;
+    if (board.classList.contains("locked")) return;
 
+    inputBusy = true;
     const expect = sequence[inputIndex];
-    const el = tileEl(index);
-    if (index !== expect) {
-      inputBusy = true;
+    const el = tileElByIcon(iconId);
+
+    if (iconId !== expect) {
       if (el) el.classList.add("bad");
+      const expectEl = tileElByIcon(expect);
+      if (expectEl) expectEl.classList.add("lit");
       setPhase("앗!", "순서가 틀렸어요");
-      setTimeout(() => gameOver(), 380);
+      setTimeout(() => gameOver(iconId), 450);
       return;
     }
 
-    inputBusy = true;
     if (el) {
       el.classList.add("ok", "lit");
-      setTimeout(() => el.classList.remove("ok", "lit"), 180);
+      setTimeout(() => el.classList.remove("ok", "lit"), 200);
     }
 
     const next = inputIndex + 1;
@@ -279,10 +295,11 @@
     }
 
     inputIndex = next;
-    setPhase("좋아요!", `${inputIndex}/${sequence.length}`);
+    setPhase("좋아요!", `${inputIndex + 1} / ${sequence.length}`);
+    // 다음 입력 허용
     setTimeout(() => {
       if (state === "input") inputBusy = false;
-    }, 180);
+    }, 200);
   }
 
   function startGame() {
@@ -329,8 +346,8 @@
         if (state !== "watch" && state !== "input") return false;
         playToken += 1;
         state = "paused";
-        setTilesEnabled(false);
-        setPhase("잠깐 멈춤", "이어서 같은 단계부터");
+        setBoardInteractive(false);
+        setPhase("잠깐 멈춤", "이어하면 순서를 다시 보여줘요");
         return true;
       },
       resume() {
