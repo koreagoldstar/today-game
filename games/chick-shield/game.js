@@ -71,15 +71,15 @@
   let clouds = [];
 
   function isBg(r, g, b, a) {
-    if (a < 18) return true;
+    if (a < 12) return true;
+    // magenta / pink key
+    if (r > 185 && b > 175 && g < 150 && r + b > g * 2.05) return true;
+    // pure / near black leftover mats
+    if (r < 18 && g < 18 && b < 18) return true;
+    // washed pastel plate (very light, low saturation)
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    // near-white / pale pastel backdrops
-    if (r > 230 && g > 220 && b > 220) return true;
-    if (r > 210 && g > 200 && b > 210 && max - min < 45) return true;
-    if (r > 200 && g > 210 && b > 230 && b >= g && g >= r - 20) return true; // soft sky
-    if (r > 230 && g > 200 && b > 210 && r > b) return true; // soft pink
-    if (r > 235 && g > 230 && b > 200) return true; // cream/yellow wash
+    if (max > 228 && max - min < 28) return true;
     return false;
   }
 
@@ -88,6 +88,7 @@
     c.width = img.naturalWidth || img.width;
     c.height = img.naturalHeight || img.height;
     const x = c.getContext("2d");
+    x.clearRect(0, 0, c.width, c.height);
     x.drawImage(img, 0, 0);
     const data = x.getImageData(0, 0, c.width, c.height);
     const d = data.data;
@@ -95,13 +96,42 @@
     let minY = c.height;
     let maxX = 0;
     let maxY = 0;
+    // flood from edges for leftover plate colors
+    const w = c.width;
+    const h = c.height;
+    const seen = new Uint8Array(w * h);
+    const stack = [];
+    const push = (px, py) => {
+      const i = py * w + px;
+      if (seen[i]) return;
+      seen[i] = 1;
+      stack.push(i);
+    };
+    for (let px = 0; px < w; px += 1) {
+      push(px, 0);
+      push(px, h - 1);
+    }
+    for (let py = 0; py < h; py += 1) {
+      push(0, py);
+      push(w - 1, py);
+    }
+    while (stack.length) {
+      const i = stack.pop();
+      const o = i * 4;
+      if (!isBg(d[o], d[o + 1], d[o + 2], d[o + 3])) continue;
+      d[o + 3] = 0;
+      const px = i % w;
+      const py = (i / w) | 0;
+      if (px > 0) push(px - 1, py);
+      if (px < w - 1) push(px + 1, py);
+      if (py > 0) push(px, py - 1);
+      if (py < h - 1) push(px, py + 1);
+    }
     for (let i = 0; i < d.length; i += 4) {
-      if (isBg(d[i], d[i + 1], d[i + 2], d[i + 3])) {
-        d[i + 3] = 0;
-        continue;
-      }
-      const px = (i / 4) % c.width;
-      const py = ((i / 4) / c.width) | 0;
+      if (isBg(d[i], d[i + 1], d[i + 2], d[i + 3])) d[i + 3] = 0;
+      if (d[i + 3] < 12) continue;
+      const px = (i / 4) % w;
+      const py = ((i / 4) / w) | 0;
       if (px < minX) minX = px;
       if (py < minY) minY = py;
       if (px > maxX) maxX = px;
@@ -115,9 +145,14 @@
     maxX = Math.min(c.width - 1, maxX + pad);
     maxY = Math.min(c.height - 1, maxY + pad);
     const out = document.createElement("canvas");
-    out.width = maxX - minX + 1;
-    out.height = maxY - minY + 1;
-    out.getContext("2d").drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+    const bw = maxX - minX + 1;
+    const bh = maxY - minY + 1;
+    const side = Math.max(bw, bh);
+    out.width = side;
+    out.height = side;
+    const ox = ((side - bw) / 2) | 0;
+    const oy = ((side - bh) / 2) | 0;
+    out.getContext("2d").drawImage(c, minX, minY, bw, bh, ox, oy, bw, bh);
     return out;
   }
 
@@ -697,18 +732,13 @@
               ? "triple"
               : "rapid";
       const bob = Math.sin(it.t * 4) * 4;
-      const ok = drawSprite(imgs[key], it.x, it.y + bob, 40, Math.sin(it.spin) * 0.2);
+      const ok = drawSprite(imgs[key], it.x, it.y + bob, 42, Math.sin(it.spin) * 0.15);
       if (!ok) {
         ctx.fillStyle = "#fff";
         ctx.beginPath();
         ctx.arc(it.x, it.y + bob, 14, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.strokeStyle = "rgba(255,255,255,0.8)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(it.x, it.y + bob, 20, 0, Math.PI * 2);
-      ctx.stroke();
     });
 
     enemies.forEach((e) => {
@@ -737,8 +767,9 @@
       if (b.friendly) {
         ctx.save();
         ctx.shadowColor = "#ffb347";
-        ctx.shadowBlur = 14;
-        const ok = drawSprite(imgs.missile, b.x, b.y, 28, b.spin * 0.4);
+        ctx.shadowBlur = 12;
+        const ang = Math.atan2(b.vy, b.vx || 0) + Math.PI / 2;
+        const ok = drawSprite(imgs.missile, b.x, b.y, 30, ang);
         ctx.shadowBlur = 0;
         ctx.restore();
         if (!ok) {
@@ -748,7 +779,7 @@
           ctx.fill();
         }
       } else {
-        const ok = drawSprite(imgs.enemyShot, b.x, b.y, 26, b.spin * 0.5);
+        const ok = drawSprite(imgs.enemyShot, b.x, b.y, 24, 0);
         if (!ok) {
           ctx.fillStyle = "#ff5a8a";
           ctx.beginPath();
