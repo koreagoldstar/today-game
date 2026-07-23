@@ -53,6 +53,7 @@
     { id: "wordle", title: "오늘의 워들" },
     { id: "sokoban", title: "상자야 굴러가" },
     { id: "reaction", title: "번쩍 반응" },
+    { id: "order-memo", title: "순서톡톡" },
   ];
 
   /** 챌린지 로테이션 풀 (고정 순서) */

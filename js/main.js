@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "order-memo",
+      title: "순서톡톡",
+      tag: "기억 · 50단계",
+      href: "/games/order-memo/",
+      thumb: "/assets/thumbs/order-memo.png",
+      category: "puzzle",
+    },
+    {
       id: "reaction",
       title: "번쩍 반응",
       tag: "반사 · ms 기록",

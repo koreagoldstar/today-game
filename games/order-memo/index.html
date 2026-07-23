@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>순서톡톡</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="order-memo">
+    <div class="stage">
+      <div class="hud">
+        <a class="home" href="/">← 홈</a>
+        <div class="score-pill soft">단계 <b id="hud-stage">1</b></div>
+        <div class="score-pill">점수 <b id="hud-score">0</b></div>
+      </div>
+
+      <p class="phase-msg" id="phase-msg">그림을 잘 보세요</p>
+      <div class="board" id="board" aria-label="순서 판"></div>
+      <p class="hint" id="hint">순서가 나오면 그대로 눌러요</p>
+
+      <div class="overlay" id="title">
+        <div class="badge">MEMORY</div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
+        <h1>순서톡톡</h1>
+        <p>반짝이는 순서를 기억해서<br />50단계까지 도전해보세요</p>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>통과!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 단계</button>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <img class="hero-art" src="assets/thumb.png" alt="" width="130" height="130" />
+        <h1>전부 클리어!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">MISS</div>
+        <img class="hero-art small" src="assets/thumb.png" alt="" width="100" height="100" />
+        <h1>아쉬워요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

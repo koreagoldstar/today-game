@@ -52,6 +52,7 @@ module.exports = async function handler(req, res) {
     "wordle",
     "sokoban",
     "reaction",
+    "order-memo",
     "donkey-kong",
     "prince",
     "lemmings",
