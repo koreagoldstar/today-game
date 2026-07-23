@@ -281,6 +281,14 @@
       category: "action",
     },
     {
+      id: "chick-shield",
+      title: "막아요 쏴요",
+      tag: "슈팅 · 방패",
+      href: "/games/chick-shield/",
+      thumb: "/assets/thumbs/chick-shield.png",
+      category: "action",
+    },
+    {
       id: "cute-shoot",
       title: "귀염뽀짝 쏘세요",
       tag: "슈팅 · 자체제작",
@@ -470,6 +478,7 @@
     "brick",
     "puzzle-bubble",
     "memory",
+    "chick-shield",
     "cute-shoot",
     "racing",
     "drift-chick",

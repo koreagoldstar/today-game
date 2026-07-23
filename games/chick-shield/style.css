@@ -1,0 +1,238 @@
+:root {
+  --ink: #2a3a55;
+  --muted: #5a6f8c;
+  --sky: #7ec8ff;
+  --accent: #ff8a4c;
+  --shield: #5ce1ff;
+  --gold: #ffd76a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  background: #9ad4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.557));
+  height: min(100dvh, calc(100vw / 0.557));
+  max-width: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(40, 90, 140, 0.35);
+  background: var(--sky);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 96px;
+}
+
+.panel.right {
+  align-items: flex-end;
+}
+
+.panel b {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.lives {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.life {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff6b8a;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
+.life.empty {
+  background: rgba(42, 58, 85, 0.18);
+}
+
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: rgba(42, 58, 85, 0.78);
+  pointer-events: none;
+  z-index: 3;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: opacity 0.25s ease;
+}
+
+.hint.dim {
+  opacity: 0.35;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 20px;
+  background: linear-gradient(180deg, rgba(126, 200, 255, 0.92), rgba(255, 236, 196, 0.94));
+  text-align: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.badge {
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 13px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.hero-art {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow: 0 12px 28px rgba(40, 90, 140, 0.22);
+}
+
+h1 {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  line-height: 1.05;
+  color: #1f3558;
+}
+
+.overlay p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.title-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #6a7f9c;
+  margin: 4px 0 6px;
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 18px;
+  padding: 12px 28px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #d96a2f;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 5px 0 #d96a2f;
+}
+
+.btn.soft {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 8px 0 #c9d7ea;
+}
+
+.overlay a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.rank-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(280px, 100%);
+  margin: 4px 0;
+}
+
+.rank-form label {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.rank-form input {
+  font: inherit;
+  border: 2px solid #c5d8ef;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.rank-msg {
+  min-height: 1.2em;
+  font-size: 13px;
+  color: #2f7d4a;
+}

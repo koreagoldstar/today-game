@@ -25,6 +25,7 @@ module.exports = async function handler(req, res) {
     "racing",
     "drift-chick",
     "crossy",
+    "chick-shield",
     "cute-shoot",
     "brick",
     "puzzle-bubble",

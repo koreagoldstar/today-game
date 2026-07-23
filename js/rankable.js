@@ -32,6 +32,7 @@
     { id: "racing", title: "스피드 삐약이" },
     { id: "drift-chick", title: "드리프트 삐약이" },
     { id: "crossy", title: "삐약이 건너기" },
+    { id: "chick-shield", title: "막아요 쏴요" },
     { id: "cute-shoot", title: "귀염뽀짝 쏘세요" },
     { id: "brick", title: "별똥별 벽돌깨기" },
     { id: "puzzle-bubble", title: "팝샷 버블" },

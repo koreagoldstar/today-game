@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>막아요 쏴요</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="chick-shield">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>웨이브 <b id="hud-wave">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>최고 <b id="hud-best">0</b></span>
+          <div class="lives" id="hud-lives"></div>
+        </div>
+      </div>
+
+      <p class="hint" id="hint">꾹 누르면 방패 · 떼면 발사!</p>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
+        <div class="badge">SHIELD SHOT</div>
+        <h1>막아요 쏴요</h1>
+        <p>
+          누르는 동안 방패로 막고<br />
+          손을 떼면 자동으로 쏴요!
+        </p>
+        <div class="title-controls">
+          <span>📱 드래그로 이동 · 꾹 눌러 방패</span>
+          <span>⌨️ ←→ 이동 · 스페이스 방패</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>방패가 깨졌어요</h1>
+        <p id="over-detail"></p>
+        <form class="rank-form" id="rank-form">
+          <label for="player-name">랭킹 이름 (2~8자)</label>
+          <input id="player-name" name="name" maxlength="8" minlength="2" autocomplete="nickname" placeholder="닉네임" required />
+          <button type="submit" class="btn" id="submit-btn">랭킹 등록</button>
+          <p class="rank-msg" id="rank-msg"></p>
+        </form>
+        <button type="button" class="btn soft" id="share-rank-btn" hidden>내 결과 공유</button>
+        <button type="button" class="btn soft" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
