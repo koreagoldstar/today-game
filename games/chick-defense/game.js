@@ -12,10 +12,10 @@
     const items =
       (window.TodayAdBoards && TodayAdBoards.getItems && TodayAdBoards.getItems()) ||
       (window.TODAY_AD_BOARDS && window.TODAY_AD_BOARDS.items) ||
-      [{ text: "사랑해", textColor: "#e23d4a" }];
+      [{ text: "오늘의 게임", textColor: "#e23d4a" }];
     return {
       items,
-      texts: items.map((a) => a.text || "사랑해"),
+      texts: items.map((a) => a.text || "오늘의 게임"),
       ink: (items[0] && items[0].textColor) || "#e23d4a",
     };
   }
@@ -40,9 +40,7 @@
         { x: 95, y: 620 },
       ],
       billboards: [
-        { x: 18, y: 118, w: 100, h: 68, textIndex: 0 },
-        { x: 278, y: 300, w: 100, h: 68, textIndex: 1 },
-        { x: 16, y: 430, w: 96, h: 66, textIndex: 2 },
+        { x: 18, y: 200, w: 100, h: 68, textIndex: 0 },
       ],
     },
     dusk: {
@@ -63,9 +61,7 @@
         { x: 310, y: 535 }, { x: 70, y: 565 }, { x: 280, y: 595 }, { x: 100, y: 625 },
       ],
       billboards: [
-        { x: 268, y: 95, w: 100, h: 68, textIndex: 0 },
-        { x: 22, y: 265, w: 96, h: 66, textIndex: 1 },
-        { x: 275, y: 480, w: 100, h: 68, textIndex: 2 },
+        { x: 268, y: 220, w: 100, h: 68, textIndex: 0 },
       ],
     },
     night: {
@@ -88,9 +84,7 @@
         { x: 280, y: 620 },
       ],
       billboards: [
-        { x: 14, y: 130, w: 96, h: 66, textIndex: 0 },
-        { x: 280, y: 340, w: 100, h: 68, textIndex: 1 },
-        { x: 20, y: 510, w: 96, h: 66, textIndex: 2 },
+        { x: 14, y: 250, w: 96, h: 66, textIndex: 0 },
       ],
     },
     meadow: {
@@ -113,9 +107,7 @@
         { x: 280, y: 630 }, { x: 120, y: 640 },
       ],
       billboards: [
-        { x: 275, y: 105, w: 100, h: 68, textIndex: 0 },
-        { x: 18, y: 310, w: 96, h: 66, textIndex: 1 },
-        { x: 268, y: 520, w: 100, h: 68, textIndex: 2 },
+        { x: 275, y: 240, w: 100, h: 68, textIndex: 0 },
       ],
     },
   };
@@ -984,7 +976,7 @@
 
   function drawBillboard(g, b) {
     const cfg = adConfig();
-    const ad = cfg.items[b.textIndex % cfg.items.length] || { text: "사랑해♡", textColor: cfg.ink };
+    const ad = cfg.items[b.textIndex % cfg.items.length] || { text: "오늘의 게임", textColor: cfg.ink };
     // Prefer shared canvas drawer when available (supports image ads)
     if (window.TodayAdBoards && TodayAdBoards.draw && !imgs.billboard) {
       TodayAdBoards.draw(g, ad, b.x, b.y, b.w, b.h, { pole: true, side: b.x < W / 2 ? "left" : "right" });
@@ -1018,7 +1010,7 @@
     g.font = `700 ${Math.min(22, th * 0.7)}px "Jua", sans-serif`;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.fillText(ad.text || "사랑해", b.x + b.w / 2, ty + th / 2 + 1);
+    g.fillText(ad.text || "오늘의 게임", b.x + b.w / 2, ty + th / 2 + 1);
   }
 
   function drawShot(g, s) {

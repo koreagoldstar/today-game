@@ -11,8 +11,8 @@
     items: [
       {
         id: "love-1",
-        text: "사랑해♡",
-        subtext: "LOVE",
+        text: "오늘의 게임",
+        subtext: "TODAY",
         bg: "#FFE4EC",
         accent: "#FF6B9D",
         textColor: "#5A3A4A",
@@ -20,8 +20,8 @@
       },
       {
         id: "love-2",
-        text: "사랑해♡",
-        subtext: "LOVE",
+        text: "오늘의 게임",
+        subtext: "TODAY",
         bg: "#E8F6FF",
         accent: "#5B9FFF",
         textColor: "#2A4A6A",
@@ -29,8 +29,8 @@
       },
       {
         id: "love-3",
-        text: "사랑해♡",
-        subtext: "LOVE",
+        text: "오늘의 게임",
+        subtext: "TODAY",
         bg: "#FFF3D6",
         accent: "#FFB347",
         textColor: "#6A4A20",
@@ -38,8 +38,8 @@
       },
       {
         id: "love-4",
-        text: "사랑해♡",
-        subtext: "LOVE",
+        text: "오늘의 게임",
+        subtext: "TODAY",
         bg: "#EDE6FF",
         accent: "#9B7EDE",
         textColor: "#3A2A5A",
@@ -83,7 +83,7 @@
   position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;
 }
 #${ROOT_ID} .today-ad-board{
-  position:absolute;width:88px;min-height:56px;padding:8px 6px 10px;
+  position:absolute;width:102px;min-height:56px;padding:8px 6px 10px;
   border-radius:12px;border:3px solid #ff6b9d;box-sizing:border-box;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;box-shadow:0 4px 0 rgba(61,42,69,.12);opacity:.92;
@@ -95,7 +95,7 @@
 }
 #${ROOT_ID} .today-ad-board.right::after{left:auto;right:14px}
 #${ROOT_ID} .today-ad-board .ad-text{
-  font-size:13px;font-weight:700;letter-spacing:-0.02em;
+  font-size:12px;font-weight:700;letter-spacing:-0.04em;
 }
 #${ROOT_ID} .today-ad-board .ad-sub{
   margin-top:2px;font-size:9px;opacity:.75;font-family:Nunito,sans-serif;font-weight:700;
@@ -103,9 +103,9 @@
 #${ROOT_ID} .today-ad-board img{
   display:block;width:100%;height:100%;object-fit:contain;border-radius:6px;
 }
-#${ROOT_ID} .today-ad-board.pos-0{left:6px;top:18%}
-#${ROOT_ID} .today-ad-board.pos-1{right:6px;top:42%}
-#${ROOT_ID} .today-ad-board.pos-2{left:6px;top:68%}
+#${ROOT_ID} .today-ad-board.pos-0{left:8px;top:22%}
+#${ROOT_ID} .today-ad-board.pos-1{right:8px;top:48%}
+#${ROOT_ID} .today-ad-board.pos-2{left:8px;top:62%}
 `;
     document.head.appendChild(style);
   }
@@ -213,7 +213,7 @@
     } else {
       const t = document.createElement("div");
       t.className = "ad-text";
-      t.textContent = ad.text || "사랑해♡";
+      t.textContent = ad.text || "오늘의 게임";
       el.appendChild(t);
       if (ad.subtext) {
         const s = document.createElement("div");
@@ -223,6 +223,19 @@
       }
     }
     return el;
+  }
+
+  let rotateTimer = 0;
+  let rotateIndex = 0;
+
+  function renderOneBoard(wrap) {
+    const items = getItems();
+    if (!items.length || !wrap) return;
+    rotateIndex = rotateIndex % items.length;
+    const ad = items[rotateIndex];
+    const pos = rotateIndex % 3;
+    wrap.innerHTML = "";
+    wrap.appendChild(buildBoardEl(ad, pos));
   }
 
   function autoMount() {
@@ -247,17 +260,23 @@
       wrap.setAttribute("aria-hidden", "true");
       root.appendChild(wrap);
     }
-    wrap.innerHTML = "";
-    const items = getItems();
-    const count = Math.min(3, items.length);
-    for (let i = 0; i < count; i++) {
-      wrap.appendChild(buildBoardEl(items[i], i));
-    }
+    // one board on screen at a time
+    renderOneBoard(wrap);
+    if (rotateTimer) clearInterval(rotateTimer);
+    rotateTimer = setInterval(() => {
+      rotateIndex += 1;
+      const el = document.getElementById(ROOT_ID);
+      if (el) renderOneBoard(el);
+    }, 9000);
     mounted = true;
     return true;
   }
 
   function unmount() {
+    if (rotateTimer) {
+      clearInterval(rotateTimer);
+      rotateTimer = 0;
+    }
     const wrap = document.getElementById(ROOT_ID);
     if (wrap) wrap.remove();
     mounted = false;

@@ -574,6 +574,7 @@
   }
 
   function spawnSign() {
+    if (game.signs.length >= 1) return;
     const ads =
       (window.TodayAdBoards && TodayAdBoards.getItems && TodayAdBoards.getItems()) ||
       window.CUTE_SHOOT_ADS ||
