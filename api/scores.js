@@ -37,6 +37,7 @@ module.exports = async function handler(req, res) {
     "slide-2048",
     "tower",
     "fish-rush",
+    "chick-defense",
     "fruit-catch",
     "bubble-pop",
     "pinball",

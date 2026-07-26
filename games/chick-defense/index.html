@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#4a8a32" />
+    <title>둥지 디펜스</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="chick-defense">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>둥지 <b id="hud-hp">10</b></span>
+          <span class="gold">🪙 <b id="hud-gold">0</b></span>
+        </div>
+      </div>
+      <div class="wave-meter"><i id="wave-fill"></i></div>
+      <div class="wave-label" id="wave-label">WAVE 1</div>
+
+      <div class="upgrade-panel hidden" id="upgrade-panel">
+        <div class="up-info">
+          <b id="up-name">삐약이</b>
+          <span id="up-level">Lv.1</span>
+          <span id="up-stats">공격 8 · 사거리 95</span>
+        </div>
+        <button type="button" class="up-btn" id="upgrade-btn">강화 <b id="up-cost">40</b></button>
+        <button type="button" class="up-close" id="up-close" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="shop hidden" id="shop"></div>
+      <div class="hint" id="hint">빈 자리 배치 · 병아리 탭하면 강화!</div>
+
+      <div class="overlay" id="title">
+        <div class="badge">NEST DEFENSE</div>
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="128" height="128" />
+        <h1>둥지 디펜스</h1>
+        <p>4맵 · 50스테이지 · 6종 타워 · Lv.8 강화!<br />병아리를 배치하고 둥지를 지켜 주세요</p>
+        <div class="icons">배치 → 처치 → 강화 · 맵 이동 시 60% 환급</div>
+        <button type="button" class="btn" id="start-btn">수비 시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>웨이브 방어 성공!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 웨이브</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">NEST DOWN</div>
+        <h1>둥지가 무너졌어요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시 수비</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h1>전설의 수호병아리!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

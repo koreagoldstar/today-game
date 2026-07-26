@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "chick-defense",
+      title: "둥지 디펜스",
+      tag: "타워디펜스 · 50단계",
+      href: "/games/chick-defense/",
+      thumb: "/assets/thumbs/chick-defense.png",
+      category: "arcade",
+    },
+    {
       id: "fish-rush",
       title: "황금 낚시",
       tag: "골드러시 · 50단계",
