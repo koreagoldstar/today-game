@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#6a8f6a" />
+    <meta name="theme-color" content="#c9a86a" />
     <title>한 발 저격</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,57 +16,65 @@
 
       <div class="hud">
         <div class="panel">
-          <span>스테이지 <b id="hud-stage">1</b>/30</span>
+          <span>미션 <b id="hud-stage">1</b>/<b id="hud-total">36</b></span>
           <span>점수 <b id="hud-score">0</b></span>
         </div>
         <div class="panel right">
           <span>최고 <b id="hud-best">0</b></span>
-          <div class="ammo" id="hud-ammo" aria-label="남은 탄"></div>
+          <div class="ammo" id="hud-ammo"></div>
         </div>
+      </div>
+
+      <div class="zoom-rail" id="zoom-rail" aria-label="배율">
+        <button type="button" class="zbtn" id="zoom-out" aria-label="축소">−</button>
+        <div class="ztrack"><i id="zoom-fill"></i></div>
+        <button type="button" class="zbtn" id="zoom-in" aria-label="확대">+</button>
+        <b id="zoom-label">1.0×</b>
       </div>
 
       <div class="controls" id="controls">
+        <button type="button" class="ctrl scope" id="scope-btn">스코프</button>
         <button type="button" class="ctrl steady" id="steady-btn">숨 참기</button>
-        <button type="button" class="ctrl fire" id="fire-btn">발사</button>
+        <button type="button" class="ctrl fire" id="fire-btn">격발</button>
       </div>
 
-      <p class="hint" id="hint">화면을 드래그해 조준 · 발사로 격발</p>
+      <p class="hint" id="hint">스코프로 숨은 표적을 찾으세요</p>
 
       <div class="overlay" id="title">
         <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
-        <div class="badge">RIFLE RANGE</div>
+        <div class="badge">SNIPER NEST</div>
         <h1>한 발 저격</h1>
         <p>
-          조준점을 미세하게 맞춰요<br />
-          숨 참고 · 한 발에 끝내기
+          스코프로 창·발코니·옥상을 훑어<br />
+          숨어 있는 표적을 찾아 부위를 맞추세요
         </p>
         <div class="title-controls">
-          <span>📱 화면 드래그 = 조준 이동</span>
-          <span>숨 참기 = 흔들림↓ · 발사 = 격발</span>
+          <span>드래그로 시야 이동 · 스코프 필수</span>
+          <span>헤드샷 고득점 · 숨 참기로 흔들림 감소</span>
         </div>
-        <button type="button" class="btn" id="start-btn">조준 시작!</button>
+        <button type="button" class="btn" id="start-btn">저격 시작</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="clear">
         <div class="badge soft">CLEAR</div>
-        <h1>명중!</h1>
+        <h1>타겟 제거</h1>
         <p id="clear-detail"></p>
-        <div class="stars" id="clear-stars" aria-hidden="true"></div>
-        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+        <div class="stars" id="clear-stars"></div>
+        <button type="button" class="btn" id="next-btn">다음 미션</button>
       </div>
 
       <div class="overlay hidden" id="over">
-        <div class="badge">MISS</div>
-        <h1>탄이 떨어졌어요</h1>
+        <div class="badge">FAILED</div>
+        <h1>탄약 소진</h1>
         <p id="over-detail"></p>
-        <button type="button" class="btn soft" id="retry-btn">다시!</button>
+        <button type="button" class="btn soft" id="retry-btn">재시도</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="allclear">
         <div class="badge soft">ALL CLEAR</div>
-        <h1>저격 마스터!</h1>
+        <h1>저격 완료</h1>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
         <a href="/">← 오늘의 게임</a>

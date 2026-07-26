@@ -1,11 +1,10 @@
 :root {
-  --ink: #2f3d2f;
-  --muted: #6a7a68;
-  --pink: #ff6b9d;
-  --cream: #fff8f2;
-  --accent: #ff7eb6;
-  --wood: #c48a55;
-  --scope: #1a2418;
+  --ink: #e8eef6;
+  --muted: #9aa8b8;
+  --panel: rgba(10, 16, 26, 0.72);
+  --accent: #ff5d7a;
+  --scope: #71e0ff;
+  --ok: #7dffb0;
 }
 
 * {
@@ -22,7 +21,7 @@ body {
   height: 100dvh;
   overflow: hidden;
   font-family: "Jua", system-ui, sans-serif;
-  background: linear-gradient(180deg, #8fb58f 0%, #cfe0cf 45%, #e8d5b5 100%);
+  background: radial-gradient(ellipse at 50% 18%, #c9a86a, #5a4a32 55%, #2a2418 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,11 +33,11 @@ body {
   width: min(100vw, calc(100dvh * 0.557));
   height: min(100dvh, calc(100vw / 0.557));
   max-width: 420px;
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 18px 50px rgba(60, 80, 50, 0.35);
-  background: #9bbf9b;
-  border: 3px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  background: #0b1220;
+  border: 2px solid rgba(255, 255, 255, 0.12);
 }
 
 canvas {
@@ -60,18 +59,17 @@ canvas {
 }
 
 .panel {
-  background: rgba(255, 248, 242, 0.86);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.75);
-  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
-  min-width: 108px;
-  box-shadow: 0 8px 18px rgba(60, 80, 50, 0.12);
+  min-width: 104px;
 }
 
 .panel.right {
@@ -79,8 +77,8 @@ canvas {
 }
 
 .panel b {
-  color: var(--ink);
-  font-size: 17px;
+  color: #fff;
+  font-size: 16px;
 }
 
 .ammo {
@@ -93,80 +91,141 @@ canvas {
 }
 
 .ammo i {
-  width: 11px;
-  height: 11px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #ffe0a8, #c48a55);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ffe08a, #c9a24a);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
   transform: rotate(45deg);
 }
 
 .ammo i.empty {
-  background: rgba(47, 61, 47, 0.14);
+  background: rgba(255, 255, 255, 0.12);
   box-shadow: none;
+}
+
+.zoom-rail {
+  position: absolute;
+  top: 86px;
+  right: 10px;
+  width: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.zoom-rail .zbtn,
+.zoom-rail b {
+  pointer-events: auto;
+}
+
+.zbtn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(10, 16, 26, 0.8);
+  color: #fff;
+  font: inherit;
+  font-size: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.ztrack {
+  width: 8px;
+  height: 90px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.ztrack i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  background: linear-gradient(180deg, #71e0ff, #3aa0ff);
+}
+
+.zoom-rail b {
+  font-size: 11px;
+  color: var(--scope);
+  background: rgba(10, 16, 26, 0.75);
+  padding: 3px 6px;
+  border-radius: 8px;
 }
 
 .controls {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 52px;
-  display: flex;
-  gap: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 46px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr;
+  gap: 8px;
   z-index: 4;
   pointer-events: none;
 }
 
 .controls .ctrl {
   pointer-events: auto;
-  flex: 1;
   appearance: none;
   border: 0;
-  border-radius: 18px;
+  border-radius: 16px;
   font: inherit;
-  font-size: 17px;
-  padding: 14px 10px;
+  font-size: 15px;
+  padding: 13px 8px;
   cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ctrl.scope {
+  background: rgba(20, 34, 52, 0.92);
+  color: var(--scope);
+}
+
+.ctrl.scope.on {
+  background: rgba(40, 90, 120, 0.95);
+  box-shadow: 0 0 0 1px rgba(113, 224, 255, 0.45);
 }
 
 .ctrl.steady {
-  background: rgba(255, 248, 242, 0.92);
-  color: var(--ink);
-  box-shadow: 0 7px 0 #c9d6c4;
+  background: rgba(20, 34, 52, 0.92);
+  color: #fff;
 }
 
 .ctrl.steady.held {
-  background: #dff5ff;
-  box-shadow: 0 4px 0 #9ec9dd;
-  transform: translateY(2px);
+  background: rgba(50, 90, 70, 0.95);
+  color: var(--ok);
 }
 
 .ctrl.fire {
-  background: linear-gradient(180deg, #ff8fbc, #ff6b9d);
+  background: linear-gradient(180deg, #ff7a90, #e23d5c);
   color: #fff;
-  box-shadow: 0 7px 0 #e25588;
+  box-shadow: 0 7px 0 #9e2440;
 }
 
 .ctrl.fire:active {
   transform: translateY(2px);
-  box-shadow: 0 4px 0 #e25588;
+  box-shadow: 0 4px 0 #9e2440;
 }
 
 .hint {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
   margin: 0;
   text-align: center;
-  font-size: 13px;
-  color: rgba(47, 61, 47, 0.78);
+  font-size: 12px;
+  color: rgba(232, 238, 246, 0.7);
   pointer-events: none;
   z-index: 3;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(255, 248, 242, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.65);
 }
 
 .overlay {
@@ -180,8 +239,8 @@ canvas {
   gap: 10px;
   padding: 24px 20px;
   background:
-    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.5), transparent 55%),
-    linear-gradient(180deg, rgba(160, 190, 150, 0.92), rgba(232, 213, 181, 0.96));
+    radial-gradient(ellipse at 50% 18%, rgba(80, 120, 180, 0.28), transparent 50%),
+    linear-gradient(180deg, rgba(8, 14, 24, 0.92), rgba(12, 20, 34, 0.96));
   text-align: center;
 }
 
@@ -191,48 +250,36 @@ canvas {
 
 .badge {
   font-family: "Bagel Fat One", "Jua", sans-serif;
-  letter-spacing: 0.04em;
-  font-size: 13px;
-  color: #fff;
-  background: linear-gradient(180deg, #7aa86a, #5c8a4e);
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  color: #0b1220;
+  background: linear-gradient(180deg, #71e0ff, #3aa0ff);
   border-radius: 999px;
   padding: 5px 14px;
-  box-shadow: 0 6px 0 #456a3a;
+  box-shadow: 0 6px 0 #1f6aa8;
 }
 
 .badge.soft {
   background: linear-gradient(180deg, #ffd76a, #ffb347);
-  box-shadow: 0 6px 0 #e09830;
-  color: #5a3a18;
+  box-shadow: 0 6px 0 #b87a20;
+  color: #3a2810;
 }
 
 .hero-art {
   width: 150px;
   height: 150px;
   object-fit: cover;
-  border-radius: 32px;
-  border: 4px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 14px 30px rgba(60, 80, 50, 0.28);
-  animation: bob 2.4s ease-in-out infinite;
-}
-
-@keyframes bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  border-radius: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
 
 h1 {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", sans-serif;
-  font-size: clamp(2rem, 8vw, 2.6rem);
+  font-size: clamp(2rem, 8vw, 2.5rem);
   line-height: 1.05;
-  color: var(--ink);
-  text-shadow: 0 3px 0 rgba(255, 255, 255, 0.45);
+  color: #fff;
 }
 
 .overlay p {
@@ -247,7 +294,7 @@ h1 {
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  color: #7a8a76;
+  color: #7f8fa3;
   margin: 4px 0 6px;
 }
 
@@ -256,7 +303,6 @@ h1 {
   gap: 8px;
   font-size: 28px;
   color: #ffd76a;
-  text-shadow: 0 2px 0 #e09830;
   min-height: 36px;
 }
 
@@ -264,24 +310,25 @@ h1 {
   appearance: none;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff8fbc, #ff6b9d);
-  color: #fff;
+  background: linear-gradient(180deg, #71e0ff, #3aa0ff);
+  color: #0b1220;
   font: inherit;
   font-size: 18px;
   padding: 12px 28px;
   cursor: pointer;
-  box-shadow: 0 8px 0 #e25588;
+  box-shadow: 0 8px 0 #1f6aa8;
 }
 
 .btn:active {
   transform: translateY(3px);
-  box-shadow: 0 5px 0 #e25588;
+  box-shadow: 0 5px 0 #1f6aa8;
 }
 
 .btn.soft {
-  background: #fff8f2;
-  color: var(--ink);
-  box-shadow: 0 8px 0 #d5e0cf;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .overlay a {
@@ -291,12 +338,9 @@ h1 {
   margin-top: 4px;
 }
 
-.stage.playing .controls {
-  opacity: 1;
-}
-
 .stage:not(.playing) .controls,
-.stage:not(.playing) .hint {
+.stage:not(.playing) .hint,
+.stage:not(.playing) .zoom-rail {
   opacity: 0;
   pointer-events: none;
 }
