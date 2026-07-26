@@ -183,6 +183,11 @@
       if (!window.__todayPauseTick) {
         window.__todayPauseTick = setInterval(() => {
           if (cfg) syncUi();
+          try {
+            if (window.TodayAdBoards && TodayAdBoards.syncVisibility) {
+              TodayAdBoards.syncVisibility();
+            }
+          } catch (_) {}
         }, 250);
       }
     },

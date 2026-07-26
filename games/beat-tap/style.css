@@ -361,9 +361,14 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
-  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   background:
     radial-gradient(circle at 50% 8%, rgba(0, 245, 255, 0.18), transparent 38%),
     radial-gradient(circle at 80% 90%, rgba(255, 45, 149, 0.12), transparent 35%),
@@ -376,11 +381,12 @@ canvas {
 
 .hero-art {
   position: relative;
-  width: min(42vw, 168px);
-  height: min(42vw, 168px);
+  width: min(28vw, 110px);
+  height: min(28vw, 110px);
   object-fit: cover;
   border-radius: 50%;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
   box-shadow:
     0 0 0 3px rgba(0, 245, 255, 0.35),
     0 0 28px rgba(255, 45, 149, 0.45),
@@ -411,7 +417,8 @@ h1 {
   margin: 0;
   font-family: "Bagel Fat One", "Chakra Petch", cursive;
   font-weight: 400;
-  font-size: clamp(38px, 11vw, 54px);
+  font-size: clamp(30px, 8vw, 44px);
+  flex-shrink: 0;
   color: #fff;
   text-shadow:
     0 0 22px rgba(0, 245, 255, 0.55),
@@ -440,9 +447,14 @@ h1 {
 .howto {
   position: relative;
   width: min(100%, 340px);
-  margin: 0 0 12px;
-  padding: 12px 12px 10px;
+  margin: 0 0 10px;
+  padding: 10px 12px 8px;
   text-align: left;
+  flex: 0 1 auto;
+  max-height: min(28vh, 200px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   border: 1px solid rgba(0, 245, 255, 0.28);
   border-radius: 14px;
   background:
@@ -505,8 +517,8 @@ h1 {
 
 .howto-demo {
   position: relative;
-  height: 72px;
-  margin: 12px 0 8px;
+  height: 56px;
+  margin: 8px 0 6px;
   display: grid;
   place-items: center;
 }
@@ -588,7 +600,10 @@ h1 {
   background: rgba(0, 0, 0, 0.4);
   overflow: hidden;
   box-shadow: 0 0 24px rgba(0, 245, 255, 0.08);
-  max-height: 140px;
+  height: 168px;
+  min-height: 168px;
+  max-height: 168px;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
@@ -613,9 +628,10 @@ h1 {
 }
 
 .song-list {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
-  max-height: min(18vh, 110px);
+  height: auto;
+  max-height: none;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
@@ -727,6 +743,7 @@ h1 {
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--void);
+  flex-shrink: 0;
   background: linear-gradient(90deg, var(--magenta), var(--cyan) 55%, var(--lime));
   box-shadow:
     0 6px 0 #0a2840,

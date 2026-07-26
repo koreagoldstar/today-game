@@ -5,6 +5,10 @@
    * 공통 광고/간판 설정
    * 나중에 문구·색·이미지만 바꾸면 pause.js 쓰는 전 게임에 반영됩니다.
    * image: null → 문구 간판 / image: "/assets/ads/foo.png" → 이미지 간판
+   *
+   * 표시 규칙: 게임 플레이 영역을 절대 가리지 않음.
+   * - 스테이지 옆 여백(≥110px)이 있을 때만 옆에 표시
+   * - 모바일처럼 화면을 꽉 채우면 숨김
    */
   const DEFAULT_CONFIG = {
     enabled: true,
@@ -50,8 +54,12 @@
 
   const STYLE_ID = "today-ad-boards-style";
   const ROOT_ID = "today-ad-boards";
+  const MIN_SIDE_GAP = 110;
   const imageCache = Object.create(null);
   let mounted = false;
+  let rotateTimer = 0;
+  let rotateIndex = 0;
+  let placeRaf = 0;
 
   function config() {
     const user = window.TODAY_AD_BOARDS;
@@ -80,14 +88,16 @@
     style.id = STYLE_ID;
     style.textContent = `
 #${ROOT_ID}{
-  position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;
+  position:fixed;inset:0;z-index:2;pointer-events:none;overflow:visible;
 }
+#${ROOT_ID}[hidden]{display:none!important}
 #${ROOT_ID} .today-ad-board{
-  position:absolute;width:102px;min-height:56px;padding:8px 6px 10px;
+  position:fixed;width:102px;min-height:56px;padding:8px 6px 10px;
   border-radius:12px;border:3px solid #ff6b9d;box-sizing:border-box;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;box-shadow:0 4px 0 rgba(61,42,69,.12);opacity:.92;
+  text-align:center;box-shadow:0 4px 0 rgba(61,42,69,.12);opacity:.94;
   font-family:"Jua","Nunito",sans-serif;line-height:1.15;
+  left:auto;right:auto;top:auto;bottom:auto;
 }
 #${ROOT_ID} .today-ad-board::after{
   content:"";position:absolute;left:14px;bottom:-18px;width:6px;height:18px;
@@ -103,9 +113,6 @@
 #${ROOT_ID} .today-ad-board img{
   display:block;width:100%;height:100%;object-fit:contain;border-radius:6px;
 }
-#${ROOT_ID} .today-ad-board.pos-0{left:8px;top:22%}
-#${ROOT_ID} .today-ad-board.pos-1{right:8px;top:48%}
-#${ROOT_ID} .today-ad-board.pos-2{left:8px;top:62%}
 `;
     document.head.appendChild(style);
   }
@@ -143,16 +150,6 @@
     ctx.closePath();
   }
 
-  /**
-   * Canvas draw helper for in-world signs.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {object} ad
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
-   * @param {number} h
-   * @param {{side?: string, images?: Record<string, HTMLImageElement>, pole?: boolean}} [opts]
-   */
   function draw(ctx, ad, x, y, w, h, opts) {
     if (!ctx || !ad) return;
     const o = opts || {};
@@ -196,13 +193,13 @@
     ctx.fill();
   }
 
-  function buildBoardEl(ad, index) {
+  function buildBoardEl(ad) {
     const el = document.createElement("div");
-    el.className = `today-ad-board pos-${index}${index === 1 ? " right" : ""}`;
+    el.className = "today-ad-board";
     el.style.background = ad.bg || "#FFE4EC";
     el.style.borderColor = ad.accent || "#FF6B9D";
     el.style.color = ad.textColor || "#5A3A4A";
-    el.dataset.adId = ad.id || `ad-${index}`;
+    el.dataset.adId = ad.id || "ad";
 
     if (ad.image) {
       const img = document.createElement("img");
@@ -225,17 +222,70 @@
     return el;
   }
 
-  let rotateTimer = 0;
-  let rotateIndex = 0;
-
   function renderOneBoard(wrap) {
     const items = getItems();
     if (!items.length || !wrap) return;
     rotateIndex = rotateIndex % items.length;
     const ad = items[rotateIndex];
-    const pos = rotateIndex % 3;
     wrap.innerHTML = "";
-    wrap.appendChild(buildBoardEl(ad, pos));
+    wrap.appendChild(buildBoardEl(ad));
+    placeBesideStage();
+  }
+
+  /** Place board in the side margin next to .stage — never over the playfield. */
+  function placeBesideStage() {
+    const wrap = document.getElementById(ROOT_ID);
+    const board = wrap && wrap.querySelector(".today-ad-board");
+    const stage = stageRoot();
+    if (!wrap || !board) return;
+
+    if (!stage) {
+      wrap.hidden = true;
+      return;
+    }
+
+    const sr = stage.getBoundingClientRect();
+    const leftGap = sr.left;
+    const rightGap = window.innerWidth - sr.right;
+    const useLeft = leftGap >= MIN_SIDE_GAP && leftGap >= rightGap;
+    const useRight = rightGap >= MIN_SIDE_GAP && rightGap > leftGap;
+
+    if (!useLeft && !useRight) {
+      // Mobile / full-bleed stage: hide so gameplay is never covered
+      wrap.hidden = true;
+      return;
+    }
+
+    wrap.hidden = false;
+    const bw = board.offsetWidth || 102;
+    const bh = board.offsetHeight || 56;
+    const top = Math.max(12, Math.min(window.innerHeight - bh - 24, sr.top + sr.height * 0.35));
+
+    board.classList.toggle("right", useRight);
+    board.style.top = `${Math.round(top)}px`;
+    board.style.bottom = "auto";
+
+    if (useLeft) {
+      const left = Math.max(8, Math.round(sr.left - bw - 12));
+      board.style.left = `${left}px`;
+      board.style.right = "auto";
+    } else {
+      const left = Math.min(window.innerWidth - bw - 8, Math.round(sr.right + 12));
+      board.style.left = `${left}px`;
+      board.style.right = "auto";
+    }
+  }
+
+  function schedulePlace() {
+    if (placeRaf) cancelAnimationFrame(placeRaf);
+    placeRaf = requestAnimationFrame(() => {
+      placeRaf = 0;
+      placeBesideStage();
+    });
+  }
+
+  function syncVisibility() {
+    placeBesideStage();
   }
 
   function autoMount() {
@@ -245,11 +295,7 @@
       preloadImages();
       return false;
     }
-    const root = stageRoot();
-    if (!root) return false;
-    if (getComputedStyle(root).position === "static") {
-      root.style.position = "relative";
-    }
+
     ensureStyles();
     preloadImages();
 
@@ -258,9 +304,12 @@
       wrap = document.createElement("div");
       wrap.id = ROOT_ID;
       wrap.setAttribute("aria-hidden", "true");
-      root.appendChild(wrap);
+      document.body.appendChild(wrap);
+    } else if (wrap.parentElement !== document.body) {
+      // migrate off .stage so it never covers gameplay
+      document.body.appendChild(wrap);
     }
-    // one board on screen at a time
+
     renderOneBoard(wrap);
     if (rotateTimer) clearInterval(rotateTimer);
     rotateTimer = setInterval(() => {
@@ -268,7 +317,14 @@
       const el = document.getElementById(ROOT_ID);
       if (el) renderOneBoard(el);
     }, 9000);
+
+    window.removeEventListener("resize", schedulePlace);
+    window.addEventListener("resize", schedulePlace);
+    window.removeEventListener("orientationchange", schedulePlace);
+    window.addEventListener("orientationchange", schedulePlace);
+
     mounted = true;
+    schedulePlace();
     return true;
   }
 
@@ -277,6 +333,8 @@
       clearInterval(rotateTimer);
       rotateTimer = 0;
     }
+    window.removeEventListener("resize", schedulePlace);
+    window.removeEventListener("orientationchange", schedulePlace);
     const wrap = document.getElementById(ROOT_ID);
     if (wrap) wrap.remove();
     mounted = false;
@@ -290,10 +348,11 @@
     draw,
     autoMount,
     unmount,
+    syncVisibility,
+    placeBesideStage,
     isMounted: () => mounted,
   };
 
-  // Allow page to override before load by assigning TODAY_AD_BOARDS earlier
   if (!window.TODAY_AD_BOARDS) {
     window.TODAY_AD_BOARDS = {
       enabled: DEFAULT_CONFIG.enabled,
