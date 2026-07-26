@@ -246,7 +246,10 @@
           img.src = c.src;
         })
     );
-    const ads = window.CUTE_SHOOT_ADS || [];
+    const ads =
+      (window.TodayAdBoards && TodayAdBoards.getItems && TodayAdBoards.getItems()) ||
+      window.CUTE_SHOOT_ADS ||
+      [];
     ads.forEach((ad) => {
       if (!ad.image) return;
       jobs.push(
@@ -571,7 +574,10 @@
   }
 
   function spawnSign() {
-    const ads = window.CUTE_SHOOT_ADS || [];
+    const ads =
+      (window.TodayAdBoards && TodayAdBoards.getItems && TodayAdBoards.getItems()) ||
+      window.CUTE_SHOOT_ADS ||
+      [];
     if (!ads.length) return;
     const ad = pick(ads);
     const side = Math.random() < 0.5 ? "left" : "right";
@@ -1117,19 +1123,20 @@
 
   function drawSign(s) {
     const { ad, x, y, w, h } = s;
-    // pole
+    if (window.TodayAdBoards && TodayAdBoards.draw) {
+      TodayAdBoards.draw(ctx, ad, x, y, w, h, { side: s.side, images });
+      return;
+    }
+    // fallback if shared module missing
     ctx.fillStyle = "#c9b8a0";
     const poleX = s.side === "left" ? x + 16 : x + w - 22;
     ctx.fillRect(poleX, y + h - 4, 6, 40);
-
-    // board
     ctx.fillStyle = ad.bg || "#fff";
     roundRect(x, y, w, h, 10);
     ctx.fill();
     ctx.strokeStyle = ad.accent || "#ff6b9d";
     ctx.lineWidth = 3;
     ctx.stroke();
-
     const img = images[`ad:${ad.id}`];
     if (img) {
       const pad = 8;
@@ -1144,8 +1151,6 @@
       ctx.fillText(ad.subtext || "", x + w / 2, y + h / 2 + 14);
       ctx.globalAlpha = 1;
     }
-
-    // little sparkle
     ctx.fillStyle = ad.accent || "#ff6b9d";
     ctx.beginPath();
     ctx.arc(x + 10, y + 10, 3, 0, Math.PI * 2);

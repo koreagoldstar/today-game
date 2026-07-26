@@ -144,11 +144,37 @@
     if (document.hidden) pause();
   }
 
+  function ensureAdBoards() {
+    if (window.__todayAdBoardsLoading) return;
+    const run = () => {
+      try {
+        if (window.TodayAdBoards && TodayAdBoards.autoMount) TodayAdBoards.autoMount();
+      } catch (_) {}
+    };
+    if (window.TodayAdBoards) {
+      run();
+      return;
+    }
+    window.__todayAdBoardsLoading = true;
+    const s = document.createElement("script");
+    s.src = "/js/ad-boards.js";
+    s.async = true;
+    s.onload = () => {
+      window.__todayAdBoardsLoading = false;
+      run();
+    };
+    s.onerror = () => {
+      window.__todayAdBoardsLoading = false;
+    };
+    document.head.appendChild(s);
+  }
+
   window.TodayPause = {
     mount(options) {
       cfg = options || null;
       ensureDom();
       syncUi();
+      ensureAdBoards();
       window.removeEventListener("keydown", onKey);
       document.removeEventListener("visibilitychange", onVisibility);
       window.addEventListener("keydown", onKey);
@@ -165,4 +191,11 @@
     toggle,
     sync: syncUi,
   };
+
+  // pause.mount 전에 스크립트만 로드된 페이지도 간판 표시
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureAdBoards);
+  } else {
+    ensureAdBoards();
+  }
 })();

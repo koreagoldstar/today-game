@@ -8,10 +8,17 @@
   const STAGE_COUNT = 50;
   const STAGES_PER_MAP = Math.ceil(STAGE_COUNT / 4);
 
-  const AD_CONFIG = {
-    texts: ["사랑해", "사랑해", "사랑해"],
-    ink: "#e23d4a",
-  };
+  function adConfig() {
+    const items =
+      (window.TodayAdBoards && TodayAdBoards.getItems && TodayAdBoards.getItems()) ||
+      (window.TODAY_AD_BOARDS && window.TODAY_AD_BOARDS.items) ||
+      [{ text: "사랑해", textColor: "#e23d4a" }];
+    return {
+      items,
+      texts: items.map((a) => a.text || "사랑해"),
+      ink: (items[0] && items[0].textColor) || "#e23d4a",
+    };
+  }
 
   const MAPS = {
     forest: {
@@ -976,15 +983,30 @@
   }
 
   function drawBillboard(g, b) {
-    const text = AD_CONFIG.texts[b.textIndex % AD_CONFIG.texts.length] || "사랑해";
+    const cfg = adConfig();
+    const ad = cfg.items[b.textIndex % cfg.items.length] || { text: "사랑해♡", textColor: cfg.ink };
+    // Prefer shared canvas drawer when available (supports image ads)
+    if (window.TodayAdBoards && TodayAdBoards.draw && !imgs.billboard) {
+      TodayAdBoards.draw(g, ad, b.x, b.y, b.w, b.h, { pole: true, side: b.x < W / 2 ? "left" : "right" });
+      return;
+    }
     if (imgs.billboard) {
       g.drawImage(imgs.billboard, b.x, b.y, b.w, b.h);
     } else {
       g.fillStyle = "#6b4226";
       g.fillRect(b.x + 12, b.y + b.h - 6, 8, 26);
       g.fillRect(b.x + b.w - 20, b.y + b.h - 6, 8, 26);
-      g.fillStyle = "#fff6e0";
+      g.fillStyle = ad.bg || "#fff6e0";
       g.fillRect(b.x + 6, b.y + 8, b.w - 12, b.h - 28);
+    }
+    const img =
+      ad.image && window.TodayAdBoards && TodayAdBoards.getImage
+        ? TodayAdBoards.getImage(ad)
+        : null;
+    if (img) {
+      const pad = 10;
+      g.drawImage(img, b.x + pad, b.y + pad, b.w - pad * 2, b.h - pad * 2 - 10);
+      return;
     }
     g.fillStyle = "rgba(255,248,230,0.92)";
     const tx = b.x + b.w * 0.12;
@@ -992,11 +1014,11 @@
     const tw = b.w * 0.76;
     const th = b.h * 0.38;
     g.fillRect(tx, ty, tw, th);
-    g.fillStyle = AD_CONFIG.ink;
+    g.fillStyle = ad.textColor || cfg.ink;
     g.font = `700 ${Math.min(22, th * 0.7)}px "Jua", sans-serif`;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.fillText(text, b.x + b.w / 2, ty + th / 2 + 1);
+    g.fillText(ad.text || "사랑해", b.x + b.w / 2, ty + th / 2 + 1);
   }
 
   function drawShot(g, s) {
