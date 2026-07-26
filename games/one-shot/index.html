@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#9fd8ff" />
-    <title>딱 한 발</title>
+    <meta name="theme-color" content="#6a8f6a" />
+    <title>한 발 저격</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
@@ -25,19 +25,24 @@
         </div>
       </div>
 
-      <p class="hint" id="hint">당겨서 조준 · 놓으면 발사!</p>
+      <div class="controls" id="controls">
+        <button type="button" class="ctrl steady" id="steady-btn">숨 참기</button>
+        <button type="button" class="ctrl fire" id="fire-btn">발사</button>
+      </div>
+
+      <p class="hint" id="hint">화면을 드래그해 조준 · 발사로 격발</p>
 
       <div class="overlay" id="title">
         <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
-        <div class="badge">ONE SHOT</div>
-        <h1>딱 한 발</h1>
+        <div class="badge">RIFLE RANGE</div>
+        <h1>한 발 저격</h1>
         <p>
-          새총을 당겨 각도·세기를 맞춰요<br />
-          탄은 적고, 한 발이 소중해요
+          조준점을 미세하게 맞춰요<br />
+          숨 참고 · 한 발에 끝내기
         </p>
         <div class="title-controls">
-          <span>📱 병아리 근처에서 당겨서 조준</span>
-          <span>궤적 점선을 보고 놓으면 발사</span>
+          <span>📱 화면 드래그 = 조준 이동</span>
+          <span>숨 참기 = 흔들림↓ · 발사 = 격발</span>
         </div>
         <button type="button" class="btn" id="start-btn">조준 시작!</button>
         <a href="/">← 오늘의 게임</a>

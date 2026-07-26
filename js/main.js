@@ -282,8 +282,8 @@
     },
     {
       id: "one-shot",
-      title: "딱 한 발",
-      tag: "슈팅 · 조준",
+      title: "한 발 저격",
+      tag: "슈팅 · 정밀조준",
       href: "/games/one-shot/",
       thumb: "/assets/thumbs/one-shot.png",
       category: "action",
