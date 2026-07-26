@@ -38,7 +38,6 @@ module.exports = async function handler(req, res) {
     "tower",
     "fish-rush",
     "chick-defense",
-    "weather-dodge",
     "fruit-catch",
     "bubble-pop",
     "pinball",

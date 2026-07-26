@@ -40,7 +40,6 @@ module.exports = async function handler(req, res) {
     { id: "tower", title: "흔들흔들 스카이", href: "/games/tower/", metric: "score" },
     { id: "fish-rush", title: "황금 낚시", href: "/games/fish-rush/", metric: "score" },
     { id: "chick-defense", title: "둥지 디펜스", href: "/games/chick-defense/", metric: "score" },
-    { id: "weather-dodge", title: "날씨 피하기", href: "/games/weather-dodge/", metric: "score" },
     { id: "fruit-catch", title: "과일 바스켓", href: "/games/fruit-catch/", metric: "score" },
     { id: "bubble-pop", title: "팝팝 방울", href: "/games/bubble-pop/", metric: "score" },
   ];

@@ -43,7 +43,6 @@
     { id: "tower", title: "흔들흔들 스카이" },
     { id: "fish-rush", title: "황금 낚시" },
     { id: "chick-defense", title: "둥지 디펜스" },
-    { id: "weather-dodge", title: "날씨 피하기" },
     { id: "fruit-catch", title: "과일 바스켓" },
     { id: "bubble-pop", title: "팝팝 방울" },
     { id: "pinball", title: "핀볼팡팡" },
