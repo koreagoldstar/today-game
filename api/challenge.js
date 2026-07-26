@@ -38,6 +38,7 @@ module.exports = async function handler(req, res) {
     { id: "diff", title: "다른 그림 찾기", href: "/games/diff/", metric: "score" },
     { id: "suika", title: "수박 합치기", href: "/games/suika/", metric: "score" },
     { id: "tower", title: "흔들흔들 스카이", href: "/games/tower/", metric: "score" },
+    { id: "fish-rush", title: "황금 낚시", href: "/games/fish-rush/", metric: "score" },
     { id: "fruit-catch", title: "과일 바스켓", href: "/games/fruit-catch/", metric: "score" },
     { id: "bubble-pop", title: "팝팝 방울", href: "/games/bubble-pop/", metric: "score" },
   ];

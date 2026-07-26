@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a4a5c" />
+    <title>황금 낚시</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="fish-rush">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>총점 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>목표 <b id="hud-goal">0</b></span>
+          <span class="timer"><b id="hud-time">60</b>초</span>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+      <div class="cash-chip"><span>₩</span><b id="hud-cash">0</b></div>
+      <div class="hint" id="hint">탭해서 낚싯바늘 던지기</div>
+
+      <div class="overlay" id="title">
+        <div class="badge">GOLD HOOK</div>
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="128" height="128" />
+        <h1>황금 낚시</h1>
+        <p>흔들리는 바늘을 던져<br />값진 물고기를 끌어올리세요</p>
+        <div class="icons">무거운 고기일수록 천천히!</div>
+        <button type="button" class="btn" id="start-btn">출항!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1 id="clear-title">어획 성공!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 바다</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">TIME UP</div>
+        <h1>출항 종료</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시 낚시</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h1>전설의 낚시왕!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

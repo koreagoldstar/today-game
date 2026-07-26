@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "fish-rush",
+      title: "황금 낚시",
+      tag: "골드러시 · 50단계",
+      href: "/games/fish-rush/",
+      thumb: "/assets/thumbs/fish-rush.png",
+      category: "arcade",
+    },
+    {
       id: "order-memo",
       title: "순서톡톡",
       tag: "기억 · 50단계",

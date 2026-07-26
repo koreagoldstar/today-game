@@ -43,6 +43,7 @@
     { id: "suika", title: "수박 합치기" },
     { id: "slide-2048", title: "두배두배" },
     { id: "tower", title: "흔들흔들 스카이" },
+    { id: "fish-rush", title: "황금 낚시" },
     { id: "fruit-catch", title: "과일 바스켓" },
     { id: "bubble-pop", title: "팝팝 방울" },
     { id: "pinball", title: "핀볼팡팡" },
