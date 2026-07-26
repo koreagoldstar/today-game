@@ -81,22 +81,6 @@
       category: "action",
     },
     {
-      id: "rps",
-      title: "가위바위보",
-      tag: "대결 · 연승",
-      href: "/games/rps/",
-      thumb: "/assets/thumbs/rps.png",
-      category: "arcade",
-    },
-    {
-      id: "odd-even",
-      title: "홀짝 팡",
-      tag: "운 · 연속도전",
-      href: "/games/odd-even/",
-      thumb: "/assets/thumbs/odd-even.png",
-      category: "arcade",
-    },
-    {
       id: "donkey-kong",
       title: "동키콩",
       tag: "Internet Archive",
@@ -472,7 +456,7 @@
       : ["flappy", "tetris", "doodle", "jump-run", "ninja-dodge", "stork-stride"]
   );
   /** 카탈로그 맨 아래 고정 */
-  const BOTTOM_IDS = new Set(["pinball", "rps", "odd-even"]);
+  const BOTTOM_IDS = new Set(["pinball"]);
 
   /**
    * 콜드스타트용 인기 시드 (실제 플레이 수가 쌓이면 자동으로 그 순서로 올라감)

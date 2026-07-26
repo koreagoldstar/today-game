@@ -5,8 +5,6 @@
   /** 챌린지에서 제외 (매일 로테이션 대상 아님) */
   const CHALLENGE_EXCLUDE = new Set([
     "pinball",
-    "rps",
-    "odd-even",
     "dual-pad",
     "slide-beat",
     "beat-tap",
@@ -47,8 +45,6 @@
     { id: "fruit-catch", title: "과일 바스켓" },
     { id: "bubble-pop", title: "팝팝 방울" },
     { id: "pinball", title: "핀볼팡팡" },
-    { id: "rps", title: "가위바위보" },
-    { id: "odd-even", title: "홀짝 팡" },
     { id: "dual-pad", title: "듀얼 패드" },
     { id: "slide-beat", title: "슬라이드 비트" },
     { id: "beat-tap", title: "펄스 탭" },

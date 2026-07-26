@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
 
   /**
    * 매일 로테이션 챌린지 풀 (고정 순서)
-   * 제외: 핀볼·가위바위보·홀짝·듀얼패드·슬라이드비트·펄스탭·홀인원골프·워들·상자야굴러가·고전
+   * 제외: 핀볼·듀얼패드·슬라이드비트·펄스탭·홀인원골프·워들·상자야굴러가·고전
    */
   const POOL = [
     { id: "minesweeper", title: "지뢰찾기", href: "/games/minesweeper/", metric: "score" },
