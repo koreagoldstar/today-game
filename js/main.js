@@ -281,6 +281,14 @@
       category: "action",
     },
     {
+      id: "one-shot",
+      title: "딱 한 발",
+      tag: "슈팅 · 조준",
+      href: "/games/one-shot/",
+      thumb: "/assets/thumbs/one-shot.png",
+      category: "action",
+    },
+    {
       id: "chick-shield",
       title: "막아요 쏴요",
       tag: "슈팅 · 방패",
@@ -478,6 +486,7 @@
     "brick",
     "puzzle-bubble",
     "memory",
+    "one-shot",
     "chick-shield",
     "cute-shoot",
     "racing",

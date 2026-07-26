@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#9fd8ff" />
+    <title>딱 한 발</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="one-shot">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>스테이지 <b id="hud-stage">1</b>/30</span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>최고 <b id="hud-best">0</b></span>
+          <div class="ammo" id="hud-ammo" aria-label="남은 탄"></div>
+        </div>
+      </div>
+
+      <p class="hint" id="hint">당겨서 조준 · 놓으면 발사!</p>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="150" height="150" />
+        <div class="badge">ONE SHOT</div>
+        <h1>딱 한 발</h1>
+        <p>
+          새총을 당겨 각도·세기를 맞춰요<br />
+          탄은 적고, 한 발이 소중해요
+        </p>
+        <div class="title-controls">
+          <span>📱 병아리 근처에서 당겨서 조준</span>
+          <span>궤적 점선을 보고 놓으면 발사</span>
+        </div>
+        <button type="button" class="btn" id="start-btn">조준 시작!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>명중!</h1>
+        <p id="clear-detail"></p>
+        <div class="stars" id="clear-stars" aria-hidden="true"></div>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">MISS</div>
+        <h1>탄이 떨어졌어요</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn soft" id="retry-btn">다시!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>저격 마스터!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
