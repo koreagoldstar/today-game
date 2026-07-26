@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1628" />
+    <title>제트 스트라이크</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="jet-strike">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b>/<b id="hud-stage-max">50</b></span>
+          <span>점수 <b id="hud-score">0</b> · 생명 <b id="hud-lives">2</b></span>
+        </div>
+        <div class="panel right">
+          <span>미사일 <b id="hud-missile">Lv.1</b></span>
+          <span>폭탄 <b id="hud-bomb">2</b> · 실드 <b id="hud-shield">0</b></span>
+        </div>
+      </div>
+      <div class="boss-bar hidden" id="boss-bar">
+        <span id="boss-name">중간 보스</span>
+        <div class="bar"><i id="boss-fill"></i></div>
+      </div>
+      <button type="button" class="bomb-btn hidden" id="bomb-btn">💣 폭탄</button>
+      <div class="hint" id="hint">드래그로 이동 · 자동 사격 · 폭탄(B/스페이스)</div>
+
+      <div class="overlay" id="title">
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="140" height="140" />
+        <div class="badge">AIR COMBAT</div>
+        <h1>제트 스트라이크</h1>
+        <p>적기를 격추하고 중간 보스를 쓰러뜨리세요<br />생명 2 · 폭탄 2로 시작 · 50스테이지!</p>
+        <button type="button" class="btn" id="start-btn">출격!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">STAGE CLEAR</div>
+        <h1>중간 보스 격파!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">SHOT DOWN</div>
+        <h1>격추당했습니다</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">재출격</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">MISSION COMPLETE</div>
+        <h1>전 전선 제압!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

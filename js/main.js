@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "jet-strike",
+      title: "제트 스트라이크",
+      tag: "슈팅 · 50스테이지",
+      href: "/games/jet-strike/",
+      thumb: "/assets/thumbs/jet-strike.png",
+      category: "action",
+    },
+    {
       id: "chick-defense",
       title: "둥지 디펜스",
       tag: "타워디펜스 · 50단계",
