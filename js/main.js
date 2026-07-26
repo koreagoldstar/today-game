@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "weather-dodge",
+      title: "날씨 피하기",
+      tag: "아케이드 · 40웨이브",
+      href: "/games/weather-dodge/",
+      thumb: "/assets/thumbs/weather-dodge.png",
+      category: "arcade",
+    },
+    {
       id: "chick-defense",
       title: "둥지 디펜스",
       tag: "타워디펜스 · 50단계",
