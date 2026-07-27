@@ -42,11 +42,9 @@
 
   function isPunchBg(r, g, b, a) {
     if (a < 28) return true;
-    if (r > 220 && g < 40 && b > 220) return true;
+    // magenta / hot-pink chroma only — never punch light stone pixels
     if (r > 185 && b > 175 && g < 145 && r + b > g * 2.1) return true;
-    if (r > 210 && b > 200 && g < 160 && Math.abs(r - b) < 90) return true;
-    if (r > 220 && g > 160 && b > 190 && r > g + 20 && b > g + 10 && (r + g + b) / 3 > 195) return true;
-    if (r > 230 && g > 190 && b > 210 && Math.abs(r - b) < 50) return true;
+    if (r > 200 && b > 150 && g < 90) return true;
     return false;
   }
 
@@ -80,7 +78,22 @@
       loadImg("assets/stone-white.png"),
     ]);
     if (black) sprites.black = punchBg(black);
-    if (white) sprites.white = punchBg(white);
+    if (white) {
+      // white stones were getting fully erased by over-aggressive chroma key
+      sprites.white = punchBg(white);
+      const x = sprites.white.getContext("2d");
+      const sample = x.getImageData(
+        Math.floor(sprites.white.width * 0.35),
+        Math.floor(sprites.white.height * 0.35),
+        Math.floor(sprites.white.width * 0.3),
+        Math.floor(sprites.white.height * 0.3)
+      ).data;
+      let opaque = 0;
+      for (let i = 3; i < sample.length; i += 4) {
+        if (sample[i] > 40) opaque += 1;
+      }
+      if (opaque < 80) sprites.white = null; // fall back to drawn stone
+    }
   }
 
   let board = [];
