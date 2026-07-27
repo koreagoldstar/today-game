@@ -17,11 +17,11 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
-      id: "cell-spore",
-      title: "셀 스포어",
-      tag: "진화 · 세포 키우기",
-      href: "/games/cell-spore/",
-      thumb: "/assets/thumbs/cell-spore.png",
+      id: "number-hole",
+      title: "넘버 홀",
+      tag: "팩맨 · 스테이지 흡수",
+      href: "/games/number-hole/",
+      thumb: "/assets/thumbs/number-hole.png",
       category: "action",
     },
     {

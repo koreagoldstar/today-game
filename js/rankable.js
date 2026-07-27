@@ -45,6 +45,7 @@
     { id: "chick-defense", title: "둥지 디펜스" },
     { id: "jet-strike", title: "제트 스트라이크" },
     { id: "cell-spore", title: "셀 스포어" },
+    { id: "number-hole", title: "넘버 홀" },
     { id: "fruit-catch", title: "과일 바스켓" },
     { id: "bubble-pop", title: "팝팝 방울" },
     { id: "pinball", title: "핀볼팡팡" },
