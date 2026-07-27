@@ -19,7 +19,7 @@
     {
       id: "number-hole",
       title: "넘버 홀",
-      tag: "흡수 · 숫자 성장",
+      tag: "합체 · 세포 세력",
       href: "/games/number-hole/",
       thumb: "/assets/thumbs/number-hole.png",
       category: "action",

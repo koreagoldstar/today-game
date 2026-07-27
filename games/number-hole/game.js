@@ -4,13 +4,14 @@
   const GAME_ID = "number-hole";
   const W = 390;
   const H = 700;
-  const WORLD = 2800;
+  const WORLD = 2600;
   const ROUND_TIME = 75;
   const START_POWER = 2;
-  const MAX_POWER = 20;
-  const MAX_COMBO = 8;
-  const MAX_FOOD = 16;
-  const MAX_RIVALS = 6;
+  const MAX_POWER = 18;
+  const MAX_BUDS = 8;
+  const MAX_CELLS = 18;
+  const MAX_RIVALS = 5;
+  const MAX_COMBO = 10;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -33,11 +34,11 @@
   let maxCombo = 0;
   let timeLeft = ROUND_TIME;
   let player = null;
-  let foods = [];
+  let cells = [];
   let rivals = [];
-  let props = [];
   let particles = [];
   let floats = [];
+  let links = [];
   let swirls = [];
   let shake = 0;
   let flash = 0;
@@ -51,14 +52,14 @@
   let stick = { active: false, ox: 0, oy: 0, dx: 0, dy: 0 };
   let keys = { up: false, down: false, left: false, right: false };
 
-  const RIVAL_COLORS = ["#ff6b5c", "#4eb6e8", "#5fd4a0", "#f0a04b", "#d48ad0"];
-  const FOOD_COLORS = {
-    1: "#ff7aa2",
-    2: "#ff9a4a",
-    3: "#4ecdc4",
-    4: "#7aa2ff",
-    5: "#c084fc",
-  };
+  const RIVAL_PALETTE = [
+    { core: "#ff6b5c", bud: "rgba(255,107,92,0.7)" },
+    { core: "#4eb6e8", bud: "rgba(78,182,232,0.7)" },
+    { core: "#5fd4a0", bud: "rgba(95,212,160,0.7)" },
+    { core: "#f0a04b", bud: "rgba(240,160,75,0.7)" },
+    { core: "#d48ad0", bud: "rgba(212,138,208,0.7)" },
+  ];
+  const CELL_COLORS = ["#ff7aa2", "#ff9a4a", "#4ecdc4", "#7aa2ff", "#c084fc", "#f5c842"];
 
   function rand(a, b) {
     return a + Math.random() * (b - a);
@@ -66,28 +67,31 @@
   function clamp(v, a, b) {
     return Math.max(a, Math.min(b, v));
   }
-  function foodColor(p) {
-    return FOOD_COLORS[Math.min(5, Math.max(1, p))] || "#7aa2ff";
+  function cellColor(p) {
+    return CELL_COLORS[(Math.max(1, p) - 1) % CELL_COLORS.length];
   }
 
-  /** Soft-capped size — grows with number, never fills screen */
   function powerRadius(p) {
-    const n = clamp(p, 1, MAX_POWER);
-    return 15 + Math.log2(1 + n) * 5.4;
+    return 15 + Math.log2(1 + clamp(p, 1, MAX_POWER)) * 5.2;
   }
 
-  function powerSpeed(p) {
-    return Math.max(140, 235 - Math.log2(1 + p) * 11);
+  function powerSpeed(p, budCount) {
+    const drag = 1 - Math.min(0.28, budCount * 0.03);
+    return Math.max(130, (232 - Math.log2(1 + p) * 10) * drag);
   }
 
   function viewZoom() {
     if (!player) return 1;
-    return clamp(1 - (player.power - START_POWER) * 0.018, 0.62, 1);
+    const sprawl = player.buds.length * 0.012;
+    return clamp(1 - (player.power - START_POWER) * 0.018 - sprawl, 0.58, 1);
   }
 
-  /** Mass needed for +1 number — keeps growth visible but not runaway */
   function massNeeded(power) {
-    return 2 + Math.floor(power * 0.85);
+    return 2 + Math.floor(power * 0.7);
+  }
+
+  function budNeeded(power, budCount) {
+    return 3 + budCount + Math.floor(power * 0.4);
   }
 
   function updateHud() {
@@ -95,6 +99,8 @@
     document.getElementById("hud-power").textContent = player ? String(player.power) : String(START_POWER);
     document.getElementById("hud-combo").textContent = String(combo);
     document.getElementById("hud-time").textContent = String(Math.max(0, Math.ceil(timeLeft)));
+    const colony = document.getElementById("hud-colony");
+    if (colony && player) colony.textContent = String(1 + player.buds.length);
     const fill = document.getElementById("xp-fill");
     if (fill && player) {
       if (player.power >= MAX_POWER) fill.style.width = "100%";
@@ -103,97 +109,91 @@
   }
 
   function addFloat(x, y, text, color) {
-    floats.push({ x, y, text, color, life: 0.8, vy: -44 });
+    floats.push({ x, y, text, color, life: 0.85, vy: -48 });
   }
 
-  function burst(x, y, color, n = 8) {
-    const count = Math.min(n, 16);
-    for (let i = 0; i < count; i++) {
+  function burst(x, y, color, n = 10) {
+    for (let i = 0; i < Math.min(n, 18); i++) {
       const a = rand(0, Math.PI * 2);
-      const sp = rand(40, 160);
+      const sp = rand(40, 170);
       particles.push({
         x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-        life: rand(0.22, 0.5), r: rand(1.5, 4), color, glow: Math.random() < 0.4,
+        life: rand(0.25, 0.55), r: rand(1.5, 4.2), color, glow: true,
       });
     }
+  }
+
+  function addLink(ax, ay, bx, by, color, life = 0.35) {
+    links.push({ ax, ay, bx, by, color, life, max: life });
   }
 
   function spawnSwirl(x, y) {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       swirls.push({
-        x, y,
-        a: rand(0, Math.PI * 2),
-        r: rand(18, 42),
-        life: rand(0.35, 0.7),
-        w: rand(2, 4),
+        x, y, a: rand(0, Math.PI * 2), r: rand(16, 36),
+        life: rand(0.4, 0.75), w: rand(2, 4),
       });
     }
   }
 
-  /** ~35% smaller / 30% equal / 35% larger — not everything is edible */
-  function rollFoodPower(base) {
+  function makeBud(owner, angle) {
+    const orbit = powerRadius(owner.power) + 18 + rand(0, 10);
+    return {
+      angle: angle ?? rand(0, Math.PI * 2),
+      orbit,
+      x: owner.x + Math.cos(angle || 0) * orbit,
+      y: owner.y + Math.sin(angle || 0) * orbit,
+      r: 7 + rand(0, 3),
+      pulse: rand(0, Math.PI * 2),
+    };
+  }
+
+  /** Mix: smaller / same / larger — not everything edible */
+  function rollCellPower(base) {
     const roll = Math.random();
-    if (roll < 0.35) {
-      if (base <= 2) return 1;
-      return Math.max(1, base - 1 - Math.floor(Math.random() * 2));
-    }
-    if (roll < 0.65) return base;
+    if (roll < 0.38) return Math.max(1, base - 1 - Math.floor(Math.random() * 2));
+    if (roll < 0.62) return base;
     return Math.min(MAX_POWER, base + 1 + Math.floor(Math.random() * 2));
   }
 
-  function makeFood(forced) {
+  function makeCell(forced) {
     const base = player ? player.power : START_POWER;
-    const p = forced == null ? rollFoodPower(base) : forced;
+    const p = forced == null ? rollCellPower(base) : forced;
+    let x;
+    let y;
+    do {
+      x = rand(100, WORLD - 100);
+      y = rand(100, WORLD - 100);
+    } while (player && Math.hypot(x - player.x, y - player.y) < 120);
     return {
-      x: rand(100, WORLD - 100),
-      y: rand(100, WORLD - 100),
-      power: Math.max(1, p),
+      x, y, power: Math.max(1, p),
       bob: rand(0, Math.PI * 2),
-      kind: Math.random() < 0.05 ? "star" : "orb",
+      mergeLock: 0,
+      vx: rand(-20, 20),
+      vy: rand(-20, 20),
     };
   }
 
   function makeRival(forced) {
     const base = player ? player.power : START_POWER;
-    const p = clamp(
-      forced ?? Math.round(rand(base, base + 3)),
-      1,
-      MAX_POWER
-    );
+    const p = clamp(forced ?? Math.round(rand(base, base + 2.5)), 1, MAX_POWER);
+    const pal = RIVAL_PALETTE[Math.floor(Math.random() * RIVAL_PALETTE.length)];
     let x;
     let y;
     do {
-      x = rand(160, WORLD - 160);
-      y = rand(160, WORLD - 160);
-    } while (player && Math.hypot(x - player.x, y - player.y) < 420);
-    return {
-      x, y, power: p, mass: 0, vx: 0, vy: 0,
-      color: RIVAL_COLORS[Math.floor(Math.random() * RIVAL_COLORS.length)],
-      think: rand(0.3, 0.8), target: null, mouth: 0, facing: 0, alive: true,
+      x = rand(180, WORLD - 180);
+      y = rand(180, WORLD - 180);
+    } while (player && Math.hypot(x - player.x, y - player.y) < 450);
+    const r = {
+      x, y, power: p, mass: 0, budBank: 0,
+      buds: [], vx: 0, vy: 0,
+      color: pal.core, budColor: pal.bud,
+      think: rand(0.3, 0.8), target: null,
+      mouth: 0, facing: 0, alive: true, mergeLock: 0, invuln: 0,
     };
-  }
-
-  function buildProps() {
-    props = [];
-    const kinds = [
-      { kind: "building", w: 48, h: 70, label: "빌딩", val: 3, hue: 265 },
-      { kind: "building", w: 40, h: 56, label: "상점", val: 2, hue: 25 },
-      { kind: "car", w: 36, h: 22, label: "차", val: 1, hue: 0 },
-      { kind: "tree", w: 32, h: 40, label: "나무", val: 1, hue: 130 },
-      { kind: "lamp", w: 18, h: 48, label: "등", val: 2, hue: 45 },
-      { kind: "bus", w: 54, h: 30, label: "버스", val: 3, hue: 200 },
-      { kind: "box", w: 26, h: 26, label: "박스", val: 1, hue: 35 },
-    ];
-    for (let i = 0; i < 28; i++) {
-      const k = kinds[Math.floor(Math.random() * kinds.length)];
-      const val = k.val + (Math.random() < 0.25 ? 1 : 0);
-      props.push({
-        x: rand(140, WORLD - 140),
-        y: rand(140, WORLD - 140),
-        w: k.w, h: k.h, label: k.label, val: Math.min(6, val),
-        kind: k.kind, hue: k.hue, eaten: false,
-      });
-    }
+    const n = Math.floor(rand(0, 2));
+    for (let i = 0; i < n; i++) r.buds.push(makeBud(r, (Math.PI * 2 * i) / Math.max(1, n)));
+    return r;
   }
 
   function resetWorld() {
@@ -204,21 +204,21 @@
     timeLeft = ROUND_TIME;
     shake = 0;
     flash = 0;
-    foods = [];
+    cells = [];
     rivals = [];
     particles = [];
     floats = [];
+    links = [];
     swirls = [];
     player = {
       x: WORLD / 2, y: WORLD / 2,
-      power: START_POWER, mass: 0,
-      mouth: 0, facing: 0, invuln: 1.5,
+      power: START_POWER, mass: 0, budBank: 0,
+      buds: [], mouth: 0, facing: 0,
+      invuln: 1.4, mergeLock: 0, squash: 0,
     };
-    buildProps();
-    // Seed: mix of edible and dangerous
-    for (let i = 0; i < 14; i++) foods.push(makeFood());
+    for (let i = 0; i < 14; i++) cells.push(makeCell());
     rivals.push(makeRival(2), makeRival(3), makeRival(4), makeRival(5));
-    hintTimer = 3.2;
+    hintTimer = 3.5;
     hint.classList.remove("fade", "hidden");
     updateHud();
   }
@@ -247,8 +247,9 @@
       badge.className = "badge soft";
       title.textContent = "시간 종료!";
     }
+    const colony = player ? 1 + player.buds.length : 0;
     document.getElementById("over-detail").textContent =
-      `점수 ${score.toLocaleString()} · 숫자 ${player ? player.power : 0} · 최고콤보 ${maxCombo}`;
+      `점수 ${score.toLocaleString()} · 숫자 ${player ? player.power : 0} · 세력 ${colony} · 콤보 ${maxCombo}`;
     overlays.over.classList.remove("hidden");
     if (window.TodayGameRank) {
       TodayGameRank.mount({ gameId: GAME_ID, gameTitle: "넘버 홀", formParent: overlays.over });
@@ -256,129 +257,247 @@
     }
   }
 
-  /** Absorb → number grows (mass → +1 power). Visible growth, soft-capped. */
-  function growPlayer(bite, x, y, label) {
-    const massGain = bite <= 1 ? 1 : bite === 2 ? 2 : Math.min(4, bite);
-    player.mass += massGain;
-    let leveled = 0;
-    while (player.power < MAX_POWER && player.mass >= massNeeded(player.power)) {
-      player.mass -= massNeeded(player.power);
-      player.power += 1;
-      leveled += 1;
+  function trySpawnBud(owner, isPlayer) {
+    if (owner.buds.length >= MAX_BUDS) return false;
+    while (owner.budBank >= budNeeded(owner.power, owner.buds.length) && owner.buds.length < MAX_BUDS) {
+      owner.budBank -= budNeeded(owner.power, owner.buds.length);
+      const ang = (Math.PI * 2 * owner.buds.length) / MAX_BUDS + rand(-0.2, 0.2);
+      owner.buds.push(makeBud(owner, ang));
+      if (isPlayer) {
+        addFloat(owner.x, owner.y - 20, "증식!", "#7dffc2");
+        burst(owner.x, owner.y, "#7dffc2", 8);
+      }
     }
-    if (player.power >= MAX_POWER) player.mass = 0;
-
-    const points = 3 + Math.floor(Math.min(combo, MAX_COMBO) * 0.7) + leveled * 6;
-    score += points;
-    combo = Math.min(MAX_COMBO, combo + 1);
-    maxCombo = Math.max(maxCombo, combo);
-    comboTimer = 1.2;
-
-    burst(x, y, "#f5c842", 6 + Math.min(5, bite));
-    spawnSwirl(player.x, player.y);
-    if (leveled) {
-      addFloat(x, y - 10, `${player.power}!`, "#ffe27a");
-      flash = 0.12;
-      shake = 0.22;
-    } else {
-      addFloat(x, y - 8, label || `+${points}`, "#f0c44a");
-      flash = 0.04;
-      shake = 0.06;
-    }
-    if (combo >= 4 && combo % 2 === 0) addFloat(x, y - 26, `${combo} HIT`, "#ff7a68");
-    updateHud();
+    return true;
   }
 
-  function bodiesOverlap(ax, ay, ap, bx, by, bp, scale = 0.92) {
-    return Math.hypot(ax - bx, ay - by) < (powerRadius(ap) + powerRadius(bp)) * scale;
+  function growCore(owner, bite, isPlayer, x, y, label) {
+    const gain = bite <= 1 ? 1 : bite === 2 ? 2 : Math.min(4, bite);
+    owner.mass += gain;
+    owner.budBank += gain;
+    let leveled = 0;
+    while (owner.power < MAX_POWER && owner.mass >= massNeeded(owner.power)) {
+      owner.mass -= massNeeded(owner.power);
+      owner.power += 1;
+      leveled += 1;
+    }
+    if (owner.power >= MAX_POWER) owner.mass = 0;
+    trySpawnBud(owner, isPlayer);
+
+    if (isPlayer) {
+      const points = 3 + Math.floor(Math.min(combo, MAX_COMBO) * 0.8) + leveled * 8;
+      score += points;
+      combo = Math.min(MAX_COMBO, combo + 1);
+      maxCombo = Math.max(maxCombo, combo);
+      comboTimer = 1.3;
+      burst(x, y, "#f5c842", 6 + bite);
+      spawnSwirl(owner.x, owner.y);
+      if (leveled) {
+        addFloat(x, y - 12, `${owner.power}!`, "#ffe27a");
+        owner.squash = 0.35;
+        flash = 0.12;
+        shake = 0.2;
+      } else {
+        addFloat(x, y - 8, label || `+${points}`, "#f0c44a");
+      }
+      if (combo >= 4 && combo % 2 === 0) addFloat(x, y - 28, `${combo} HIT`, "#ff7a68");
+      updateHud();
+    }
+  }
+
+  /** Same-power merge → +1 (suika-style) */
+  function mergeWithCell(owner, cell, isPlayer) {
+    if (owner.mergeLock > 0 || cell.mergeLock > 0) return false;
+    if (owner.power !== cell.power || owner.power >= MAX_POWER) return false;
+    const dist = Math.hypot(owner.x - cell.x, owner.y - cell.y);
+    if (dist > powerRadius(owner.power) * 1.15) return false;
+
+    addLink(owner.x, owner.y, cell.x, cell.y, isPlayer ? "#f5c842" : owner.color, 0.4);
+    owner.power += 1;
+    owner.mergeLock = 0.35;
+    owner.squash = 0.45;
+    owner.mass = Math.max(0, owner.mass - 1);
+    owner.budBank += 2;
+    trySpawnBud(owner, isPlayer);
+
+    if (isPlayer) {
+      const pts = 18 + combo * 2;
+      score += pts;
+      combo = Math.min(MAX_COMBO, combo + 1);
+      maxCombo = Math.max(maxCombo, combo);
+      comboTimer = 1.5;
+      addFloat(owner.x, owner.y - 16, `합체 ${owner.power}!`, "#7dffc2");
+      burst(owner.x, owner.y, "#7dffc2", 16);
+      spawnSwirl(owner.x, owner.y);
+      flash = 0.15;
+      shake = 0.25;
+      updateHud();
+    } else {
+      burst(owner.x, owner.y, owner.color, 10);
+    }
+    return true;
+  }
+
+  function mergePlayerRival(r) {
+    if (player.mergeLock > 0 || r.mergeLock > 0) return false;
+    if (player.power !== r.power || player.power >= MAX_POWER) return false;
+    const dist = Math.hypot(player.x - r.x, player.y - r.y);
+    if (dist > (powerRadius(player.power) + powerRadius(r.power)) * 0.55) return false;
+
+    addLink(player.x, player.y, r.x, r.y, "#ffe27a", 0.5);
+    player.power += 1;
+    player.mergeLock = 0.4;
+    player.squash = 0.5;
+    player.budBank += 3 + r.buds.length;
+    // Absorb rival buds into player colony
+    for (const b of r.buds) {
+      if (player.buds.length >= MAX_BUDS) break;
+      player.buds.push({
+        angle: b.angle, orbit: b.orbit, x: b.x, y: b.y, r: b.r, pulse: b.pulse,
+      });
+    }
+    trySpawnBud(player, true);
+    const pts = 28 + r.buds.length * 4;
+    score += pts;
+    combo = Math.min(MAX_COMBO, combo + 1);
+    maxCombo = Math.max(maxCombo, combo);
+    comboTimer = 1.6;
+    addFloat(player.x, player.y - 18, `세력 합체!`, "#7dffc2");
+    burst(player.x, player.y, "#ffe27a", 18);
+    flash = 0.18;
+    shake = 0.3;
+    updateHud();
+    r.alive = false;
+    return true;
+  }
+
+  function updateBuds(owner, dt) {
+    const baseR = powerRadius(owner.power);
+    owner.buds.forEach((b, i) => {
+      b.pulse += dt * 4;
+      b.angle += dt * (0.55 + i * 0.04);
+      const targetOrbit = baseR + 16 + i * 3;
+      b.orbit += (targetOrbit - b.orbit) * Math.min(1, dt * 4);
+      const tx = owner.x + Math.cos(b.angle) * b.orbit;
+      const ty = owner.y + Math.sin(b.angle) * b.orbit;
+      b.x += (tx - b.x) * Math.min(1, dt * 8);
+      b.y += (ty - b.y) * Math.min(1, dt * 8);
+      b.r = 6.5 + Math.sin(b.pulse) * 0.8 + Math.min(3, owner.power * 0.12);
+    });
+  }
+
+  function budsAbsorb(owner, isPlayer, dt) {
+    for (const b of owner.buds) {
+      for (let i = cells.length - 1; i >= 0; i--) {
+        const c = cells[i];
+        if (c.power >= owner.power) continue;
+        const dist = Math.hypot(c.x - b.x, c.y - b.y);
+        if (dist < b.r + powerRadius(c.power) * 0.35 + 6) {
+          addLink(b.x, b.y, c.x, c.y, isPlayer ? "#f5c842" : owner.color, 0.2);
+          growCore(owner, Math.min(2, c.power), isPlayer, c.x, c.y, isPlayer ? "세포" : null);
+          if (isPlayer) score += 2;
+          cells.splice(i, 1);
+        } else if (c.power < owner.power && dist < 55) {
+          const ang = Math.atan2(b.y - c.y, b.x - c.x);
+          c.x += Math.cos(ang) * 70 * dt;
+          c.y += Math.sin(ang) * 70 * dt;
+        }
+      }
+    }
   }
 
   function canAbsorb(eater, prey, dist) {
-    return prey < eater && dist < powerRadius(eater) * 0.82;
+    return prey < eater && dist < powerRadius(eater) * 0.8;
   }
 
   function separate(a, b, push) {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     const d = Math.hypot(dx, dy) || 0.001;
-    const nx = dx / d;
-    const ny = dy / d;
-    a.x += nx * push;
-    a.y += ny * push;
-    b.x -= nx * push;
-    b.y -= ny * push;
+    a.x += (dx / d) * push;
+    a.y += (dy / d) * push;
+    b.x -= (dx / d) * push;
+    b.y -= (dy / d) * push;
   }
 
-  function tryEatFood(f, i, dt) {
-    let dist = Math.hypot(f.x - player.x, f.y - player.y);
-    if (f.power < player.power && dist < powerRadius(player.power) * 1.55 && dist > 2) {
-      const ang = Math.atan2(player.y - f.y, player.x - f.x);
-      f.x += Math.cos(ang) * 120 * dt;
-      f.y += Math.sin(ang) * 120 * dt;
-      dist = Math.hypot(f.x - player.x, f.y - player.y);
-    }
-    if (canAbsorb(player.power, f.power, dist)) {
-      growPlayer(f.power, f.x, f.y, f.kind === "star" ? "★" : null);
-      if (f.kind === "star") {
-        player.mass += 1;
-        score += 4;
+  function tryEatCell(c, i, dt) {
+    if (c.mergeLock > 0) c.mergeLock -= dt;
+    c.bob += dt * 3;
+    c.x += c.vx * dt;
+    c.y += c.vy * dt;
+    c.x = clamp(c.x, 60, WORLD - 60);
+    c.y = clamp(c.y, 60, WORLD - 60);
+
+    let dist = Math.hypot(c.x - player.x, c.y - player.y);
+
+    // Same power: stretch-link then merge
+    if (c.power === player.power && player.mergeLock <= 0) {
+      if (dist < powerRadius(player.power) * 1.6) {
+        const ang = Math.atan2(player.y - c.y, player.x - c.x);
+        c.x += Math.cos(ang) * 90 * dt;
+        c.y += Math.sin(ang) * 90 * dt;
+        dist = Math.hypot(c.x - player.x, c.y - player.y);
+        if (dist < 40) addLink(player.x, player.y, c.x, c.y, "rgba(125,255,194,0.5)", 0.08);
       }
-      foods.splice(i, 1);
-    } else if (f.power >= player.power && dist < (powerRadius(player.power) + powerRadius(f.power) * 0.45) * 0.85) {
-      const ang = Math.atan2(f.y - player.y, f.x - player.x);
-      f.x += Math.cos(ang) * 8;
-      f.y += Math.sin(ang) * 8;
+      if (mergeWithCell(player, c, true)) {
+        cells.splice(i, 1);
+        return;
+      }
     }
-  }
 
-  function tryEatProp(p) {
-    if (p.eaten) return;
-    const dist = Math.hypot(p.x - player.x, p.y - player.y);
-    const reach = powerRadius(player.power) * 0.75 + Math.max(p.w, p.h) * 0.2;
-    if (p.val < player.power && dist < reach) {
-      p.eaten = true;
-      growPlayer(1, p.x, p.y, p.label);
-      burst(p.x, p.y, `hsl(${p.hue},55%,55%)`, 8);
+    if (c.power < player.power && dist < powerRadius(player.power) * 1.5 && dist > 2) {
+      const ang = Math.atan2(player.y - c.y, player.x - c.x);
+      c.x += Math.cos(ang) * 115 * dt;
+      c.y += Math.sin(ang) * 115 * dt;
+      dist = Math.hypot(c.x - player.x, c.y - player.y);
     }
-  }
 
-  function rivalGrow(r, amount) {
-    r.mass += amount;
-    const need = massNeeded(r.power);
-    if (r.power < MAX_POWER && r.mass >= need) {
-      r.mass = 0;
-      r.power += 1;
+    if (canAbsorb(player.power, c.power, dist)) {
+      growCore(player, c.power, true, c.x, c.y, null);
+      cells.splice(i, 1);
+    } else if (c.power > player.power && dist < (powerRadius(player.power) + powerRadius(c.power) * 0.4) * 0.9) {
+      const ang = Math.atan2(c.y - player.y, c.x - player.x);
+      c.x += Math.cos(ang) * 6;
+      c.y += Math.sin(ang) * 6;
     }
   }
 
   function rivalAI(r, dt) {
+    if (r.mergeLock > 0) r.mergeLock -= dt;
+    if (r.invuln > 0) r.invuln -= dt;
     r.think -= dt;
     if (r.think <= 0 || !r.target) {
       r.think = rand(0.4, 0.9);
       let best = null;
       let bestD = Infinity;
-      for (const f of foods) {
-        if (f.power >= r.power) continue;
-        const d = Math.hypot(f.x - r.x, f.y - r.y);
-        if (d < bestD) { bestD = d; best = f; }
+      let mergeT = null;
+      let mergeD = Infinity;
+      for (const c of cells) {
+        const d = Math.hypot(c.x - r.x, c.y - r.y);
+        if (c.power === r.power && d < mergeD) { mergeD = d; mergeT = c; }
+        if (c.power < r.power && d < bestD) { bestD = d; best = c; }
       }
-      // Hunt player only if clearly stronger
-      if (player && r.power > player.power + 0) {
+      if (player && player.power === r.power) {
         const d = Math.hypot(player.x - r.x, player.y - r.y);
-        if (d < 340 && d < bestD) best = player;
+        if (d < 280) mergeT = player;
       }
-      // Flee if player is bigger
-      if (player && player.power > r.power && Math.hypot(player.x - r.x, player.y - r.y) < 180) {
-        r.target = { x: r.x + (r.x - player.x) * 1.2, y: r.y + (r.y - player.y) * 1.2 };
+      if (player && r.power > player.power) {
+        const d = Math.hypot(player.x - r.x, player.y - r.y);
+        if (d < 320 && d < bestD) best = player;
+      }
+      if (player && player.power > r.power && Math.hypot(player.x - r.x, player.y - r.y) < 200) {
+        r.target = { x: r.x + (r.x - player.x), y: r.y + (r.y - player.y), kind: "flee" };
+      } else if (mergeT && mergeD < 220) {
+        r.target = { x: mergeT.x, y: mergeT.y, kind: "merge", ref: mergeT };
       } else if (best) {
-        r.target = { x: best.x, y: best.y };
+        r.target = { x: best.x, y: best.y, kind: "eat" };
       } else {
-        r.target = { x: rand(120, WORLD - 120), y: rand(120, WORLD - 120) };
+        r.target = { x: rand(120, WORLD - 120), y: rand(120, WORLD - 120), kind: "wander" };
       }
     }
     if (r.target) {
       const ang = Math.atan2(r.target.y - r.y, r.target.x - r.x);
-      const sp = powerSpeed(r.power) * 0.72;
+      const sp = powerSpeed(r.power, r.buds.length) * 0.7;
       r.vx = Math.cos(ang) * sp;
       r.vy = Math.sin(ang) * sp;
       r.facing = ang;
@@ -387,17 +506,19 @@
     r.y = clamp(r.y + r.vy * dt, 50, WORLD - 50);
     r.mouth = (r.mouth + dt * 9) % (Math.PI * 2);
 
-    for (let i = foods.length - 1; i >= 0; i--) {
-      const f = foods[i];
-      if (canAbsorb(r.power, f.power, Math.hypot(f.x - r.x, f.y - r.y))) {
-        rivalGrow(r, f.power <= 1 ? 1 : 2);
-        foods.splice(i, 1);
+    updateBuds(r, dt);
+    budsAbsorb(r, false, dt);
+
+    for (let i = cells.length - 1; i >= 0; i--) {
+      const c = cells[i];
+      const dist = Math.hypot(c.x - r.x, c.y - r.y);
+      if (c.power === r.power && mergeWithCell(r, c, false)) {
+        cells.splice(i, 1);
+        continue;
       }
-    }
-    for (const p of props) {
-      if (!p.eaten && p.val < r.power && Math.hypot(p.x - r.x, p.y - r.y) < powerRadius(r.power) * 0.7) {
-        p.eaten = true;
-        rivalGrow(r, 1);
+      if (canAbsorb(r.power, c.power, dist)) {
+        growCore(r, c.power, false, c.x, c.y);
+        cells.splice(i, 1);
       }
     }
   }
@@ -406,38 +527,64 @@
     const dist = Math.hypot(r.x - player.x, r.y - player.y);
     const sumR = powerRadius(player.power) + powerRadius(r.power);
 
-    // Mild suction only for clearly smaller rivals
-    if (r.power < player.power && dist < powerRadius(player.power) * 1.35 && dist > sumR * 0.55) {
+    // Same power → merge into player colony
+    if (mergePlayerRival(r)) {
+      rivals.splice(i, 1);
+      return "ate";
+    }
+
+    if (r.power < player.power && dist < powerRadius(player.power) * 1.35 && dist > sumR * 0.5) {
       const ang = Math.atan2(player.y - r.y, player.x - r.x);
-      r.x += Math.cos(ang) * 55 * dt;
-      r.y += Math.sin(ang) * 55 * dt;
+      r.x += Math.cos(ang) * 50 * dt;
+      r.y += Math.sin(ang) * 50 * dt;
     }
 
     const dist2 = Math.hypot(r.x - player.x, r.y - player.y);
 
     if (player.power > r.power && canAbsorb(player.power, r.power, dist2)) {
-      growPlayer(Math.min(3, r.power), r.x, r.y, "라이벌");
-      score += 10;
+      // Eat rival core → gain buds
+      player.budBank += 2 + r.buds.length;
+      trySpawnBud(player, true);
+      growCore(player, Math.min(3, r.power), true, r.x, r.y, "세력");
+      score += 12 + r.buds.length * 3;
       burst(r.x, r.y, r.color, 14);
       rivals.splice(i, 1);
       return "ate";
     }
 
-    if (player.invuln <= 0 && r.power > player.power && dist2 < powerRadius(r.power) * 0.72) {
+    if (player.invuln <= 0 && r.power > player.power && dist2 < powerRadius(r.power) * 0.7) {
       burst(player.x, player.y, "#ff6b5a", 18);
       endGame("eaten");
       return "dead";
     }
 
-    // Equal (or almost overlapping) → bounce apart cleanly
-    if (r.power === player.power && dist2 < sumR * 0.88) {
-      separate(player, r, 6);
-      player.x = clamp(player.x, 50, WORLD - 50);
-      player.y = clamp(player.y, 50, WORLD - 50);
-      r.x = clamp(r.x, 50, WORLD - 50);
-      r.y = clamp(r.y, 50, WORLD - 50);
-    } else if (dist2 < sumR * 0.55 && player.power !== r.power) {
-      // Soft body push so they don't clip through each other
+    // Steal smaller buds on contact
+    if (dist2 < sumR * 1.1) {
+      for (let bi = r.buds.length - 1; bi >= 0; bi--) {
+        const b = r.buds[bi];
+        if (player.power > r.power && Math.hypot(b.x - player.x, b.y - player.y) < powerRadius(player.power) * 0.9) {
+          r.buds.splice(bi, 1);
+          player.budBank += 1;
+          trySpawnBud(player, true);
+          score += 5;
+          burst(b.x, b.y, r.color, 6);
+        }
+      }
+      for (let bi = player.buds.length - 1; bi >= 0; bi--) {
+        const b = player.buds[bi];
+        if (r.power > player.power && Math.hypot(b.x - r.x, b.y - r.y) < powerRadius(r.power) * 0.9) {
+          player.buds.splice(bi, 1);
+          r.budBank += 1;
+          trySpawnBud(r, false);
+          burst(b.x, b.y, "#f5c842", 6);
+          updateHud();
+        }
+      }
+    }
+
+    if (dist2 < sumR * 0.85 && player.power === r.power) {
+      separate(player, r, 5);
+    } else if (dist2 < sumR * 0.5) {
       separate(player, r, 3);
     }
     return "ok";
@@ -448,6 +595,8 @@
     if (shake > 0) shake -= dt;
     if (flash > 0) flash -= dt;
     if (player.invuln > 0) player.invuln -= dt;
+    if (player.mergeLock > 0) player.mergeLock -= dt;
+    if (player.squash > 0) player.squash -= dt;
     if (comboTimer > 0) {
       comboTimer -= dt;
       if (comboTimer <= 0) combo = 0;
@@ -476,7 +625,7 @@
     }
     const len = Math.hypot(mx, my);
     if (len > 0.01) {
-      const sp = powerSpeed(player.power);
+      const sp = powerSpeed(player.power, player.buds.length);
       player.x += (mx / len) * sp * dt;
       player.y += (my / len) * sp * dt;
       player.facing = Math.atan2(my, mx);
@@ -487,9 +636,10 @@
     player.x = clamp(player.x, 50, WORLD - 50);
     player.y = clamp(player.y, 50, WORLD - 50);
 
-    for (const f of foods) f.bob += dt * 3.2;
-    for (let i = foods.length - 1; i >= 0; i--) tryEatFood(foods[i], i, dt);
-    for (const p of props) tryEatProp(p);
+    updateBuds(player, dt);
+    budsAbsorb(player, true, dt);
+
+    for (let i = cells.length - 1; i >= 0; i--) tryEatCell(cells[i], i, dt);
 
     for (let i = rivals.length - 1; i >= 0; i--) {
       const r = rivals[i];
@@ -500,7 +650,7 @@
       if (res === "ate") continue;
     }
 
-    // Rival vs rival: bigger eats smaller; equals push apart
+    // Rival vs rival
     for (let i = 0; i < rivals.length; i++) {
       for (let j = i + 1; j < rivals.length; j++) {
         const a = rivals[i];
@@ -508,32 +658,47 @@
         if (!a.alive || !b.alive) continue;
         const d = Math.hypot(a.x - b.x, a.y - b.y);
         const sumR = powerRadius(a.power) + powerRadius(b.power);
-        if (d >= sumR * 0.7) continue;
-        if (a.power > b.power && d < powerRadius(a.power) * 0.75) {
-          rivalGrow(a, 2);
+        if (d >= sumR * 0.75) continue;
+        if (a.power === b.power && a.power < MAX_POWER && a.mergeLock <= 0 && b.mergeLock <= 0) {
+          a.power += 1;
+          a.mergeLock = 0.35;
+          a.budBank += 2 + b.buds.length;
+          for (const bud of b.buds) {
+            if (a.buds.length >= MAX_BUDS) break;
+            a.buds.push(bud);
+          }
+          trySpawnBud(a, false);
+          b.alive = false;
+          burst(a.x, a.y, a.color, 12);
+        } else if (a.power > b.power && d < powerRadius(a.power) * 0.75) {
+          a.budBank += 1 + b.buds.length;
+          trySpawnBud(a, false);
+          growCore(a, 2, false, b.x, b.y);
           b.alive = false;
         } else if (b.power > a.power && d < powerRadius(b.power) * 0.75) {
-          rivalGrow(b, 2);
+          b.budBank += 1 + a.buds.length;
+          trySpawnBud(b, false);
+          growCore(b, 2, false, a.x, a.y);
           a.alive = false;
-        } else if (a.power === b.power) {
-          separate(a, b, 5);
+        } else {
+          separate(a, b, 4);
         }
       }
     }
     rivals = rivals.filter((r) => r.alive);
 
     spawnAcc += dt;
-    if (spawnAcc > 1.1 && foods.length < MAX_FOOD) {
+    if (spawnAcc > 1.0 && cells.length < MAX_CELLS) {
       spawnAcc = 0;
-      foods.push(makeFood());
+      cells.push(makeCell());
     }
     rivalAcc += dt;
-    if (rivalAcc > 4.5 && rivals.length < MAX_RIVALS) {
+    if (rivalAcc > 5.0 && rivals.length < MAX_RIVALS) {
       rivalAcc = 0;
-      rivals.push(makeRival(player.power + Math.floor(rand(0, 3))));
+      rivals.push(makeRival(player.power + Math.floor(rand(0, 2))));
     }
 
-    if (particles.length > 90) particles.splice(0, particles.length - 90);
+    if (particles.length > 100) particles.splice(0, particles.length - 100);
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.life -= dt;
@@ -547,11 +712,15 @@
       f.y += f.vy * dt;
       if (f.life <= 0) floats.splice(i, 1);
     }
+    for (let i = links.length - 1; i >= 0; i--) {
+      links[i].life -= dt;
+      if (links[i].life <= 0) links.splice(i, 1);
+    }
     for (let i = swirls.length - 1; i >= 0; i--) {
       const s = swirls[i];
       s.life -= dt;
-      s.a += dt * 8;
-      s.r += dt * 30;
+      s.a += dt * 9;
+      s.r += dt * 35;
       if (s.life <= 0) swirls.splice(i, 1);
     }
     updateHud();
@@ -576,216 +745,96 @@
     g.closePath();
   }
 
-  function drawGrid(g) {
+  function drawMembrane(g, ax, ay, bx, by, color, width, alpha) {
+    const sa = worldToScreen(ax, ay);
+    const sb = worldToScreen(bx, by);
     const z = viewZoom();
-    const step = 80;
-    g.strokeStyle = "rgba(100,160,220,0.06)";
-    g.lineWidth = 1;
-    const x0 = Math.floor((player.x - W / z) / step) * step;
-    const y0 = Math.floor((player.y - H / z) / step) * step;
-    for (let x = x0; x < player.x + W / z + step; x += step) {
-      const s = worldToScreen(x, player.y).x;
-      g.beginPath();
-      g.moveTo(s, 0);
-      g.lineTo(s, H);
-      g.stroke();
-    }
-    for (let y = y0; y < player.y + H / z + step; y += step) {
-      const s = worldToScreen(player.x, y).y;
-      g.beginPath();
-      g.moveTo(0, s);
-      g.lineTo(W, s);
-      g.stroke();
-    }
+    const mx = (sa.x + sb.x) / 2 + Math.sin(time * 3 + ax * 0.01) * 6 * z;
+    const my = (sa.y + sb.y) / 2 + Math.cos(time * 2.5 + ay * 0.01) * 6 * z;
+    g.save();
+    g.globalAlpha = alpha;
+    g.strokeStyle = color;
+    g.lineWidth = width * z;
+    g.lineCap = "round";
+    g.beginPath();
+    g.moveTo(sa.x, sa.y);
+    g.quadraticCurveTo(mx, my, sb.x, sb.y);
+    g.stroke();
+    g.restore();
   }
 
-  function drawProp(g, p) {
-    if (p.eaten) return;
-    const s = worldToScreen(p.x, p.y);
+  function drawBud(g, b, color) {
+    const s = worldToScreen(b.x, b.y);
     const z = viewZoom();
-    if (s.x < -80 || s.y < -80 || s.x > W + 80 || s.y > H + 80) return;
+    const r = b.r * z;
+    if (s.x < -30 || s.y < -30 || s.x > W + 30 || s.y > H + 30) return;
     g.save();
     g.translate(s.x, s.y);
-    const can = player && p.val < player.power;
-    const w = p.w * z;
-    const h = p.h * z;
-
-    g.fillStyle = "rgba(0,0,0,0.25)";
+    g.fillStyle = "rgba(0,0,0,0.18)";
     g.beginPath();
-    g.ellipse(0, h * 0.42, w * 0.45, h * 0.12, 0, 0, Math.PI * 2);
+    g.ellipse(1, r * 0.55, r * 0.7, r * 0.25, 0, 0, Math.PI * 2);
     g.fill();
-
-    if (p.kind === "car" || p.kind === "bus") {
-      const body = can ? "#e84545" : "#5a3a42";
-      roundRect(g, -w / 2, -h / 2, w, h * 0.7, 5 * z);
-      g.fillStyle = body;
-      g.fill();
-      g.fillStyle = can ? "#7ad7ff" : "#3a4a55";
-      roundRect(g, -w * 0.28, -h * 0.42, w * 0.56, h * 0.28, 3 * z);
-      g.fill();
-      g.fillStyle = "#1a1a1a";
-      g.beginPath();
-      g.arc(-w * 0.28, h * 0.22, 4 * z, 0, Math.PI * 2);
-      g.arc(w * 0.28, h * 0.22, 4 * z, 0, Math.PI * 2);
-      g.fill();
-      if (p.kind === "bus") {
-        g.fillStyle = "rgba(255,255,255,0.35)";
-        for (let i = -1; i <= 1; i++) {
-          roundRect(g, i * w * 0.22 - 4 * z, -h * 0.35, 8 * z, 8 * z, 2 * z);
-          g.fill();
-        }
-      }
-    } else if (p.kind === "tree") {
-      g.fillStyle = can ? "#8b5a2b" : "#3d2e22";
-      roundRect(g, -w * 0.12, h * 0.05, w * 0.24, h * 0.4, 2 * z);
-      g.fill();
-      g.fillStyle = can ? "#3ecf6a" : "#2a5a3a";
-      roundRect(g, -w / 2, -h / 2, w, h * 0.55, 6 * z);
-      g.fill();
-      g.fillStyle = can ? "#2a9e4a" : "#1e4030";
-      roundRect(g, -w * 0.35, -h * 0.25, w * 0.7, h * 0.35, 5 * z);
-      g.fill();
-    } else if (p.kind === "lamp") {
-      g.fillStyle = can ? "#6a7380" : "#3a4048";
-      roundRect(g, -2 * z, -h * 0.35, 4 * z, h * 0.7, 2 * z);
-      g.fill();
-      g.fillStyle = can ? "#ffe27a" : "#6a6040";
-      g.shadowColor = can ? "rgba(255,220,100,0.7)" : "transparent";
-      g.shadowBlur = can ? 12 : 0;
-      g.beginPath();
-      g.arc(0, -h * 0.38, 7 * z, 0, Math.PI * 2);
-      g.fill();
-      g.shadowBlur = 0;
-    } else if (p.kind === "building") {
-      const c1 = can ? `hsl(${p.hue},48%,48%)` : `hsl(${p.hue},18%,28%)`;
-      const c2 = can ? `hsl(${p.hue},42%,38%)` : `hsl(${p.hue},14%,22%)`;
-      const grad = g.createLinearGradient(-w / 2, 0, w / 2, 0);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(1, c2);
-      g.fillStyle = grad;
-      roundRect(g, -w / 2, -h / 2, w, h, 6 * z);
-      g.fill();
-      g.fillStyle = can ? "rgba(255,230,140,0.55)" : "rgba(80,90,100,0.35)";
-      const cols = 2;
-      const rows = 3;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const wx = -w * 0.28 + c * w * 0.32;
-          const wy = -h * 0.32 + r * h * 0.22;
-          roundRect(g, wx, wy, w * 0.18, h * 0.12, 2 * z);
-          g.fill();
-        }
-      }
-    } else {
-      g.fillStyle = can ? `hsl(${p.hue},50%,48%)` : `hsl(${p.hue},15%,30%)`;
-      roundRect(g, -w / 2, -h / 2, w, h, 5 * z);
-      g.fill();
-    }
-
-    // Number badge
-    const br = Math.max(9, 11 * z);
-    g.fillStyle = can ? "rgba(20,28,40,0.85)" : "rgba(10,14,20,0.7)";
-    g.beginPath();
-    g.arc(0, 0, br, 0, Math.PI * 2);
-    g.fill();
-    g.strokeStyle = can ? "#f0c44a" : "rgba(255,255,255,0.15)";
-    g.lineWidth = 1.5;
-    g.stroke();
-    g.fillStyle = can ? "#ffe27a" : "#8a9aaa";
-    g.font = `700 ${Math.max(10, 12 * z)}px "Bagel Fat One","Jua"`;
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText(String(p.val), 0, 1);
-    g.restore();
-  }
-
-  function drawNumberOrb(g, x, y, power, bob) {
-    const s = worldToScreen(x, y);
-    const z = viewZoom();
-    const rad = powerRadius(power) * 0.4 * z;
-    if (s.x < -40 || s.y < -40 || s.x > W + 40 || s.y > H + 40) return;
-    const can = player && power < player.power;
-    const col = foodColor(power);
-
-    g.save();
-    g.translate(s.x, s.y + bob);
-
-    g.fillStyle = "rgba(0,0,0,0.2)";
-    g.beginPath();
-    g.ellipse(1, rad * 0.55, rad * 0.65, rad * 0.22, 0, 0, Math.PI * 2);
-    g.fill();
-
-    if (can) {
-      g.shadowColor = col;
-      g.shadowBlur = 10;
-    }
-    const grd = g.createRadialGradient(-rad * 0.3, -rad * 0.35, rad * 0.1, 0, 0, rad);
-    grd.addColorStop(0, can ? "#fff6e8" : "#9aa8b4");
-    grd.addColorStop(0.35, col);
-    grd.addColorStop(1, can ? "#2a3040" : "#1a222c");
+    const grd = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+    grd.addColorStop(0, "rgba(255,255,255,0.75)");
+    grd.addColorStop(0.4, color);
+    grd.addColorStop(1, "rgba(20,30,45,0.55)");
     g.fillStyle = grd;
     g.beginPath();
-    g.arc(0, 0, rad, 0, Math.PI * 2);
+    g.arc(0, 0, r, 0, Math.PI * 2);
     g.fill();
-    g.shadowBlur = 0;
-
-    g.fillStyle = "rgba(255,255,255,0.45)";
+    g.fillStyle = "rgba(255,255,255,0.4)";
     g.beginPath();
-    g.ellipse(-rad * 0.28, -rad * 0.32, rad * 0.28, rad * 0.16, -0.5, 0, Math.PI * 2);
+    g.ellipse(-r * 0.25, -r * 0.28, r * 0.28, r * 0.16, -0.4, 0, Math.PI * 2);
     g.fill();
-
-    g.strokeStyle = can ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.1)";
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.arc(0, 0, rad, 0, Math.PI * 2);
-    g.stroke();
-
-    g.fillStyle = "#1a2030";
-    g.font = `700 ${Math.max(10, rad * 1.05)}px "Bagel Fat One","Jua"`;
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText(String(power), 0, 1);
     g.restore();
   }
 
-  function drawPacOrb(g, x, y, power, color, mouthPhase, facing, isPlayer) {
-    const s = worldToScreen(x, y);
+  function drawColony(g, owner, isPlayer) {
+    const coreColor = isPlayer ? "#f5c842" : owner.color;
+    const budCol = isPlayer ? "rgba(245,200,66,0.75)" : owner.budColor;
+    for (const b of owner.buds) {
+      drawMembrane(g, owner.x, owner.y, b.x, b.y, budCol, 5 + b.r * 0.3, 0.45);
+    }
+    for (const b of owner.buds) drawBud(g, b, budCol);
+    drawPacCore(g, owner, isPlayer, coreColor);
+  }
+
+  function drawPacCore(g, owner, isPlayer, color) {
+    const s = worldToScreen(owner.x, owner.y);
     const z = viewZoom();
-    const rad = powerRadius(power) * z;
+    let rad = powerRadius(owner.power) * z;
+    if (owner.squash > 0) rad *= 1 + owner.squash * 0.25;
     if (s.x < -60 || s.y < -60 || s.x > W + 60 || s.y > H + 60) return;
 
     g.save();
     g.translate(s.x, s.y);
 
-    // Shadow
     g.fillStyle = "rgba(0,0,0,0.28)";
     g.beginPath();
     g.ellipse(2, rad * 0.55, rad * 0.75, rad * 0.22, 0, 0, Math.PI * 2);
     g.fill();
 
-    // Vortex ring (player)
     if (isPlayer) {
       for (let i = 0; i < 3; i++) {
-        const rr = rad + 8 + i * 7 + Math.sin(time * 4 + i) * 2;
-        g.strokeStyle = `rgba(80,200,255,${0.28 - i * 0.07})`;
+        const rr = rad + 7 + i * 6 + Math.sin(time * 4 + i) * 2;
+        g.strokeStyle = `rgba(80,200,255,${0.26 - i * 0.06})`;
         g.lineWidth = 2;
         g.beginPath();
-        g.arc(0, 0, rr, time * 3 + i, time * 3 + i + Math.PI * 1.2);
+        g.arc(0, 0, rr, time * 2.8 + i, time * 2.8 + i + Math.PI * 1.15);
         g.stroke();
       }
     }
 
-    const mouth = (0.14 + Math.abs(Math.sin(mouthPhase || 0)) * 0.32) * Math.PI;
-    g.rotate(facing || 0);
+    const mouth = (0.14 + Math.abs(Math.sin(owner.mouth || 0)) * 0.3) * Math.PI;
+    g.rotate(owner.facing || 0);
 
-    // Body gradient
     const grd = g.createRadialGradient(-rad * 0.25, -rad * 0.3, rad * 0.1, 0, 0, rad);
     if (isPlayer) {
       grd.addColorStop(0, "#fff3b0");
       grd.addColorStop(0.45, "#f5c842");
       grd.addColorStop(1, "#d4891a");
-      g.shadowColor = "rgba(245,200,66,0.55)";
-      g.shadowBlur = 16;
+      g.shadowColor = "rgba(245,200,66,0.5)";
+      g.shadowBlur = 14;
     } else {
       grd.addColorStop(0, "#ffffff");
       grd.addColorStop(0.35, color);
@@ -806,69 +855,95 @@
     g.fill();
     g.shadowBlur = 0;
 
-    // Gloss
     g.fillStyle = "rgba(255,255,255,0.35)";
     g.beginPath();
-    g.ellipse(-rad * 0.28, -rad * 0.32, rad * 0.32, rad * 0.18, -0.5, 0, Math.PI * 2);
+    g.ellipse(-rad * 0.28, -rad * 0.32, rad * 0.3, rad * 0.17, -0.5, 0, Math.PI * 2);
     g.fill();
 
-    // Single glossy eye (thumbnail style)
     const eyeX = rad * 0.22;
     const eyeY = -rad * 0.28;
     g.fillStyle = "#1a1e28";
     g.beginPath();
-    g.arc(eyeX, eyeY, rad * 0.18, 0, Math.PI * 2);
+    g.arc(eyeX, eyeY, rad * 0.17, 0, Math.PI * 2);
     g.fill();
     g.fillStyle = "#fff";
     g.beginPath();
-    g.arc(eyeX - rad * 0.04, eyeY - rad * 0.05, rad * 0.06, 0, Math.PI * 2);
+    g.arc(eyeX - rad * 0.04, eyeY - rad * 0.05, rad * 0.055, 0, Math.PI * 2);
     g.fill();
 
-    g.rotate(-(facing || 0));
+    g.rotate(-(owner.facing || 0));
 
-    // Big side number like thumbnail
     const fs = Math.max(12, Math.min(28, rad * 0.95));
     g.font = `700 ${fs}px "Bagel Fat One","Jua"`;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.lineWidth = Math.max(2, fs * 0.12);
-    g.strokeStyle = isPlayer ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.35)";
-    g.fillStyle = isPlayer ? "#f5c842" : "#152028";
     if (isPlayer) {
-      g.strokeText(String(power), rad * 0.05, rad * 0.12);
-      g.fillText(String(power), rad * 0.05, rad * 0.12);
+      g.lineWidth = Math.max(2, fs * 0.12);
+      g.strokeStyle = "rgba(255,255,255,0.9)";
+      g.fillStyle = "#f5c842";
+      g.strokeText(String(owner.power), rad * 0.05, rad * 0.12);
+      g.fillText(String(owner.power), rad * 0.05, rad * 0.12);
     } else {
       g.fillStyle = "#152028";
-      g.fillText(String(power), 0, 2);
+      g.fillText(String(owner.power), 0, 2);
     }
     g.restore();
   }
 
-  function drawVortexFX(g) {
-    if (!player) return;
-    const s = worldToScreen(player.x, player.y);
+  function drawCell(g, c) {
+    const s = worldToScreen(c.x, c.y);
     const z = viewZoom();
-    const rad = powerRadius(player.power) * z;
-    g.save();
-    g.translate(s.x, s.y);
-    for (let i = 0; i < 10; i++) {
-      const a = time * 2.2 + i * 0.63;
-      const rr = rad + 14 + (i % 4) * 9;
-      const px = Math.cos(a) * rr;
-      const py = Math.sin(a) * rr * 0.7;
-      g.fillStyle = `rgba(120,210,255,${0.15 + (i % 3) * 0.05})`;
-      g.fillRect(px - 2, py - 2, 4, 4);
-    }
-    g.restore();
+    const rad = powerRadius(c.power) * 0.4 * z;
+    const bob = Math.sin(c.bob) * 2.5;
+    if (s.x < -40 || s.y < -40 || s.x > W + 40 || s.y > H + 40) return;
+    const can = player && c.power < player.power;
+    const same = player && c.power === player.power;
+    const col = cellColor(c.power);
 
-    for (const sw of swirls) {
-      const p = worldToScreen(sw.x, sw.y);
-      g.strokeStyle = `rgba(100,210,255,${Math.max(0, sw.life)})`;
-      g.lineWidth = sw.w;
+    g.save();
+    g.translate(s.x, s.y + bob);
+    g.fillStyle = "rgba(0,0,0,0.2)";
+    g.beginPath();
+    g.ellipse(1, rad * 0.55, rad * 0.65, rad * 0.22, 0, 0, Math.PI * 2);
+    g.fill();
+
+    if (same) {
+      g.shadowColor = "#7dffc2";
+      g.shadowBlur = 14;
+    } else if (can) {
+      g.shadowColor = col;
+      g.shadowBlur = 10;
+    }
+
+    const grd = g.createRadialGradient(-rad * 0.3, -rad * 0.35, rad * 0.1, 0, 0, rad);
+    grd.addColorStop(0, same ? "#e8fff4" : can ? "#fff6e8" : "#9aa8b4");
+    grd.addColorStop(0.4, same ? "#7dffc2" : col);
+    grd.addColorStop(1, "#1a222c");
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(0, 0, rad, 0, Math.PI * 2);
+    g.fill();
+    g.shadowBlur = 0;
+
+    g.fillStyle = "rgba(255,255,255,0.45)";
+    g.beginPath();
+    g.ellipse(-rad * 0.28, -rad * 0.32, rad * 0.28, rad * 0.16, -0.5, 0, Math.PI * 2);
+    g.fill();
+
+    if (same) {
+      g.strokeStyle = "rgba(125,255,194,0.8)";
+      g.lineWidth = 2;
       g.beginPath();
-      g.arc(p.x, p.y, sw.r * z, sw.a, sw.a + 1.8);
+      g.arc(0, 0, rad + 3 + Math.sin(time * 6) * 1.5, 0, Math.PI * 2);
       g.stroke();
     }
+
+    g.fillStyle = "#1a2030";
+    g.font = `700 ${Math.max(10, rad * 1.05)}px "Bagel Fat One","Jua"`;
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText(String(c.power), 0, 1);
+    g.restore();
   }
 
   function drawMinimap(g) {
@@ -906,66 +981,60 @@
     g.save();
     if (shake > 0) g.translate(rand(-2, 2) * shake * 5, rand(-2, 2) * shake * 5);
 
-    const bg = g.createRadialGradient(W * 0.5, H * 0.35, 20, W * 0.5, H * 0.5, H * 0.85);
+    const bg = g.createRadialGradient(W * 0.5, H * 0.35, 20, W * 0.5, H * 0.5, H * 0.9);
     bg.addColorStop(0, "#1a3a5c");
-    bg.addColorStop(0.45, "#0f2438");
+    bg.addColorStop(0.5, "#0f2438");
     bg.addColorStop(1, "#070e18");
     g.fillStyle = bg;
     g.fillRect(0, 0, W, H);
 
-    // Soft vignette glow
-    g.fillStyle = "rgba(40,120,180,0.06)";
-    g.beginPath();
-    g.arc(W / 2, H / 2, 180, 0, Math.PI * 2);
-    g.fill();
-
-    drawGrid(g);
-
-    // Depth sort props roughly by y
-    const sortedProps = props.slice().sort((a, b) => a.y - b.y);
-    for (const p of sortedProps) drawProp(g, p);
-
-    for (const f of foods) {
-      if (f.kind === "star") {
-        const s = worldToScreen(f.x, f.y);
-        const z = viewZoom();
-        const rad = powerRadius(f.power) * 0.42 * z;
-        const bob = Math.sin(f.bob) * 2;
-        g.save();
-        g.translate(s.x, s.y + bob);
-        g.shadowColor = "#f5c842";
-        g.shadowBlur = 12;
-        g.fillStyle = "#f5c842";
-        g.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
-          g.lineTo(Math.cos(a) * rad * 1.15, Math.sin(a) * rad * 1.15);
-          g.lineTo(Math.cos(a + Math.PI / 5) * rad * 0.45, Math.sin(a + Math.PI / 5) * rad * 0.45);
-        }
-        g.closePath();
-        g.fill();
-        g.shadowBlur = 0;
-        g.restore();
-      } else {
-        drawNumberOrb(g, f.x, f.y, f.power, Math.sin(f.bob) * 2.5);
-      }
+    // Soft grid
+    const z = viewZoom();
+    const step = 80;
+    g.strokeStyle = "rgba(100,160,220,0.05)";
+    g.lineWidth = 1;
+    const x0 = Math.floor((player.x - W / z) / step) * step;
+    const y0 = Math.floor((player.y - H / z) / step) * step;
+    for (let x = x0; x < player.x + W / z + step; x += step) {
+      const sx = worldToScreen(x, player.y).x;
+      g.beginPath();
+      g.moveTo(sx, 0);
+      g.lineTo(sx, H);
+      g.stroke();
+    }
+    for (let y = y0; y < player.y + H / z + step; y += step) {
+      const sy = worldToScreen(player.x, y).y;
+      g.beginPath();
+      g.moveTo(0, sy);
+      g.lineTo(W, sy);
+      g.stroke();
     }
 
-    drawVortexFX(g);
+    for (const c of cells) drawCell(g, c);
 
-    for (const r of rivals) {
-      drawPacOrb(g, r.x, r.y, r.power, r.color, r.mouth, r.facing, false);
+    for (const lk of links) {
+      const a = Math.max(0, lk.life / lk.max);
+      drawMembrane(g, lk.ax, lk.ay, lk.bx, lk.by, lk.color, 6, a * 0.7);
     }
+
+    for (const sw of swirls) {
+      const p = worldToScreen(sw.x, sw.y);
+      g.strokeStyle = `rgba(100,210,255,${Math.max(0, sw.life)})`;
+      g.lineWidth = sw.w;
+      g.beginPath();
+      g.arc(p.x, p.y, sw.r * z, sw.a, sw.a + 1.8);
+      g.stroke();
+    }
+
+    for (const r of rivals) drawColony(g, r, false);
+
     const blink = player.invuln > 0 && Math.floor(time * 14) % 2 === 0;
-    if (!blink) drawPacOrb(g, player.x, player.y, player.power, "#f5c842", player.mouth, player.facing, true);
+    if (!blink) drawColony(g, player, true);
 
     for (const p of particles) {
       const s = worldToScreen(p.x, p.y);
       g.globalAlpha = Math.max(0, p.life * 2.2);
-      if (p.glow) {
-        g.shadowColor = p.color;
-        g.shadowBlur = 8;
-      }
+      if (p.glow) { g.shadowColor = p.color; g.shadowBlur = 8; }
       g.fillStyle = p.color;
       g.beginPath();
       g.arc(s.x, s.y, p.r, 0, Math.PI * 2);
@@ -1001,7 +1070,7 @@
     }
 
     if (flash > 0) {
-      g.fillStyle = `rgba(245,200,66,${flash * 0.32})`;
+      g.fillStyle = `rgba(125,255,194,${flash * 0.28})`;
       g.fillRect(0, 0, W, H);
     }
     g.restore();
@@ -1040,10 +1109,8 @@
     try { canvas.setPointerCapture(pointerId); } catch (_) { /* ignore */ }
     const p = canvasPos(ev);
     stick.active = true;
-    stick.ox = p.x;
-    stick.oy = p.y;
-    stick.dx = 0;
-    stick.dy = 0;
+    stick.ox = p.x; stick.oy = p.y;
+    stick.dx = 0; stick.dy = 0;
   });
   canvas.addEventListener("pointermove", (ev) => {
     if (state !== "play" || ev.pointerId !== pointerId || !stick.active) return;
@@ -1055,8 +1122,7 @@
     if (ev.pointerId === pointerId) {
       pointerId = null;
       stick.active = false;
-      stick.dx = 0;
-      stick.dy = 0;
+      stick.dx = 0; stick.dy = 0;
     }
   });
   canvas.addEventListener("pointercancel", () => {
@@ -1101,32 +1167,34 @@
     });
   }
 
-  // Title idle preview
-  player = { x: WORLD / 2, y: WORLD / 2, power: 7, mass: 0, mouth: 0, facing: 0, invuln: 0 };
-  buildProps();
-  foods = [
-    makeFood(1), makeFood(2), makeFood(3), makeFood(1), makeFood(4), makeFood(2),
-  ];
-  foods[0].x = WORLD / 2 + 90; foods[0].y = WORLD / 2 - 20;
-  foods[1].x = WORLD / 2 + 120; foods[1].y = WORLD / 2 + 40;
-  foods[2].x = WORLD / 2 + 70; foods[2].y = WORLD / 2 + 70;
-  rivals.push(makeRival(4), makeRival(5));
+  // Title idle: show colony vibe
+  player = {
+    x: WORLD / 2, y: WORLD / 2, power: 5, mass: 0, budBank: 0,
+    buds: [], mouth: 0, facing: 0, invuln: 0, mergeLock: 0, squash: 0,
+  };
+  for (let i = 0; i < 4; i++) player.buds.push(makeBud(player, (Math.PI * 2 * i) / 4));
+  cells = [makeCell(3), makeCell(5), makeCell(5), makeCell(2), makeCell(4), makeCell(1)];
+  cells[1].x = WORLD / 2 + 100; cells[1].y = WORLD / 2;
+  cells[2].x = WORLD / 2 + 130; cells[2].y = WORLD / 2 + 50;
+  rivals.push(makeRival(4));
   last = performance.now();
   raf = requestAnimationFrame(function idle(now) {
     if (state !== "title") return;
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016);
     last = now;
     time += dt;
-    player.facing = Math.sin(time * 0.6) * 0.4;
+    player.facing = Math.sin(time * 0.55) * 0.35;
     player.mouth = time * 8;
-    player.x = WORLD / 2 + Math.cos(time * 0.4) * 40;
-    player.y = WORLD / 2 + Math.sin(time * 0.35) * 30;
-    for (const f of foods) {
-      f.bob += dt * 3;
-      // Pull toward player for title drama
-      const ang = Math.atan2(player.y - f.y, player.x - f.x);
-      f.x += Math.cos(ang) * 12 * dt;
-      f.y += Math.sin(ang) * 12 * dt;
+    player.x = WORLD / 2 + Math.cos(time * 0.35) * 35;
+    player.y = WORLD / 2 + Math.sin(time * 0.3) * 25;
+    updateBuds(player, dt);
+    for (const c of cells) {
+      c.bob += dt * 3;
+      if (c.power === player.power) {
+        const ang = Math.atan2(player.y - c.y, player.x - c.x);
+        c.x += Math.cos(ang) * 18 * dt;
+        c.y += Math.sin(ang) * 18 * dt;
+      }
     }
     draw(ctx);
     raf = requestAnimationFrame(idle);
