@@ -159,29 +159,39 @@
     };
   }
 
-  function makeRival(forced) {
+  function makeRival(forced, nearPlayer) {
     const st = STAGES[stageIndex];
     const base = player ? player.power : st.startPower;
     let p;
     if (forced != null) p = forced;
     else {
       const roll = Math.random();
-      if (roll < 0.35) p = Math.max(1, base - 1);
-      else if (roll < 0.55) p = base;
+      if (roll < 0.3) p = Math.max(1, base - 1);
+      else if (roll < 0.5) p = base;
       else p = base + 1 + Math.floor(Math.random() * (1 + Math.floor(stageIndex / 4)));
     }
     p = clamp(p, 1, MAX_POWER);
+
     let x;
     let y;
-    do {
-      x = rand(200, WORLD - 200);
-      y = rand(200, WORLD - 200);
-    } while (player && Math.hypot(x - player.x, y - player.y) < 500);
+    if (player && nearPlayer !== false) {
+      // Spawn in a ring around the player so fights happen on-screen
+      const ang = rand(0, Math.PI * 2);
+      const dist = rand(220, 520);
+      x = clamp(player.x + Math.cos(ang) * dist, 80, WORLD - 80);
+      y = clamp(player.y + Math.sin(ang) * dist, 80, WORLD - 80);
+    } else {
+      do {
+        x = rand(200, WORLD - 200);
+        y = rand(200, WORLD - 200);
+      } while (player && Math.hypot(x - player.x, y - player.y) < 180);
+    }
+
     return {
       x, y, power: p, mass: 0, vx: 0, vy: 0,
       color: rivalColor(Math.floor(Math.random() * 6)),
-      think: rand(0.15, 0.5), target: null, mode: "hunt",
-      mouth: 0, facing: 0, alive: true, rage: 0, pack: Math.random() < 0.4,
+      think: rand(0.1, 0.35), target: null, mode: "hunt",
+      mouth: 0, facing: 0, alive: true, rage: 0, pack: Math.random() < 0.55,
     };
   }
 
@@ -228,12 +238,18 @@
     };
     buildCity();
     for (let i = 0; i < st.food; i++) foods.push(makeFood());
-    for (let i = 0; i < st.rivals; i++) {
-      const bias = i < st.rivals * 0.4 ? st.startPower + 1 + Math.floor(i / 3) : null;
-      rivals.push(makeRival(bias));
+    // Guaranteed nearby threats (some bigger, some smaller)
+    const nearby = Math.max(5, st.rivals);
+    for (let i = 0; i < nearby; i++) {
+      let bias;
+      if (i < 2) bias = st.startPower + 1 + Math.floor(i / 1);
+      else if (i < 4) bias = st.startPower;
+      else bias = Math.max(1, st.startPower - 1);
+      rivals.push(makeRival(bias, true));
     }
     hintTimer = 3;
     hint.classList.remove("fade");
+    hint.textContent = "빨간·컬러 팩맨이 적! 작으면 흡수, 크면 도망!";
     updateHud();
   }
 
@@ -393,11 +409,10 @@
     r.think -= dt;
 
     if (r.think <= 0 || !r.target) {
-      r.think = rand(0.2, 0.55);
+      r.think = rand(0.12, 0.4);
       let best = null;
       let bestD = Infinity;
-      let preyP = null;
-      let preyD = Infinity;
+      r.target = null;
 
       for (const f of foods) {
         if (f.power >= r.power) continue;
@@ -407,27 +422,29 @@
 
       if (player) {
         const pd = Math.hypot(player.x - r.x, player.y - r.y);
-        // Hunt player aggressively when stronger
-        if (r.power > player.power && pd < 520 * st.aggress) {
-          preyP = player;
-          preyD = pd;
+        // Prefer engaging the player whenever relatively nearby
+        if (r.power > player.power && pd < 900) {
           r.mode = "hunt";
-        } else if (r.power === player.power && pd < 200) {
+          r.target = { x: player.x, y: player.y };
+        } else if (r.power === player.power && pd < 420) {
           r.mode = "bully";
           r.target = { x: player.x, y: player.y };
-        } else if (player.power > r.power && pd < 220) {
+        } else if (player.power > r.power && pd < 280) {
           r.mode = "flee";
-          r.target = { x: r.x + (r.x - player.x) * 1.4, y: r.y + (r.y - player.y) * 1.4 };
+          r.target = { x: r.x + (r.x - player.x) * 1.5, y: r.y + (r.y - player.y) * 1.5 };
+        } else if (pd < 650 && Math.random() < 0.55) {
+          // Even weaker/equal rivals occasionally rush the action
+          r.mode = "contest";
+          r.target = { x: player.x + rand(-80, 80), y: player.y + rand(-80, 80) };
         } else {
           r.mode = "feed";
         }
       }
 
-      // Pack: follow nearby stronger ally toward player
       if (r.pack && player && r.power >= player.power) {
         for (const o of rivals) {
           if (o === r || !o.alive) continue;
-          if (o.power >= r.power && Math.hypot(o.x - r.x, o.y - r.y) < 280) {
+          if (o.mode === "hunt" && Math.hypot(o.x - r.x, o.y - r.y) < 360) {
             r.target = { x: (o.x + player.x) / 2, y: (o.y + player.y) / 2 };
             r.mode = "pack";
             break;
@@ -436,17 +453,17 @@
       }
 
       if (!r.target) {
-        if (preyP && preyD < bestD * 1.15) r.target = { x: preyP.x, y: preyP.y };
-        else if (best) r.target = { x: best.x, y: best.y };
+        if (best && bestD < 500) r.target = { x: best.x, y: best.y };
+        else if (player) r.target = { x: player.x + rand(-200, 200), y: player.y + rand(-200, 200) };
         else r.target = { x: rand(150, WORLD - 150), y: rand(150, WORLD - 150) };
       }
     }
 
     if (r.target) {
       const ang = Math.atan2(r.target.y - r.y, r.target.x - r.x);
-      let sp = powerSpeed(r.power) * (0.72 + st.aggress * 0.2);
-      if (r.mode === "hunt" || r.mode === "pack") sp *= 1.18 + (r.rage > 0 ? 0.15 : 0);
-      if (r.mode === "flee") sp *= 1.1;
+      let sp = powerSpeed(r.power) * (0.78 + st.aggress * 0.25);
+      if (r.mode === "hunt" || r.mode === "pack" || r.mode === "contest") sp *= 1.25 + (r.rage > 0 ? 0.2 : 0);
+      if (r.mode === "flee") sp *= 1.15;
       r.vx = Math.cos(ang) * sp;
       r.vy = Math.sin(ang) * sp;
       r.facing = ang;
@@ -597,9 +614,9 @@
       foods.push(makeFood());
     }
     rivalAcc += dt;
-    if (rivalAcc > Math.max(2.8, 5 - stageIndex * 0.08) && rivals.length < st.rivals + 2) {
+    if (rivalAcc > Math.max(2.2, 4.2 - stageIndex * 0.08) && rivals.length < st.rivals + 3) {
       rivalAcc = 0;
-      rivals.push(makeRival(player.power + Math.floor(rand(0, 2 + stageIndex * 0.1))));
+      rivals.push(makeRival(player.power + Math.floor(rand(0, 2 + stageIndex * 0.1)), true));
     }
 
     for (let i = trails.length - 1; i >= 0; i--) {
@@ -1123,7 +1140,7 @@
   foods[0].x = WORLD / 2 + 110; foods[0].y = WORLD / 2 - 10;
   foods[1].x = WORLD / 2 + 150; foods[1].y = WORLD / 2 + 50;
   foods[2].x = WORLD / 2 + 90; foods[2].y = WORLD / 2 + 80;
-  rivals = [makeRival(4), makeRival(5), makeRival(8)];
+  rivals = [makeRival(4, true), makeRival(5, true), makeRival(8, true)];
   last = performance.now();
   raf = requestAnimationFrame(function idle(now) {
     if (state !== "title") return;
