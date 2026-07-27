@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e1a24" />
+    <title>넘버 홀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="number-hole">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>점수 <b id="hud-score">0</b></span>
+          <span>숫자 <b id="hud-power">2</b></span>
+          <div class="xp" aria-hidden="true"><i id="xp-fill"></i></div>
+        </div>
+        <div class="panel right">
+          <span>콤보 <b id="hud-combo">0</b></span>
+          <span>시간 <b id="hud-time">75</b></span>
+        </div>
+      </div>
+      <div class="hint" id="hint">드래그·WASD · 작은 숫자만 흡수 · 경험치로 성장</div>
+
+      <div class="overlay" id="title">
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="128" height="128" />
+        <div class="badge">NUMBER HOLE</div>
+        <h1>넘버 홀</h1>
+        <p>
+          나보다 <b>작은 숫자</b>만 흡수하고<br />
+          경험치를 모아 천천히 성장하세요.
+        </p>
+        <ul class="rules">
+          <li><i>1</i> 작은 먹이·라이벌만 흡수</li>
+          <li><i>2</i> 같거나 크면 튕김 · 더 크면 위험</li>
+          <li><i>3</i> 75초 · 급성장 없이 신중하게</li>
+        </ul>
+        <button type="button" class="btn" id="start-btn">시작</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge" id="over-badge">TIME UP</div>
+        <h1 id="over-title">종료!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=3"></script>
+  </body>
+</html>

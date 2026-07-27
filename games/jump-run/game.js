@@ -1531,19 +1531,15 @@
     }
   });
 
+  // canvas only — stage+canvas both listening caused one tap → two jump buffers
   canvas.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     onJumpDown();
   });
   canvas.addEventListener("pointerup", onJumpUp);
   canvas.addEventListener("pointercancel", onJumpUp);
-
-  // also allow tap on stage (outside overlay buttons)
-  document.querySelector(".stage").addEventListener("pointerdown", (e) => {
-    if (e.target.closest(".overlay") || e.target.closest("a") || e.target.closest("button")) return;
-    onJumpDown();
-  });
   window.addEventListener("pointerup", onJumpUp);
+  window.addEventListener("pointercancel", onJumpUp);
 
   document.getElementById("hud-best").textContent = String(best);
 

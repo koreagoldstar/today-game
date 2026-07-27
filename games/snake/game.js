@@ -132,7 +132,8 @@
   let lives = 3;
   let snake = [];
   let dir = DIRS.right;
-  let nextDir = DIRS.right;
+  /** Buffered turns (max 2) so quick flicks aren't lost between ticks */
+  let dirQueue = [];
   let apple = null;
   let moveAcc = 0;
   let moveInterval = 0.16;
@@ -144,7 +145,6 @@
   let pulse = 0;
   let last = 0;
   let raf = 0;
-  let keys = Object.create(null);
   let swipeStart = null;
 
   try {
@@ -204,7 +204,7 @@
       { x: sx + 1, y: sy },
     ];
     dir = DIRS.right;
-    nextDir = DIRS.right;
+    dirQueue = [];
   }
 
   function occupied(x, y) {
@@ -364,14 +364,25 @@
     ensureLoop();
   }
 
+  function lastQueuedDir() {
+    return dirQueue.length ? dirQueue[dirQueue.length - 1] : dir;
+  }
+
+  function sameDir(a, b) {
+    return a && b && a.x === b.x && a.y === b.y;
+  }
+
   function setDirection(d) {
-    if (!d) return;
-    const opp = dir.x + d.x === 0 && dir.y + d.y === 0;
-    if (!opp) nextDir = d;
+    if (!d || state !== "play") return;
+    const base = lastQueuedDir();
+    if (base.x + d.x === 0 && base.y + d.y === 0) return;
+    if (sameDir(base, d)) return;
+    if (dirQueue.length >= 2) dirQueue[dirQueue.length - 1] = d;
+    else dirQueue.push(d);
   }
 
   function moveSnake() {
-    dir = nextDir;
+    if (dirQueue.length) dir = dirQueue.shift();
     const head = snake[snake.length - 1];
     const nx = head.x + dir.x;
     const ny = head.y + dir.y;
@@ -423,11 +434,6 @@
       if (comboTimer <= 0) combo = 0;
     }
     if (flash > 0) flash -= dt;
-
-    if (keys.ArrowUp || keys.w || keys.W) setDirection(DIRS.up);
-    if (keys.ArrowDown || keys.s || keys.S) setDirection(DIRS.down);
-    if (keys.ArrowLeft || keys.a || keys.A) setDirection(DIRS.left);
-    if (keys.ArrowRight || keys.d || keys.D) setDirection(DIRS.right);
 
     moveAcc += dt;
     // 프레임 끊김 후에도 바로 움직이도록 누적 이동 처리
@@ -705,30 +711,50 @@
     raf = requestAnimationFrame(loop);
   }
 
-  function onSwipe(dx, dy) {
-    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
-    if (Math.abs(dx) > Math.abs(dy)) setDirection(dx > 0 ? DIRS.right : DIRS.left);
+  const SWIPE_MIN = 22;
+
+  function applySwipeDelta(dx, dy) {
+    if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return false;
+    if (Math.abs(dx) > Math.abs(dy) * 0.85) setDirection(dx > 0 ? DIRS.right : DIRS.left);
     else setDirection(dy > 0 ? DIRS.down : DIRS.up);
+    return true;
   }
 
   canvas.addEventListener("pointerdown", (e) => {
+    if (state !== "play") return;
     swipeStart = { x: e.clientX, y: e.clientY };
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (_) {
+      /* ignore */
+    }
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!swipeStart || state !== "play") return;
+    const dx = e.clientX - swipeStart.x;
+    const dy = e.clientY - swipeStart.y;
+    if (applySwipeDelta(dx, dy)) {
+      // reset origin so chained turns (우→상→좌) work in one drag
+      swipeStart = { x: e.clientX, y: e.clientY };
+    }
   });
   canvas.addEventListener("pointerup", (e) => {
-    if (!swipeStart) return;
-    onSwipe(e.clientX - swipeStart.x, e.clientY - swipeStart.y);
-    swipeStart = null;
+    if (swipeStart) {
+      applySwipeDelta(e.clientX - swipeStart.x, e.clientY - swipeStart.y);
+      swipeStart = null;
+    }
   });
   canvas.addEventListener("pointercancel", () => {
     swipeStart = null;
   });
 
   window.addEventListener("keydown", (e) => {
-    keys[e.key] = true;
+    if (e.repeat) return;
+    if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") setDirection(DIRS.up);
+    if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") setDirection(DIRS.down);
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") setDirection(DIRS.left);
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") setDirection(DIRS.right);
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
-  });
-  window.addEventListener("keyup", (e) => {
-    keys[e.key] = false;
   });
 
   document.getElementById("start-btn").addEventListener("click", () => startGame(false, true));
