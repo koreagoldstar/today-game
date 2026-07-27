@@ -191,7 +191,7 @@
       x, y, power: p, mass: 0, vx: 0, vy: 0,
       color: rivalColor(Math.floor(Math.random() * 6)),
       think: rand(0.1, 0.35), target: null, mode: "hunt",
-      mouth: 0, facing: 0, alive: true, rage: 0, pack: Math.random() < 0.55,
+      mouth: 0, facing: 0, alive: true, rage: 0, stun: 0, pack: Math.random() < 0.55,
     };
   }
 
@@ -361,17 +361,35 @@
   }
 
   function canAbsorb(eater, prey, dist) {
-    return prey < eater && dist < powerRadius(eater) * 0.8;
+    return prey < eater && dist < powerRadius(eater) * 0.82;
   }
 
-  function separate(a, b, push) {
+  function separateBodies(a, b, minDist) {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     const d = Math.hypot(dx, dy) || 0.001;
-    a.x += (dx / d) * push;
-    a.y += (dy / d) * push;
-    b.x -= (dx / d) * push;
-    b.y -= (dy / d) * push;
+    if (d >= minDist) return false;
+    const push = (minDist - d) * 0.65;
+    const nx = dx / d;
+    const ny = dy / d;
+    a.x += nx * push;
+    a.y += ny * push;
+    b.x -= nx * push;
+    b.y -= ny * push;
+    return true;
+  }
+
+  function knockRival(r, fromX, fromY, force) {
+    const ang = Math.atan2(r.y - fromY, r.x - fromX);
+    r.vx = Math.cos(ang) * force;
+    r.vy = Math.sin(ang) * force;
+    r.stun = 0.5;
+    r.target = {
+      x: r.x + Math.cos(ang) * 180,
+      y: r.y + Math.sin(ang) * 180,
+    };
+    r.mode = "bounce";
+    r.think = 0.5;
   }
 
   function tryEatFood(f, i, dt) {
@@ -406,6 +424,15 @@
   function rivalAI(r, dt) {
     const st = STAGES[stageIndex];
     if (r.rage > 0) r.rage -= dt;
+    if (r.stun > 0) {
+      r.stun -= dt;
+      r.x = clamp(r.x + r.vx * dt, 50, WORLD - 50);
+      r.y = clamp(r.y + r.vy * dt, 50, WORLD - 50);
+      r.vx *= Math.pow(0.08, dt);
+      r.vy *= Math.pow(0.08, dt);
+      r.mouth = (r.mouth + dt * 11) % (Math.PI * 2);
+      return;
+    }
     r.think -= dt;
 
     if (r.think <= 0 || !r.target) {
@@ -422,26 +449,29 @@
 
       if (player) {
         const pd = Math.hypot(player.x - r.x, player.y - r.y);
-        // Prefer engaging the player whenever relatively nearby
         if (r.power > player.power && pd < 900) {
           r.mode = "hunt";
           r.target = { x: player.x, y: player.y };
         } else if (r.power === player.power && pd < 420) {
+          // Equal: circle / jab, don't glue to center
           r.mode = "bully";
-          r.target = { x: player.x, y: player.y };
+          const orbit = rand(0, Math.PI * 2);
+          r.target = {
+            x: player.x + Math.cos(orbit) * rand(90, 160),
+            y: player.y + Math.sin(orbit) * rand(90, 160),
+          };
         } else if (player.power > r.power && pd < 280) {
           r.mode = "flee";
           r.target = { x: r.x + (r.x - player.x) * 1.5, y: r.y + (r.y - player.y) * 1.5 };
-        } else if (pd < 650 && Math.random() < 0.55) {
-          // Even weaker/equal rivals occasionally rush the action
+        } else if (pd < 650 && Math.random() < 0.45) {
           r.mode = "contest";
-          r.target = { x: player.x + rand(-80, 80), y: player.y + rand(-80, 80) };
+          r.target = { x: player.x + rand(-120, 120), y: player.y + rand(-120, 120) };
         } else {
           r.mode = "feed";
         }
       }
 
-      if (r.pack && player && r.power >= player.power) {
+      if (r.pack && player && r.power > player.power) {
         for (const o of rivals) {
           if (o === r || !o.alive) continue;
           if (o.mode === "hunt" && Math.hypot(o.x - r.x, o.y - r.y) < 360) {
@@ -462,8 +492,9 @@
     if (r.target) {
       const ang = Math.atan2(r.target.y - r.y, r.target.x - r.x);
       let sp = powerSpeed(r.power) * (0.78 + st.aggress * 0.25);
-      if (r.mode === "hunt" || r.mode === "pack" || r.mode === "contest") sp *= 1.25 + (r.rage > 0 ? 0.2 : 0);
+      if (r.mode === "hunt" || r.mode === "pack") sp *= 1.22 + (r.rage > 0 ? 0.2 : 0);
       if (r.mode === "flee") sp *= 1.15;
+      if (r.mode === "bully") sp *= 0.95;
       r.vx = Math.cos(ang) * sp;
       r.vy = Math.sin(ang) * sp;
       r.facing = ang;
@@ -489,12 +520,15 @@
 
   function resolvePlayerRival(r, i, dt) {
     let dist = Math.hypot(r.x - player.x, r.y - player.y);
-    const sumR = powerRadius(player.power) + powerRadius(r.power);
+    const pr = powerRadius(player.power);
+    const rr = powerRadius(r.power);
+    const sumR = pr + rr;
 
-    if (r.power < player.power && dist < powerRadius(player.power) * 1.4 && dist > sumR * 0.5) {
+    // Suction only while clearly apart
+    if (r.stun <= 0 && r.power < player.power && dist < pr * 1.45 && dist > sumR * 0.98) {
       const ang = Math.atan2(player.y - r.y, player.x - r.x);
-      r.x += Math.cos(ang) * 75 * dt;
-      r.y += Math.sin(ang) * 75 * dt;
+      r.x += Math.cos(ang) * 100 * dt;
+      r.y += Math.sin(ang) * 100 * dt;
       dist = Math.hypot(r.x - player.x, r.y - player.y);
     }
 
@@ -506,18 +540,24 @@
       return "ate";
     }
 
-    if (player.invuln <= 0 && r.power > player.power && dist < powerRadius(r.power) * 0.7) {
+    if (player.invuln <= 0 && r.power > player.power && dist < rr * 0.72) {
       burst(player.x, player.y, "#ff6b5a", 20);
       endGame("eaten");
       return "dead";
     }
 
-    if (r.power === player.power && dist < sumR * 0.88) {
-      separate(player, r, 7);
-      // equal clash sparks
-      if (Math.random() < 0.08) burst((player.x + r.x) / 2, (player.y + r.y) / 2, "#fff", 4);
-    } else if (dist < sumR * 0.5) {
-      separate(player, r, 3);
+    // Never allow body overlap / glue
+    if (dist < sumR * 0.94) {
+      separateBodies(player, r, sumR * 1.02);
+      player.x = clamp(player.x, 50, WORLD - 50);
+      player.y = clamp(player.y, 50, WORLD - 50);
+      r.x = clamp(r.x, 50, WORLD - 50);
+      r.y = clamp(r.y, 50, WORLD - 50);
+      knockRival(r, player.x, player.y, 240 + r.power * 5);
+      const ang = Math.atan2(player.y - r.y, player.x - r.x);
+      player.x += Math.cos(ang) * 12;
+      player.y += Math.sin(ang) * 12;
+      if (Math.random() < 0.25) burst((player.x + r.x) / 2, (player.y + r.y) / 2, "#ffffff", 5);
     }
     return "ok";
   }
@@ -601,7 +641,9 @@
           a.alive = false;
           burst(a.x, a.y, a.color, 8);
         } else {
-          separate(a, b, 5);
+          separateBodies(a, b, sumR);
+          if (a.stun <= 0) knockRival(a, b.x, b.y, 160);
+          if (b.stun <= 0) knockRival(b, a.x, a.y, 160);
         }
       }
     }
