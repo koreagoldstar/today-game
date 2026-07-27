@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a2a3a" />
+    <title>셀 스포어</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="cell-spore">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>단계 <b id="hud-era">세포</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>DNA <b id="hud-dna">0</b></span>
+          <span>체력 <b id="hud-hp">3</b></span>
+        </div>
+      </div>
+      <div class="dna-meter"><i id="dna-fill"></i></div>
+
+      <div class="shop" id="shop">
+        <button type="button" class="part-btn" data-part="mouth" title="입">입<span>4</span></button>
+        <button type="button" class="part-btn" data-part="eye" title="눈">눈<span>5</span></button>
+        <button type="button" class="part-btn" data-part="spike" title="가시">가시<span>6</span></button>
+        <button type="button" class="part-btn" data-part="flagella" title="편모">편모<span>5</span></button>
+        <button type="button" class="part-btn" data-part="shell" title="갑피">갑피<span>7</span></button>
+        <button type="button" class="part-btn" data-part="leg" title="다리">다리<span>10</span></button>
+      </div>
+
+      <div class="hint" id="hint">드래그로 헤엄 · DNA로 신체 부위 부착 · 진화하세요!</div>
+
+      <div class="overlay" id="title">
+        <img class="title-thumb" src="assets/thumb.png" alt="" width="128" height="128" />
+        <div class="badge">CELL SPORE</div>
+        <h1>셀 스포어</h1>
+        <p>
+          작은 미생물에서 시작해<br />
+          <b>입·눈·가시·다리</b>를 붙여 진화하세요.<br />
+          세포 → 생물 → 부족 → 문명 → 우주!
+        </p>
+        <ul class="rules">
+          <li><i>1</i> 유기물·작은 세포를 먹고 DNA 수집</li>
+          <li><i>2</i> 하단 버튼으로 신체 부위 부착</li>
+          <li><i>3</i> DNA가 차면 다음 시대로 진화</li>
+        </ul>
+        <button type="button" class="btn" id="start-btn">태어나기</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge" id="over-badge">EVOLVED</div>
+        <h1 id="over-title">여정 종료</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시 태어나기</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="banner hidden" id="era-banner"><span id="era-text">세포 시대</span></div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=1"></script>
+  </body>
+</html>
