@@ -68,6 +68,44 @@ module.exports = async function handler(req, res) {
     return { ...POOL[idx], index: idx };
   }
 
+  function dailyGameKey(dayStr) {
+    return `todaygame:challenge:game:${dayStr}`;
+  }
+
+  function parseStoredGame(raw) {
+    if (raw == null || raw === "") return null;
+    try {
+      const game = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!game || typeof game !== "object") return null;
+      if (!game.id || !game.title || !game.href) return null;
+      return {
+        id: String(game.id),
+        title: String(game.title),
+        href: String(game.href),
+        metric: String(game.metric || "score"),
+        index: Number.isInteger(game.index) ? game.index : -1,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async function pickDailyGame(dayStr) {
+    const fallback = pickGame(dayStr);
+    if (!redisConfigured()) return fallback;
+
+    const key = dailyGameKey(dayStr);
+    const stored = await redis(["GET", key]);
+    const existing = stored.ok ? parseStoredGame(stored.result) : null;
+    if (existing) return existing;
+
+    await redis(["SET", key, JSON.stringify(fallback), "NX", "EX", 60 * 60 * 24 * 3]);
+
+    // 동시에 여러 지역에서 첫 요청이 와도 Redis에서 먼저 고정된 하나를 사용한다.
+    const locked = await redis(["GET", key]);
+    return (locked.ok && parseStoredGame(locked.result)) || fallback;
+  }
+
   function redisConfigured() {
     return Boolean(
       (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
@@ -227,7 +265,7 @@ module.exports = async function handler(req, res) {
   }
 
   const day = seoulDay();
-  const game = pickGame(day);
+  const game = await pickDailyGame(day);
   const endsAt = endsAtMs(day);
 
   if (req.method === "GET") {
