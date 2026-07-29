@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "number-hole",
+      title: "넘버 홀",
+      tag: "팩맨 · 30스테이지",
+      href: "/games/number-hole/",
+      thumb: "/assets/thumbs/number-hole.png",
+      category: "action",
+    },
+    {
       id: "jet-strike",
       title: "제트 스트라이크",
       tag: "슈팅 · 50스테이지",

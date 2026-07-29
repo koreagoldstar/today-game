@@ -1,7 +1,3 @@
 .vercel
 .DS_Store
 node_modules
-
-# WIP — Number Hole stays local until ready
-games/number-hole/
-assets/thumbs/number-hole.png

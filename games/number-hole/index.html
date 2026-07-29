@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#071525" />
+    <title>넘버 홀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="number-hole">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span>STAGE <b id="hud-stage">1</b></span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>숫자 <b id="hud-power">2</b></span>
+          <span>적 <b id="hud-rivals">0</b></span>
+          <span>목표 <b id="hud-goal">0</b></span>
+        </div>
+      </div>
+      <div class="goal-meter"><i id="goal-fill"></i></div>
+      <div class="hint" id="hint">드래그·WASD · 작은 숫자만 흡수 · 큰 적은 피하세요</div>
+
+      <div class="overlay" id="title">
+        <img class="title-thumb" src="/assets/thumbs/number-hole.png" alt="" width="132" height="132" />
+        <div class="badge">NUMBER HOLE</div>
+        <h1>넘버 홀</h1>
+        <p>
+          노란 팩이 되어 넓은 도시에서<br />
+          <b>작은 숫자</b>를 삼키고 성장하세요.<br />
+          라이벌과 치열하게 싸우며 스테이지를 돌파!
+        </p>
+        <ul class="rules">
+          <li><i>1</i> 나보다 작은 숫자·적만 흡수</li>
+          <li><i>2</i> 같으면 튕김 · 더 크면 위험</li>
+          <li><i>3</i> 목표 달성 시 다음 스테이지</li>
+        </ul>
+        <button type="button" class="btn" id="start-btn">시작</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">CLEAR</div>
+        <h1>스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge" id="over-badge">GAME OVER</div>
+        <h1 id="over-title">삼켜졌어요!</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge soft">ALL CLEAR</div>
+        <h1>도시의 지배자!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=10"></script>
+  </body>
+</html>
