@@ -6,6 +6,7 @@
   const TOTAL_ROUNDS = 10;
   const GOAL = { left: 34, right: 356, top: 143, bottom: 370 };
   const BALL_START = { x: 195, y: 578 };
+  const KICK_CONTACT_TIME = 0.76;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -279,6 +280,7 @@
 
     shot = {
       time: 0,
+      motionTime: 0,
       duration: 0.78 - quality * 0.18,
       target: { x: actualX, y: actualY },
       aim: { ...aim },
@@ -292,11 +294,19 @@
       keeperTarget,
       displayedResult: false,
     };
-    phase = "flight";
+    phase = "kick";
     ui.timing.classList.add("hidden");
-    ui.coach.textContent = grade === "PERFECT" ? "PERFECT SHOT!" : `${grade} · 공의 궤적을 보세요`;
+    ui.coach.textContent = "도움닫기 · 디딤발을 고정하세요!";
+  }
+
+  function launchBall() {
+    if (!shot || phase !== "kick") return;
+    phase = "flight";
+    shot.time = 0;
+    ui.coach.textContent =
+      shot.grade === "PERFECT" ? "PERFECT SHOT!" : `${shot.grade} · 공의 궤적을 보세요`;
     kickSound();
-    shake = 5 + quality * 3;
+    shake = 5 + shot.quality * 3;
     spawnKickParticles();
   }
 
@@ -433,8 +443,17 @@
       ui.grade.textContent = timingLabel(q);
     }
 
+    if (phase === "kick" && shot) {
+      shot.motionTime += dt;
+      if (shot.motionTime >= KICK_CONTACT_TIME) {
+        shot.motionTime = KICK_CONTACT_TIME;
+        launchBall();
+      }
+    }
+
     if (phase === "flight" && shot) {
       shot.time += dt;
+      shot.motionTime += dt;
       const t = clamp(shot.time / shot.duration, 0, 1);
       const difficulty = round / (TOTAL_ROUNDS - 1);
       const diveDelay = 0.1 + (1 - difficulty) * 0.1;
@@ -1076,6 +1095,57 @@
     ctx.restore();
   }
 
+  function smoothStep(a, b, value) {
+    const t = clamp((value - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  function strikerPose(time) {
+    const motion = shot && (phase === "kick" || phase === "flight") ? shot.motionTime : 0;
+    const run = smoothStep(0.02, 0.25, motion);
+    const plant = smoothStep(0.2, 0.42, motion);
+    const swing = smoothStep(0.43, KICK_CONTACT_TIME, motion);
+    const follow = smoothStep(KICK_CONTACT_TIME, 1.02, motion);
+    const breathe = motion ? 0 : Math.sin(time * 2.2) * 1.1;
+
+    return {
+      bodyX: 253 - run * 11 - swing * 2 - follow * 5,
+      bodyY: 596 + breathe - run * 5 - swing * 2 - follow * 8,
+      lean: -0.025 - plant * 0.06 - swing * 0.1 + follow * 0.03,
+      leftArm: -0.08 - plant * 0.34 - swing * 0.28 + follow * 0.2,
+      rightArm: 0.08 + plant * 0.43 + swing * 0.35 - follow * 0.12,
+      plantLeg: 0.015 - plant * 0.06 + follow * 0.08,
+      swingLeg: lerp(0, -0.62, plant) + swing * 1.82 + follow * 0.25,
+      swingLength: lerp(1, 0.92, plant) - swing * 0.5 + follow * 0.08,
+      run,
+      plant,
+      swing,
+      follow,
+    };
+  }
+
+  function drawSpritePart(sprite, crop, pivot, scale) {
+    const sw = sprite.naturalWidth;
+    const sh = sprite.naturalHeight;
+    const sx = crop.x * sw;
+    const sy = crop.y * sh;
+    const sourceW = crop.w * sw;
+    const sourceH = crop.h * sh;
+    const pivotX = pivot.x * sw;
+    const pivotY = pivot.y * sh;
+    ctx.drawImage(
+      sprite,
+      sx,
+      sy,
+      sourceW,
+      sourceH,
+      (sx - pivotX) * scale,
+      (sy - pivotY) * scale,
+      sourceW * scale,
+      sourceH * scale
+    );
+  }
+
   function drawStriker(time) {
     const sprite = characterSprites.striker;
     if (!sprite.complete || !sprite.naturalWidth) {
@@ -1083,30 +1153,99 @@
       return;
     }
 
-    const flightT = phase === "flight" && shot ? clamp(shot.time / shot.duration, 0, 1) : 0;
-    const kick = Math.sin(Math.min(1, flightT * 2.2) * Math.PI);
-    const breathe = Math.sin(time * 2.2) * 1.1;
-    const footX = 238;
-    const footY = 690;
-    const h = 208;
-    const w = h * (sprite.naturalWidth / sprite.naturalHeight);
+    const pose = strikerPose(time);
+    const scale = 214 / sprite.naturalHeight;
 
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.24)";
     ctx.beginPath();
-    ctx.ellipse(footX - 2 - kick * 4, footY - 8, 44, 10, -0.04, 0, Math.PI * 2);
+    ctx.ellipse(
+      pose.bodyX - 2 - pose.follow * 8,
+      687,
+      45 - pose.swing * 6,
+      10,
+      -0.04,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
-    // Lean and step into the goal (upward on screen), never toward the camera.
-    ctx.translate(footX - kick * 6, footY - kick * 18 + breathe);
-    ctx.rotate(-0.03 - kick * 0.06);
+
+    // Rear-facing layered rig: every limb travels up-field toward the goal.
+    ctx.translate(pose.bodyX, pose.bodyY);
+    ctx.rotate(pose.lean);
     ctx.shadowColor = "rgba(0,8,18,.24)";
     ctx.shadowBlur = 7;
-    ctx.drawImage(sprite, -w / 2, -h, w, h);
+
+    // Planted right leg locks beside the ball before the striking leg comes through.
+    ctx.save();
+    ctx.translate((0.66 - 0.5) * sprite.naturalWidth * scale, 0);
+    ctx.rotate(pose.plantLeg);
+    drawSpritePart(
+      sprite,
+      { x: 0.47, y: 0.48, w: 0.53, h: 0.52 },
+      { x: 0.66, y: 0.55 },
+      scale
+    );
+    ctx.restore();
+
+    // Left leg first loads behind, then visibly swings forward into the ball.
+    ctx.save();
+    ctx.translate((0.34 - 0.5) * sprite.naturalWidth * scale, 0);
+    ctx.rotate(pose.swingLeg);
+    ctx.scale(1, pose.swingLength);
+    drawSpritePart(
+      sprite,
+      { x: 0, y: 0.48, w: 0.53, h: 0.52 },
+      { x: 0.34, y: 0.55 },
+      scale
+    );
+    ctx.restore();
+
+    // Arms counter-rotate for balance and make the contact silhouette unmistakable.
+    ctx.save();
+    ctx.translate(
+      (0.2 - 0.5) * sprite.naturalWidth * scale,
+      (0.24 - 0.55) * sprite.naturalHeight * scale
+    );
+    ctx.rotate(pose.leftArm);
+    drawSpritePart(
+      sprite,
+      { x: 0, y: 0.18, w: 0.34, h: 0.42 },
+      { x: 0.2, y: 0.24 },
+      scale
+    );
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(
+      (0.8 - 0.5) * sprite.naturalWidth * scale,
+      (0.24 - 0.55) * sprite.naturalHeight * scale
+    );
+    ctx.rotate(pose.rightArm);
+    drawSpritePart(
+      sprite,
+      { x: 0.66, y: 0.18, w: 0.34, h: 0.42 },
+      { x: 0.8, y: 0.24 },
+      scale
+    );
+    ctx.restore();
+
+    // The premium torso/head remains intact, preserving texture, number and rear view.
+    drawSpritePart(
+      sprite,
+      { x: 0.11, y: 0, w: 0.78, h: 0.62 },
+      { x: 0.5, y: 0.55 },
+      scale
+    );
     ctx.restore();
   }
 
   function drawShot() {
-    if (phase !== "flight" || !shot) {
+    if ((phase !== "flight" && phase !== "kick") || !shot) {
+      drawBall(BALL_START.x, BALL_START.y, 13, 0);
+      return;
+    }
+    if (phase === "kick") {
       drawBall(BALL_START.x, BALL_START.y, 13, 0);
       return;
     }
