@@ -15,6 +15,13 @@
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
 
+  const characterSprites = {
+    keeper: new Image(),
+    striker: new Image(),
+  };
+  characterSprites.keeper.src = "assets/goalkeeper.png?v=3";
+  characterSprites.striker.src = "assets/striker.png?v=3";
+
   const ui = {
     title: document.getElementById("title"),
     result: document.getElementById("round-result"),
@@ -681,7 +688,43 @@
     ctx.restore();
   }
 
-  function drawKeeper(time) {
+  function drawSegment(x1, y1, x2, y2, width, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  function drawBoot(x, y, angle, color, flip = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(flip, 1);
+    const boot = ctx.createLinearGradient(-10, -5, 18, 8);
+    boot.addColorStop(0, color);
+    boot.addColorStop(1, "#151e2d");
+    ctx.fillStyle = boot;
+    ctx.beginPath();
+    ctx.moveTo(-8, -6);
+    ctx.lineTo(8, -7);
+    ctx.quadraticCurveTo(13, -2, 23, 2);
+    ctx.quadraticCurveTo(25, 8, 16, 10);
+    ctx.lineTo(-8, 8);
+    ctx.quadraticCurveTo(-12, 1, -8, -6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    ctx.fillRect(1, -3, 11, 2);
+    ctx.fillStyle = "#07111e";
+    ctx.fillRect(-7, 7, 26, 2.5);
+    ctx.restore();
+  }
+
+  function drawKeeperVector(time) {
     let tellLean = 0;
     if (phase === "aim" || phase === "timing") {
       tellLean = keeperPlan.tell * (4 + Math.sin(time * 3.2) * 1.7);
@@ -695,121 +738,189 @@
     ctx.rotate(keeper.rotation);
     const stretch = keeper.stretch;
     const dive = keeper.dive || keeperPlan.tell;
+    const leftHand = {
+      x: -48 - stretch * 35,
+      y: -11 - stretch * 29,
+    };
+    const rightHand = {
+      x: 48 + stretch * 35,
+      y: -11 + stretch * 5,
+    };
 
     ctx.fillStyle = "rgba(0,0,0,.28)";
     ctx.beginPath();
-    ctx.ellipse(0, 64, 37 + stretch * 30, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 62, 41 + stretch * 35, 7, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "#17263f";
-    ctx.lineWidth = 17;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(-14, 34);
-    ctx.lineTo(-25 - dive * stretch * 17, 61 - stretch * 9);
-    ctx.moveTo(14, 34);
-    ctx.lineTo(25 - dive * stretch * 6, 61 + stretch * 3);
-    ctx.stroke();
+    const leftKnee = { x: -25 - dive * stretch * 18, y: 42 - stretch * 10 };
+    const rightKnee = { x: 25 - dive * stretch * 7, y: 42 + stretch * 2 };
+    const leftFoot = { x: -34 - dive * stretch * 22, y: 65 - stretch * 13 };
+    const rightFoot = { x: 34 - dive * stretch * 8, y: 65 + stretch * 4 };
+    drawSegment(-12, 27, leftKnee.x, leftKnee.y, 18, "#17243d");
+    drawSegment(12, 27, rightKnee.x, rightKnee.y, 18, "#17243d");
+    drawSegment(leftKnee.x, leftKnee.y, leftFoot.x, leftFoot.y, 10, "#f0f5fa");
+    drawSegment(rightKnee.x, rightKnee.y, rightFoot.x, rightFoot.y, 10, "#f0f5fa");
+    drawBoot(leftFoot.x - 2, leftFoot.y + 1, -0.08, "#e9f4ff", -1);
+    drawBoot(rightFoot.x + 2, rightFoot.y + 1, 0.08, "#e9f4ff", 1);
 
-    ctx.strokeStyle = "#f5c49d";
-    ctx.lineWidth = 9;
-    ctx.beginPath();
-    ctx.moveTo(-25 - dive * stretch * 17, 59 - stretch * 9);
-    ctx.lineTo(-28 - dive * stretch * 18, 68 - stretch * 10);
-    ctx.moveTo(25 - dive * stretch * 6, 59 + stretch * 3);
-    ctx.lineTo(29 - dive * stretch * 6, 68 + stretch * 4);
-    ctx.stroke();
+    const leftElbow = {
+      x: lerp(-31, leftHand.x + 19, stretch),
+      y: lerp(-2, leftHand.y + 10, stretch),
+    };
+    const rightElbow = {
+      x: lerp(31, rightHand.x - 19, stretch),
+      y: lerp(-2, rightHand.y + 10, stretch),
+    };
+    drawSegment(-23, -11, leftElbow.x, leftElbow.y, 17, "#f4b900");
+    drawSegment(leftElbow.x, leftElbow.y, leftHand.x, leftHand.y, 14, "#ffc92e");
+    drawSegment(23, -11, rightElbow.x, rightElbow.y, 17, "#f4b900");
+    drawSegment(rightElbow.x, rightElbow.y, rightHand.x, rightHand.y, 14, "#ffc92e");
 
-    ctx.fillStyle = "#ecf5ff";
-    [-1, 1].forEach((side) => {
-      const footX = side === -1 ? -29 - dive * stretch * 18 : 30 - dive * stretch * 6;
-      const footY = side === -1 ? 69 - stretch * 10 : 69 + stretch * 4;
+    [leftHand, rightHand].forEach((hand, index) => {
+      const side = index === 0 ? -1 : 1;
       ctx.save();
-      ctx.translate(footX, footY);
-      ctx.rotate(side * 0.08);
-      roundRect(side < 0 ? -11 : -4, -3, 16, 8, 4);
+      ctx.translate(hand.x, hand.y);
+      ctx.rotate(side * (0.25 + stretch * 0.18));
+      ctx.fillStyle = "#eefaff";
+      ctx.beginPath();
+      ctx.moveTo(-8, -8);
+      ctx.quadraticCurveTo(0, -12, 9, -6);
+      ctx.lineTo(11, 5);
+      ctx.quadraticCurveTo(2, 12, -9, 6);
+      ctx.closePath();
       ctx.fill();
+      ctx.strokeStyle = "#47a9d5";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(35,92,123,.48)";
+      ctx.lineWidth = 1;
+      for (let finger = -4; finger <= 4; finger += 4) {
+        ctx.beginPath();
+        ctx.moveTo(finger, -6);
+        ctx.lineTo(finger + side, 5);
+        ctx.stroke();
+      }
       ctx.restore();
     });
 
-    ctx.strokeStyle = "#ffca32";
-    ctx.lineWidth = 17;
-    ctx.beginPath();
-    const armReach = 35 + stretch * 31;
-    ctx.moveTo(-23, -4);
-    ctx.lineTo(-armReach, -20 - stretch * 20);
-    ctx.moveTo(23, -4);
-    ctx.lineTo(armReach, -20 + stretch * 4);
-    ctx.stroke();
-
-    ctx.fillStyle = "#effbff";
-    [-1, 1].forEach((side) => {
-      const handX = side * armReach;
-      const handY = side === -1 ? -20 - stretch * 20 : -20 + stretch * 4;
-      ctx.beginPath();
-      ctx.ellipse(handX, handY, 10, 8, side * 0.25, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#47a9d5";
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(34,91,123,.45)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(handX - side * 4, handY - 5);
-      ctx.lineTo(handX + side * 5, handY + 4);
-      ctx.stroke();
-    });
-
-    const jersey = ctx.createLinearGradient(-27, -35, 28, 40);
-    jersey.addColorStop(0, "#ffe96a");
-    jersey.addColorStop(0.5, "#ffc72c");
-    jersey.addColorStop(1, "#e39100");
+    const jersey = ctx.createLinearGradient(-30, -34, 30, 34);
+    jersey.addColorStop(0, "#ffe879");
+    jersey.addColorStop(0.45, "#ffc62c");
+    jersey.addColorStop(1, "#dc8500");
     ctx.fillStyle = jersey;
-    roundRect(-28, -31, 56, 72, 15);
+    ctx.beginPath();
+    ctx.moveTo(-25, -25);
+    ctx.quadraticCurveTo(0, -35, 25, -25);
+    ctx.lineTo(24, 20);
+    ctx.quadraticCurveTo(19, 33, 0, 34);
+    ctx.quadraticCurveTo(-19, 33, -24, 20);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,.24)";
-    roundRect(-22, -25, 13, 58, 7);
+    ctx.fillStyle = "rgba(255,255,255,.19)";
+    ctx.beginPath();
+    ctx.moveTo(-18, -24);
+    ctx.lineTo(-7, -28);
+    ctx.lineTo(-10, 29);
+    ctx.lineTo(-19, 25);
+    ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = "rgba(110,61,0,.35)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-24, 19);
+    ctx.quadraticCurveTo(0, 24, 24, 19);
+    ctx.stroke();
     ctx.fillStyle = "#092d57";
-    ctx.font = "900 22px system-ui";
+    ctx.font = "900 20px system-ui";
     ctx.textAlign = "center";
-    ctx.fillText("1", 0, 16);
+    ctx.fillText("1", 0, 15);
     ctx.font = "700 5.5px system-ui";
-    ctx.letterSpacing = "1px";
-    ctx.fillText("KEEPER", 0, -15);
+    ctx.fillText("KOREA", 0, -15);
+    ctx.fillStyle = "#163156";
+    roundRect(-20, 28, 40, 15, 5);
+    ctx.fill();
 
     ctx.fillStyle = "#efbc94";
-    roundRect(-7, -41, 14, 14, 4);
+    roundRect(-6, -38, 12, 13, 4);
     ctx.fill();
-    ctx.fillStyle = "#f3c39d";
+    ctx.fillStyle = "#e7ae84";
     ctx.beginPath();
-    ctx.ellipse(0, -53, 19, 22, 0, 0, Math.PI * 2);
+    ctx.ellipse(-16, -49, 3.8, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(16, -49, 3.8, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const skin = ctx.createLinearGradient(-15, -66, 13, -39);
+    skin.addColorStop(0, "#ffd4ad");
+    skin.addColorStop(1, "#e8ac81");
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.ellipse(0, -51, 16, 19, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#201923";
     ctx.beginPath();
-    ctx.arc(0, -60, 18, Math.PI, Math.PI * 2);
-    ctx.quadraticCurveTo(11, -50, 18, -53);
-    ctx.lineTo(17, -64);
+    ctx.moveTo(-16, -54);
+    ctx.quadraticCurveTo(-14, -72, 2, -70);
+    ctx.quadraticCurveTo(16, -68, 17, -53);
+    ctx.quadraticCurveTo(8, -59, 1, -61);
+    ctx.quadraticCurveTo(-6, -55, -16, -54);
     ctx.closePath();
     ctx.fill();
 
-    const look = phase === "aim" || phase === "timing" ? keeperPlan.tell * 2.4 : keeper.dive * 2.4;
-    ctx.fillStyle = "#fff";
+    const look = phase === "aim" || phase === "timing" ? keeperPlan.tell * 1.2 : keeper.dive * 1.2;
+    ctx.strokeStyle = "#3a2525";
+    ctx.lineWidth = 1.4;
     [-1, 1].forEach((side) => {
       ctx.beginPath();
-      ctx.ellipse(side * 7, -53, 5, 5.7, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#13253b";
+      ctx.moveTo(side * 3 + look, -52);
+      ctx.lineTo(side * 8 + look, -52.5);
+      ctx.stroke();
+      ctx.fillStyle = "#172230";
       ctx.beginPath();
-      ctx.arc(side * 7 + look, -53, 2.2, 0, Math.PI * 2);
+      ctx.arc(side * 5.5 + look, -51.5, 1.2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#fff";
     });
-    ctx.strokeStyle = "#73352d";
-    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = "#9b5945";
+    ctx.lineWidth = 1.3;
     ctx.beginPath();
-    ctx.arc(0, -44, 6, 0.05, Math.PI - 0.05);
+    ctx.arc(0, -43, 5, Math.PI + 0.15, Math.PI * 2 - 0.15);
     ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.42)";
+    ctx.beginPath();
+    ctx.ellipse(-7, -58, 4, 2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawKeeper(time) {
+    const sprite = characterSprites.keeper;
+    if (!sprite.complete || !sprite.naturalWidth) {
+      drawKeeperVector(time);
+      return;
+    }
+
+    let tellLean = 0;
+    if (phase === "aim" || phase === "timing") {
+      tellLean = keeperPlan.tell * (4 + Math.sin(time * 3.2) * 1.7);
+      keeper.x = 195 + tellLean;
+      keeper.y = 300 + Math.sin(time * 4.4) * 2.5;
+      keeper.rotation = tellLean * 0.005;
+    }
+
+    const stretch = keeper.stretch;
+    const dive = keeper.dive || 0;
+    const h = 168;
+    const w = h * (sprite.naturalWidth / sprite.naturalHeight);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.3)";
+    ctx.beginPath();
+    ctx.ellipse(keeper.x + dive * stretch * 18, 364, 36 + stretch * 28, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.translate(keeper.x, keeper.y + 58);
+    ctx.rotate(keeper.rotation + dive * stretch * 0.55);
+    ctx.scale(1 + stretch * 0.08, 1 - stretch * 0.04);
+    ctx.shadowColor = "rgba(0,11,24,.26)";
+    ctx.shadowBlur = 6;
+    ctx.drawImage(sprite, -w / 2, -h, w, h);
     ctx.restore();
   }
 
@@ -887,83 +998,110 @@
     ctx.restore();
   }
 
-  function drawStriker(time) {
+  function drawStrikerVector(time) {
     const flightT = phase === "flight" && shot ? clamp(shot.time / shot.duration, 0, 1) : 0;
-    const kick = Math.sin(Math.min(1, flightT * 2.2) * Math.PI) * 26;
+    const kick = Math.sin(Math.min(1, flightT * 2.2) * Math.PI);
+    const breathe = Math.sin(time * 2.2) * 1.1;
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.22)";
     ctx.beginPath();
-    ctx.ellipse(260, 677, 77, 16, -0.06, 0, Math.PI * 2);
+    ctx.ellipse(246, 688, 48, 10, -0.04, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.translate(266, 670 + Math.sin(time * 2) * 1.5);
-    ctx.fillStyle = "#dbe7f2";
-    ctx.strokeStyle = "#dbe7f2";
-    ctx.lineCap = "round";
-    ctx.lineWidth = 23;
+    // Rear view: lean and step into the goal (up the pitch), swing foot toward the ball.
+    ctx.translate(248 - kick * 8, 668 + breathe - kick * 12);
+    ctx.rotate(-0.05 - kick * 0.1);
+
+    drawSegment(-24, -88, -38, -58, 14, "#eef4f8");
+    drawSegment(-38, -58, -44, -30, 10, "#e9b58f");
+    drawSegment(24, -88, 38, -58, 14, "#eef4f8");
+    drawSegment(38, -58, 44, -30, 10, "#e9b58f");
+    ctx.fillStyle = "#e9b58f";
     ctx.beginPath();
-    ctx.moveTo(7, -11);
-    ctx.lineTo(18, 31);
-    ctx.stroke();
-    ctx.fillStyle = "#15294a";
-    ctx.fillRect(7, 7, 24, 14);
-    ctx.fillStyle = "#ff4257";
-    ctx.save();
-    ctx.translate(24, 34);
-    ctx.rotate(0.12);
-    roundRect(-8, -6, 29, 13, 6);
+    ctx.arc(-45, -26, 5.5, 0, Math.PI * 2);
+    ctx.arc(45, -26, 5.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
 
-    ctx.save();
-    ctx.translate(-6 - kick * 0.7, -15 - kick * 0.55);
-    ctx.rotate(-0.72 - kick * 0.018);
-    ctx.strokeStyle = "#dbe7f2";
-    ctx.lineWidth = 23;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-8, 42);
-    ctx.stroke();
-    ctx.fillStyle = "#15294a";
-    ctx.fillRect(-19, 17, 23, 13);
-    ctx.fillStyle = "#ff4257";
-    roundRect(-31, 48, 34, 14, 7);
+    ctx.fillStyle = "#172d50";
+    roundRect(-24, -42, 48, 34, 8);
     ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(-24, 50, 18, 2.5);
-    ctx.restore();
+    ctx.fillStyle = "#e52f4c";
+    ctx.fillRect(-22, -38, 44, 4);
 
-    const shirt = ctx.createLinearGradient(-35, -98, 35, -25);
+    const plantKnee = { x: 16, y: 24 };
+    const plantAnkle = { x: 20, y: 54 };
+    drawSegment(10, -8, plantKnee.x, plantKnee.y, 18, "#dce8ef");
+    drawSegment(plantKnee.x, plantKnee.y, plantAnkle.x, plantAnkle.y, 11, "#eef5f8");
+    drawBoot(plantAnkle.x + 3, plantAnkle.y + 1, 0.08, "#ff3a56", 1);
+
+    // Kick foot starts planted near ball, then drives forward/up into the goal.
+    const swingKnee = { x: -14 + kick * 4, y: 18 - kick * 18 };
+    const swingAnkle = { x: -28 + kick * 10, y: 50 - kick * 46 };
+    drawSegment(-10, -8, swingKnee.x, swingKnee.y, 18, "#dce8ef");
+    drawSegment(swingKnee.x, swingKnee.y, swingAnkle.x, swingAnkle.y, 11, "#eef5f8");
+    drawBoot(swingAnkle.x - 2, swingAnkle.y, -0.55 - kick * 0.35, "#ff3a56", -1);
+
+    const shirt = ctx.createLinearGradient(-30, -104, 30, -34);
     shirt.addColorStop(0, "#f8fbff");
-    shirt.addColorStop(1, "#b9cee0");
+    shirt.addColorStop(0.55, "#e6eff5");
+    shirt.addColorStop(1, "#adbfcd");
     ctx.fillStyle = shirt;
     ctx.beginPath();
-    ctx.moveTo(-33, -105);
-    ctx.quadraticCurveTo(0, -125, 34, -104);
-    ctx.lineTo(25, -37);
-    ctx.quadraticCurveTo(0, -23, -25, -37);
+    ctx.moveTo(-28, -98);
+    ctx.quadraticCurveTo(0, -112, 28, -98);
+    ctx.lineTo(24, -40);
+    ctx.quadraticCurveTo(0, -32, -24, -40);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#e92745";
-    ctx.fillRect(-31, -78, 62, 8);
+    ctx.fillRect(-26, -74, 52, 6);
     ctx.fillStyle = "#122a4b";
     ctx.textAlign = "center";
-    ctx.font = "900 10px system-ui";
-    ctx.fillText("KOREA", 0, -91);
-    ctx.font = "900 31px system-ui";
-    ctx.fillText("10", 0, -51);
+    ctx.font = "800 8px system-ui";
+    ctx.fillText("KOREA", 0, -86);
+    ctx.font = "900 26px system-ui";
+    ctx.fillText("10", 0, -48);
 
-    ctx.fillStyle = "#efbd97";
-    ctx.beginPath();
-    ctx.arc(0, -126, 22, 0, Math.PI * 2);
+    ctx.fillStyle = "#d99d78";
+    roundRect(-5, -116, 10, 16, 4);
     ctx.fill();
     ctx.fillStyle = "#1d1820";
     ctx.beginPath();
-    ctx.arc(0, -133, 21, Math.PI, Math.PI * 2);
-    ctx.lineTo(20, -126);
-    ctx.quadraticCurveTo(4, -119, -19, -125);
-    ctx.closePath();
+    ctx.ellipse(0, -128, 17, 19, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = "#f0b889";
+    ctx.beginPath();
+    ctx.ellipse(0, -122, 13, 10, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStriker(time) {
+    const sprite = characterSprites.striker;
+    if (!sprite.complete || !sprite.naturalWidth) {
+      drawStrikerVector(time);
+      return;
+    }
+
+    const flightT = phase === "flight" && shot ? clamp(shot.time / shot.duration, 0, 1) : 0;
+    const kick = Math.sin(Math.min(1, flightT * 2.2) * Math.PI);
+    const breathe = Math.sin(time * 2.2) * 1.1;
+    const footX = 238;
+    const footY = 690;
+    const h = 208;
+    const w = h * (sprite.naturalWidth / sprite.naturalHeight);
+
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.24)";
+    ctx.beginPath();
+    ctx.ellipse(footX - 2 - kick * 4, footY - 8, 44, 10, -0.04, 0, Math.PI * 2);
+    ctx.fill();
+    // Lean and step into the goal (upward on screen), never toward the camera.
+    ctx.translate(footX - kick * 6, footY - kick * 18 + breathe);
+    ctx.rotate(-0.03 - kick * 0.06);
+    ctx.shadowColor = "rgba(0,8,18,.24)";
+    ctx.shadowBlur = 7;
+    ctx.drawImage(sprite, -w / 2, -h, w, h);
     ctx.restore();
   }
 
