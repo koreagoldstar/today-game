@@ -653,6 +653,7 @@
 
   function renderCatalog() {
     if (!catalog) return;
+    // JS로 인기순 재배치. 크롤러(JS 미실행)는 index.html 정적 폴백을 그대로 읽는다.
     catalog.innerHTML = "";
     const frag = document.createDocumentFragment();
 

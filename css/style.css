@@ -1446,3 +1446,46 @@ body {
     animation: none;
   }
 }
+
+/* 크롤러용 텍스트 인덱스 — JS 랭킹 보드와 별도로 HTML에 상주 */
+.seo-crawl {
+  margin: 28px 12px 8px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(40, 70, 110, 0.12);
+}
+
+.seo-crawl h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.seo-crawl ul {
+  margin: 0;
+  padding: 0 0 0 1.1em;
+  columns: 2;
+  column-gap: 18px;
+}
+
+.seo-crawl li {
+  break-inside: avoid;
+  margin: 0 0 6px;
+  font-size: 0.92rem;
+}
+
+.seo-crawl a {
+  color: #245a8c;
+  text-decoration: none;
+}
+
+.seo-crawl a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+  .seo-crawl ul {
+    columns: 1;
+  }
+}

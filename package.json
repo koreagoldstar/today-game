@@ -5,6 +5,7 @@
   "description": "오늘의 게임 — 귀여운 미니게임 모음",
   "scripts": {
     "start": "npx --yes serve . -l 3456",
-    "deploy": "npx vercel deploy --prod --yes"
+    "deploy": "npx vercel deploy --prod --yes",
+    "seo:fallback": "node scripts/generate-seo-fallback.js"
   }
 }
