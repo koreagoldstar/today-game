@@ -21,7 +21,7 @@
       title: "승부차기 히어로",
       tag: "축구 · 예측 타이밍",
       href: "/games/penalty-kick/",
-      thumb: "/assets/thumbs/penalty-kick.svg",
+      thumb: "/assets/thumbs/penalty-kick.png",
       category: "sports",
     },
     {
