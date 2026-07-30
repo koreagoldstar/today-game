@@ -21,8 +21,9 @@ body {
   color: #fff;
   font-family: "Jua", system-ui, sans-serif;
   background:
-    radial-gradient(circle at 50% 5%, rgba(58, 160, 255, 0.25), transparent 34%),
-    linear-gradient(160deg, #020813, #071b3a 55%, #041126);
+    radial-gradient(circle at 50% 8%, rgba(38, 139, 224, 0.24), transparent 31%),
+    radial-gradient(circle at 50% 100%, rgba(0, 211, 166, 0.08), transparent 34%),
+    linear-gradient(160deg, #01050c, #06162f 55%, #020916);
   touch-action: none;
 }
 
@@ -42,9 +43,13 @@ a {
   width: min(100vw, calc(100dvh * 390 / 700), 430px);
   aspect-ratio: 390 / 700;
   overflow: hidden;
-  border-radius: clamp(0px, 3vw, 28px);
+  border: 1px solid rgba(152, 212, 247, 0.15);
+  border-radius: clamp(0px, 2.4vw, 22px);
   background: #071b3a;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.52), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.62),
+    0 0 50px rgba(14, 105, 174, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   isolation: isolate;
 }
 
@@ -57,20 +62,20 @@ canvas {
 .hud {
   position: absolute;
   z-index: 5;
-  top: max(10px, env(safe-area-inset-top));
-  left: 10px;
-  right: 10px;
-  min-height: 58px;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  min-height: 54px;
   display: grid;
   grid-template-columns: 72px 1fr 72px;
   align-items: center;
   gap: 5px;
   padding: 7px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 17px;
-  background: linear-gradient(180deg, rgba(7, 27, 58, 0.9), rgba(4, 15, 35, 0.82));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(9px);
+  border: 1px solid rgba(118, 200, 246, 0.2);
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(3, 18, 41, 0.96), rgba(2, 10, 25, 0.92));
+  box-shadow: 0 9px 28px rgba(0, 0, 0, 0.36), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
 }
 
 .hud-block {
@@ -109,10 +114,11 @@ canvas {
   display: grid;
   place-items: center;
   height: 29px;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
   color: #fff;
   font: 900 19px/1 system-ui, sans-serif;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(63, 103, 146, 0.38), rgba(19, 45, 77, 0.38));
 }
 
 .hud-score i {
@@ -123,7 +129,7 @@ canvas {
 .shot-dots {
   position: absolute;
   z-index: 5;
-  top: 77px;
+  top: 69px;
   left: 50%;
   display: flex;
   gap: 5px;
@@ -131,8 +137,8 @@ canvas {
 }
 
 .shot-dot {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 50%;
   background: rgba(1, 11, 28, 0.58);
@@ -153,7 +159,7 @@ canvas {
 .coach {
   position: absolute;
   z-index: 5;
-  top: 95px;
+  top: 88px;
   left: 50%;
   width: max-content;
   max-width: calc(100% - 34px);
@@ -163,7 +169,8 @@ canvas {
   color: #dff6ff;
   font-size: 12px;
   text-align: center;
-  background: rgba(3, 18, 42, 0.62);
+  border: 1px solid rgba(119, 199, 239, 0.12);
+  background: rgba(1, 11, 27, 0.72);
   transform: translateX(-50%);
   backdrop-filter: blur(5px);
 }
@@ -171,15 +178,15 @@ canvas {
 .timing-panel {
   position: absolute;
   z-index: 8;
-  right: 16px;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  left: 16px;
-  padding: 13px 14px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(5, 28, 62, 0.94), rgba(2, 14, 34, 0.96));
-  box-shadow: 0 13px 35px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(10px);
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  padding: 12px;
+  border: 1px solid rgba(96, 190, 239, 0.24);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(3, 20, 44, 0.97), rgba(1, 8, 20, 0.98));
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
 }
 
 .timing-label {
@@ -197,9 +204,9 @@ canvas {
 
 .timing-track {
   position: relative;
-  height: 18px;
+  height: 15px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 999px;
   background: linear-gradient(90deg, #e83e62 0 19%, #f9bd3d 19% 36%, #43d889 36% 64%, #f9bd3d 64% 81%, #e83e62 81%);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.28);
@@ -229,18 +236,20 @@ canvas {
   min-height: 44px;
   margin-top: 10px;
   border: 0;
-  border-radius: 14px;
-  color: #08233f;
-  font-size: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  color: #03162a;
+  font-size: 16px;
   font-weight: 900;
-  background: linear-gradient(180deg, #fff176, #ffc928);
-  box-shadow: 0 5px 0 #c88c00;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #7af1ff, #28b8ee);
+  box-shadow: 0 4px 0 #0875aa, 0 8px 22px rgba(19, 174, 229, 0.24);
   cursor: pointer;
 }
 
 #kick-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 2px 0 #c88c00;
+  box-shadow: 0 1px 0 #0875aa;
 }
 
 .overlay {
@@ -254,18 +263,20 @@ canvas {
   padding: 40px 28px;
   text-align: center;
   background:
-    radial-gradient(circle at 50% 28%, rgba(33, 143, 232, 0.37), transparent 34%),
-    linear-gradient(180deg, rgba(2, 11, 29, 0.76), rgba(2, 11, 29, 0.96));
-  backdrop-filter: blur(5px);
+    linear-gradient(180deg, rgba(1, 8, 22, 0.48), rgba(1, 8, 22, 0.93) 74%),
+    radial-gradient(circle at 50% 29%, rgba(29, 150, 227, 0.23), transparent 33%);
+  backdrop-filter: blur(7px);
 }
 
 .overlay.compact {
-  inset: 23% 8% auto;
-  min-height: 330px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(8, 38, 78, 0.96), rgba(3, 17, 39, 0.97));
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  inset: 25% 6% auto;
+  min-height: 292px;
+  border: 1px solid rgba(107, 199, 246, 0.2);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(7, 40, 77, 0.97), rgba(2, 13, 31, 0.98)),
+    radial-gradient(circle at 50% 0, rgba(43, 193, 244, 0.16), transparent 45%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hidden {
@@ -275,7 +286,7 @@ canvas {
 .title-ball,
 .trophy {
   margin-bottom: 4px;
-  font-size: 62px;
+  font-size: 58px;
   filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.3));
   animation: float 2.4s ease-in-out infinite;
 }
@@ -290,8 +301,8 @@ canvas {
 .overlay h1 {
   margin: 0 0 13px;
   color: #fff;
-  font: 400 clamp(39px, 11vw, 52px)/0.9 "Bagel Fat One", sans-serif;
-  text-shadow: 0 5px 0 #063970, 0 10px 24px rgba(0, 0, 0, 0.36);
+  font: 400 clamp(38px, 10vw, 49px)/0.94 "Bagel Fat One", sans-serif;
+  text-shadow: 0 4px 0 #063461, 0 12px 28px rgba(0, 0, 0, 0.46);
 }
 
 .overlay h1 em {
@@ -320,10 +331,11 @@ canvas {
   align-items: center;
   gap: 10px;
   padding: 8px 11px;
-  border-radius: 13px;
+  border: 1px solid rgba(122, 199, 238, 0.1);
+  border-radius: 9px;
   color: #eaf7ff;
   font-size: 13px;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(3, 22, 46, 0.62);
 }
 
 .rules b {
@@ -340,18 +352,19 @@ canvas {
   width: min(270px, 100%);
   min-height: 51px;
   border: 0;
-  border-radius: 16px;
-  color: #062846;
-  font-size: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 11px;
+  color: #04182c;
+  font-size: 18px;
   font-weight: 900;
-  background: linear-gradient(180deg, #fff37c, #ffc82f);
-  box-shadow: 0 7px 0 #be8200, 0 13px 25px rgba(0, 0, 0, 0.28);
+  background: linear-gradient(180deg, #72eaff, #23b6ec);
+  box-shadow: 0 5px 0 #0875a9, 0 13px 28px rgba(0, 0, 0, 0.34);
   cursor: pointer;
 }
 
 .primary:active {
   transform: translateY(4px);
-  box-shadow: 0 3px 0 #be8200;
+  box-shadow: 0 1px 0 #0875a9;
 }
 
 .overlay a {
@@ -383,6 +396,19 @@ canvas {
   font-size: 20px;
 }
 
+.overlay.compact h1 {
+  max-width: 100%;
+  margin-bottom: 12px;
+  font: 900 clamp(27px, 8vw, 36px)/1.06 "Jua", sans-serif;
+  word-break: keep-all;
+  text-shadow: 0 3px 0 #063461, 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+#game-over h1 {
+  font: 900 clamp(28px, 8vw, 39px)/1.08 "Jua", sans-serif;
+  word-break: keep-all;
+}
+
 #game-over {
   justify-content: flex-start;
   overflow-y: auto;
@@ -397,11 +423,11 @@ canvas {
 #game-over .today-rank-form .btn {
   min-height: 43px;
   border: 0;
-  border-radius: 14px;
-  color: #062846;
+  border-radius: 10px;
+  color: #04182c;
   font-weight: 900;
-  background: linear-gradient(180deg, #fff176, #ffc928);
-  box-shadow: 0 5px 0 #bd8200;
+  background: linear-gradient(180deg, #72eaff, #23b6ec);
+  box-shadow: 0 4px 0 #0875a9;
   cursor: pointer;
 }
 
