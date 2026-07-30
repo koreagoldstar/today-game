@@ -190,6 +190,30 @@ body {
   box-shadow: 0 3px 0 rgba(196, 120, 0, 0.28);
 }
 
+.pwa-install {
+  border: 0;
+  color: #238456;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(35, 132, 86, 0.25);
+}
+
+.pwa-install[hidden],
+.pwa-install-hint[hidden] {
+  display: none;
+}
+
+.pwa-install-hint {
+  max-width: 440px;
+  margin: -6px auto 14px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  color: #24536f;
+  font-size: 13px;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.78);
+}
+
 .shelf {
   grid-area: shelf;
   animation: rise-in 0.8s ease-out 0.12s both;

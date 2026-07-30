@@ -1,0 +1,28 @@
+{
+  "id": "/",
+  "name": "오늘의 게임",
+  "short_name": "오늘의 게임",
+  "description": "작고 귀여운 미니게임과 오늘의 챌린지를 즐겨보세요.",
+  "lang": "ko-KR",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#dff3ff",
+  "theme_color": "#7ec8ff",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

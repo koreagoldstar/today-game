@@ -9,6 +9,12 @@
     <meta name="description" content="작고 귀여운 미니게임 모음 · 오늘의 챌린지에 도전해 보세요!" />
     <title>오늘의 게임</title>
     <link rel="canonical" href="https://www.todaygame.co.kr/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="오늘의 게임" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="오늘의 게임" />
     <meta property="og:locale" content="ko_KR" />
@@ -53,7 +59,9 @@
         <p class="hero-links">
           <a class="hero-link" href="/rankings/">전체 게임 랭킹</a>
           <a class="hero-link hero-link-fame" href="/fame/">🏆 Hall of Fame</a>
+          <button class="hero-link pwa-install" id="pwa-install" type="button" hidden>📲 홈 화면에 추가</button>
         </p>
+        <p class="pwa-install-hint" id="pwa-install-hint" role="status" hidden></p>
 
         <section class="challenge" id="today-challenge" aria-label="오늘의 챌린지">
           <p class="challenge-eyebrow">🏆 오늘의 챌린지</p>
@@ -526,5 +534,6 @@
     <script src="js/rankable.js"></script>
     <script src="js/game-rank.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/pwa.js"></script>
   </body>
 </html>
