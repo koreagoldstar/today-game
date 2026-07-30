@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#071b3a" />
+    <meta name="description" content="골키퍼의 움직임을 읽고 완벽한 타이밍에 슛하는 고퀄리티 페널티킥 미니게임" />
+    <title>승부차기 히어로 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/penalty-kick/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+  </head>
+  <body data-bgm="penalty-kick">
+    <main class="stage">
+      <canvas id="game" width="390" height="700" aria-label="승부차기 경기장"></canvas>
+
+      <header class="hud" aria-live="polite">
+        <div class="hud-block">
+          <span>ROUND</span>
+          <strong><b id="hud-round">1</b>/10</strong>
+        </div>
+        <div class="hud-score">
+          <span>대한민국</span>
+          <strong id="hud-goals">0</strong>
+          <i>:</i>
+          <strong id="hud-saves">0</strong>
+          <span>KEEPER</span>
+        </div>
+        <div class="hud-block right">
+          <span>SCORE</span>
+          <strong id="hud-score">0</strong>
+        </div>
+      </header>
+
+      <div class="shot-dots" id="shot-dots" aria-label="슈팅 결과"></div>
+      <p class="coach" id="coach">골키퍼의 시선과 무게중심을 읽으세요</p>
+
+      <section class="timing-panel hidden" id="timing-panel" aria-label="슈팅 타이밍">
+        <div class="timing-label">
+          <span>SHOT TIMING</span>
+          <b id="timing-grade">탭!</b>
+        </div>
+        <div class="timing-track">
+          <i class="timing-danger left"></i>
+          <i class="timing-good"></i>
+          <i class="timing-perfect"></i>
+          <i class="timing-danger right"></i>
+          <span id="timing-cursor"></span>
+        </div>
+        <button type="button" id="kick-btn">지금 슛!</button>
+      </section>
+
+      <section class="overlay" id="title">
+        <div class="title-ball" aria-hidden="true">⚽</div>
+        <p class="eyebrow">PENALTY SHOOTOUT</p>
+        <h1>승부차기<br /><em>히어로</em></h1>
+        <p>골키퍼의 방향을 예측하고<br />완벽한 타이밍에 골망을 흔드세요!</p>
+        <ol class="rules">
+          <li><b>1</b><span>골대 안을 눌러 슛 방향 선택</span></li>
+          <li><b>2</b><span>움직이는 바가 중앙일 때 슛</span></li>
+          <li><b>3</b><span>10번의 승부차기로 최고점 도전</span></li>
+        </ol>
+        <button type="button" class="primary" id="start-btn">경기 시작</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+
+      <section class="overlay compact hidden" id="round-result">
+        <p class="eyebrow" id="result-badge">GOAL!</p>
+        <h1 id="result-title">골!</h1>
+        <p id="result-detail"></p>
+        <button type="button" class="primary" id="next-btn">다음 킥</button>
+      </section>
+
+      <section class="overlay hidden" id="game-over">
+        <div class="trophy" aria-hidden="true">🏆</div>
+        <p class="eyebrow">FULL TIME</p>
+        <h1 id="over-title">승부차기 종료</h1>
+        <p id="over-detail"></p>
+        <div class="final-stats">
+          <span>GOALS <b id="final-goals">0</b></span>
+          <span>PERFECT <b id="final-perfect">0</b></span>
+          <span>BEST COMBO <b id="final-combo">0</b></span>
+        </div>
+        <button type="button" class="primary" id="retry-btn">다시 도전</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+    </main>
+
+    <script src="/js/bgm.js?v=3"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=2"></script>
+  </body>
+</html>

@@ -42,6 +42,7 @@ module.exports = async function handler(req, res) {
     { id: "chick-defense", title: "둥지 디펜스", href: "/games/chick-defense/", metric: "score" },
     { id: "jet-strike", title: "제트 스트라이크", href: "/games/jet-strike/", metric: "score" },
     { id: "number-hole", title: "넘버 홀", href: "/games/number-hole/", metric: "score" },
+    { id: "penalty-kick", title: "승부차기 히어로", href: "/games/penalty-kick/", metric: "score" },
     { id: "fruit-catch", title: "과일 바스켓", href: "/games/fruit-catch/", metric: "score" },
     { id: "bubble-pop", title: "팝팝 방울", href: "/games/bubble-pop/", metric: "score" },
   ];
