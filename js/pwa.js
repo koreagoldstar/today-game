@@ -27,13 +27,13 @@
     return;
   }
 
+  installButton.hidden = false;
+
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredPrompt = event;
     installButton.hidden = false;
   });
-
-  if (isIos) installButton.hidden = false;
 
   installButton.addEventListener("click", async () => {
     if (deferredPrompt) {
@@ -44,10 +44,11 @@
       return;
     }
 
-    if (isIos && installHint) {
-      installHint.hidden = false;
-      installHint.textContent = "Safari의 공유 버튼(□↑)을 누른 뒤 ‘홈 화면에 추가’를 선택하세요.";
-    }
+    if (!installHint) return;
+    installHint.hidden = false;
+    installHint.textContent = isIos
+      ? "Safari의 공유 버튼(□↑)을 누른 뒤 ‘홈 화면에 추가’를 선택하세요."
+      : "브라우저 메뉴(⋮)에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요.";
   });
 
   window.addEventListener("appinstalled", hideInstall);
