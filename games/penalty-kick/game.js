@@ -6,7 +6,8 @@
   const TOTAL_ROUNDS = 10;
   const GOAL = { left: 34, right: 356, top: 143, bottom: 370 };
   const BALL_START = { x: 195, y: 578 };
-  const KICK_CONTACT_TIME = 0.76;
+  const KICK_CONTACT_TIME = 0.54;
+  const KICK_MOTION_END = 0.78;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -19,9 +20,11 @@
   const characterSprites = {
     keeper: new Image(),
     striker: new Image(),
+    strikerKick: new Image(),
   };
   characterSprites.keeper.src = "assets/goalkeeper.png?v=3";
-  characterSprites.striker.src = "assets/striker.png?v=3";
+  characterSprites.striker.src = "assets/striker.png?v=4";
+  characterSprites.strikerKick.src = "assets/striker-kick-sheet.png?v=1";
 
   const ui = {
     title: document.getElementById("title"),
@@ -453,7 +456,7 @@
 
     if (phase === "flight" && shot) {
       shot.time += dt;
-      shot.motionTime += dt;
+      shot.motionTime = Math.min(KICK_MOTION_END, shot.motionTime + dt);
       const t = clamp(shot.time / shot.duration, 0, 1);
       const difficulty = round / (TOTAL_ROUNDS - 1);
       const diveDelay = 0.1 + (1 - difficulty) * 0.1;
@@ -1095,148 +1098,71 @@
     ctx.restore();
   }
 
-  function smoothStep(a, b, value) {
-    const t = clamp((value - a) / (b - a), 0, 1);
-    return t * t * (3 - 2 * t);
-  }
-
-  function strikerPose(time) {
-    const motion = shot && (phase === "kick" || phase === "flight") ? shot.motionTime : 0;
-    const run = smoothStep(0.02, 0.25, motion);
-    const plant = smoothStep(0.2, 0.42, motion);
-    const swing = smoothStep(0.43, KICK_CONTACT_TIME, motion);
-    const follow = smoothStep(KICK_CONTACT_TIME, 1.02, motion);
-    const breathe = motion ? 0 : Math.sin(time * 2.2) * 1.1;
-
-    return {
-      bodyX: 253 - run * 11 - swing * 2 - follow * 5,
-      bodyY: 596 + breathe - run * 5 - swing * 2 - follow * 8,
-      lean: -0.025 - plant * 0.06 - swing * 0.1 + follow * 0.03,
-      leftArm: -0.08 - plant * 0.34 - swing * 0.28 + follow * 0.2,
-      rightArm: 0.08 + plant * 0.43 + swing * 0.35 - follow * 0.12,
-      plantLeg: 0.015 - plant * 0.06 + follow * 0.08,
-      swingLeg: lerp(0, -0.62, plant) + swing * 1.82 + follow * 0.25,
-      swingLength: lerp(1, 0.92, plant) - swing * 0.5 + follow * 0.08,
-      run,
-      plant,
-      swing,
-      follow,
-    };
-  }
-
-  function drawSpritePart(sprite, crop, pivot, scale) {
-    const sw = sprite.naturalWidth;
-    const sh = sprite.naturalHeight;
-    const sx = crop.x * sw;
-    const sy = crop.y * sh;
-    const sourceW = crop.w * sw;
-    const sourceH = crop.h * sh;
-    const pivotX = pivot.x * sw;
-    const pivotY = pivot.y * sh;
-    ctx.drawImage(
-      sprite,
-      sx,
-      sy,
-      sourceW,
-      sourceH,
-      (sx - pivotX) * scale,
-      (sy - pivotY) * scale,
-      sourceW * scale,
-      sourceH * scale
-    );
-  }
-
   function drawStriker(time) {
-    const sprite = characterSprites.striker;
-    if (!sprite.complete || !sprite.naturalWidth) {
+    const idleSprite = characterSprites.striker;
+    if (!idleSprite.complete || !idleSprite.naturalWidth) {
       drawStrikerVector(time);
       return;
     }
 
-    const pose = strikerPose(time);
-    const scale = 214 / sprite.naturalHeight;
+    const isMoving = shot && (phase === "kick" || phase === "flight");
+    const kickSheet = characterSprites.strikerKick;
+    const useFrames = isMoving && kickSheet.complete && kickSheet.naturalWidth;
+    const motion = isMoving ? Math.min(KICK_MOTION_END, shot.motionTime) : 0;
+    const breathe = isMoving ? 0 : Math.sin(time * 2.2) * 1.1;
+    const run = clamp(motion / KICK_CONTACT_TIME, 0, 1);
+    const recover = clamp((motion - KICK_CONTACT_TIME) / (KICK_MOTION_END - KICK_CONTACT_TIME), 0, 1);
+    const footX = 248 - run * 9 - recover * 5;
+    const footY = 690 - run * 8 - recover * 3 + breathe;
 
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.24)";
     ctx.beginPath();
-    ctx.ellipse(
-      pose.bodyX - 2 - pose.follow * 8,
-      687,
-      45 - pose.swing * 6,
-      10,
-      -0.04,
-      0,
-      Math.PI * 2
-    );
+    ctx.ellipse(footX - 2, 684, 43 - recover * 4, 9, -0.04, 0, Math.PI * 2);
     ctx.fill();
-
-    // Rear-facing layered rig: every limb travels up-field toward the goal.
-    ctx.translate(pose.bodyX, pose.bodyY);
-    ctx.rotate(pose.lean);
     ctx.shadowColor = "rgba(0,8,18,.24)";
     ctx.shadowBlur = 7;
 
-    // Planted right leg locks beside the ball before the striking leg comes through.
-    ctx.save();
-    ctx.translate((0.66 - 0.5) * sprite.naturalWidth * scale, 0);
-    ctx.rotate(pose.plantLeg);
-    drawSpritePart(
-      sprite,
-      { x: 0.47, y: 0.48, w: 0.53, h: 0.52 },
-      { x: 0.66, y: 0.55 },
-      scale
-    );
-    ctx.restore();
-
-    // Left leg first loads behind, then visibly swings forward into the ball.
-    ctx.save();
-    ctx.translate((0.34 - 0.5) * sprite.naturalWidth * scale, 0);
-    ctx.rotate(pose.swingLeg);
-    ctx.scale(1, pose.swingLength);
-    drawSpritePart(
-      sprite,
-      { x: 0, y: 0.48, w: 0.53, h: 0.52 },
-      { x: 0.34, y: 0.55 },
-      scale
-    );
-    ctx.restore();
-
-    // Arms counter-rotate for balance and make the contact silhouette unmistakable.
-    ctx.save();
-    ctx.translate(
-      (0.2 - 0.5) * sprite.naturalWidth * scale,
-      (0.24 - 0.55) * sprite.naturalHeight * scale
-    );
-    ctx.rotate(pose.leftArm);
-    drawSpritePart(
-      sprite,
-      { x: 0, y: 0.18, w: 0.34, h: 0.42 },
-      { x: 0.2, y: 0.24 },
-      scale
-    );
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(
-      (0.8 - 0.5) * sprite.naturalWidth * scale,
-      (0.24 - 0.55) * sprite.naturalHeight * scale
-    );
-    ctx.rotate(pose.rightArm);
-    drawSpritePart(
-      sprite,
-      { x: 0.66, y: 0.18, w: 0.34, h: 0.42 },
-      { x: 0.8, y: 0.24 },
-      scale
-    );
-    ctx.restore();
-
-    // The premium torso/head remains intact, preserving texture, number and rear view.
-    drawSpritePart(
-      sprite,
-      { x: 0.11, y: 0, w: 0.78, h: 0.62 },
-      { x: 0.5, y: 0.55 },
-      scale
-    );
+    if (useFrames) {
+      // Whole, consistently rendered frames avoid sliced-limb seams and impossible joints.
+      const frame =
+        motion < 0.16 ? 0 :
+          motion < 0.34 ? 1 :
+            motion < KICK_CONTACT_TIME ? 2 : 3;
+      const frameCrops = [
+        { x: 0, w: 330 },
+        { x: 330, w: 460 },
+        { x: 780, w: 430 },
+        { x: 1230, w: 306 },
+      ];
+      const crop = frameCrops[frame];
+      const sourceScale = kickSheet.naturalWidth / 1536;
+      const sourceX = crop.x * sourceScale;
+      const sourceW = crop.w * sourceScale;
+      const sourceY = kickSheet.naturalHeight * 0.1;
+      const sourceH = kickSheet.naturalHeight * 0.8;
+      const drawH = 218;
+      const drawW = drawH * (sourceW / sourceH);
+      ctx.translate(footX, footY);
+      ctx.rotate(-0.025 - run * 0.025 + recover * 0.035);
+      ctx.drawImage(
+        kickSheet,
+        sourceX,
+        sourceY,
+        sourceW,
+        sourceH,
+        -drawW / 2,
+        -drawH,
+        drawW,
+        drawH
+      );
+    } else {
+      const h = 208;
+      const w = h * (idleSprite.naturalWidth / idleSprite.naturalHeight);
+      ctx.translate(footX, footY);
+      ctx.rotate(-0.03);
+      ctx.drawImage(idleSprite, -w / 2, -h, w, h);
+    }
     ctx.restore();
   }
 
