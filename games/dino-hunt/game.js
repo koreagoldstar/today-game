@@ -113,6 +113,7 @@
     hp: 100,
     inv: 0,
     climbing: false,
+    climbState: "ground", // ground | up | perch | down
     tree: null,
     climbProgress: 0,
     hurtFlash: 0,
@@ -126,6 +127,9 @@
   }
   function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
+  }
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
   function rand(a, b) {
     return a + Math.random() * (b - a);
@@ -292,26 +296,64 @@
     return best;
   }
 
+  function syncClimbButton() {
+    const btn = document.getElementById("climb-btn");
+    if (!btn) return;
+    if (player.climbState === "perch" || player.climbState === "up") {
+      btn.textContent = "내려오기";
+    } else {
+      btn.textContent = "나무 타기";
+    }
+  }
+
   function tryClimb() {
     if (phase !== "play") return;
-    if (player.climbing) {
-      player.climbing = false;
-      player.tree = null;
-      player.climbProgress = 0;
-      player.y = GROUND;
-      setCoach("지상으로 내려왔습니다");
+    if (player.climbState === "up" || player.climbState === "down") return;
+
+    if (player.climbState === "perch") {
+      player.climbState = "down";
+      player.climbing = true;
+      setCoach("내려오는 중…");
+      syncClimbButton();
       return;
     }
+
     const tree = nearestTree();
     if (!tree) {
       setCoach("나무 가까이에서 탈 수 있어요");
       return;
     }
     player.climbing = true;
+    player.climbState = "up";
     player.tree = tree;
     player.x = tree.x;
     player.climbProgress = 0;
+    player.vx = 0;
     setCoach("낮은 가지 위! 비행 공룡만 조심하세요");
+    syncClimbButton();
+  }
+
+  function updateFacing() {
+    // Face walk direction first; when idle, face aim
+    if (Math.abs(player.vx) > 18) {
+      player.face = player.vx > 0 ? 1 : -1;
+      return;
+    }
+    if (moveLeft && !moveRight) {
+      player.face = -1;
+      return;
+    }
+    if (moveRight && !moveLeft) {
+      player.face = 1;
+      return;
+    }
+    const ax = aimWX();
+    if (Math.abs(ax - player.x) > 12) player.face = ax >= player.x ? 1 : -1;
+  }
+
+  function playerSpriteSize() {
+    if (player.climbing) return { w: 64, h: 96 };
+    return { w: 76, h: 118 };
   }
 
   function checkUpgrade() {
@@ -336,9 +378,11 @@
   }
 
   function muzzlePos() {
+    // Sprite faces right; drawn from (-0.45w, -h) to (0.55w, 0). Gun tip ≈ right edge, ~45% down.
+    const { w, h } = playerSpriteSize();
     return {
-      x: player.x + player.face * (player.climbing ? 28 : 36),
-      y: player.y - (player.climbing ? 72 : 90),
+      x: player.x + player.face * w * 0.52,
+      y: player.y - h * 0.55,
     };
   }
 
@@ -355,8 +399,7 @@
     if (p.y > 610) return false;
     aimSX = p.x;
     aimSY = p.y;
-    const ax = aimWX();
-    if (Math.abs(ax - player.x) > 8) player.face = ax >= player.x ? 1 : -1;
+    updateFacing();
     return true;
   }
 
@@ -385,7 +428,9 @@
         r: wpn.id === "plasma" ? 4.2 : 2.6,
       });
     }
-    player.face = targetX >= player.x ? 1 : -1;
+    if (Math.abs(player.vx) <= 18 && !moveLeft && !moveRight) {
+      player.face = targetX >= player.x ? 1 : -1;
+    }
     muzzleFlash = 0.08;
     burst(muzzle.x, muzzle.y, "#fff1b0", 4, 55);
     shake = Math.max(shake, 1.4);
@@ -472,9 +517,11 @@
     player.hp = 100;
     player.inv = 2.2;
     player.climbing = false;
+    player.climbState = "ground";
     player.tree = null;
     player.climbProgress = 0;
     ensureTrees();
+    syncClimbButton();
     ui.title.classList.add("hidden");
     ui.upgrade.classList.add("hidden");
     ui.over.classList.add("hidden");
@@ -564,22 +611,44 @@
       if (wave >= 6 && Math.random() < 0.28) spawnDino();
     }
 
-    if (!player.climbing) {
+    if (player.climbState === "ground") {
       const speed = 210;
       if (moveLeft) player.vx = -speed;
       else if (moveRight) player.vx = speed;
       else player.vx *= Math.pow(0.02, dt);
       player.x = Math.max(40, player.x + player.vx * dt);
-      const ax = aimWX();
-      if (Math.abs(ax - player.x) > 10) player.face = ax >= player.x ? 1 : -1;
       player.y = GROUND;
+      player.climbing = false;
+      updateFacing();
     } else if (player.tree) {
-      player.climbProgress = clamp(player.climbProgress + dt * 2.4, 0, 1);
-      player.x = player.tree.x;
-      player.y = lerp(GROUND, player.tree.climbY, easeOutCubic(player.climbProgress));
       player.vx = 0;
-      const ax = aimWX();
-      if (Math.abs(ax - player.x) > 10) player.face = ax >= player.x ? 1 : -1;
+      player.climbing = true;
+      player.x = player.tree.x;
+      if (player.climbState === "up") {
+        player.climbProgress = clamp(player.climbProgress + dt * 2.0, 0, 1);
+        player.y = lerp(GROUND, player.tree.climbY, easeInOutCubic(player.climbProgress));
+        if (player.climbProgress >= 1) {
+          player.climbState = "perch";
+          player.y = player.tree.climbY;
+          syncClimbButton();
+        }
+      } else if (player.climbState === "down") {
+        player.climbProgress = clamp(player.climbProgress - dt * 1.85, 0, 1);
+        player.y = lerp(GROUND, player.tree.climbY, easeInOutCubic(player.climbProgress));
+        if (player.climbProgress <= 0) {
+          player.climbState = "ground";
+          player.climbing = false;
+          player.tree = null;
+          player.y = GROUND;
+          setCoach("지상으로 내려왔습니다");
+          syncClimbButton();
+        }
+      } else {
+        // perch
+        player.climbProgress = 1;
+        player.y = player.tree.climbY;
+        updateFacing();
+      }
     }
 
     if (player.x > farthestX) {
@@ -629,7 +698,7 @@
 
     dinos.forEach((d) => {
       if (d.hp <= 0) return;
-      const canReach = d.flying || !player.climbing || player.climbProgress < 0.7;
+      const canReach = d.flying || player.climbState === "ground" || player.climbProgress < 0.55;
       if (!canReach) return;
       const box = dinoHitbox(d);
       const px = player.x;
@@ -665,7 +734,7 @@
     });
     blood = blood.filter((b) => b.life > 0);
 
-    if (player.hp < 35 && !player.climbing) setCoach("체력이 낮아요! 나무로 피하세요");
+    if (player.hp < 35 && player.climbState === "ground") setCoach("체력이 낮아요! 나무로 피하세요");
   }
 
   function drawOneBgTile(key, alpha, offsetX) {
@@ -712,7 +781,7 @@
         ctx.arc(x, GROUND - 155, 42, 0, Math.PI * 2);
         ctx.fill();
       }
-      if (!player.climbing && Math.abs(player.x - t.x) < 58) {
+      if (player.climbState === "ground" && Math.abs(player.x - t.x) < 58) {
         ctx.fillStyle = "rgba(255, 225, 110, 0.9)";
         ctx.font = "800 11px system-ui";
         ctx.textAlign = "center";
@@ -723,12 +792,14 @@
 
   function drawPlayer() {
     const img = images.hunter;
-    const h = player.climbing ? 96 : 118;
-    const w = player.climbing ? 64 : 76;
+    const { w, h } = playerSpriteSize();
     const px = sx(player.x);
     ctx.save();
     ctx.translate(px, player.y);
     if (player.hurtFlash > 0) ctx.globalAlpha = 0.45 + Math.sin(performance.now() / 30) * 0.25;
+    // Slight lean while climbing so ascent/descent feels less stiff
+    if (player.climbState === "up") ctx.rotate(-0.08);
+    else if (player.climbState === "down") ctx.rotate(0.1);
     ctx.scale(player.face, 1);
     if (loadImgReady(img)) ctx.drawImage(img, -w * 0.45, -h, w, h);
     else {
