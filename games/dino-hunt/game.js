@@ -5,24 +5,24 @@
   const H = 700;
   const GROUND = 590;
   const TREE_SPOTS = [
-    { x: 78, climbY: 250 },
-    { x: 312, climbY: 250 },
+    { x: 78, climbY: 455 },
+    { x: 312, climbY: 455 },
   ];
 
   const WEAPONS = [
-    { id: "pistol", name: "권총", kills: 0, dmg: 1, rate: 0.42, spread: 520, spread: 1, spray: 0, pierce: 0, color: "#ffd56a" },
-    { id: "shotgun", name: "샷건", kills: 8, dmg: 1, rate: 0.55, speed: 460, pellets: 5, spray: 0.22, pierce: 0, color: "#ff9f4a" },
-    { id: "rifle", name: "소총", kills: 20, dmg: 2.4, rate: 0.34, speed: 680, pellets: 1, spray: 0.02, pierce: 0, color: "#7dffb0" },
-    { id: "assault", name: "돌격소총", kills: 38, dmg: 1.5, rate: 0.12, speed: 620, pellets: 1, spray: 0.05, pierce: 0, color: "#7ad0ff" },
-    { id: "plasma", name: "플라즈마", kills: 65, dmg: 3.2, rate: 0.18, speed: 700, pellets: 1, spray: 0.01, pierce: 2, color: "#d57bff" },
+    { id: "pistol", name: "권총", kills: 0, dmg: 1, rate: 0.34, speed: 680, pellets: 1, spray: 0.012, pierce: 0, color: "#ffd56a" },
+    { id: "shotgun", name: "샷건", kills: 8, dmg: 1, rate: 0.48, speed: 560, pellets: 5, spray: 0.16, pierce: 0, color: "#ff9f4a" },
+    { id: "rifle", name: "소총", kills: 20, dmg: 2.4, rate: 0.28, speed: 820, pellets: 1, spray: 0.012, pierce: 0, color: "#7dffb0" },
+    { id: "assault", name: "돌격소총", kills: 38, dmg: 1.5, rate: 0.1, speed: 740, pellets: 1, spray: 0.035, pierce: 0, color: "#7ad0ff" },
+    { id: "plasma", name: "플라즈마", kills: 65, dmg: 3.2, rate: 0.15, speed: 800, pellets: 1, spray: 0.01, pierce: 2, color: "#d57bff" },
   ];
 
   const DINO_TYPES = {
-    raptor: { src: "assets/raptor.png", hp: 2, speed: 72, score: 120, w: 92, h: 78, flying: false, damage: 10 },
-    stego: { src: "assets/stego.png", hp: 5, speed: 38, score: 180, w: 120, h: 70, flying: false, damage: 14 },
-    triceratops: { src: "assets/triceratops.png", hp: 7, speed: 46, score: 240, w: 128, h: 72, flying: false, damage: 16 },
-    ptera: { src: "assets/ptera.png", hp: 3, speed: 64, score: 200, w: 110, h: 70, flying: true, damage: 10 },
-    trex: { src: "assets/trex.png", hp: 16, speed: 34, score: 520, w: 150, h: 100, flying: false, damage: 24 },
+    raptor: { hp: 2, speed: 92, score: 120, w: 104, h: 86, flying: false, damage: 10, gait: 12 },
+    stego: { hp: 5, speed: 44, score: 180, w: 132, h: 76, flying: false, damage: 14, gait: 7 },
+    triceratops: { hp: 7, speed: 54, score: 240, w: 140, h: 78, flying: false, damage: 16, gait: 8 },
+    ptera: { hp: 3, speed: 74, score: 200, w: 122, h: 76, flying: true, damage: 10, gait: 10 },
+    trex: { hp: 16, speed: 40, score: 520, w: 164, h: 112, flying: false, damage: 24, gait: 6 },
   };
 
   const canvas = document.getElementById("game");
@@ -53,6 +53,8 @@
   const images = {};
   const imageFiles = {
     bg: "assets/bg.jpg",
+    bg2: "assets/bg2.jpg",
+    bg3: "assets/bg3.jpg",
     hunter: "assets/hunter.png",
     tree: "assets/tree.png",
     raptor: "assets/raptor.png",
@@ -66,6 +68,11 @@
     img.src = src;
     images[key] = img;
   });
+  const BG_KEYS = ["bg", "bg2", "bg3"];
+  let bgIndex = 0;
+  let bgFade = 0;
+  let nextBgIndex = 0;
+  let lastWaveBg = 1;
 
   let phase = "title";
   let last = performance.now();
@@ -87,7 +94,8 @@
   let moveRight = false;
   let autoFire = false;
   let aimX = W * 0.72;
-  let aimY = GROUND - 80;
+  let aimY = GROUND - 70;
+  let manualAimUntil = 0;
 
   const player = {
     x: W * 0.5,
@@ -108,13 +116,14 @@
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
   function rand(a, b) {
     return a + Math.random() * (b - a);
   }
   function dist(ax, ay, bx, by) {
-    const dx = ax - bx;
-    const dy = ay - by;
-    return Math.hypot(dx, dy);
+    return Math.hypot(ax - bx, ay - by);
   }
   function weapon() {
     return WEAPONS[weaponIndex];
@@ -122,13 +131,45 @@
   function nextWeaponNeed() {
     return weaponIndex + 1 < WEAPONS.length ? WEAPONS[weaponIndex + 1].kills : null;
   }
-
   function loadImgReady(img) {
     return img && img.complete && img.naturalWidth > 0;
   }
-
   function setCoach(text) {
     ui.coach.textContent = text;
+  }
+
+  function dinoHitbox(d) {
+    // Generous body box: sprites face left by default, feet at d.y
+    const padX = d.w * 0.52;
+    const top = d.y - d.h * 0.98;
+    const bottom = d.y - d.h * 0.02;
+    return {
+      left: d.x - padX,
+      right: d.x + padX,
+      top,
+      bottom,
+      cx: d.x,
+      cy: (top + bottom) * 0.5,
+    };
+  }
+
+  function segmentHitsBox(x0, y0, x1, y1, box, radius) {
+    // Point checks + coarse samples along the segment (anti-tunnel)
+    const steps = 6;
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const x = lerp(x0, x1, t);
+      const y = lerp(y0, y1, t);
+      if (
+        x + radius >= box.left &&
+        x - radius <= box.right &&
+        y + radius >= box.top &&
+        y - radius <= box.bottom
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function updateHud() {
@@ -162,6 +203,15 @@
     floats.push({ x, y, text, color, life: 0.9 });
   }
 
+  function pickBgForWave() {
+    if (wave === lastWaveBg) return;
+    lastWaveBg = wave;
+    if (wave === 1) return;
+    nextBgIndex = (bgIndex + 1 + Math.floor(Math.random() * (BG_KEYS.length - 1))) % BG_KEYS.length;
+    if (nextBgIndex === bgIndex) nextBgIndex = (bgIndex + 1) % BG_KEYS.length;
+    bgFade = 0.001;
+  }
+
   function spawnDino(forced) {
     const roll = Math.random();
     let type = "raptor";
@@ -173,12 +223,15 @@
 
     const def = DINO_TYPES[type];
     const fromLeft = Math.random() < 0.5;
+    const dir = fromLeft ? 1 : -1;
     const flying = def.flying;
     dinos.push({
       type,
-      x: fromLeft ? -80 : W + 80,
-      y: flying ? rand(170, 320) : GROUND,
-      vx: (fromLeft ? 1 : -1) * def.speed * (0.85 + Math.random() * 0.2) * (1 + wave * 0.028),
+      x: fromLeft ? -90 : W + 90,
+      y: flying ? rand(210, 300) : GROUND,
+      baseY: flying ? rand(210, 300) : GROUND,
+      vx: dir * def.speed * (0.9 + Math.random() * 0.15) * (1 + wave * 0.025),
+      desiredSpeed: def.speed * (1 + wave * 0.025),
       hp: def.hp + Math.floor(wave * 0.28),
       maxHp: def.hp + Math.floor(wave * 0.28),
       w: def.w,
@@ -186,14 +239,16 @@
       flying,
       damage: def.damage,
       score: def.score,
-      bob: Math.random() * Math.PI * 2,
+      gait: def.gait,
+      phase: Math.random() * Math.PI * 2,
       hitFlash: 0,
+      lean: 0,
     });
   }
 
   function nearestTree() {
     let best = null;
-    let bestD = 54;
+    let bestD = 58;
     TREE_SPOTS.forEach((t) => {
       const d = Math.abs(player.x - t.x);
       if (d < bestD) {
@@ -223,7 +278,7 @@
     player.tree = tree;
     player.x = tree.x;
     player.climbProgress = 0;
-    setCoach("나무 위! 프테라만 조심하세요");
+    setCoach("낮은 가지 위! 프테라만 조심하세요");
   }
 
   function checkUpgrade() {
@@ -236,7 +291,6 @@
       ui.upgradeDetail.textContent = "화력이 강해졌습니다. 더 많은 공룡을 처치하세요!";
       burst(player.x, player.y - 70, wpn.color, 24, 180);
       flash = 0.35;
-      if (window.TodayBGM) window.TodayBGM.start("dino-hunt");
       break;
     }
   }
@@ -252,28 +306,52 @@
     if (phase !== "play" || fireCd > 0) return;
     const wpn = weapon();
     fireCd = wpn.rate;
-    const muzzleX = player.x + player.face * (player.climbing ? 28 : 34);
-    const muzzleY = player.y - (player.climbing ? 78 : 92);
-    const targetX = aimX;
-    const targetY = aimY;
+    const muzzleX = player.x + player.face * (player.climbing ? 26 : 32);
+    const muzzleY = player.y - (player.climbing ? 70 : 88);
+
+    // Prefer body center of nearest dino if no recent manual aim
+    let targetX = aimX;
+    let targetY = aimY;
+    if (performance.now() > manualAimUntil) {
+      let nearest = null;
+      let nearestD = 1e9;
+      dinos.forEach((d) => {
+        if (d.hp <= 0) return;
+        const box = dinoHitbox(d);
+        const dlt = dist(muzzleX, muzzleY, box.cx, box.cy);
+        if (dlt < nearestD) {
+          nearestD = dlt;
+          nearest = box;
+        }
+      });
+      if (nearest) {
+        targetX = nearest.cx;
+        targetY = nearest.cy;
+        aimX = targetX;
+        aimY = targetY;
+      }
+    }
+
     const baseAng = Math.atan2(targetY - muzzleY, targetX - muzzleX);
     for (let i = 0; i < wpn.pellets; i += 1) {
       const ang = baseAng + rand(-wpn.spray, wpn.spray);
       bullets.push({
         x: muzzleX,
         y: muzzleY,
+        px: muzzleX,
+        py: muzzleY,
         vx: Math.cos(ang) * wpn.speed,
         vy: Math.sin(ang) * wpn.speed,
         dmg: wpn.dmg,
         pierce: wpn.pierce,
-        life: 1.1,
+        life: 1.15,
         color: wpn.color,
-        r: wpn.id === "plasma" ? 5.5 : 3.2,
+        r: wpn.id === "plasma" ? 6.5 : 4.5,
       });
     }
     player.face = targetX >= player.x ? 1 : -1;
     burst(muzzleX, muzzleY, "#ffe6a0", 5, 80);
-    shake = Math.max(shake, 2.2);
+    shake = Math.max(shake, 2);
     kickSound();
   }
 
@@ -330,8 +408,12 @@
     kills = 0;
     weaponIndex = 0;
     fireCd = 0;
-    spawnAcc = 0;
+    spawnAcc = -1.2;
     wave = 1;
+    lastWaveBg = 1;
+    bgIndex = Math.floor(Math.random() * BG_KEYS.length);
+    nextBgIndex = bgIndex;
+    bgFade = 0;
     dinos = [];
     bullets = [];
     particles = [];
@@ -352,8 +434,6 @@
     updateHud();
     setCoach("좌우 이동 · 발사 · 나무로 피하세요");
     spawnDino("raptor");
-    // give a short grace period before the second spawn
-    spawnAcc = -1.2;
     if (window.TodayGameRank) window.TodayGameRank.reset();
     if (window.TodayBGM) window.TodayBGM.start("dino-hunt");
     last = performance.now();
@@ -371,6 +451,42 @@
     }
   }
 
+  function updateDino(d, dt) {
+    d.phase += dt * d.gait;
+    d.hitFlash = Math.max(0, d.hitFlash - dt);
+
+    const toPlayer = player.x - d.x;
+    const dir = Math.sign(toPlayer) || (d.vx >= 0 ? 1 : -1);
+    const want = dir * d.desiredSpeed;
+
+    if (d.flying) {
+      d.vx = lerp(d.vx, want * (player.climbing ? 1.15 : 0.95), 1 - Math.pow(0.08, dt));
+      d.baseY = lerp(d.baseY, player.climbing ? player.y - 40 : 250, 1 - Math.pow(0.2, dt));
+      d.y = d.baseY + Math.sin(d.phase) * 14;
+      d.lean = lerp(d.lean, clamp(d.vx / 160, -0.18, 0.18), 0.2);
+    } else {
+      // Smooth chase with gallop hop — feet stay near ground
+      d.vx = lerp(d.vx, want, 1 - Math.pow(0.12, dt));
+      const hop = Math.abs(Math.sin(d.phase)) * (d.type === "raptor" ? 10 : 6);
+      d.y = GROUND - hop;
+      d.lean = lerp(d.lean, clamp(-d.vx / 220, -0.12, 0.12), 0.25);
+      // Dust when landing in hop cycle
+      if (Math.sin(d.phase) > 0.92 && Math.random() < 0.35) {
+        particles.push({
+          x: d.x + rand(-10, 10),
+          y: GROUND - 4,
+          vx: rand(-20, 20),
+          vy: rand(-30, -10),
+          life: 0.28,
+          max: 0.28,
+          size: rand(2, 4),
+          color: "rgba(120,90,50,.55)",
+        });
+      }
+    }
+    d.x += d.vx * dt;
+  }
+
   function update(dt) {
     if (phase !== "play" || paused) return;
     fireCd = Math.max(0, fireCd - dt);
@@ -379,7 +495,17 @@
     shake = Math.max(0, shake - dt * 18);
     flash = Math.max(0, flash - dt);
 
+    if (bgFade > 0) {
+      bgFade = clamp(bgFade + dt * 0.7, 0, 1);
+      if (bgFade >= 1) {
+        bgIndex = nextBgIndex;
+        bgFade = 0;
+      }
+    }
+
     wave = 1 + Math.floor(kills / 6);
+    pickBgForWave();
+
     spawnAcc += dt;
     const spawnEvery = Math.max(0.85, 2.4 - wave * 0.07);
     if (spawnAcc >= spawnEvery) {
@@ -397,67 +523,51 @@
       if (Math.abs(player.vx) > 12) player.face = player.vx > 0 ? 1 : -1;
       player.y = GROUND;
     } else if (player.tree) {
-      player.climbProgress = clamp(player.climbProgress + dt * 1.6, 0, 1);
+      player.climbProgress = clamp(player.climbProgress + dt * 2.4, 0, 1);
       player.x = player.tree.x;
-      player.y = lerp(GROUND, player.tree.climbY, player.climbProgress);
+      player.y = lerp(GROUND, player.tree.climbY, easeOutCubic(player.climbProgress));
       player.vx = 0;
     }
 
     if (autoFire) fire();
 
-    // Prefer aiming at nearest threat
-    let nearest = null;
-    let nearestD = 1e9;
-    dinos.forEach((d) => {
-      const dlt = dist(player.x, player.y - 80, d.x, d.y - d.h * 0.35);
-      if (dlt < nearestD) {
-        nearestD = dlt;
-        nearest = d;
+    if (performance.now() > manualAimUntil) {
+      let nearest = null;
+      let nearestD = 1e9;
+      dinos.forEach((d) => {
+        if (d.hp <= 0) return;
+        const box = dinoHitbox(d);
+        const dlt = dist(player.x, player.y - 80, box.cx, box.cy);
+        if (dlt < nearestD) {
+          nearestD = dlt;
+          nearest = { d, box };
+        }
+      });
+      if (nearest) {
+        aimX = nearest.box.cx;
+        aimY = nearest.box.cy;
+        if (!moveLeft && !moveRight) player.face = nearest.d.x >= player.x ? 1 : -1;
       }
-    });
-    if (nearest) {
-      aimX = nearest.x;
-      aimY = nearest.y - nearest.h * 0.4;
-      if (!moveLeft && !moveRight) player.face = nearest.x >= player.x ? 1 : -1;
     }
 
     bullets.forEach((b) => {
+      b.px = b.x;
+      b.py = b.y;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.life -= dt;
     });
 
-    dinos.forEach((d) => {
-      d.bob += dt * (d.flying ? 5 : 3);
-      d.hitFlash = Math.max(0, d.hitFlash - dt);
-      if (d.flying) {
-        d.x += d.vx * dt;
-        d.y += Math.sin(d.bob) * 18 * dt;
-        d.y = clamp(d.y, 140, 360);
-        // home slightly toward player if climbing
-        if (player.climbing) {
-          d.vx += Math.sign(player.x - d.x) * 20 * dt;
-          d.vx = clamp(d.vx, -140, 140);
-        }
-      } else {
-        d.x += d.vx * dt;
-        d.y = GROUND;
-      }
-    });
+    dinos.forEach((d) => updateDino(d, dt));
 
-    // collisions bullets vs dinos
     bullets.forEach((b) => {
       if (b.life <= 0) return;
       dinos.forEach((d) => {
         if (d.hp <= 0 || b.life <= 0) return;
-        const hit =
-          b.x > d.x - d.w * 0.42 &&
-          b.x < d.x + d.w * 0.42 &&
-          b.y > d.y - d.h * 0.95 &&
-          b.y < d.y - d.h * 0.05;
-        if (!hit) return;
+        const box = dinoHitbox(d);
+        if (!segmentHitsBox(b.px, b.py, b.x, b.y, box, b.r + 2)) return;
         d.hp -= b.dmg;
-        d.hitFlash = 0.12;
+        d.hitFlash = 0.14;
         b.pierce -= 1;
         if (b.pierce < 0) b.life = 0;
         burst(b.x, b.y, "#ff6b6b", 8, 140);
@@ -467,7 +577,7 @@
           score += d.score + wave * 15;
           floatText(d.x, d.y - d.h, `+${d.score}`, "#ffe56a");
           burst(d.x, d.y - d.h * 0.4, "#c45a3a", 18, 180);
-          blood.push({ x: d.x, y: d.y - 8, life: 0.8 });
+          blood.push({ x: d.x, y: GROUND - 6, life: 0.8 });
           d.hp = 0;
           updateHud();
           checkUpgrade();
@@ -475,21 +585,23 @@
       });
     });
 
-    // dino vs player
     dinos.forEach((d) => {
       if (d.hp <= 0) return;
-      const canReach = d.flying || !player.climbing || player.climbProgress < 0.55;
+      const canReach = d.flying || !player.climbing || player.climbProgress < 0.7;
       if (!canReach) return;
+      const box = dinoHitbox(d);
       const px = player.x;
-      const py = player.y - 50;
+      const py = player.y - 48;
       const hit =
-        Math.abs(d.x - px) < (d.flying ? 28 : 30) &&
-        Math.abs((d.y - (d.flying ? d.h * 0.35 : d.h * 0.45)) - py) < (d.flying ? 34 : 38);
+        px > box.left + 18 &&
+        px < box.right - 18 &&
+        py > box.top + 10 &&
+        py < box.bottom + 8;
       if (hit) hurtPlayer(d.damage);
     });
 
-    dinos = dinos.filter((d) => d.hp > 0 && d.x > -120 && d.x < W + 120);
-    bullets = bullets.filter((b) => b.life > 0 && b.x > -20 && b.x < W + 20 && b.y > -20 && b.y < H + 20);
+    dinos = dinos.filter((d) => d.hp > 0 && d.x > -140 && d.x < W + 140);
+    bullets = bullets.filter((b) => b.life > 0 && b.x > -30 && b.x < W + 30 && b.y > -30 && b.y < H + 30);
     particles.forEach((p) => {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -510,10 +622,11 @@
     if (player.hp < 35 && !player.climbing) setCoach("체력이 낮아요! 나무로 피하세요");
   }
 
-  function drawBg() {
-    if (loadImgReady(images.bg)) {
-      ctx.drawImage(images.bg, 0, 0, W, H);
-    } else {
+  function drawOneBg(key, alpha) {
+    const img = images[key];
+    ctx.globalAlpha = alpha;
+    if (loadImgReady(img)) ctx.drawImage(img, 0, 0, W, H);
+    else {
       const g = ctx.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "#6fa8c8");
       g.addColorStop(0.45, "#4f8a52");
@@ -521,92 +634,107 @@
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
-    ctx.fillStyle = "rgba(8, 24, 12, 0.18)";
-    ctx.fillRect(0, GROUND - 8, W, H - GROUND + 8);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawBg() {
+    drawOneBg(BG_KEYS[bgIndex], 1);
+    if (bgFade > 0) drawOneBg(BG_KEYS[nextBgIndex], bgFade);
+    ctx.fillStyle = "rgba(8, 24, 12, 0.16)";
+    ctx.fillRect(0, GROUND - 6, W, H - GROUND + 6);
   }
 
   function drawTrees() {
     TREE_SPOTS.forEach((t) => {
       if (loadImgReady(images.tree)) {
-        const tw = 150;
-        const th = 280;
-        ctx.drawImage(images.tree, t.x - tw / 2, GROUND - th + 18, tw, th);
+        const tw = 132;
+        const th = 210;
+        // Shorter draw so canopy sits near climb platform
+        ctx.drawImage(images.tree, t.x - tw / 2, GROUND - th + 10, tw, th);
       } else {
         ctx.fillStyle = "#5a3a22";
-        ctx.fillRect(t.x - 14, GROUND - 210, 28, 210);
+        ctx.fillRect(t.x - 12, GROUND - 150, 24, 150);
         ctx.fillStyle = "#2f7a3a";
         ctx.beginPath();
-        ctx.arc(t.x, GROUND - 220, 58, 0, Math.PI * 2);
+        ctx.arc(t.x, GROUND - 155, 42, 0, Math.PI * 2);
         ctx.fill();
       }
-      if (!player.climbing && Math.abs(player.x - t.x) < 54) {
-        ctx.fillStyle = "rgba(255, 225, 110, 0.85)";
+      if (!player.climbing && Math.abs(player.x - t.x) < 58) {
+        ctx.fillStyle = "rgba(255, 225, 110, 0.9)";
         ctx.font = "800 11px system-ui";
         ctx.textAlign = "center";
-        ctx.fillText("▲ 나무", t.x, GROUND - 236);
+        ctx.fillText("▲ 나무", t.x, t.climbY - 28);
       }
     });
   }
 
   function drawPlayer() {
     const img = images.hunter;
-    const h = player.climbing ? 108 : 118;
-    const w = player.climbing ? 70 : 76;
+    const h = player.climbing ? 96 : 118;
+    const w = player.climbing ? 64 : 76;
     ctx.save();
     ctx.translate(player.x, player.y);
     if (player.hurtFlash > 0) ctx.globalAlpha = 0.45 + Math.sin(performance.now() / 30) * 0.25;
     ctx.scale(player.face, 1);
-    if (loadImgReady(img)) {
-      ctx.drawImage(img, -w * 0.45, -h, w, h);
-    } else {
+    if (loadImgReady(img)) ctx.drawImage(img, -w * 0.45, -h, w, h);
+    else {
       ctx.fillStyle = "#d9c08a";
       ctx.fillRect(-18, -90, 36, 90);
     }
     ctx.restore();
 
-    // hp bar
     const hpW = 54;
+    const barY = player.y - (player.climbing ? 108 : 132);
     ctx.fillStyle = "rgba(0,0,0,.35)";
-    ctx.fillRect(player.x - hpW / 2, player.y - (player.climbing ? 120 : 132), hpW, 6);
+    ctx.fillRect(player.x - hpW / 2, barY, hpW, 6);
     ctx.fillStyle = player.hp > 35 ? "#58e07a" : "#ff5b6a";
-    ctx.fillRect(player.x - hpW / 2, player.y - (player.climbing ? 120 : 132), hpW * clamp(player.hp / 100, 0, 1), 6);
+    ctx.fillRect(player.x - hpW / 2, barY, hpW * clamp(player.hp / 100, 0, 1), 6);
   }
 
   function drawDinos() {
     dinos.forEach((d) => {
       const img = images[d.type];
-      const face = d.vx >= 0 ? 1 : -1;
+      // Sprites face LEFT by default: flip when moving right
+      const face = d.vx >= 0 ? -1 : 1;
       ctx.save();
       ctx.translate(d.x, d.y);
-      if (d.hitFlash > 0) ctx.filter = "brightness(2.2)";
+      ctx.rotate(d.lean || 0);
+      if (d.hitFlash > 0) ctx.filter = "brightness(2.1)";
       ctx.scale(face, 1);
-      if (loadImgReady(img)) {
-        ctx.drawImage(img, -d.w / 2, -d.h, d.w, d.h);
-      } else {
+      const bobScale = d.flying ? 1 : 1 + Math.abs(Math.sin(d.phase)) * 0.03;
+      ctx.scale(bobScale, 2 - bobScale);
+      if (loadImgReady(img)) ctx.drawImage(img, -d.w / 2, -d.h, d.w, d.h);
+      else {
         ctx.fillStyle = "#6b8f4e";
         ctx.fillRect(-d.w / 2, -d.h, d.w, d.h);
       }
       ctx.filter = "none";
       ctx.restore();
 
-      // hp
       const ratio = clamp(d.hp / d.maxHp, 0, 1);
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      ctx.fillRect(d.x - 28, d.y - d.h - 10, 56, 5);
+      ctx.fillRect(d.x - 28, d.y - d.h - 12, 56, 5);
       ctx.fillStyle = ratio > 0.4 ? "#8cff7a" : "#ff6a6a";
-      ctx.fillRect(d.x - 28, d.y - d.h - 10, 56 * ratio, 5);
+      ctx.fillRect(d.x - 28, d.y - d.h - 12, 56 * ratio, 5);
     });
   }
 
   function drawBullets() {
     bullets.forEach((b) => {
       ctx.save();
-      ctx.translate(b.x, b.y);
+      ctx.strokeStyle = b.color;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = Math.max(2, b.r);
+      ctx.beginPath();
+      ctx.moveTo(b.px, b.py);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
       ctx.fillStyle = b.color;
       ctx.shadowColor = b.color;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
@@ -639,24 +767,24 @@
 
   function drawAim() {
     if (phase !== "play") return;
-    ctx.strokeStyle = "rgba(255,240,160,.55)";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(255,240,160,.65)";
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.arc(aimX, aimY, 10, 0, Math.PI * 2);
+    ctx.arc(aimX, aimY, 11, 0, Math.PI * 2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(aimX - 14, aimY);
+    ctx.moveTo(aimX - 15, aimY);
     ctx.lineTo(aimX - 5, aimY);
     ctx.moveTo(aimX + 5, aimY);
-    ctx.lineTo(aimX + 14, aimY);
-    ctx.moveTo(aimX, aimY - 14);
+    ctx.lineTo(aimX + 15, aimY);
+    ctx.moveTo(aimX, aimY - 15);
     ctx.lineTo(aimX, aimY - 5);
     ctx.moveTo(aimX, aimY + 5);
-    ctx.lineTo(aimX, aimY + 14);
+    ctx.lineTo(aimX, aimY + 15);
     ctx.stroke();
   }
 
-  function draw(time) {
+  function draw() {
     ctx.save();
     if (shake > 0) ctx.translate(rand(-shake, shake), rand(-shake, shake));
     drawBg();
@@ -677,7 +805,7 @@
     const dt = Math.min(0.033, Math.max(0, (now - last) / 1000 || 0));
     last = now;
     update(dt);
-    draw(now / 1000);
+    draw();
     requestAnimationFrame(loop);
   }
 
@@ -696,24 +824,8 @@
     el.addEventListener("pointercancel", end);
   }
 
-  bindHold(
-    document.getElementById("left-btn"),
-    () => {
-      moveLeft = true;
-    },
-    () => {
-      moveLeft = false;
-    }
-  );
-  bindHold(
-    document.getElementById("right-btn"),
-    () => {
-      moveRight = true;
-    },
-    () => {
-      moveRight = false;
-    }
-  );
+  bindHold(document.getElementById("left-btn"), () => { moveLeft = true; }, () => { moveLeft = false; });
+  bindHold(document.getElementById("right-btn"), () => { moveRight = true; }, () => { moveRight = false; });
   bindHold(
     document.getElementById("fire-btn"),
     () => {
@@ -734,8 +846,8 @@
     const rect = canvas.getBoundingClientRect();
     aimX = ((e.clientX - rect.left) / rect.width) * W;
     aimY = ((e.clientY - rect.top) / rect.height) * H;
-    // ignore taps on lower control area roughly
     if (aimY > 620) return;
+    manualAimUntil = performance.now() + 900;
     fire();
   });
 
