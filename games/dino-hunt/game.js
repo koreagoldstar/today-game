@@ -4,10 +4,11 @@
   const W = 390;
   const H = 700;
   const GROUND = 590;
-  const TREE_SPOTS = [
-    { x: 78, climbY: 455 },
-    { x: 312, climbY: 455 },
-  ];
+  const CLIMB_Y = 455;
+  const TREE_GAP_MIN = 280;
+  const TREE_GAP_MAX = 420;
+  const VIEW_AHEAD = 520;
+  const VIEW_BEHIND = 220;
 
   const WEAPONS = [
     { id: "pistol", name: "권총", kills: 0, dmg: 1, rate: 0.34, speed: 720, pellets: 1, spray: 0.008, pierce: 0, color: "#ffe8a8" },
@@ -92,16 +93,20 @@
   let particles = [];
   let floats = [];
   let blood = [];
+  let trees = [];
+  let cameraX = 0;
+  let nextTreeX = 180;
+  let farthestX = 0;
   let moveLeft = false;
   let moveRight = false;
   let autoFire = false;
-  let aimX = W * 0.78;
-  let aimY = GROUND - 90;
+  let aimSX = W * 0.72;
+  let aimSY = GROUND - 90;
   let aiming = false;
   let muzzleFlash = 0;
 
   const player = {
-    x: W * 0.5,
+    x: 80,
     y: GROUND,
     vx: 0,
     face: 1,
@@ -125,9 +130,6 @@
   function rand(a, b) {
     return a + Math.random() * (b - a);
   }
-  function dist(ax, ay, bx, by) {
-    return Math.hypot(ax - bx, ay - by);
-  }
   function weapon() {
     return WEAPONS[weaponIndex];
   }
@@ -140,9 +142,20 @@
   function setCoach(text) {
     ui.coach.textContent = text;
   }
+  function sx(x) {
+    return x - cameraX;
+  }
+  function worldX(screenX) {
+    return screenX + cameraX;
+  }
+  function aimWX() {
+    return worldX(aimSX);
+  }
+  function aimWY() {
+    return aimSY;
+  }
 
   function dinoHitbox(d) {
-    // Generous body box: sprites face left by default, feet at d.y
     const padX = d.w * 0.52;
     const top = d.y - d.h * 0.98;
     const bottom = d.y - d.h * 0.02;
@@ -157,7 +170,6 @@
   }
 
   function segmentHitsBox(x0, y0, x1, y1, box, radius) {
-    // Point checks + coarse samples along the segment (anti-tunnel)
     const steps = 6;
     for (let i = 0; i <= steps; i += 1) {
       const t = i / steps;
@@ -215,6 +227,19 @@
     bgFade = 0.001;
   }
 
+  function addTree(x) {
+    trees.push({ x, climbY: CLIMB_Y });
+  }
+
+  function ensureTrees() {
+    const needUntil = player.x + VIEW_AHEAD + 200;
+    while (nextTreeX < needUntil) {
+      addTree(nextTreeX);
+      nextTreeX += rand(TREE_GAP_MIN, TREE_GAP_MAX);
+    }
+    trees = trees.filter((t) => t.x > player.x - VIEW_BEHIND - 200 || (player.climbing && player.tree === t));
+  }
+
   function spawnDino(forced) {
     const roll = Math.random();
     let type = "raptor";
@@ -226,13 +251,16 @@
     else if (wave >= 2 && roll > 0.36) type = "stego";
 
     const def = DINO_TYPES[type];
-    const fromLeft = Math.random() < 0.5;
-    const dir = fromLeft ? 1 : -1;
+    const ahead = Math.random() < 0.72;
+    const spawnX = ahead
+      ? player.x + rand(W * 0.55, VIEW_AHEAD)
+      : player.x - rand(80, VIEW_BEHIND);
+    const dir = spawnX < player.x ? 1 : -1;
     const flying = def.flying;
     const flyY = type === "quetz" ? rand(180, 250) : rand(210, 300);
     dinos.push({
       type,
-      x: fromLeft ? -90 : W + 90,
+      x: spawnX,
       y: flying ? flyY : GROUND,
       baseY: flying ? flyY : GROUND,
       vx: dir * def.speed * (0.9 + Math.random() * 0.15) * (1 + wave * 0.025),
@@ -254,7 +282,7 @@
   function nearestTree() {
     let best = null;
     let bestD = 58;
-    TREE_SPOTS.forEach((t) => {
+    trees.forEach((t) => {
       const d = Math.abs(player.x - t.x);
       if (d < bestD) {
         bestD = d;
@@ -283,7 +311,7 @@
     player.tree = tree;
     player.x = tree.x;
     player.climbProgress = 0;
-    setCoach("낮은 가지 위! 프테라만 조심하세요");
+    setCoach("낮은 가지 위! 비행 공룡만 조심하세요");
   }
 
   function checkUpgrade() {
@@ -324,11 +352,11 @@
 
   function setAimFromPointer(e) {
     const p = pointerToGame(e);
-    // Ignore control strip for aiming updates from canvas
     if (p.y > 610) return false;
-    aimX = p.x;
-    aimY = p.y;
-    if (Math.abs(aimX - player.x) > 8) player.face = aimX >= player.x ? 1 : -1;
+    aimSX = p.x;
+    aimSY = p.y;
+    const ax = aimWX();
+    if (Math.abs(ax - player.x) > 8) player.face = ax >= player.x ? 1 : -1;
     return true;
   }
 
@@ -337,10 +365,9 @@
     const wpn = weapon();
     fireCd = wpn.rate;
     const muzzle = muzzlePos();
-    const targetX = aimX;
-    const targetY = aimY;
+    const targetX = aimWX();
+    const targetY = aimWY();
     const baseAng = Math.atan2(targetY - muzzle.y, targetX - muzzle.x);
-    // Keep shots mostly directed; tiny spray only for shotgun
     for (let i = 0; i < wpn.pellets; i += 1) {
       const ang = baseAng + rand(-wpn.spray, wpn.spray);
       const speed = wpn.speed * (wpn.pellets > 1 ? rand(0.92, 1.05) : 1);
@@ -412,13 +439,18 @@
     if (player.hp <= 0) endGame();
   }
 
+  function updateCamera() {
+    const target = player.x - W * 0.34;
+    cameraX = lerp(cameraX, Math.max(0, target), 0.14);
+  }
+
   function startGame() {
     phase = "play";
     score = 0;
     kills = 0;
     weaponIndex = 0;
     fireCd = 0;
-    spawnAcc = -1.2;
+    spawnAcc = -0.6;
     wave = 1;
     lastWaveBg = 1;
     bgIndex = Math.floor(Math.random() * BG_KEYS.length);
@@ -429,7 +461,11 @@
     particles = [];
     floats = [];
     blood = [];
-    player.x = W * 0.5;
+    trees = [];
+    nextTreeX = 160;
+    farthestX = 80;
+    cameraX = 0;
+    player.x = 80;
     player.y = GROUND;
     player.vx = 0;
     player.face = 1;
@@ -438,14 +474,15 @@
     player.climbing = false;
     player.tree = null;
     player.climbProgress = 0;
+    ensureTrees();
     ui.title.classList.add("hidden");
     ui.upgrade.classList.add("hidden");
     ui.over.classList.add("hidden");
     updateHud();
-    setCoach("화면을 조준한 뒤 발사하세요");
+    setCoach("앞으로 가며 조준·사격하세요");
     spawnDino("raptor");
-    aimX = player.x + 110;
-    aimY = GROUND - 90;
+    aimSX = W * 0.72;
+    aimSY = GROUND - 90;
     if (window.TodayGameRank) window.TodayGameRank.reset();
     if (window.TodayBGM) window.TodayBGM.start("dino-hunt");
     last = performance.now();
@@ -478,12 +515,10 @@
       d.y = d.baseY + Math.sin(d.phase) * (d.type === "quetz" ? 18 : 14);
       d.lean = lerp(d.lean, clamp(d.vx / 160, -0.18, 0.18), 0.2);
     } else {
-      // Smooth chase with gallop hop — feet stay near ground
       d.vx = lerp(d.vx, want, 1 - Math.pow(0.12, dt));
       const hop = Math.abs(Math.sin(d.phase)) * (d.type === "raptor" ? 10 : 6);
       d.y = GROUND - hop;
       d.lean = lerp(d.lean, clamp(-d.vx / 220, -0.12, 0.12), 0.25);
-      // Dust when landing in hop cycle
       if (Math.sin(d.phase) > 0.92 && Math.random() < 0.35) {
         particles.push({
           x: d.x + rand(-10, 10),
@@ -517,11 +552,12 @@
       }
     }
 
-    wave = 1 + Math.floor(kills / 6);
+    wave = 1 + Math.floor(kills / 6) + Math.floor(Math.max(0, farthestX) / 1400);
     pickBgForWave();
+    ensureTrees();
 
     spawnAcc += dt;
-    const spawnEvery = Math.max(0.85, 2.4 - wave * 0.07);
+    const spawnEvery = Math.max(0.8, 2.2 - wave * 0.07);
     if (spawnAcc >= spawnEvery) {
       spawnAcc = 0;
       spawnDino();
@@ -529,22 +565,31 @@
     }
 
     if (!player.climbing) {
-      const speed = 190;
+      const speed = 210;
       if (moveLeft) player.vx = -speed;
       else if (moveRight) player.vx = speed;
       else player.vx *= Math.pow(0.02, dt);
-      player.x = clamp(player.x + player.vx * dt, 36, W - 36);
-      // Facing follows aim, not just walk direction
-      if (Math.abs(aimX - player.x) > 10) player.face = aimX >= player.x ? 1 : -1;
+      player.x = Math.max(40, player.x + player.vx * dt);
+      const ax = aimWX();
+      if (Math.abs(ax - player.x) > 10) player.face = ax >= player.x ? 1 : -1;
       player.y = GROUND;
     } else if (player.tree) {
       player.climbProgress = clamp(player.climbProgress + dt * 2.4, 0, 1);
       player.x = player.tree.x;
       player.y = lerp(GROUND, player.tree.climbY, easeOutCubic(player.climbProgress));
       player.vx = 0;
-      if (Math.abs(aimX - player.x) > 10) player.face = aimX >= player.x ? 1 : -1;
+      const ax = aimWX();
+      if (Math.abs(ax - player.x) > 10) player.face = ax >= player.x ? 1 : -1;
     }
 
+    if (player.x > farthestX) {
+      const gained = player.x - farthestX;
+      farthestX = player.x;
+      score += Math.floor(gained * 0.12);
+      updateHud();
+    }
+
+    updateCamera();
     if (autoFire) fire();
 
     bullets.forEach((b) => {
@@ -597,8 +642,12 @@
       if (hit) hurtPlayer(d.damage);
     });
 
-    dinos = dinos.filter((d) => d.hp > 0 && d.x > -140 && d.x < W + 140);
-    bullets = bullets.filter((b) => b.life > 0 && b.x > -30 && b.x < W + 30 && b.y > -30 && b.y < H + 30);
+    const cullL = player.x - VIEW_BEHIND - 180;
+    const cullR = player.x + VIEW_AHEAD + 220;
+    dinos = dinos.filter((d) => d.hp > 0 && d.x > cullL && d.x < cullR);
+    bullets = bullets.filter(
+      (b) => b.life > 0 && b.x > cullL && b.x < cullR && b.y > -40 && b.y < H + 40
+    );
     particles.forEach((p) => {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -619,11 +668,16 @@
     if (player.hp < 35 && !player.climbing) setCoach("체력이 낮아요! 나무로 피하세요");
   }
 
-  function drawOneBg(key, alpha) {
+  function drawOneBgTile(key, alpha, offsetX) {
     const img = images[key];
     ctx.globalAlpha = alpha;
-    if (loadImgReady(img)) ctx.drawImage(img, 0, 0, W, H);
-    else {
+    if (loadImgReady(img)) {
+      const tileW = W;
+      let start = -((offsetX % tileW) + tileW) % tileW;
+      for (let x = start; x < W + tileW; x += tileW) {
+        ctx.drawImage(img, x, 0, tileW, H);
+      }
+    } else {
       const g = ctx.createLinearGradient(0, 0, 0, H);
       g.addColorStop(0, "#6fa8c8");
       g.addColorStop(0.45, "#4f8a52");
@@ -635,32 +689,34 @@
   }
 
   function drawBg() {
-    drawOneBg(BG_KEYS[bgIndex], 1);
-    if (bgFade > 0) drawOneBg(BG_KEYS[nextBgIndex], bgFade);
+    const parallax = cameraX * 0.35;
+    drawOneBgTile(BG_KEYS[bgIndex], 1, parallax);
+    if (bgFade > 0) drawOneBgTile(BG_KEYS[nextBgIndex], bgFade, parallax);
     ctx.fillStyle = "rgba(8, 24, 12, 0.16)";
     ctx.fillRect(0, GROUND - 6, W, H - GROUND + 6);
   }
 
   function drawTrees() {
-    TREE_SPOTS.forEach((t) => {
+    trees.forEach((t) => {
+      const x = sx(t.x);
+      if (x < -100 || x > W + 100) return;
       if (loadImgReady(images.tree)) {
         const tw = 132;
         const th = 210;
-        // Shorter draw so canopy sits near climb platform
-        ctx.drawImage(images.tree, t.x - tw / 2, GROUND - th + 10, tw, th);
+        ctx.drawImage(images.tree, x - tw / 2, GROUND - th + 10, tw, th);
       } else {
         ctx.fillStyle = "#5a3a22";
-        ctx.fillRect(t.x - 12, GROUND - 150, 24, 150);
+        ctx.fillRect(x - 12, GROUND - 150, 24, 150);
         ctx.fillStyle = "#2f7a3a";
         ctx.beginPath();
-        ctx.arc(t.x, GROUND - 155, 42, 0, Math.PI * 2);
+        ctx.arc(x, GROUND - 155, 42, 0, Math.PI * 2);
         ctx.fill();
       }
       if (!player.climbing && Math.abs(player.x - t.x) < 58) {
         ctx.fillStyle = "rgba(255, 225, 110, 0.9)";
         ctx.font = "800 11px system-ui";
         ctx.textAlign = "center";
-        ctx.fillText("▲ 나무", t.x, t.climbY - 28);
+        ctx.fillText("▲ 나무", x, t.climbY - 28);
       }
     });
   }
@@ -669,8 +725,9 @@
     const img = images.hunter;
     const h = player.climbing ? 96 : 118;
     const w = player.climbing ? 64 : 76;
+    const px = sx(player.x);
     ctx.save();
-    ctx.translate(player.x, player.y);
+    ctx.translate(px, player.y);
     if (player.hurtFlash > 0) ctx.globalAlpha = 0.45 + Math.sin(performance.now() / 30) * 0.25;
     ctx.scale(player.face, 1);
     if (loadImgReady(img)) ctx.drawImage(img, -w * 0.45, -h, w, h);
@@ -683,18 +740,19 @@
     const hpW = 54;
     const barY = player.y - (player.climbing ? 108 : 132);
     ctx.fillStyle = "rgba(0,0,0,.35)";
-    ctx.fillRect(player.x - hpW / 2, barY, hpW, 6);
+    ctx.fillRect(px - hpW / 2, barY, hpW, 6);
     ctx.fillStyle = player.hp > 35 ? "#58e07a" : "#ff5b6a";
-    ctx.fillRect(player.x - hpW / 2, barY, hpW * clamp(player.hp / 100, 0, 1), 6);
+    ctx.fillRect(px - hpW / 2, barY, hpW * clamp(player.hp / 100, 0, 1), 6);
   }
 
   function drawDinos() {
     dinos.forEach((d) => {
+      const x = sx(d.x);
+      if (x < -160 || x > W + 160) return;
       const img = images[d.type];
-      // Sprites face LEFT by default: flip when moving right
       const face = d.vx >= 0 ? -1 : 1;
       ctx.save();
-      ctx.translate(d.x, d.y);
+      ctx.translate(x, d.y);
       ctx.rotate(d.lean || 0);
       if (d.hitFlash > 0) ctx.filter = "brightness(2.1)";
       ctx.scale(face, 1);
@@ -710,19 +768,20 @@
 
       const ratio = clamp(d.hp / d.maxHp, 0, 1);
       ctx.fillStyle = "rgba(0,0,0,.35)";
-      ctx.fillRect(d.x - 28, d.y - d.h - 12, 56, 5);
+      ctx.fillRect(x - 28, d.y - d.h - 12, 56, 5);
       ctx.fillStyle = ratio > 0.4 ? "#8cff7a" : "#ff6a6a";
-      ctx.fillRect(d.x - 28, d.y - d.h - 12, 56 * ratio, 5);
+      ctx.fillRect(x - 28, d.y - d.h - 12, 56 * ratio, 5);
     });
   }
 
   function drawBullets() {
     bullets.forEach((b) => {
+      const x = sx(b.x);
+      if (x < -40 || x > W + 40) return;
       const ang = Math.atan2(b.vy, b.vx);
       ctx.save();
-      ctx.translate(b.x, b.y);
+      ctx.translate(x, b.y);
       ctx.rotate(ang);
-      // Slim tracer round instead of glowing orb
       ctx.fillStyle = "#fff8e6";
       ctx.beginPath();
       ctx.ellipse(0, 0, Math.max(5, b.r * 2.2), Math.max(1.4, b.r * 0.55), 0, 0, Math.PI * 2);
@@ -737,66 +796,71 @@
   function drawAim() {
     if (phase !== "play") return;
     const muzzle = muzzlePos();
+    const mx = sx(muzzle.x);
+    const my = muzzle.y;
     ctx.save();
     ctx.strokeStyle = "rgba(255,245,180,.28)";
     ctx.setLineDash([5, 6]);
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(muzzle.x, muzzle.y);
-    ctx.lineTo(aimX, aimY);
+    ctx.moveTo(mx, my);
+    ctx.lineTo(aimSX, aimSY);
     ctx.stroke();
     ctx.setLineDash([]);
 
     if (muzzleFlash > 0) {
       ctx.fillStyle = `rgba(255,230,140,${muzzleFlash * 8})`;
       ctx.beginPath();
-      ctx.arc(muzzle.x, muzzle.y, 10, 0, Math.PI * 2);
+      ctx.arc(mx, my, 10, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.strokeStyle = aiming ? "rgba(255,240,160,.95)" : "rgba(255,240,160,.7)";
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.arc(aimX, aimY, 13, 0, Math.PI * 2);
+    ctx.arc(aimSX, aimSY, 13, 0, Math.PI * 2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(aimX - 17, aimY);
-    ctx.lineTo(aimX - 6, aimY);
-    ctx.moveTo(aimX + 6, aimY);
-    ctx.lineTo(aimX + 17, aimY);
-    ctx.moveTo(aimX, aimY - 17);
-    ctx.lineTo(aimX, aimY - 6);
-    ctx.moveTo(aimX, aimY + 6);
-    ctx.lineTo(aimX, aimY + 17);
+    ctx.moveTo(aimSX - 17, aimSY);
+    ctx.lineTo(aimSX - 6, aimSY);
+    ctx.moveTo(aimSX + 6, aimSY);
+    ctx.lineTo(aimSX + 17, aimSY);
+    ctx.moveTo(aimSX, aimSY - 17);
+    ctx.lineTo(aimSX, aimSY - 6);
+    ctx.moveTo(aimSX, aimSY + 6);
+    ctx.lineTo(aimSX, aimSY + 17);
     ctx.stroke();
     ctx.fillStyle = "rgba(255,240,160,.85)";
     ctx.beginPath();
-    ctx.arc(aimX, aimY, 2, 0, Math.PI * 2);
+    ctx.arc(aimSX, aimSY, 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
   function drawFx() {
     blood.forEach((b) => {
+      const x = sx(b.x);
       ctx.globalAlpha = clamp(b.life / 0.8, 0, 1) * 0.45;
       ctx.fillStyle = "#7a1f1f";
       ctx.beginPath();
-      ctx.ellipse(b.x, b.y, 18, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, b.y, 18, 6, 0, 0, Math.PI * 2);
       ctx.fill();
     });
     ctx.globalAlpha = 1;
     particles.forEach((p) => {
+      const x = sx(p.x);
       ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.fillRect(x, p.y, p.size, p.size);
     });
     ctx.globalAlpha = 1;
     floats.forEach((f) => {
+      const x = sx(f.x);
       ctx.globalAlpha = clamp(f.life / 0.9, 0, 1);
       ctx.fillStyle = f.color;
       ctx.font = "900 16px system-ui";
       ctx.textAlign = "center";
-      ctx.fillText(f.text, f.x, f.y);
+      ctx.fillText(f.text, x, f.y);
     });
     ctx.globalAlpha = 1;
   }
@@ -858,7 +922,6 @@
   document.getElementById("retry-btn").addEventListener("click", startGame);
   document.getElementById("upgrade-btn").addEventListener("click", resumeAfterUpgrade);
 
-  // Mouse move / touch drag: aim only. Click / tap on field: aim + shoot.
   canvas.addEventListener("pointermove", (e) => {
     if (phase !== "play") return;
     setAimFromPointer(e);
