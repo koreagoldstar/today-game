@@ -73,6 +73,7 @@
   let crowdPulse = 0;
   let last = 0;
   let audioCtx = null;
+  let paused = false;
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -126,18 +127,22 @@
   function chooseKeeperPlan() {
     const difficulty = round / (TOTAL_ROUNDS - 1);
     let dive;
-    if (directionHistory.length >= 2 && Math.random() < 0.42 + difficulty * 0.24) {
+    // Stronger pattern reading as rounds go on
+    if (directionHistory.length >= 2 && Math.random() < 0.55 + difficulty * 0.32) {
       const counts = [-1, 0, 1].map((dir) => ({
         dir,
         count: directionHistory.filter((value) => value === dir).length,
       }));
       counts.sort((a, b) => b.count - a.count || Math.random() - 0.5);
       dive = counts[0].dir;
+    } else if (directionHistory.length >= 1 && Math.random() < 0.35 + difficulty * 0.25) {
+      dive = directionHistory[directionHistory.length - 1];
     } else {
       dive = [-1, 0, 1][Math.floor(Math.random() * 3)];
     }
-    const height = Math.random() < 0.48 ? "high" : "low";
-    const truthChance = 0.78 - difficulty * 0.24;
+    const height = Math.random() < 0.52 ? "high" : "low";
+    // More fake tells — harder to trust weight shift
+    const truthChance = 0.58 - difficulty * 0.28;
     const tell = Math.random() < truthChance ? dive : [-1, 0, 1][Math.floor(Math.random() * 3)];
     return { dive, height, tell };
   }
@@ -170,9 +175,9 @@
     shot = null;
     keeperPlan = chooseKeeperPlan();
     timing = {
-      value: rand(0.05, 0.2),
-      dir: 1,
-      speed: 0.75 + round * 0.045,
+      value: rand(0.02, 0.18),
+      dir: Math.random() < 0.5 ? 1 : -1,
+      speed: 0.95 + round * 0.07,
     };
     resetKeeper();
     ui.timing.classList.add("hidden");
@@ -249,18 +254,19 @@
 
     let actualX = aim.x;
     let actualY = aim.y;
-    const error = Math.pow(1 - quality, 1.45) * (72 + round * 1.8);
+    const error = Math.pow(1 - quality, 1.35) * (88 + round * 3.2);
     actualX += rand(-error, error);
-    actualY += rand(-error * 0.55, error * 0.72);
+    actualY += rand(-error * 0.6, error * 0.8);
 
     let keeperDive = keeperPlan.dive;
-    const reactiveRead = 0.08 + difficulty * 0.27 + (1 - quality) * 0.3;
+    // Keeper reads kick direction more often — especially on weak timing
+    const reactiveRead = 0.22 + difficulty * 0.42 + (1 - quality) * 0.38;
     if (Math.random() < reactiveRead) keeperDive = chosenDir;
+    // After round 4, sometimes mirror the actual aim x zone even more tightly
+    if (difficulty > 0.35 && Math.random() < 0.2 + difficulty * 0.25) {
+      keeperDive = directionOf(actualX);
+    }
 
-    const keeperTarget = {
-      x: keeperDive === -1 ? 109 : keeperDive === 1 ? 281 : 195,
-      y: keeperPlan.height === "high" ? 225 : 306,
-    };
     const onTarget =
       actualX > GOAL.left + 6 &&
       actualX < GOAL.right - 6 &&
@@ -269,22 +275,35 @@
     const targetDir = directionOf(actualX);
     const corner =
       onTarget &&
-      (actualX < 118 || actualX > 272) &&
-      actualY < 248;
+      (actualX < 112 || actualX > 278) &&
+      actualY < 236;
+
+    // Dive destination: saves go TO the ball (catch), misses go to planned wrong zone
+    const plannedX = keeperDive === -1 ? 109 : keeperDive === 1 ? 281 : 195;
+    const plannedY = keeperPlan.height === "high" ? 225 : 306;
+    const willGuessRight = keeperDive === targetDir;
     const reach =
-      44 +
-      difficulty * 19 +
-      (keeperDive === targetDir ? 16 : 0) -
-      quality * 9 -
-      (corner ? 8 : 0);
-    const dist = Math.hypot(actualX - keeperTarget.x, actualY - keeperTarget.y);
-    const saved = onTarget && dist < reach;
+      58 +
+      difficulty * 28 +
+      (willGuessRight ? 22 : 0) -
+      quality * 5 -
+      (corner ? 6 : 0);
+    const distToPlan = Math.hypot(actualX - plannedX, actualY - plannedY);
+    const saved = onTarget && (willGuessRight ? distToPlan < reach : distToPlan < reach * 0.55);
     const goal = onTarget && !saved;
+
+    const keeperTarget = saved
+      ? {
+          // Move body so gloves meet the ball
+          x: clamp(actualX, GOAL.left + 40, GOAL.right - 40),
+          y: clamp(actualY + 18, 210, 330),
+        }
+      : { x: plannedX, y: plannedY };
 
     shot = {
       time: 0,
       motionTime: 0,
-      duration: 0.78 - quality * 0.18,
+      duration: 0.72 - quality * 0.12,
       target: { x: actualX, y: actualY },
       aim: { ...aim },
       quality,
@@ -293,8 +312,9 @@
       saved,
       onTarget,
       corner,
-      keeperDive,
+      keeperDive: saved ? Math.sign(actualX - 195) || keeperDive : keeperDive,
       keeperTarget,
+      catchHold: 0,
       displayedResult: false,
     };
     phase = "kick";
@@ -381,9 +401,9 @@
       score += gained;
       results.push(false);
       ui.resultBadge.textContent = saved ? "SAVED" : "OFF TARGET";
-      ui.resultTitle.textContent = saved ? "골키퍼가 막았어요!" : "골대를 벗어났어요!";
+      ui.resultTitle.textContent = saved ? "골키퍼가 공을 잡아냈어요!" : "골대를 벗어났어요!";
       ui.resultDetail.innerHTML = saved
-        ? `${grade} · 골키퍼가 방향을 읽었습니다${gained ? `<br />유효 슛 +${gained}점` : ""}`
+        ? `${grade} · 글러브로 막아냈습니다${gained ? `<br />유효 슛 +${gained}점` : ""}`
         : `${grade} · 타이밍을 중앙에 맞춰보세요`;
       saveSound();
       shake = 8;
@@ -414,7 +434,7 @@
     ui.coach.textContent = "경기 종료";
     const rate = Math.round((goals / TOTAL_ROUNDS) * 100);
     ui.overTitle.textContent =
-      goals >= 9 ? "전설의 키커!" : goals >= 7 ? "승부차기 마스터!" : goals >= 5 ? "멋진 승부였어요!" : "다시 도전해봐요!";
+      goals >= 8 ? "전설의 키커!" : goals >= 6 ? "승부차기 마스터!" : goals >= 4 ? "멋진 승부였어요!" : "다시 도전해봐요!";
     ui.overDetail.innerHTML = `10번 중 <b>${goals}골</b> · 성공률 ${rate}%<br />최종 점수 <b>${score.toLocaleString("ko-KR")}점</b>`;
     ui.finalGoals.textContent = String(goals);
     ui.finalPerfect.textContent = String(perfects);
@@ -428,6 +448,7 @@
   }
 
   function update(dt) {
+    if (paused) return;
     crowdPulse = Math.max(0, crowdPulse - dt * 0.8);
     flash = Math.max(0, flash - dt * 2.2);
     shake = Math.max(0, shake - dt * 20);
@@ -459,14 +480,30 @@
       shot.motionTime = Math.min(KICK_MOTION_END, shot.motionTime + dt);
       const t = clamp(shot.time / shot.duration, 0, 1);
       const difficulty = round / (TOTAL_ROUNDS - 1);
-      const diveDelay = 0.1 + (1 - difficulty) * 0.1;
-      const diveT = clamp((t - diveDelay) / (0.65 - diveDelay), 0, 1);
-      const k = easeOut(diveT);
+      // React faster on later rounds — still arrive with the ball
+      const diveDelay = shot.saved ? 0.02 + (1 - difficulty) * 0.05 : 0.06 + (1 - difficulty) * 0.08;
+      const diveT = clamp((t - diveDelay) / Math.max(0.28, 0.92 - diveDelay), 0, 1);
+      const k = shot.saved ? easeInOut(diveT) : easeOut(diveT);
       keeper.x = lerp(195, shot.keeperTarget.x, k);
       keeper.y = lerp(300, shot.keeperTarget.y, k);
-      keeper.rotation = shot.keeperDive * lerp(0, 1.14, k);
-      keeper.stretch = k;
-      keeper.dive = shot.keeperDive;
+      const side = shot.keeperDive || Math.sign(shot.keeperTarget.x - 195) || 0;
+      if (shot.saved) {
+        // Lean into the ball (catch), not away from it
+        keeper.rotation = side * lerp(0, 0.38, k);
+        keeper.stretch = lerp(0, 1, k);
+        // Final snap: gloves meet ball
+        if (t > 0.78) {
+          const snap = easeOut(clamp((t - 0.78) / 0.22, 0, 1));
+          keeper.x = lerp(keeper.x, shot.target.x, snap * 0.55);
+          keeper.y = lerp(keeper.y, shot.target.y + 22, snap * 0.55);
+          shot.catchHold = snap;
+        }
+      } else {
+        keeper.rotation = side * lerp(0, 0.72, k);
+        keeper.stretch = k;
+        shot.catchHold = 0;
+      }
+      keeper.dive = side;
       if (t >= 1) finishFlight();
     }
 
@@ -761,12 +798,12 @@
     const stretch = keeper.stretch;
     const dive = keeper.dive || keeperPlan.tell;
     const leftHand = {
-      x: -48 - stretch * 35,
-      y: -11 - stretch * 29,
+      x: shot && shot.saved ? lerp(-48, -14 - stretch * 8, stretch) : -48 - stretch * 35,
+      y: shot && shot.saved ? lerp(-11, -28 - stretch * 18, stretch) : -11 - stretch * 29,
     };
     const rightHand = {
-      x: 48 + stretch * 35,
-      y: -11 + stretch * 5,
+      x: shot && shot.saved ? lerp(48, 14 + stretch * 8, stretch) : 48 + stretch * 35,
+      y: shot && shot.saved ? lerp(-11, -28 - stretch * 12, stretch) : -11 + stretch * 5,
     };
 
     ctx.fillStyle = "rgba(0,0,0,.28)";
@@ -938,8 +975,10 @@
     ctx.ellipse(keeper.x + dive * stretch * 18, 364, 36 + stretch * 28, 7, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.translate(keeper.x, keeper.y + 58);
-    ctx.rotate(keeper.rotation + dive * stretch * 0.55);
-    ctx.scale(1 + stretch * 0.08, 1 - stretch * 0.04);
+    // Mild lean toward the ball when catching; avoid flopping away
+    const catchLean = shot && shot.saved ? dive * stretch * 0.22 : dive * stretch * 0.42;
+    ctx.rotate(keeper.rotation + catchLean);
+    ctx.scale(1 + stretch * (shot && shot.saved ? 0.04 : 0.08), 1 - stretch * 0.03);
     ctx.shadowColor = "rgba(0,11,24,.26)";
     ctx.shadowBlur = 6;
     ctx.drawImage(sprite, -w / 2, -h, w, h);
@@ -1176,7 +1215,15 @@
       return;
     }
     const t = clamp(shot.time / shot.duration, 0, 1);
-    const pos = ballPosition(t);
+    let pos = ballPosition(t);
+    // On save, ball sticks into the gloves at the end
+    if (shot.saved && shot.catchHold > 0) {
+      const hold = shot.catchHold;
+      pos = {
+        x: lerp(pos.x, keeper.x, hold * 0.85),
+        y: lerp(pos.y, keeper.y - 36, hold * 0.85),
+      };
+    }
     const targetScale = 0.48;
     const radius = lerp(13, 13 * targetScale, t);
 
@@ -1293,6 +1340,22 @@
 
   buildDots();
   updateHud();
+  if (window.TodayPause) {
+    window.TodayPause.mount({
+      canPause: () =>
+        phase === "aim" || phase === "timing" || phase === "kick" || phase === "flight",
+      isPaused: () => paused,
+      pause() {
+        paused = true;
+        return true;
+      },
+      resume() {
+        paused = false;
+        last = performance.now();
+        return true;
+      },
+    });
+  }
   if (window.TodayGameRank) {
     window.TodayGameRank.mount({
       gameId: "penalty-kick",

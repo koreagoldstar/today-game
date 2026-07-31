@@ -4,11 +4,14 @@
   /**
    * 오늘의 게임 공통 일시정지
    * 사용: game.js 끝에서 TodayPause.mount({ canPause, isPaused, pause, resume })
+   * mount 없이 pause.js만 로드된 게임은 자동으로 기본 일시정지/홈을 제공합니다.
    */
   const STYLE_ID = "today-pause-style";
   let cfg = null;
   let btn = null;
   let overlay = null;
+  let autoPaused = false;
+  let mountedExplicit = false;
 
   function ensureStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -26,8 +29,8 @@
 .today-pause-btn[hidden]{display:none!important}
 .today-pause-overlay{
   position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;
-  background:rgba(40,30,50,.55);backdrop-filter:blur(6px);color:#fff;
+  align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;
+  background:rgba(20,18,28,.62);backdrop-filter:blur(8px);color:#fff;
 }
 .today-pause-overlay[hidden]{display:none!important}
 .today-pause-overlay h2{
@@ -35,19 +38,37 @@
   text-shadow:0 3px 0 rgba(0,0,0,.2);
 }
 .today-pause-overlay p{margin:0;font-size:15px;opacity:.92}
+.today-pause-actions{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:4px;width:min(240px,80%)}
+.today-pause-overlay .today-pause-resume,
+.today-pause-overlay .today-pause-home{
+  appearance:none;border:none;width:100%;min-height:48px;padding:0 22px;
+  border-radius:999px;font:inherit;font-size:17px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+  box-sizing:border-box;
+}
 .today-pause-overlay .today-pause-resume{
-  appearance:none;border:none;min-width:160px;min-height:48px;margin-top:6px;
-  padding:0 22px;border-radius:999px;font:inherit;font-size:18px;color:#fff;cursor:pointer;
-  background:linear-gradient(180deg,#ff8ab5,#ff4f8b);box-shadow:0 5px 0 #d93f74;
+  color:#fff;background:linear-gradient(180deg,#ff8ab5,#ff4f8b);box-shadow:0 5px 0 #d93f74;
 }
 .today-pause-overlay .today-pause-resume:active{transform:translateY(2px);box-shadow:0 3px 0 #d93f74}
-.today-pause-overlay a{color:#fff;opacity:.9;text-decoration:none;font-size:14px;margin-top:4px}
+.today-pause-overlay .today-pause-home{
+  color:#243048;background:rgba(255,255,255,.94);box-shadow:0 4px 0 rgba(20,24,40,.18);font-weight:700;
+}
+.today-pause-overlay .today-pause-home:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(20,24,40,.18)}
+.today-pause-overlay .today-pause-hint{margin-top:2px;font-size:12px;opacity:.7}
 `;
     document.head.appendChild(style);
   }
 
   function stageRoot() {
     return document.querySelector(".stage") || document.body;
+  }
+
+  function goHome(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    window.location.href = "/";
   }
 
   function ensureDom() {
@@ -75,15 +96,19 @@
       overlay.hidden = true;
       overlay.innerHTML = `
         <h2>잠깐 멈춤</h2>
-        <p>쉬었다가 다시 달려요</p>
-        <button type="button" class="today-pause-resume" id="today-pause-resume">계속하기</button>
-        <a href="/">← 홈</a>
+        <p>쉬었다가 이어하거나 홈으로 나갈 수 있어요</p>
+        <div class="today-pause-actions">
+          <button type="button" class="today-pause-resume" id="today-pause-resume">계속하기</button>
+          <a class="today-pause-home" id="today-pause-home" href="/">홈으로</a>
+        </div>
+        <p class="today-pause-hint">Esc / P · 일시정지</p>
       `;
       overlay.querySelector("#today-pause-resume").addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         resume();
       });
+      overlay.querySelector("#today-pause-home").addEventListener("click", goHome);
       root.appendChild(overlay);
     }
   }
@@ -133,6 +158,13 @@
 
   function onKey(e) {
     if (!cfg) return;
+    if (e.code === "KeyH" && cfg.isPaused && cfg.isPaused()) {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      goHome();
+      return;
+    }
     if (e.code !== "Escape" && e.code !== "KeyP") return;
     const tag = (e.target && e.target.tagName) || "";
     if (tag === "INPUT" || tag === "TEXTAREA") return;
@@ -169,9 +201,42 @@
     document.head.appendChild(s);
   }
 
+  function defaultCanPause() {
+    const path = location.pathname || "";
+    if (!path.includes("/games/")) return false;
+    const blockers = ["#title", "#game-over", "#over", "#result"];
+    for (const sel of blockers) {
+      const el = document.querySelector(sel);
+      if (el && !el.classList.contains("hidden") && el.offsetParent !== null) return false;
+    }
+    return Boolean(document.querySelector(".stage"));
+  }
+
+  function autoMount() {
+    if (cfg) return;
+    if (!document.querySelector(".stage")) return;
+    if (!(location.pathname || "").includes("/games/")) return;
+    window.TodayPause.mount({
+      canPause: defaultCanPause,
+      isPaused: () => autoPaused,
+      pause() {
+        autoPaused = true;
+        window.__todayGamePaused = true;
+        return true;
+      },
+      resume() {
+        autoPaused = false;
+        window.__todayGamePaused = false;
+        return true;
+      },
+    });
+  }
+
   window.TodayPause = {
     mount(options) {
       cfg = options || null;
+      mountedExplicit = true;
+      autoPaused = false;
       ensureDom();
       syncUi();
       ensureAdBoards();
@@ -179,7 +244,6 @@
       document.removeEventListener("visibilitychange", onVisibility);
       window.addEventListener("keydown", onKey);
       document.addEventListener("visibilitychange", onVisibility);
-      // HUD 상태 동기화
       if (!window.__todayPauseTick) {
         window.__todayPauseTick = setInterval(() => {
           if (cfg) syncUi();
@@ -197,10 +261,15 @@
     sync: syncUi,
   };
 
-  // pause.mount 전에 스크립트만 로드된 페이지도 간판 표시
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", ensureAdBoards);
-  } else {
+  function boot() {
     ensureAdBoards();
+    // Give game scripts a moment to mount explicitly, then fall back.
+    setTimeout(autoMount, 120);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
   }
 })();
