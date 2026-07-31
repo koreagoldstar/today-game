@@ -267,7 +267,9 @@
       x: spawnX,
       y: flying ? flyY : GROUND,
       baseY: flying ? flyY : GROUND,
+      cruiseY: flyY,
       vx: dir * def.speed * (0.9 + Math.random() * 0.15) * (1 + wave * 0.025),
+      vy: 0,
       desiredSpeed: def.speed * (1 + wave * 0.025),
       hp: def.hp + Math.floor(wave * 0.28),
       maxHp: def.hp + Math.floor(wave * 0.28),
@@ -280,6 +282,9 @@
       phase: Math.random() * Math.PI * 2,
       hitFlash: 0,
       lean: 0,
+      flyMode: flying ? "cruise" : null,
+      diveCd: flying ? rand(0.6, 1.8) : 0,
+      diveT: 0,
     });
   }
 
@@ -329,7 +334,7 @@
     player.x = tree.x;
     player.climbProgress = 0;
     player.vx = 0;
-    setCoach("낮은 가지 위! 비행 공룡만 조심하세요");
+    setCoach("낮은 가지 위! 비행 공룡 급강하를 조심하세요");
     syncClimbButton();
   }
 
@@ -480,7 +485,7 @@
     player.hurtFlash = 0.3;
     shake = 8;
     flash = 0.2;
-    setCoach("공격당했습니다! 나무로 피하세요");
+    setCoach(d.flying ? "급강하를 피하거나 쏘세요!" : "공격당했습니다! 나무로 피하세요");
     if (player.hp <= 0) endGame();
   }
 
@@ -556,28 +561,118 @@
     const want = dir * d.desiredSpeed;
 
     if (d.flying) {
-      d.vx = lerp(d.vx, want * (player.climbing ? 1.15 : 0.95), 1 - Math.pow(0.08, dt));
-      const hoverY = d.type === "quetz" ? (player.climbing ? player.y - 55 : 210) : (player.climbing ? player.y - 40 : 250);
-      d.baseY = lerp(d.baseY, hoverY, 1 - Math.pow(0.2, dt));
-      d.y = d.baseY + Math.sin(d.phase) * (d.type === "quetz" ? 18 : 14);
-      d.lean = lerp(d.lean, clamp(d.vx / 160, -0.18, 0.18), 0.2);
-    } else {
-      d.vx = lerp(d.vx, want, 1 - Math.pow(0.12, dt));
-      const hop = Math.abs(Math.sin(d.phase)) * (d.type === "raptor" ? 10 : 6);
-      d.y = GROUND - hop;
-      d.lean = lerp(d.lean, clamp(-d.vx / 220, -0.12, 0.12), 0.25);
-      if (Math.sin(d.phase) > 0.92 && Math.random() < 0.35) {
-        particles.push({
-          x: d.x + rand(-10, 10),
-          y: GROUND - 4,
-          vx: rand(-20, 20),
-          vy: rand(-30, -10),
-          life: 0.28,
-          max: 0.28,
-          size: rand(2, 4),
-          color: "rgba(120,90,50,.55)",
-        });
+      d.diveCd = Math.max(0, d.diveCd - dt);
+      const cruise = d.cruiseY || (d.type === "quetz" ? 210 : 250);
+      const targetBodyY = player.y - (player.climbing ? 50 : 70);
+
+      if (d.flyMode === "cruise") {
+        d.vx = lerp(d.vx, want * 0.95, 1 - Math.pow(0.08, dt));
+        d.vy = lerp(d.vy, 0, 0.12);
+        d.baseY = lerp(d.baseY, cruise, 1 - Math.pow(0.25, dt));
+        d.y = d.baseY + Math.sin(d.phase) * (d.type === "quetz" ? 16 : 12);
+        d.lean = lerp(d.lean, clamp(d.vx / 160, -0.18, 0.18), 0.2);
+
+        const dx = Math.abs(toPlayer);
+        const inView = dx < 210 && dx > 28;
+        if (inView && d.diveCd <= 0) {
+          d.flyMode = "telegraph";
+          d.diveT = 0.38;
+          setCoach(d.type === "quetz" ? "케찰이 급강하합니다!" : "프테라가 급강하합니다!");
+        }
+      } else if (d.flyMode === "telegraph") {
+        d.diveT -= dt;
+        d.vx = lerp(d.vx, dir * d.desiredSpeed * 0.35, 0.15);
+        d.baseY = lerp(d.baseY, cruise - 18, 0.2);
+        d.y = d.baseY;
+        d.lean = lerp(d.lean, dir * 0.35, 0.25);
+        // Warning flaps
+        if (Math.random() < 0.4) {
+          particles.push({
+            x: d.x + rand(-20, 20),
+            y: d.y - d.h * 0.4,
+            vx: rand(-30, 30),
+            vy: rand(20, 60),
+            life: 0.25,
+            max: 0.25,
+            size: rand(2, 4),
+            color: "rgba(255,210,120,.7)",
+          });
+        }
+        if (d.diveT <= 0) {
+          d.flyMode = "dive";
+          const ang = Math.atan2(targetBodyY - d.y, player.x - d.x);
+          const diveSp = (d.type === "quetz" ? 340 : 290) * (1 + wave * 0.02);
+          d.vx = Math.cos(ang) * diveSp;
+          d.vy = Math.sin(ang) * diveSp;
+          d.diveT = 1.15;
+        }
+      } else if (d.flyMode === "dive") {
+        d.diveT -= dt;
+        // Home slightly so dodge still matters but they commit
+        const ang = Math.atan2(targetBodyY - d.y, player.x - d.x);
+        const diveSp = Math.hypot(d.vx, d.vy) || 280;
+        d.vx = lerp(d.vx, Math.cos(ang) * diveSp, 0.08);
+        d.vy = lerp(d.vy, Math.sin(ang) * diveSp, 0.08);
+        d.y += d.vy * dt;
+        d.baseY = d.y;
+        d.lean = lerp(d.lean, clamp(d.vy / 220, -0.55, 0.55) + clamp(d.vx / 260, -0.2, 0.2), 0.3);
+        if (Math.random() < 0.55) {
+          particles.push({
+            x: d.x - Math.sign(d.vx || 1) * 18,
+            y: d.y - d.h * 0.2,
+            vx: -d.vx * 0.05 + rand(-20, 20),
+            vy: -d.vy * 0.05 + rand(-10, 10),
+            life: 0.22,
+            max: 0.22,
+            size: rand(2, 5),
+            color: "rgba(200,220,255,.45)",
+          });
+        }
+        const passed =
+          d.diveT <= 0 ||
+          d.y > GROUND - 40 ||
+          (Math.sign(d.vx) === Math.sign(d.x - player.x) && Math.abs(d.x - player.x) > 90 && d.y > targetBodyY - 20);
+        if (passed) {
+          d.flyMode = "climb";
+          d.diveT = 0.9;
+          d.vy = d.type === "quetz" ? -210 : -240;
+          d.vx = dir * d.desiredSpeed * 1.1;
+        }
+      } else if (d.flyMode === "climb") {
+        d.diveT -= dt;
+        d.vy = lerp(d.vy, -180, 0.1);
+        d.vx = lerp(d.vx, want * 1.05, 0.1);
+        d.y += d.vy * dt;
+        d.baseY = d.y;
+        d.lean = lerp(d.lean, -0.25, 0.2);
+        if (d.y <= cruise + 10 || d.diveT <= 0) {
+          d.flyMode = "cruise";
+          d.y = Math.min(d.y, cruise);
+          d.baseY = d.y;
+          d.vy = 0;
+          d.cruiseY = cruise;
+          d.diveCd = d.type === "quetz" ? rand(1.8, 2.8) : rand(1.3, 2.2);
+        }
       }
+      d.x += d.vx * dt;
+      return;
+    }
+
+    d.vx = lerp(d.vx, want, 1 - Math.pow(0.12, dt));
+    const hop = Math.abs(Math.sin(d.phase)) * (d.type === "raptor" ? 10 : 6);
+    d.y = GROUND - hop;
+    d.lean = lerp(d.lean, clamp(-d.vx / 220, -0.12, 0.12), 0.25);
+    if (Math.sin(d.phase) > 0.92 && Math.random() < 0.35) {
+      particles.push({
+        x: d.x + rand(-10, 10),
+        y: GROUND - 4,
+        vx: rand(-20, 20),
+        vy: rand(-30, -10),
+        life: 0.28,
+        max: 0.28,
+        size: rand(2, 4),
+        color: "rgba(120,90,50,.55)",
+      });
     }
     d.x += d.vx * dt;
   }
@@ -698,17 +793,28 @@
 
     dinos.forEach((d) => {
       if (d.hp <= 0) return;
+      // Ground dinos can't reach perch; flying ones dive-bomb everywhere
       const canReach = d.flying || player.climbState === "ground" || player.climbProgress < 0.55;
       if (!canReach) return;
+      // Only diving flyers (or contact while low) hurt — cruise altitude doesn't clip
+      if (d.flying && d.flyMode !== "dive" && d.y < player.y - 110) return;
       const box = dinoHitbox(d);
       const px = player.x;
       const py = player.y - 48;
       const hit =
-        px > box.left + 18 &&
-        px < box.right - 18 &&
-        py > box.top + 10 &&
-        py < box.bottom + 8;
-      if (hit) hurtPlayer(d.damage);
+        px > box.left + 12 &&
+        px < box.right - 12 &&
+        py > box.top + 6 &&
+        py < box.bottom + 10;
+      if (hit) {
+        hurtPlayer(d.flying && d.flyMode === "dive" ? Math.round(d.damage * 1.25) : d.damage);
+        if (d.flying && d.flyMode === "dive") {
+          d.flyMode = "climb";
+          d.diveT = 0.85;
+          d.vy = -220;
+          d.diveCd = d.type === "quetz" ? 2.4 : 1.8;
+        }
+      }
     });
 
     const cullL = player.x - VIEW_BEHIND - 180;
@@ -826,6 +932,8 @@
       ctx.translate(x, d.y);
       ctx.rotate(d.lean || 0);
       if (d.hitFlash > 0) ctx.filter = "brightness(2.1)";
+      else if (d.flying && d.flyMode === "telegraph") ctx.filter = "brightness(1.35) saturate(1.2)";
+      else if (d.flying && d.flyMode === "dive") ctx.filter = "brightness(1.15)";
       ctx.scale(face, 1);
       const bobScale = d.flying ? 1 : 1 + Math.abs(Math.sin(d.phase)) * 0.03;
       ctx.scale(bobScale, 2 - bobScale);
