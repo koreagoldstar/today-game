@@ -478,14 +478,14 @@
     } catch (_) {}
   }
 
-  function hurtPlayer(amount) {
+  function hurtPlayer(amount, fromSky) {
     if (player.inv > 0) return;
     player.hp -= amount;
     player.inv = 1.35;
     player.hurtFlash = 0.3;
     shake = 8;
     flash = 0.2;
-    setCoach(d.flying ? "급강하를 피하거나 쏘세요!" : "공격당했습니다! 나무로 피하세요");
+    setCoach(fromSky ? "급강하를 피하거나 쏘세요!" : "공격당했습니다! 나무로 피하세요");
     if (player.hp <= 0) endGame();
   }
 
@@ -807,8 +807,9 @@
         py > box.top + 6 &&
         py < box.bottom + 10;
       if (hit) {
-        hurtPlayer(d.flying && d.flyMode === "dive" ? Math.round(d.damage * 1.25) : d.damage);
-        if (d.flying && d.flyMode === "dive") {
+        const diving = d.flying && d.flyMode === "dive";
+        hurtPlayer(diving ? Math.round(d.damage * 1.25) : d.damage, !!d.flying);
+        if (diving) {
           d.flyMode = "climb";
           d.diveT = 0.85;
           d.vy = -220;
