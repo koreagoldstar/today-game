@@ -10,11 +10,11 @@
   ];
 
   const WEAPONS = [
-    { id: "pistol", name: "권총", kills: 0, dmg: 1, rate: 0.34, speed: 680, pellets: 1, spray: 0.012, pierce: 0, color: "#ffd56a" },
-    { id: "shotgun", name: "샷건", kills: 8, dmg: 1, rate: 0.48, speed: 560, pellets: 5, spray: 0.16, pierce: 0, color: "#ff9f4a" },
-    { id: "rifle", name: "소총", kills: 20, dmg: 2.4, rate: 0.28, speed: 820, pellets: 1, spray: 0.012, pierce: 0, color: "#7dffb0" },
-    { id: "assault", name: "돌격소총", kills: 38, dmg: 1.5, rate: 0.1, speed: 740, pellets: 1, spray: 0.035, pierce: 0, color: "#7ad0ff" },
-    { id: "plasma", name: "플라즈마", kills: 65, dmg: 3.2, rate: 0.15, speed: 800, pellets: 1, spray: 0.01, pierce: 2, color: "#d57bff" },
+    { id: "pistol", name: "권총", kills: 0, dmg: 1, rate: 0.34, speed: 720, pellets: 1, spray: 0.008, pierce: 0, color: "#ffe8a8" },
+    { id: "shotgun", name: "샷건", kills: 8, dmg: 1, rate: 0.5, speed: 620, pellets: 4, spray: 0.1, pierce: 0, color: "#ffc078" },
+    { id: "rifle", name: "소총", kills: 20, dmg: 2.4, rate: 0.3, speed: 900, pellets: 1, spray: 0.006, pierce: 0, color: "#b8ffd0" },
+    { id: "assault", name: "돌격소총", kills: 38, dmg: 1.5, rate: 0.1, speed: 820, pellets: 1, spray: 0.02, pierce: 0, color: "#9fd8ff" },
+    { id: "plasma", name: "플라즈마", kills: 65, dmg: 3.2, rate: 0.16, speed: 860, pellets: 1, spray: 0.008, pierce: 2, color: "#e0a8ff" },
   ];
 
   const DINO_TYPES = {
@@ -93,9 +93,10 @@
   let moveLeft = false;
   let moveRight = false;
   let autoFire = false;
-  let aimX = W * 0.72;
-  let aimY = GROUND - 70;
-  let manualAimUntil = 0;
+  let aimX = W * 0.78;
+  let aimY = GROUND - 90;
+  let aiming = false;
+  let muzzleFlash = 0;
 
   const player = {
     x: W * 0.5,
@@ -302,56 +303,61 @@
     setCoach(`${weapon().name} 장착 완료`);
   }
 
+  function muzzlePos() {
+    return {
+      x: player.x + player.face * (player.climbing ? 28 : 36),
+      y: player.y - (player.climbing ? 72 : 90),
+    };
+  }
+
+  function pointerToGame(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: clamp(((e.clientX - rect.left) / rect.width) * W, 8, W - 8),
+      y: clamp(((e.clientY - rect.top) / rect.height) * H, 8, H - 8),
+    };
+  }
+
+  function setAimFromPointer(e) {
+    const p = pointerToGame(e);
+    // Ignore control strip for aiming updates from canvas
+    if (p.y > 610) return false;
+    aimX = p.x;
+    aimY = p.y;
+    if (Math.abs(aimX - player.x) > 8) player.face = aimX >= player.x ? 1 : -1;
+    return true;
+  }
+
   function fire() {
     if (phase !== "play" || fireCd > 0) return;
     const wpn = weapon();
     fireCd = wpn.rate;
-    const muzzleX = player.x + player.face * (player.climbing ? 26 : 32);
-    const muzzleY = player.y - (player.climbing ? 70 : 88);
-
-    // Prefer body center of nearest dino if no recent manual aim
-    let targetX = aimX;
-    let targetY = aimY;
-    if (performance.now() > manualAimUntil) {
-      let nearest = null;
-      let nearestD = 1e9;
-      dinos.forEach((d) => {
-        if (d.hp <= 0) return;
-        const box = dinoHitbox(d);
-        const dlt = dist(muzzleX, muzzleY, box.cx, box.cy);
-        if (dlt < nearestD) {
-          nearestD = dlt;
-          nearest = box;
-        }
-      });
-      if (nearest) {
-        targetX = nearest.cx;
-        targetY = nearest.cy;
-        aimX = targetX;
-        aimY = targetY;
-      }
-    }
-
-    const baseAng = Math.atan2(targetY - muzzleY, targetX - muzzleX);
+    const muzzle = muzzlePos();
+    const targetX = aimX;
+    const targetY = aimY;
+    const baseAng = Math.atan2(targetY - muzzle.y, targetX - muzzle.x);
+    // Keep shots mostly directed; tiny spray only for shotgun
     for (let i = 0; i < wpn.pellets; i += 1) {
       const ang = baseAng + rand(-wpn.spray, wpn.spray);
+      const speed = wpn.speed * (wpn.pellets > 1 ? rand(0.92, 1.05) : 1);
       bullets.push({
-        x: muzzleX,
-        y: muzzleY,
-        px: muzzleX,
-        py: muzzleY,
-        vx: Math.cos(ang) * wpn.speed,
-        vy: Math.sin(ang) * wpn.speed,
+        x: muzzle.x,
+        y: muzzle.y,
+        px: muzzle.x,
+        py: muzzle.y,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
         dmg: wpn.dmg,
         pierce: wpn.pierce,
-        life: 1.15,
+        life: 0.85,
         color: wpn.color,
-        r: wpn.id === "plasma" ? 6.5 : 4.5,
+        r: wpn.id === "plasma" ? 4.2 : 2.6,
       });
     }
     player.face = targetX >= player.x ? 1 : -1;
-    burst(muzzleX, muzzleY, "#ffe6a0", 5, 80);
-    shake = Math.max(shake, 2);
+    muzzleFlash = 0.08;
+    burst(muzzle.x, muzzle.y, "#fff1b0", 4, 55);
+    shake = Math.max(shake, 1.4);
     kickSound();
   }
 
@@ -432,8 +438,10 @@
     ui.upgrade.classList.add("hidden");
     ui.over.classList.add("hidden");
     updateHud();
-    setCoach("좌우 이동 · 발사 · 나무로 피하세요");
+    setCoach("화면을 조준한 뒤 발사하세요");
     spawnDino("raptor");
+    aimX = player.x + 110;
+    aimY = GROUND - 90;
     if (window.TodayGameRank) window.TodayGameRank.reset();
     if (window.TodayBGM) window.TodayBGM.start("dino-hunt");
     last = performance.now();
@@ -494,6 +502,7 @@
     player.hurtFlash = Math.max(0, player.hurtFlash - dt);
     shake = Math.max(0, shake - dt * 18);
     flash = Math.max(0, flash - dt);
+    muzzleFlash = Math.max(0, muzzleFlash - dt);
 
     if (bgFade > 0) {
       bgFade = clamp(bgFade + dt * 0.7, 0, 1);
@@ -520,35 +529,18 @@
       else if (moveRight) player.vx = speed;
       else player.vx *= Math.pow(0.02, dt);
       player.x = clamp(player.x + player.vx * dt, 36, W - 36);
-      if (Math.abs(player.vx) > 12) player.face = player.vx > 0 ? 1 : -1;
+      // Facing follows aim, not just walk direction
+      if (Math.abs(aimX - player.x) > 10) player.face = aimX >= player.x ? 1 : -1;
       player.y = GROUND;
     } else if (player.tree) {
       player.climbProgress = clamp(player.climbProgress + dt * 2.4, 0, 1);
       player.x = player.tree.x;
       player.y = lerp(GROUND, player.tree.climbY, easeOutCubic(player.climbProgress));
       player.vx = 0;
+      if (Math.abs(aimX - player.x) > 10) player.face = aimX >= player.x ? 1 : -1;
     }
 
     if (autoFire) fire();
-
-    if (performance.now() > manualAimUntil) {
-      let nearest = null;
-      let nearestD = 1e9;
-      dinos.forEach((d) => {
-        if (d.hp <= 0) return;
-        const box = dinoHitbox(d);
-        const dlt = dist(player.x, player.y - 80, box.cx, box.cy);
-        if (dlt < nearestD) {
-          nearestD = dlt;
-          nearest = { d, box };
-        }
-      });
-      if (nearest) {
-        aimX = nearest.box.cx;
-        aimY = nearest.box.cy;
-        if (!moveLeft && !moveRight) player.face = nearest.d.x >= player.x ? 1 : -1;
-      }
-    }
 
     bullets.forEach((b) => {
       b.px = b.x;
@@ -721,23 +713,62 @@
 
   function drawBullets() {
     bullets.forEach((b) => {
+      const ang = Math.atan2(b.vy, b.vx);
       ctx.save();
-      ctx.strokeStyle = b.color;
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = Math.max(2, b.r);
+      ctx.translate(b.x, b.y);
+      ctx.rotate(ang);
+      // Slim tracer round instead of glowing orb
+      ctx.fillStyle = "#fff8e6";
       ctx.beginPath();
-      ctx.moveTo(b.px, b.py);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, Math.max(5, b.r * 2.2), Math.max(1.4, b.r * 0.55), 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(-10, -0.8, 8, 1.6);
       ctx.restore();
     });
+  }
+
+  function drawAim() {
+    if (phase !== "play") return;
+    const muzzle = muzzlePos();
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,245,180,.28)";
+    ctx.setLineDash([5, 6]);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(muzzle.x, muzzle.y);
+    ctx.lineTo(aimX, aimY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    if (muzzleFlash > 0) {
+      ctx.fillStyle = `rgba(255,230,140,${muzzleFlash * 8})`;
+      ctx.beginPath();
+      ctx.arc(muzzle.x, muzzle.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = aiming ? "rgba(255,240,160,.95)" : "rgba(255,240,160,.7)";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(aimX, aimY, 13, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(aimX - 17, aimY);
+    ctx.lineTo(aimX - 6, aimY);
+    ctx.moveTo(aimX + 6, aimY);
+    ctx.lineTo(aimX + 17, aimY);
+    ctx.moveTo(aimX, aimY - 17);
+    ctx.lineTo(aimX, aimY - 6);
+    ctx.moveTo(aimX, aimY + 6);
+    ctx.lineTo(aimX, aimY + 17);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,240,160,.85)";
+    ctx.beginPath();
+    ctx.arc(aimX, aimY, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   function drawFx() {
@@ -763,25 +794,6 @@
       ctx.fillText(f.text, f.x, f.y);
     });
     ctx.globalAlpha = 1;
-  }
-
-  function drawAim() {
-    if (phase !== "play") return;
-    ctx.strokeStyle = "rgba(255,240,160,.65)";
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.arc(aimX, aimY, 11, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(aimX - 15, aimY);
-    ctx.lineTo(aimX - 5, aimY);
-    ctx.moveTo(aimX + 5, aimY);
-    ctx.lineTo(aimX + 15, aimY);
-    ctx.moveTo(aimX, aimY - 15);
-    ctx.lineTo(aimX, aimY - 5);
-    ctx.moveTo(aimX, aimY + 5);
-    ctx.lineTo(aimX, aimY + 15);
-    ctx.stroke();
   }
 
   function draw() {
@@ -841,14 +853,26 @@
   document.getElementById("retry-btn").addEventListener("click", startGame);
   document.getElementById("upgrade-btn").addEventListener("click", resumeAfterUpgrade);
 
+  // Mouse move / touch drag: aim only. Click / tap on field: aim + shoot.
+  canvas.addEventListener("pointermove", (e) => {
+    if (phase !== "play") return;
+    setAimFromPointer(e);
+  });
   canvas.addEventListener("pointerdown", (e) => {
     if (phase !== "play") return;
-    const rect = canvas.getBoundingClientRect();
-    aimX = ((e.clientX - rect.left) / rect.width) * W;
-    aimY = ((e.clientY - rect.top) / rect.height) * H;
-    if (aimY > 620) return;
-    manualAimUntil = performance.now() + 900;
+    e.preventDefault();
+    aiming = true;
+    if (!setAimFromPointer(e)) return;
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (_) {}
     fire();
+  });
+  canvas.addEventListener("pointerup", () => {
+    aiming = false;
+  });
+  canvas.addEventListener("pointercancel", () => {
+    aiming = false;
   });
 
   window.addEventListener("keydown", (e) => {
