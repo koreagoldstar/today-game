@@ -9,7 +9,7 @@ const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
   "/css/style.css",
-  "/js/main.js?v=4",
+  "/js/main.js?v=5",
   "/js/pwa.js?v=2",
   "/assets/pwa-icon-192.png",
   "/assets/pwa-icon-512.png"

@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "dino-hunt",
+      title: "공룡 헌터",
+      tag: "슈팅 · 나무 오르기",
+      href: "/games/dino-hunt/",
+      thumb: "/assets/thumbs/dino-hunt.png",
+      category: "action",
+    },
+    {
       id: "penalty-kick",
       title: "승부차기 히어로",
       tag: "축구 · 예측 타이밍",
