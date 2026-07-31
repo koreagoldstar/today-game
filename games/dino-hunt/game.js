@@ -22,6 +22,7 @@
     stego: { hp: 5, speed: 44, score: 180, w: 132, h: 76, flying: false, damage: 14, gait: 7 },
     triceratops: { hp: 7, speed: 54, score: 240, w: 140, h: 78, flying: false, damage: 16, gait: 8 },
     ptera: { hp: 3, speed: 74, score: 200, w: 122, h: 76, flying: true, damage: 10, gait: 10 },
+    quetz: { hp: 9, speed: 58, score: 380, w: 176, h: 108, flying: true, damage: 18, gait: 7 },
     trex: { hp: 16, speed: 40, score: 520, w: 164, h: 112, flying: false, damage: 24, gait: 6 },
   };
 
@@ -61,6 +62,7 @@
     stego: "assets/stego.png",
     triceratops: "assets/triceratops.png",
     ptera: "assets/ptera.png",
+    quetz: "assets/quetz.png",
     trex: "assets/trex.png",
   };
   Object.entries(imageFiles).forEach(([key, src]) => {
@@ -218,19 +220,21 @@
     let type = "raptor";
     if (forced) type = forced;
     else if (wave >= 8 && roll > 0.92) type = "trex";
-    else if (wave >= 4 && roll > 0.78) type = "triceratops";
-    else if (wave >= 3 && roll > 0.58) type = "ptera";
-    else if (wave >= 2 && roll > 0.38) type = "stego";
+    else if (wave >= 6 && roll > 0.84) type = "quetz";
+    else if (wave >= 4 && roll > 0.72) type = "triceratops";
+    else if (wave >= 3 && roll > 0.54) type = "ptera";
+    else if (wave >= 2 && roll > 0.36) type = "stego";
 
     const def = DINO_TYPES[type];
     const fromLeft = Math.random() < 0.5;
     const dir = fromLeft ? 1 : -1;
     const flying = def.flying;
+    const flyY = type === "quetz" ? rand(180, 250) : rand(210, 300);
     dinos.push({
       type,
       x: fromLeft ? -90 : W + 90,
-      y: flying ? rand(210, 300) : GROUND,
-      baseY: flying ? rand(210, 300) : GROUND,
+      y: flying ? flyY : GROUND,
+      baseY: flying ? flyY : GROUND,
       vx: dir * def.speed * (0.9 + Math.random() * 0.15) * (1 + wave * 0.025),
       desiredSpeed: def.speed * (1 + wave * 0.025),
       hp: def.hp + Math.floor(wave * 0.28),
@@ -469,8 +473,9 @@
 
     if (d.flying) {
       d.vx = lerp(d.vx, want * (player.climbing ? 1.15 : 0.95), 1 - Math.pow(0.08, dt));
-      d.baseY = lerp(d.baseY, player.climbing ? player.y - 40 : 250, 1 - Math.pow(0.2, dt));
-      d.y = d.baseY + Math.sin(d.phase) * 14;
+      const hoverY = d.type === "quetz" ? (player.climbing ? player.y - 55 : 210) : (player.climbing ? player.y - 40 : 250);
+      d.baseY = lerp(d.baseY, hoverY, 1 - Math.pow(0.2, dt));
+      d.y = d.baseY + Math.sin(d.phase) * (d.type === "quetz" ? 18 : 14);
       d.lean = lerp(d.lean, clamp(d.vx / 160, -0.18, 0.18), 0.2);
     } else {
       // Smooth chase with gallop hop — feet stay near ground
