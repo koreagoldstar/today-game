@@ -5,6 +5,7 @@
   const GAME_TITLE = "우주 회피";
 
   const canvas = document.getElementById("game");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
   // HUD & UI Elements
@@ -40,13 +41,15 @@
   // Web Audio Synth
   let audioCtx = null;
   function getAudioCtx() {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) audioCtx = new AudioContext();
-    }
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
+    try {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    } catch (_) {}
     return audioCtx;
   }
 
@@ -62,7 +65,7 @@
         osc.type = "square";
         osc.frequency.setValueAtTime(800, now);
         osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.setValueAtTime(0.15, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
         osc.connect(gain);
         gain.connect(ac.destination);
@@ -75,7 +78,7 @@
         osc.frequency.setValueAtTime(523, now);
         osc.frequency.setValueAtTime(659, now + 0.06);
         osc.frequency.setValueAtTime(784, now + 0.12);
-        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.setValueAtTime(0.2, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
         osc.connect(gain);
         gain.connect(ac.destination);
@@ -87,7 +90,7 @@
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(200, now);
         osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
-        gain.gain.setValueAtTime(0.6, now);
+        gain.gain.setValueAtTime(0.5, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
         osc.connect(gain);
         gain.connect(ac.destination);
@@ -99,7 +102,7 @@
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(120, now);
         osc.frequency.linearRampToValueAtTime(40, now + 0.25);
-        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.setValueAtTime(0.3, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         osc.connect(gain);
         gain.connect(ac.destination);
@@ -111,7 +114,7 @@
         osc.type = "triangle";
         osc.frequency.setValueAtTime(150, now);
         osc.frequency.exponentialRampToValueAtTime(600, now + 0.4);
-        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.setValueAtTime(0.3, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
         osc.connect(gain);
         gain.connect(ac.destination);
@@ -138,7 +141,7 @@
   resize();
 
   // Game Engine State
-  let state = "title"; // "title", "playing", "clear", "over"
+  let state = "title"; // "title", "playing", "paused", "clear", "over"
   let stage = 1;
   const MAX_STAGE = 50;
   let score = 0;
@@ -155,12 +158,12 @@
     vx: 0,
     targetX: W / 2,
     hasShield: false,
-    weaponLevel: 1, // 1: single, 2: double, 3: spread
+    weaponLevel: 1,
     fireCooldown: 0,
   };
 
   // Boss State
-  let boss = null; // { x, y, hp, maxHp, vx, patternTimer }
+  let boss = null;
 
   // Objects
   let stars = [];
@@ -184,7 +187,7 @@
   }
   initStarfield();
 
-  // Input Handlers (Touch + Mouse + Keys)
+  // Input Handlers
   const keys = {};
   let isPadLeft = false;
   let isPadRight = false;
@@ -207,9 +210,6 @@
       }
       if (e.key === "f" || e.key === "F") {
         fireBullet();
-      }
-      if (e.key === "Escape" || e.key === "p" || e.key === "P") {
-        if (window.TodayPause) window.TodayPause.toggle();
       }
     }
   });
@@ -279,7 +279,6 @@
     playSound("bomb");
     screenShake = 20;
 
-    // Destroy all non-boss hazards
     hazards.forEach((h) => {
       addExplosion(h.x, h.y, "#ff9e00", 16);
       score += 100;
@@ -287,7 +286,6 @@
     hazards = [];
     warnings = [];
 
-    // Damage Boss if present
     if (boss) {
       boss.hp -= 25;
       addExplosion(boss.x, boss.y, "#ff0055", 30);
@@ -313,18 +311,19 @@
   }
 
   function updateHUD() {
-    hudStage.textContent = stage;
-    hudStageMax.textContent = MAX_STAGE;
-    hudScore.textContent = score.toLocaleString("ko-KR");
-    hudLives.textContent = "❤️".repeat(Math.max(0, lives));
-    hudShield.textContent = player.hasShield ? "ON" : "OFF";
-    hudShield.style.color = player.hasShield ? "#00f0ff" : "#a0c4ff";
-    hudBomb.textContent = `💣 x${bombs}`;
+    if (hudStage) hudStage.textContent = stage;
+    if (hudStageMax) hudStageMax.textContent = MAX_STAGE;
+    if (hudScore) hudScore.textContent = score.toLocaleString("ko-KR");
+    if (hudLives) hudLives.textContent = "❤️".repeat(Math.max(0, lives));
+    if (hudShield) {
+      hudShield.textContent = player.hasShield ? "ON" : "OFF";
+      hudShield.style.color = player.hasShield ? "#00f0ff" : "#a0c4ff";
+    }
+    if (hudBomb) hudBomb.textContent = `💣 x${bombs}`;
   }
 
-  // Stage & Boss Spawning Logic
   let stageTimer = 0;
-  let stageDuration = 25; // seconds per stage
+  let stageDuration = 25;
   let spawnTimer = 0;
   let itemTimer = 0;
   let warningTimer = 0;
@@ -339,9 +338,8 @@
     items = [];
     warnings = [];
     boss = null;
-    bossBar.classList.add("hidden");
+    if (bossBar) bossBar.classList.add("hidden");
 
-    // Spawn Boss on Stage 5, 10, 15...
     if (stage % 5 === 0) {
       const maxHp = 60 + stage * 20;
       boss = {
@@ -353,9 +351,9 @@
         vx: 2.2,
         patternTimer: 0,
       };
-      bossNameEl.textContent = `우주 거함 보스 (Stage ${stage})`;
-      bossFillEl.style.width = "100%";
-      bossBar.classList.remove("hidden");
+      if (bossNameEl) bossNameEl.textContent = `우주 거함 보스 (Stage ${stage})`;
+      if (bossFillEl) bossFillEl.style.width = "100%";
+      if (bossBar) bossBar.classList.remove("hidden");
       playSound("boss");
     }
 
@@ -369,7 +367,7 @@
     addExplosion(boss.x + 30, boss.y, "#00f0ff", 30);
     score += 3000 + stage * 500;
     boss = null;
-    bossBar.classList.add("hidden");
+    if (bossBar) bossBar.classList.add("hidden");
     stageClear();
   }
 
@@ -394,7 +392,7 @@
     const x = Math.random() * (W - 80) + 40;
     warnings.push({
       x,
-      timer: 1.2, // warning duration before laser fires
+      timer: 1.2,
       duration: 0.8,
       active: false,
     });
@@ -416,11 +414,9 @@
     });
   }
 
-  // Engine Update (60fps)
   let lastTime = performance.now();
 
   function update(dt) {
-    // Starfield scrolling
     stars.forEach((s) => {
       s.y += s.speed;
       if (s.y > H) {
@@ -431,7 +427,6 @@
 
     if (state !== "playing") return;
 
-    // Timers
     if (invulnerableTimer > 0) invulnerableTimer -= dt;
     if (screenShake > 0) screenShake -= dt * 30;
     if (player.fireCooldown > 0) player.fireCooldown -= dt;
@@ -441,7 +436,6 @@
     itemTimer += dt;
     warningTimer += dt;
 
-    // Movement Controls
     if (keys["ArrowLeft"] || keys["a"] || keys["A"] || isPadLeft) {
       player.targetX -= 7;
     }
@@ -452,12 +446,10 @@
     player.targetX = Math.max(player.r, Math.min(W - player.r, player.targetX));
     player.x += (player.targetX - player.x) * 0.22;
 
-    // Auto-fire if holding Space/F
     if (keys[" "] || keys["f"] || keys["F"]) {
       fireBullet();
     }
 
-    // Engine thruster particles
     if (Math.random() < 0.8) {
       particles.push({
         x: player.x + (Math.random() - 0.5) * 12,
@@ -482,12 +474,11 @@
         continue;
       }
 
-      // Hit Boss
       if (boss && Math.hypot(b.x - boss.x, b.y - boss.y) < 45) {
         boss.hp--;
         addExplosion(b.x, b.y, "#ff9e00", 4);
         bullets.splice(i, 1);
-        bossFillEl.style.width = `${Math.max(0, (boss.hp / boss.maxHp) * 100)}%`;
+        if (bossFillEl) bossFillEl.style.width = `${Math.max(0, (boss.hp / boss.maxHp) * 100)}%`;
         if (boss.hp <= 0) {
           destroyBoss();
           return;
@@ -495,7 +486,6 @@
         continue;
       }
 
-      // Hit Hazards
       let hit = false;
       for (let j = hazards.length - 1; j >= 0; j--) {
         const h = hazards[j];
@@ -524,7 +514,6 @@
       boss.patternTimer += dt;
       if (boss.patternTimer > 1.2) {
         boss.patternTimer = 0;
-        // Boss fires lasers
         hazards.push({
           x: boss.x - 20,
           y: boss.y + 30,
@@ -547,7 +536,6 @@
         });
       }
     } else {
-      // Regular Stage Spawning
       const spawnInterval = Math.max(0.3, 1.1 - stage * 0.02);
       if (spawnTimer > spawnInterval) {
         spawnTimer = 0;
@@ -564,7 +552,6 @@
         spawnItem();
       }
 
-      // Check Stage Clear (non-boss stage)
       if (stageTimer > stageDuration) {
         stageClear();
         return;
@@ -579,7 +566,6 @@
         if (w.timer <= 0) w.active = true;
       } else {
         w.duration -= dt;
-        // Check Laser collision with player
         if (Math.abs(player.x - w.x) < 18) {
           playerHit();
         }
@@ -587,7 +573,7 @@
       }
     }
 
-    // Hazards Update & Collision
+    // Hazards Update
     for (let i = hazards.length - 1; i >= 0; i--) {
       const h = hazards[i];
       h.y += h.vy;
@@ -602,7 +588,7 @@
       }
     }
 
-    // Items Update & Pickup
+    // Items Update
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
       it.y += it.vy;
@@ -666,17 +652,14 @@
     }
   }
 
-  // Render Frame
   function render() {
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Apply Screen Shake
     if (screenShake > 0) {
       ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
     }
 
-    // Clear Canvas
     ctx.fillStyle = "#060911";
     ctx.fillRect(0, 0, W, H);
 
@@ -690,10 +673,9 @@
     });
     ctx.globalAlpha = 1;
 
-    // Render Warning Lasers
+    // Render Warnings
     warnings.forEach((w) => {
       if (!w.active) {
-        // Red warning line
         ctx.strokeStyle = "rgba(255, 0, 85, 0.4)";
         ctx.lineWidth = 4;
         ctx.setLineDash([8, 8]);
@@ -703,7 +685,6 @@
         ctx.stroke();
         ctx.setLineDash([]);
       } else {
-        // Active Laser Beam
         ctx.fillStyle = "rgba(255, 0, 85, 0.85)";
         ctx.shadowColor = "#ff0055";
         ctx.shadowBlur = 18;
@@ -719,7 +700,6 @@
       ctx.shadowColor = "#ff0055";
       ctx.shadowBlur = 20;
 
-      // Boss Body Polygon
       ctx.beginPath();
       ctx.moveTo(0, 35);
       ctx.lineTo(-45, -20);
@@ -729,7 +709,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Boss Core
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.arc(0, 0, 14, 0, Math.PI * 2);
@@ -755,7 +734,6 @@
         ctx.arc(0, 0, h.r * 0.4, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        // Meteor
         ctx.fillStyle = "#e07a5f";
         ctx.shadowColor = "#f4a261";
         ctx.shadowBlur = 10;
@@ -811,11 +789,10 @@
     ctx.globalAlpha = 1;
 
     // Render Player Starcraft
-    if (state === "playing" && (invulnerableTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0)) {
+    if ((state === "playing" || state === "title") && (invulnerableTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0)) {
       ctx.save();
       ctx.translate(player.x, player.y);
 
-      // Shield Aura
       if (player.hasShield) {
         ctx.strokeStyle = "#00f0ff";
         ctx.shadowColor = "#00f0ff";
@@ -826,7 +803,6 @@
         ctx.stroke();
       }
 
-      // Draw Starcraft Ship
       ctx.shadowColor = "#00f0ff";
       ctx.shadowBlur = 14;
       ctx.fillStyle = "#00f0ff";
@@ -841,7 +817,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Cockpit Window
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.ellipse(0, -6, 5, 10, 0, 0, Math.PI * 2);
@@ -857,7 +832,7 @@
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    if (!window.TodayPause || !window.TodayPause.isPaused()) {
+    if (!window.TodayPause || !window.TodayPause.isPaused || !window.TodayPause.isPaused()) {
       update(dt);
     }
     render();
@@ -865,7 +840,6 @@
   }
   requestAnimationFrame(loop);
 
-  // Game Flow Controls
   function startGame() {
     getAudioCtx();
     stage = 1;
@@ -878,9 +852,9 @@
     player.targetX = W / 2;
 
     state = "playing";
-    titleOverlay.classList.add("hidden");
-    clearOverlay.classList.add("hidden");
-    overOverlay.classList.add("hidden");
+    if (titleOverlay) titleOverlay.classList.add("hidden");
+    if (clearOverlay) clearOverlay.classList.add("hidden");
+    if (overOverlay) overOverlay.classList.add("hidden");
 
     setupStage();
   }
@@ -890,15 +864,15 @@
     playSound("star");
 
     if (stage >= MAX_STAGE) {
-      clearTitle.textContent = "🏆 전 은하 제압!";
-      clearDetail.textContent = `축하합니다! 50스테이지 완파!\n최종 점수: ${score.toLocaleString("ko-KR")}점`;
-      nextBtn.textContent = "처음부터";
+      if (clearTitle) clearTitle.textContent = "🏆 전 은하 제압!";
+      if (clearDetail) clearDetail.textContent = `축하합니다! 50스테이지 완파!\n최종 점수: ${score.toLocaleString("ko-KR")}점`;
+      if (nextBtn) nextBtn.textContent = "처음부터";
     } else {
-      clearTitle.textContent = `STAGE ${stage} CLEAR!`;
-      clearDetail.textContent = `점수: ${score.toLocaleString("ko-KR")}점 · 다음 구역 진입`;
-      nextBtn.textContent = "다음 스테이지";
+      if (clearTitle) clearTitle.textContent = `STAGE ${stage} CLEAR!`;
+      if (clearDetail) clearDetail.textContent = `점수: ${score.toLocaleString("ko-KR")}점 · 다음 구역 진입`;
+      if (nextBtn) nextBtn.textContent = "다음 스테이지";
     }
-    clearOverlay.classList.remove("hidden");
+    if (clearOverlay) clearOverlay.classList.remove("hidden");
   }
 
   function nextStage() {
@@ -908,14 +882,14 @@
     }
     stage++;
     state = "playing";
-    clearOverlay.classList.add("hidden");
+    if (clearOverlay) clearOverlay.classList.add("hidden");
     setupStage();
   }
 
   function gameOver() {
     state = "over";
-    overDetail.textContent = `STAGE ${stage} · 최종 점수: ${score.toLocaleString("ko-KR")}점`;
-    overOverlay.classList.remove("hidden");
+    if (overDetail) overDetail.textContent = `STAGE ${stage} · 최종 점수: ${score.toLocaleString("ko-KR")}점`;
+    if (overOverlay) overOverlay.classList.remove("hidden");
 
     if (window.TodayGameRank) {
       window.TodayGameRank.mount({
@@ -927,16 +901,26 @@
     }
   }
 
-  startBtn.addEventListener("click", startGame);
-  nextBtn.addEventListener("click", nextStage);
-  retryBtn.addEventListener("click", startGame);
+  if (startBtn) startBtn.addEventListener("click", startGame);
+  if (nextBtn) nextBtn.addEventListener("click", nextStage);
+  if (retryBtn) retryBtn.addEventListener("click", startGame);
 
-  // Initialize Pause System
-  if (window.TodayPause) {
-    window.TodayPause.init({
-      gameTitle: GAME_TITLE,
-      onPause() {},
-      onResume() {},
+  // TodayPause Mount Integration
+  if (window.TodayPause && window.TodayPause.mount) {
+    window.TodayPause.mount({
+      canPause: () => state === "playing",
+      isPaused: () => state === "paused",
+      pause() {
+        if (state !== "playing") return false;
+        state = "paused";
+        return true;
+      },
+      resume() {
+        if (state !== "paused") return false;
+        state = "playing";
+        lastTime = performance.now();
+        return true;
+      },
     });
   }
 })();
