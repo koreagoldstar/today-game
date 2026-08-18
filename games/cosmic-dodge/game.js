@@ -8,10 +8,61 @@
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  // Load High-Res Background Image
+  // High-Res Scrolling Background
   const bgImg = new Image();
   bgImg.src = "assets/bg.jpg";
   let bgScrollY = 0;
+
+  // Real 3D Sprite Assets
+  const sprites = { player: null, boss: null, meteor: null };
+
+  function chromaKey(img) {
+    if (!img) return null;
+    try {
+      const c = document.createElement("canvas");
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return img;
+      c.width = w;
+      c.height = h;
+      const x = c.getContext("2d");
+      x.drawImage(img, 0, 0);
+      const data = x.getImageData(0, 0, w, h);
+      const d = data.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i];
+        const g = d[i + 1];
+        const b = d[i + 2];
+        // Chroma key black background
+        if (r < 32 && g < 32 && b < 32) {
+          d[i + 3] = 0;
+        }
+      }
+      x.putImageData(data, 0, 0);
+      return c;
+    } catch (_) {
+      return img;
+    }
+  }
+
+  function loadImg(src) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(chromaKey(img) || img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+
+  Promise.all([
+    loadImg("assets/player.png"),
+    loadImg("assets/boss.png"),
+    loadImg("assets/meteor.png"),
+  ]).then(([playerSprite, bossSprite, meteorSprite]) => {
+    sprites.player = playerSprite;
+    sprites.boss = bossSprite;
+    sprites.meteor = meteorSprite;
+  });
 
   // HUD & UI Elements
   const hudStage = document.getElementById("hud-stage");
@@ -159,12 +210,13 @@
   const player = {
     x: W / 2,
     y: H - 140,
-    r: 24,
+    r: 26,
     vx: 0,
     targetX: W / 2,
     hasShield: false,
     weaponLevel: 1,
     fireCooldown: 0,
+    tilt: 0,
   };
 
   // Boss State
@@ -260,14 +312,14 @@
     playSound("laser");
 
     if (player.weaponLevel === 1) {
-      bullets.push({ x: player.x, y: player.y - 28, vx: 0, vy: -14, r: 5 });
+      bullets.push({ x: player.x, y: player.y - 30, vx: 0, vy: -15, r: 6 });
     } else if (player.weaponLevel === 2) {
-      bullets.push({ x: player.x - 12, y: player.y - 24, vx: 0, vy: -14, r: 5 });
-      bullets.push({ x: player.x + 12, y: player.y - 24, vx: 0, vy: -14, r: 5 });
+      bullets.push({ x: player.x - 14, y: player.y - 26, vx: 0, vy: -15, r: 6 });
+      bullets.push({ x: player.x + 14, y: player.y - 26, vx: 0, vy: -15, r: 6 });
     } else {
-      bullets.push({ x: player.x, y: player.y - 28, vx: 0, vy: -15, r: 6 });
-      bullets.push({ x: player.x - 14, y: player.y - 22, vx: -3.0, vy: -13.5, r: 5 });
-      bullets.push({ x: player.x + 14, y: player.y - 22, vx: 3.0, vy: -13.5, r: 5 });
+      bullets.push({ x: player.x, y: player.y - 30, vx: 0, vy: -16, r: 7 });
+      bullets.push({ x: player.x - 16, y: player.y - 24, vx: -3.5, vy: -14.5, r: 6 });
+      bullets.push({ x: player.x + 16, y: player.y - 24, vx: 3.5, vy: -14.5, r: 6 });
     }
   }
 
@@ -279,29 +331,29 @@
     screenShake = 24;
 
     hazards.forEach((h) => {
-      addExplosion(h.x, h.y, "#ff9e00", 20);
+      addExplosion(h.x, h.y, "#ff9e00", 24);
       score += 100;
     });
     hazards = [];
     warnings = [];
 
     if (boss) {
-      boss.hp -= 30;
-      addExplosion(boss.x, boss.y, "#ff0055", 35);
+      boss.hp -= 35;
+      addExplosion(boss.x, boss.y, "#ff0055", 40);
       if (boss.hp <= 0) destroyBoss();
     }
   }
 
-  function addExplosion(x, y, color, count = 16) {
+  function addExplosion(x, y, color, count = 18) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 6 + 1.8;
+      const speed = Math.random() * 6.5 + 2.0;
       particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        r: Math.random() * 4.5 + 2,
+        r: Math.random() * 5 + 2,
         color,
         life: 1,
         decay: Math.random() * 0.04 + 0.02,
@@ -361,9 +413,9 @@
 
   function destroyBoss() {
     playSound("bomb");
-    addExplosion(boss.x, boss.y, "#ff0055", 60);
-    addExplosion(boss.x - 35, boss.y, "#ffd166", 40);
-    addExplosion(boss.x + 35, boss.y, "#00f0ff", 40);
+    addExplosion(boss.x, boss.y, "#ff0055", 65);
+    addExplosion(boss.x - 35, boss.y, "#ffd166", 45);
+    addExplosion(boss.x + 35, boss.y, "#00f0ff", 45);
     score += 3500 + stage * 500;
     boss = null;
     if (bossBar) bossBar.classList.add("hidden");
@@ -372,7 +424,7 @@
 
   function spawnHazard() {
     const isMine = Math.random() < 0.28;
-    const size = isMine ? 20 : Math.random() * 18 + 16;
+    const size = isMine ? 20 : Math.random() * 20 + 18;
     const speed = (Math.random() * 2.4 + 2.6) * (1 + stage * 0.04);
 
     hazards.push({
@@ -437,35 +489,39 @@
     itemTimer += dt;
     warningTimer += dt;
 
+    let moveX = 0;
     if (keys["ArrowLeft"] || keys["a"] || keys["A"] || isPadLeft) {
-      player.targetX -= 7.5;
+      moveX -= 8.0;
     }
     if (keys["ArrowRight"] || keys["d"] || keys["D"] || isPadRight) {
-      player.targetX += 7.5;
+      moveX += 8.0;
     }
 
+    player.targetX += moveX;
     player.targetX = Math.max(player.r, Math.min(W - player.r, player.targetX));
-    player.x += (player.targetX - player.x) * 0.24;
+    const dx = player.targetX - player.x;
+    player.x += dx * 0.24;
+    player.tilt = dx * 0.04;
 
     if (keys[" "] || keys["f"] || keys["F"]) {
       fireBullet();
     }
 
-    // Engine Thruster Particles
-    if (Math.random() < 0.9) {
+    // Engine Thruster Flame Particles
+    if (Math.random() < 0.95) {
       particles.push({
-        x: player.x + (Math.random() - 0.5) * 14,
-        y: player.y + 22,
-        vx: (Math.random() - 0.5) * 1.4,
-        vy: Math.random() * 3.5 + 3.5,
-        r: Math.random() * 3.5 + 1.2,
+        x: player.x + (Math.random() - 0.5) * 16,
+        y: player.y + 24,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: Math.random() * 4 + 4,
+        r: Math.random() * 4 + 1.5,
         color: player.hasShield ? "#00f0ff" : "#ffb703",
         life: 1,
         decay: 0.08,
       });
     }
 
-    // Update Bullets
+    // Bullets Update
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
       b.x += b.vx;
@@ -476,7 +532,7 @@
         continue;
       }
 
-      if (boss && Math.hypot(b.x - boss.x, b.y - boss.y) < 50) {
+      if (boss && Math.hypot(b.x - boss.x, b.y - boss.y) < 55) {
         boss.hp--;
         addExplosion(b.x, b.y, "#ff9e00", 5);
         bullets.splice(i, 1);
@@ -498,7 +554,7 @@
           if (h.hp <= 0) {
             score += h.type === "mine" ? 150 : 80;
             playSound("hit");
-            addExplosion(h.x, h.y, "#ff5500", 16);
+            addExplosion(h.x, h.y, "#ff5500", 18);
             hazards.splice(j, 1);
           }
           break;
@@ -511,13 +567,13 @@
     if (boss) {
       if (boss.y < boss.targetY) boss.y += 2;
       boss.x += boss.vx;
-      if (boss.x < 60 || boss.x > W - 60) boss.vx *= -1;
+      if (boss.x < 65 || boss.x > W - 65) boss.vx *= -1;
 
       boss.patternTimer += dt;
       if (boss.patternTimer > 1.1) {
         boss.patternTimer = 0;
-        hazards.push({ x: boss.x - 24, y: boss.y + 35, r: 9, type: "mine", vy: 4.8, rot: 0, vRot: 0, hp: 1 });
-        hazards.push({ x: boss.x + 24, y: boss.y + 35, r: 9, type: "mine", vy: 4.8, rot: 0, vRot: 0, hp: 1 });
+        hazards.push({ x: boss.x - 28, y: boss.y + 38, r: 10, type: "mine", vy: 4.8, rot: 0, vRot: 0, hp: 1 });
+        hazards.push({ x: boss.x + 28, y: boss.y + 38, r: 10, type: "mine", vy: 4.8, rot: 0, vRot: 0, hp: 1 });
       }
     } else {
       const spawnInterval = Math.max(0.28, 1.0 - stage * 0.02);
@@ -550,7 +606,7 @@
         if (w.timer <= 0) w.active = true;
       } else {
         w.duration -= dt;
-        if (Math.abs(player.x - w.x) < 20) {
+        if (Math.abs(player.x - w.x) < 22) {
           playerHit();
         }
         if (w.duration <= 0) warnings.splice(i, 1);
@@ -649,14 +705,14 @@
     if (bgImg.complete && bgImg.naturalWidth > 0) {
       ctx.drawImage(bgImg, 0, bgScrollY, W, H);
       ctx.drawImage(bgImg, 0, bgScrollY - H, W, H);
-      ctx.fillStyle = "rgba(5, 8, 17, 0.4)";
+      ctx.fillStyle = "rgba(5, 8, 17, 0.35)";
       ctx.fillRect(0, 0, W, H);
     } else {
       ctx.fillStyle = "#050811";
       ctx.fillRect(0, 0, W, H);
     }
 
-    // Render Starfield
+    // Render Starfield Particles
     ctx.fillStyle = "#ffffff";
     stars.forEach((s) => {
       ctx.globalAlpha = s.alpha;
@@ -681,49 +737,32 @@
         ctx.fillStyle = "rgba(255, 0, 85, 0.9)";
         ctx.shadowColor = "#ff0055";
         ctx.shadowBlur = 22;
-        ctx.fillRect(w.x - 16, 0, 32, H);
+        ctx.fillRect(w.x - 18, 0, 36, H);
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(w.x - 4, 0, 8, H);
+        ctx.fillRect(w.x - 5, 0, 10, H);
       }
     });
 
-    // Render Boss Ship
+    // Render 3D Boss Ship Sprite
     if (boss) {
       ctx.save();
       ctx.translate(boss.x, boss.y);
-      
-      ctx.fillStyle = "#ff0055";
-      ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 25;
-
-      // Dreadnought Wings
-      ctx.beginPath();
-      ctx.moveTo(0, 42);
-      ctx.lineTo(-50, -22);
-      ctx.lineTo(-24, -40);
-      ctx.lineTo(24, -40);
-      ctx.lineTo(50, -22);
-      ctx.closePath();
-      ctx.fill();
-
-      // Boss Metallic Trim
-      ctx.fillStyle = "#2b1020";
-      ctx.beginPath();
-      ctx.arc(0, 0, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Boss Core Eye
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 15;
-      ctx.beginPath();
-      ctx.arc(0, 0, 12, 0, Math.PI * 2);
-      ctx.fill();
-
+      if (sprites.boss) {
+        ctx.shadowColor = "#ff0055";
+        ctx.shadowBlur = 25;
+        ctx.drawImage(sprites.boss, -70, -70, 140, 140);
+      } else {
+        ctx.fillStyle = "#ff0055";
+        ctx.shadowColor = "#ff0055";
+        ctx.shadowBlur = 25;
+        ctx.beginPath();
+        ctx.arc(0, 0, 45, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
 
-    // Render Hazards (Meteors & Mines)
+    // Render 3D Hazards (Meteors & Mines)
     hazards.forEach((h) => {
       ctx.save();
       ctx.translate(h.x, h.y);
@@ -732,37 +771,27 @@
       if (h.type === "mine") {
         ctx.fillStyle = "#ff0055";
         ctx.shadowColor = "#ff0055";
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 18;
         ctx.beginPath();
         ctx.arc(0, 0, h.r, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
         ctx.arc(0, 0, h.r * 0.45, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        // 3D Textured Faceted Meteor
-        ctx.fillStyle = "#f4a261";
-        ctx.shadowColor = "#ffb703";
-        ctx.shadowBlur = 14;
-        ctx.beginPath();
-        const sides = 7;
-        for (let i = 0; i < sides; i++) {
-          const a = (i / sides) * Math.PI * 2;
-          const rad = h.r * (0.82 + (i % 2 === 0 ? 0.22 : 0.04));
-          const px = Math.cos(a) * rad;
-          const py = Math.sin(a) * rad;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+        if (sprites.meteor) {
+          ctx.shadowColor = "#ff9e00";
+          ctx.shadowBlur = 16;
+          ctx.drawImage(sprites.meteor, -h.r * 1.35, -h.r * 1.35, h.r * 2.7, h.r * 2.7);
+        } else {
+          ctx.fillStyle = "#f4a261";
+          ctx.shadowColor = "#ffb703";
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.arc(0, 0, h.r, 0, Math.PI * 2);
+          ctx.fill();
         }
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#2b1e1a";
-        ctx.beginPath();
-        ctx.arc(-h.r * 0.2, -h.r * 0.2, h.r * 0.35, 0, Math.PI * 2);
-        ctx.fill();
       }
       ctx.restore();
     });
@@ -771,7 +800,7 @@
     bullets.forEach((b) => {
       ctx.fillStyle = "#00f0ff";
       ctx.shadowColor = "#00f0ff";
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = 16;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       ctx.fill();
@@ -785,7 +814,7 @@
     items.forEach((it) => {
       ctx.save();
       ctx.translate(it.x, it.y);
-      ctx.font = "26px sans-serif";
+      ctx.font = "28px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
@@ -796,7 +825,7 @@
       ctx.restore();
     });
 
-    // Render Particles
+    // Render Explosion Particles
     particles.forEach((p) => {
       ctx.fillStyle = p.color;
       ctx.globalAlpha = Math.max(0, p.life);
@@ -806,42 +835,38 @@
     });
     ctx.globalAlpha = 1;
 
-    // Render Player Spacecraft
+    // Render 3D Player Spacecraft Sprite
     if ((state === "playing" || state === "title") && (invulnerableTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0)) {
       ctx.save();
       ctx.translate(player.x, player.y);
+      ctx.rotate(player.tilt || 0);
 
-      // Energy Shield Forcefield
+      // Energy Shield Aura Ring
       if (player.hasShield) {
         ctx.strokeStyle = "#00f0ff";
         ctx.shadowColor = "#00f0ff";
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 3;
+        ctx.shadowBlur = 22;
+        ctx.lineWidth = 3.5;
         ctx.beginPath();
-        ctx.arc(0, 0, player.r + 10, 0, Math.PI * 2);
+        ctx.arc(0, 0, player.r + 14, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Fighter Metallic Body
-      ctx.shadowColor = "#00f0ff";
-      ctx.shadowBlur = 16;
-      ctx.fillStyle = "#00f0ff";
-
-      ctx.beginPath();
-      ctx.moveTo(0, -28);
-      ctx.lineTo(-26, 20);
-      ctx.lineTo(-12, 14);
-      ctx.lineTo(0, 18);
-      ctx.lineTo(12, 14);
-      ctx.lineTo(26, 20);
-      ctx.closePath();
-      ctx.fill();
-
-      // Wingtip Thruster Lights
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(0, -7, 6, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
+      if (sprites.player) {
+        ctx.shadowColor = "#00f0ff";
+        ctx.shadowBlur = 18;
+        ctx.drawImage(sprites.player, -player.r * 1.6, -player.r * 1.6, player.r * 3.2, player.r * 3.2);
+      } else {
+        ctx.shadowColor = "#00f0ff";
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = "#00f0ff";
+        ctx.beginPath();
+        ctx.moveTo(0, -28);
+        ctx.lineTo(-26, 20);
+        ctx.lineTo(26, 20);
+        ctx.closePath();
+        ctx.fill();
+      }
 
       ctx.restore();
     }
