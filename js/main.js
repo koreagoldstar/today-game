@@ -21,7 +21,7 @@
       title: "우주 회피",
       tag: "슈팅 · 50스테이지",
       href: "/games/cosmic-dodge/",
-      thumb: "/assets/thumbs/cosmic-dodge.svg",
+      thumb: "/assets/thumbs/cosmic-dodge.png",
       category: "action",
     },
     {
