@@ -2,7 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  touch-action: manipulation;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -11,7 +11,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0b0e14;
+  background: #060911;
   color: #fff;
   font-family: "Jua", system-ui, -apple-system, sans-serif;
 }
@@ -22,8 +22,15 @@ html, body {
   height: min(700px, 100vh);
   margin: 0 auto;
   overflow: hidden;
-  background: #05070a;
-  box-shadow: 0 0 40px rgba(0, 180, 255, 0.2);
+  background: #060911;
+  box-shadow: 0 0 50px rgba(0, 240, 255, 0.25);
+  border-radius: max(0px, min(16px, 2vw));
+}
+
+canvas#game {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .hud {
@@ -33,127 +40,249 @@ html, body {
   right: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  gap: 8px;
   z-index: 10;
+  pointer-events: none;
 }
 
-.home {
-  color: #7ec8ff;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 700;
-  background: rgba(11, 14, 20, 0.7);
-  backdrop-filter: blur(8px);
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(126, 200, 255, 0.3);
-}
-
-.score-pill {
-  background: rgba(11, 14, 20, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 14px;
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  background: rgba(10, 18, 32, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 14px;
+  font-size: 13px;
   color: #a0c4ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.score-pill b {
+.panel.right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.panel b {
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
 }
 
-.score-pill.soft {
-  color: #ffb703;
+.boss-bar {
+  position: absolute;
+  top: 64px;
+  left: 20px;
+  right: 20px;
+  background: rgba(10, 18, 32, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid #ff0055;
+  border-radius: 12px;
+  padding: 6px 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+  transition: opacity 0.3s ease;
 }
 
-.score-pill.soft b {
-  color: #ffd166;
+.boss-bar.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
-canvas#game {
+.boss-bar span {
+  font-size: 12px;
+  color: #ff9ec4;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.boss-bar .bar {
   width: 100%;
-  height: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.boss-bar .bar i {
   display: block;
-  background: radial-gradient(circle at 50% 30%, #101726 0%, #05070a 100%);
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff0055, #ff5500);
+  border-radius: 6px;
+  transition: width 0.15s ease-out;
 }
 
 .hint {
   position: absolute;
-  bottom: 12px;
+  bottom: 90px;
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
   pointer-events: none;
   z-index: 5;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.controls {
+  position: absolute;
+  bottom: 14px;
+  left: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.3fr;
+  gap: 8px;
+  z-index: 12;
+}
+
+.pad, .fire {
+  padding: 14px 6px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+
+.pad:active, .fire:active {
+  transform: scale(0.94);
+  background: rgba(0, 240, 255, 0.35);
+}
+
+.pad.bomb {
+  font-size: 13px;
+  background: linear-gradient(180deg, rgba(255, 0, 85, 0.5), rgba(200, 0, 50, 0.3));
+  border-color: rgba(255, 0, 85, 0.6);
+}
+
+.fire {
+  font-size: 15px;
+  background: linear-gradient(180deg, #00f0ff, #0077b6);
+  border-color: #90e0ef;
+  color: #03045e;
+  box-shadow: 0 4px 14px rgba(0, 240, 255, 0.5);
 }
 
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(7, 10, 16, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(6, 9, 17, 0.92);
+  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 24px;
   text-align: center;
-  z-index: 20;
+  z-index: 25;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .overlay.hidden {
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
-.badge {
-  font-family: "Bagel Fat One", display;
-  font-size: 13px;
-  letter-spacing: 2px;
-  padding: 4px 12px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #00b4d8, #90e0ef);
-  color: #03045e;
+.hero-art {
+  width: 130px;
+  height: 130px;
   margin-bottom: 12px;
-  text-transform: uppercase;
-}
-
-.hero-art-icon {
-  font-size: 64px;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 0 16px rgba(0, 180, 255, 0.8));
+  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.6));
   animation: float 3s ease-in-out infinite;
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
+}
+
+.badge {
+  font-family: "Bagel Fat One", display;
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00f0ff, #70e000);
+  color: #03045e;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.badge.soft {
+  background: linear-gradient(135deg, #ffd166, #ffb703);
 }
 
 h1 {
   font-family: "Bagel Fat One", cursive;
-  font-size: 32px;
+  font-size: 34px;
   color: #fff;
-  text-shadow: 0 0 12px rgba(0, 180, 255, 0.6);
+  text-shadow: 0 0 16px rgba(0, 240, 255, 0.7);
   margin-bottom: 8px;
 }
 
-p {
-  font-size: 15px;
-  line-height: 1.4;
-  color: #b0c4de;
-  margin-bottom: 20px;
+h1 em {
+  font-style: normal;
+  color: #00f0ff;
 }
 
-.btn {
+p {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #a0c4ff;
+  margin-bottom: 16px;
+}
+
+.rules {
+  list-style: none;
+  width: min(300px, 100%);
+  margin-bottom: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rules li {
+  font-size: 13px;
+  color: #d0e4ff;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rules li b {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  background: #00f0ff;
+  color: #03045e;
+  border-radius: 50%;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.primary {
   width: min(280px, 100%);
-  padding: 14px 20px;
+  padding: 15px 20px;
   font-family: inherit;
   font-size: 18px;
   font-weight: 700;
@@ -161,37 +290,37 @@ p {
   background: linear-gradient(180deg, #90e0ef, #00b4d8);
   border: none;
   border-radius: 18px;
-  box-shadow: 0 6px 0 #0077b6, 0 8px 20px rgba(0, 180, 255, 0.4);
+  box-shadow: 0 6px 0 #0077b6, 0 10px 25px rgba(0, 240, 255, 0.4);
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.btn:active {
+.primary:active {
   transform: translateY(3px);
-  box-shadow: 0 3px 0 #0077b6, 0 4px 10px rgba(0, 180, 255, 0.4);
+  box-shadow: 0 3px 0 #0077b6;
 }
 
-.btn.soft {
+.primary.soft {
   color: #fff;
   background: linear-gradient(180deg, #7209b7, #4cc9f0);
-  box-shadow: 0 6px 0 #3f37c9, 0 8px 20px rgba(114, 9, 183, 0.4);
+  box-shadow: 0 6px 0 #3f37c9, 0 10px 25px rgba(114, 9, 183, 0.4);
 }
 
-.btn.soft:active {
+.primary.soft:active {
   transform: translateY(3px);
   box-shadow: 0 3px 0 #3f37c9;
 }
 
-.link {
+.overlay a {
   color: #7ec8ff;
   font-size: 14px;
   text-decoration: none;
-  margin-top: 8px;
+  margin-top: 6px;
   opacity: 0.85;
 }
 
-.link:hover {
+.overlay a:hover {
   opacity: 1;
 }
 

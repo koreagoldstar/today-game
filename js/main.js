@@ -19,9 +19,9 @@
     {
       id: "cosmic-dodge",
       title: "우주 회피",
-      tag: "아케이드 · 무한 회피",
+      tag: "슈팅 · 50스테이지",
       href: "/games/cosmic-dodge/",
-      emoji: "🚀",
+      thumb: "/assets/thumbs/cosmic-dodge.svg",
       category: "action",
     },
     {
