@@ -1,54 +1,142 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#1a2536"/>
-      <stop offset="100%" stop-color="#060911"/>
+    <!-- Background Gradient -->
+    <radialGradient id="spaceBg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#162238" />
+      <stop offset="50%" stop-color="#0d1424" />
+      <stop offset="100%" stop-color="#050811" />
     </radialGradient>
-    <linearGradient id="ship" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f0ff"/>
-      <stop offset="100%" stop-color="#0077b6"/>
+
+    <!-- Nebula Glow -->
+    <radialGradient id="nebula" cx="70%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#7209b7" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#050811" stop-opacity="0" />
+    </radialGradient>
+    
+    <radialGradient id="cyanGlow" cx="30%" cy="70%" r="45%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#050811" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Metallic Fighter Ship Gradients -->
+    <linearGradient id="shipBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f7fa" />
+      <stop offset="40%" stop-color="#00b4d8" />
+      <stop offset="100%" stop-color="#03045e" />
     </linearGradient>
-    <linearGradient id="flame" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffb703"/>
-      <stop offset="100%" stop-color="#ff0055"/>
+
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0077b6" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="4" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <linearGradient id="thrusterFlame" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#ffd166" />
+      <stop offset="70%" stop-color="#ff0055" />
+      <stop offset="100%" stop-color="#7209b7" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Meteor Flame & Rock -->
+    <linearGradient id="meteorFlame" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffb703" />
+      <stop offset="50%" stop-color="#ff0055" />
+      <stop offset="100%" stop-color="#3a0ca3" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="rockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4a261" />
+      <stop offset="50%" stop-color="#e07a5f" />
+      <stop offset="100%" stop-color="#2b1e1a" />
+    </linearGradient>
+
+    <!-- Shield Glow -->
+    <radialGradient id="shieldGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="#00f0ff" stop-opacity="0" />
+      <stop offset="90%" stop-color="#00f0ff" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9" />
+    </radialGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
     </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="220" height="220" rx="44" fill="url(#bg)" />
+  <!-- Frame Background -->
+  <rect width="220" height="220" rx="44" fill="url(#spaceBg)" />
+  <rect width="220" height="220" rx="44" fill="url(#nebula)" />
+  <rect width="220" height="220" rx="44" fill="url(#cyanGlow)" />
 
   <!-- Stars -->
-  <circle cx="35" cy="45" r="2" fill="#fff" opacity="0.8" />
-  <circle cx="180" cy="30" r="1.5" fill="#fff" opacity="0.9" />
-  <circle cx="160" cy="180" r="2.5" fill="#ffd166" opacity="0.8" filter="url(#glow)" />
-  <circle cx="40" cy="160" r="1.5" fill="#fff" opacity="0.6" />
+  <circle cx="30" cy="40" r="1.5" fill="#fff" opacity="0.9" />
+  <circle cx="85" cy="25" r="2.2" fill="#ffd166" filter="url(#glowFilter)" />
+  <circle cx="190" cy="35" r="1.8" fill="#fff" opacity="0.7" />
+  <circle cx="175" cy="185" r="2.5" fill="#00f0ff" filter="url(#glowFilter)" />
+  <circle cx="35" cy="170" r="1.2" fill="#fff" opacity="0.8" />
+  <circle cx="110" cy="195" r="1.6" fill="#fff" opacity="0.6" />
 
-  <!-- Flaming Meteor -->
-  <g transform="translate(160, 75) rotate(-25)">
-    <path d="M-20,-10 C-40,0 -50,20 -70,25 C-40,30 -30,50 0,40 C30,30 20,-20 -20,-10 Z" fill="url(#flame)" opacity="0.75" />
-    <path d="M0,0 L14,-8 L26,4 L18,22 L-4,24 L-12,10 Z" fill="#e07a5f" stroke="#f4a261" stroke-width="2.5" stroke-linejoin="round" />
-    <circle cx="4" cy="8" r="4" fill="#3d1e16" opacity="0.6" />
+  <!-- Cosmic Speed Lines -->
+  <line x1="20" y1="10" x2="20" y2="40" stroke="#ffffff" opacity="0.15" stroke-width="1" stroke-dasharray="4 8" />
+  <line x1="200" y1="60" x2="200" y2="110" stroke="#00f0ff" opacity="0.2" stroke-width="1.5" />
+  <line x1="160" y1="140" x2="160" y2="190" stroke="#ffffff" opacity="0.15" stroke-width="1" />
+
+  <!-- Flaming Meteor (Top Right Danger) -->
+  <g transform="translate(155, 65) rotate(-35)">
+    <!-- Fire Trail -->
+    <path d="M-35,-15 C-60,-5 -80,25 -105,30 C-65,38 -45,65 0,50 C40,35 30,-25 -35,-15 Z" fill="url(#meteorFlame)" opacity="0.85" filter="url(#glowFilter)" />
+    <!-- Meteor Body -->
+    <path d="M12,-15 L28,-2 L32,18 L16,32 L-8,30 L-22,14 L-15,-8 Z" fill="url(#rockGrad)" stroke="#ffb703" stroke-width="2" stroke-linejoin="round" filter="url(#glowFilter)" />
+    <!-- Craters -->
+    <circle cx="5" cy="5" r="5" fill="#1e100c" opacity="0.6" />
+    <circle cx="18" cy="12" r="3" fill="#1e100c" opacity="0.5" />
+    <circle cx="-5" cy="16" r="3.5" fill="#1e100c" opacity="0.6" />
   </g>
 
-  <!-- Spaceship -->
-  <g transform="translate(100, 125)" filter="url(#glow)">
+  <!-- Player Spaceship (Center Bottom) -->
+  <g transform="translate(95, 125)">
     <!-- Thruster Flame -->
-    <polygon points="-8,30 0,55 8,30" fill="url(#flame)" />
-    <!-- Wings -->
-    <polygon points="-42,20 -12,-5 0,-35 12,-5 42,20 22,25 0,18 -22,25" fill="url(#ship)" stroke="#90e0ef" stroke-width="2" />
-    <!-- Cockpit -->
-    <ellipse cx="0" cy="-5" rx="7" ry="14" fill="#ffffff" opacity="0.9" />
-    <!-- Wing Lights -->
-    <circle cx="-38" cy="18" r="3" fill="#ff0055" />
-    <circle cx="38" cy="18" r="3" fill="#00f0ff" />
+    <polygon points="-7,30 0,68 7,30" fill="url(#thrusterFlame)" filter="url(#strongGlow)" />
+    <polygon points="-3,28 0,50 3,28" fill="#ffffff" filter="url(#glowFilter)" />
+
+    <!-- Energy Shield Aura -->
+    <circle cx="0" cy="0" r="44" fill="url(#shieldGrad)" filter="url(#glowFilter)" opacity="0.85" />
+    <circle cx="0" cy="0" r="44" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="6 4" fill="none" filter="url(#glowFilter)" />
+
+    <!-- Main Fighter Body -->
+    <g filter="url(#glowFilter)">
+      <!-- Left & Right Wings -->
+      <path d="M0,-36 L-44,20 L-24,24 L0,14 Z" fill="url(#wingGrad)" />
+      <path d="M0,-36 L44,20 L24,24 L0,14 Z" fill="url(#wingGrad)" />
+
+      <!-- Center Fuselage -->
+      <path d="M0,-42 L-16,-5 L-10,22 L0,28 L10,22 L16,-5 Z" fill="url(#shipBody)" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Glass Cockpit Dome -->
+      <ellipse cx="0" cy="-10" rx="6" ry="15" fill="#ffffff" opacity="0.95" />
+      <ellipse cx="0" cy="-10" rx="4" ry="11" fill="#00f0ff" opacity="0.8" />
+
+      <!-- Wingtip Plasma Cannons -->
+      <circle cx="-42" cy="18" r="3.5" fill="#ff0055" filter="url(#glowFilter)" />
+      <circle cx="42" cy="18" r="3.5" fill="#00f0ff" filter="url(#glowFilter)" />
+    </g>
   </g>
 
-  <!-- Ether Star Collectible -->
-  <g transform="translate(55, 80) scale(1.2)" filter="url(#glow)">
-    <polygon points="0,-12 3.5,-3.5 12,0 3.5,3.5 0,12 -3.5,3.5 -12,0 -3.5,-3.5" fill="#ffd166" />
+  <!-- Golden Ether Star Item (Top Left) -->
+  <g transform="translate(48, 75)" filter="url(#strongGlow)">
+    <polygon points="0,-16 4.5,-4.5 16,0 4.5,4.5 0,16 -4.5,4.5 -16,0 -4.5,-4.5" fill="#ffd166" stroke="#ffffff" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="4" fill="#ffffff" />
   </g>
 </svg>

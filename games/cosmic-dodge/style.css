@@ -1,132 +1,147 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+:root {
+  --ink: #e8f0ff;
+  --gold: #ffd166;
+  --cyan: #00f0ff;
+  --panel: rgba(8, 16, 32, 0.72);
 }
 
-html, body {
-  width: 100%;
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+html,
+body {
+  margin: 0;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
-  background: #060911;
-  color: #fff;
-  font-family: "Jua", system-ui, -apple-system, sans-serif;
+  font-family: "Jua", system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.2), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(114, 9, 183, 0.25), transparent 60%),
+    linear-gradient(180deg, #050811 0%, #0d1627 50%, #050811 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
 }
 
 .stage {
   position: relative;
-  width: min(390px, 100vw);
-  height: min(700px, 100vh);
-  margin: 0 auto;
+  width: min(100vw, calc(100dvh * 0.557));
+  height: min(100dvh, calc(100vw / 0.557));
+  max-width: 420px;
+  border-radius: 20px;
   overflow: hidden;
-  background: #060911;
-  box-shadow: 0 0 50px rgba(0, 240, 255, 0.25);
-  border-radius: max(0px, min(16px, 2vw));
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 240, 255, 0.15);
+  border: 2px solid rgba(0, 240, 255, 0.3);
+  background: #050811;
 }
 
 canvas#game {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
 }
 
 .hud {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  z-index: 10;
   pointer-events: none;
+  z-index: 3;
 }
 
 .panel {
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 14px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 14px;
-  background: rgba(10, 18, 32, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: 14px;
   font-size: 13px;
-  color: #a0c4ff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  min-width: 110px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 .panel.right {
-  text-align: right;
   align-items: flex-end;
 }
 
 .panel b {
-  color: #fff;
+  color: var(--gold);
+  font-weight: 400;
   font-size: 15px;
 }
 
 .boss-bar {
   position: absolute;
-  top: 64px;
-  left: 20px;
-  right: 20px;
-  background: rgba(10, 18, 32, 0.9);
+  top: 70px;
+  left: 16px;
+  right: 16px;
+  z-index: 4;
+  pointer-events: none;
+  background: rgba(8, 16, 32, 0.85);
   backdrop-filter: blur(10px);
-  border: 1.5px solid #ff0055;
+  border: 1px solid rgba(255, 0, 85, 0.5);
   border-radius: 12px;
   padding: 6px 12px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-  transition: opacity 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.3);
 }
 
 .boss-bar.hidden {
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .boss-bar span {
+  display: block;
+  text-align: center;
   font-size: 12px;
   color: #ff9ec4;
+  margin-bottom: 4px;
   font-weight: 700;
-  letter-spacing: 1px;
 }
 
 .boss-bar .bar {
-  width: 100%;
   height: 10px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 0, 85, 0.3);
   overflow: hidden;
 }
 
-.boss-bar .bar i {
+.boss-bar .bar > i {
   display: block;
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #ff0055, #ff5500);
-  border-radius: 6px;
-  transition: width 0.15s ease-out;
+  background: linear-gradient(90deg, #ff0055, #ffd166);
+  border-radius: inherit;
+  transition: width 0.12s ease;
 }
 
 .hint {
   position: absolute;
-  bottom: 90px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
   pointer-events: none;
-  z-index: 5;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(8, 16, 32, 0.65);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  font-size: 12px;
+  color: rgba(232, 240, 255, 0.9);
+  white-space: nowrap;
 }
 
 .controls {
@@ -135,25 +150,25 @@ canvas#game {
   left: 12px;
   right: 12px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.3fr;
+  grid-template-columns: 1fr 1.1fr 1fr 1.3fr;
   gap: 8px;
   z-index: 12;
 }
 
 .pad, .fire {
-  padding: 14px 6px;
+  padding: 13px 4px;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   border: none;
   border-radius: 16px;
   cursor: pointer;
   touch-action: manipulation;
   color: #fff;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.08s ease, background 0.08s ease;
 }
 
@@ -164,8 +179,9 @@ canvas#game {
 
 .pad.bomb {
   font-size: 13px;
-  background: linear-gradient(180deg, rgba(255, 0, 85, 0.5), rgba(200, 0, 50, 0.3));
-  border-color: rgba(255, 0, 85, 0.6);
+  background: linear-gradient(180deg, rgba(255, 0, 85, 0.6), rgba(180, 0, 50, 0.4));
+  border-color: rgba(255, 0, 85, 0.7);
+  box-shadow: 0 4px 14px rgba(255, 0, 85, 0.3);
 }
 
 .fire {
@@ -173,35 +189,34 @@ canvas#game {
   background: linear-gradient(180deg, #00f0ff, #0077b6);
   border-color: #90e0ef;
   color: #03045e;
-  box-shadow: 0 4px 14px rgba(0, 240, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.5);
 }
 
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 9, 17, 0.92);
-  backdrop-filter: blur(16px);
+  z-index: 20;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 24px;
+  justify-content: center;
   text-align: center;
-  z-index: 25;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(0, 240, 255, 0.25), transparent 50%),
+    linear-gradient(180deg, rgba(8, 16, 32, 0.95), rgba(4, 8, 16, 0.98));
+  backdrop-filter: blur(16px);
 }
 
 .overlay.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.95);
+  display: none !important;
 }
 
 .hero-art {
-  width: 130px;
-  height: 130px;
+  width: 140px;
+  height: 140px;
   margin-bottom: 12px;
-  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.6));
+  filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.5));
   animation: float 3s ease-in-out infinite;
 }
 
@@ -211,27 +226,29 @@ canvas#game {
 }
 
 .badge {
-  font-family: "Bagel Fat One", display;
-  font-size: 12px;
-  letter-spacing: 2px;
-  padding: 4px 14px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #00f0ff, #70e000);
+  display: inline-block;
+  background: linear-gradient(180deg, #00f0ff, #0077b6);
   color: #03045e;
-  margin-bottom: 10px;
-  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  font-family: "Bagel Fat One", display;
 }
 
 .badge.soft {
-  background: linear-gradient(135deg, #ffd166, #ffb703);
+  background: linear-gradient(180deg, #ffd166, #ffb703);
+  color: #3d2a00;
 }
 
 h1 {
-  font-family: "Bagel Fat One", cursive;
-  font-size: 34px;
+  margin: 0 0 6px;
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-size: 36px;
   color: #fff;
-  text-shadow: 0 0 16px rgba(0, 240, 255, 0.7);
-  margin-bottom: 8px;
+  text-shadow: 0 4px 16px rgba(0, 240, 255, 0.5);
 }
 
 h1 em {
@@ -240,17 +257,17 @@ h1 em {
 }
 
 p {
+  margin: 0 0 16px;
   font-size: 14px;
   line-height: 1.45;
   color: #a0c4ff;
-  margin-bottom: 16px;
 }
 
 .rules {
   list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
   width: min(300px, 100%);
-  margin-bottom: 20px;
-  text-align: left;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -259,12 +276,14 @@ p {
 .rules li {
   font-size: 13px;
   color: #d0e4ff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
+  text-align: left;
 }
 
 .rules li b {
@@ -281,43 +300,40 @@ p {
 }
 
 .primary {
-  width: min(280px, 100%);
-  padding: 15px 20px;
-  font-family: inherit;
-  font-size: 18px;
-  font-weight: 700;
-  color: #03045e;
-  background: linear-gradient(180deg, #90e0ef, #00b4d8);
+  appearance: none;
   border: none;
-  border-radius: 18px;
-  box-shadow: 0 6px 0 #0077b6, 0 10px 25px rgba(0, 240, 255, 0.4);
+  width: min(280px, 100%);
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
   cursor: pointer;
+  color: #2e1c00;
+  background: linear-gradient(180deg, #ffd166, #ffb703);
+  box-shadow: 0 8px 24px rgba(255, 183, 3, 0.4);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .primary:active {
   transform: translateY(3px);
-  box-shadow: 0 3px 0 #0077b6;
+  box-shadow: 0 4px 12px rgba(255, 183, 3, 0.4);
 }
 
 .primary.soft {
   color: #fff;
   background: linear-gradient(180deg, #7209b7, #4cc9f0);
-  box-shadow: 0 6px 0 #3f37c9, 0 10px 25px rgba(114, 9, 183, 0.4);
-}
-
-.primary.soft:active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 #3f37c9;
+  box-shadow: 0 8px 24px rgba(114, 9, 183, 0.4);
 }
 
 .overlay a {
   color: #7ec8ff;
   font-size: 14px;
   text-decoration: none;
-  margin-top: 6px;
-  opacity: 0.85;
+  margin-top: 4px;
+  opacity: 0.9;
 }
 
 .overlay a:hover {
