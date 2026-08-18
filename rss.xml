@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>오늘의 게임 | 오늘의게임 (Today Game)</title>
+    <link>https://www.todaygame.co.kr</link>
+    <description>별도 설치 없이 브라우저에서 바로 즐기는 무료 미니게임 모음 — 오늘의 게임 공식 RSS 피드입니다.</description>
+    <language>ko</language>
+
+    <item>
+      <title>[오늘의 게임] 신규 미니게임: 공룡 헌터 (Dino Hunt)</title>
+      <link>https://www.todaygame.co.kr/games/dino-hunt/</link>
+      <description>나무를 오르고 위협적인 공룡을 조준하여 격파하는 스릴 넘치는 슈팅 액션 미니게임! 오늘의 게임에서 무료로 바로 플레이해보세요.</description>
+      <pubDate>Tue, 18 Aug 2026 12:00:00 +0900</pubDate>
+    </item>
+
+    <item>
+      <title>[오늘의 게임] 승부차기 히어로 (Penalty Kick)</title>
+      <link>https://www.todaygame.co.kr/games/penalty-kick/</link>
+      <description>짜릿한 타이밍 조절로 골키퍼를 제치고 골을 성공시켜보세요! 실시간 랭킹 도전이 가능합니다.</description>
+      <pubDate>Tue, 18 Aug 2026 10:00:00 +0900</pubDate>
+    </item>
+
+    <item>
+      <title>[오늘의 게임] 펄럭 병아리 (Flappy Chick)</title>
+      <link>https://www.todaygame.co.kr/games/flappy/</link>
+      <description>파이프 사이를 펄럭이며 날아가 최고 점수를 기록하는 클래식 캐주얼 미니게임.</description>
+      <pubDate>Mon, 17 Aug 2026 15:00:00 +0900</pubDate>
+    </item>
+
+    <item>
+      <title>[오늘의 게임] 전체 게임 랭킹 및 명예의 전당</title>
+      <link>https://www.todaygame.co.kr/rankings/</link>
+      <description>오늘의 게임에서 플레이할 수 있는 50여 가지 미니게임의 일간/주간 리더보드 순위를 확인하세요.</description>
+      <pubDate>Sun, 16 Aug 2026 18:00:00 +0900</pubDate>
+    </item>
+
+  </channel>
+</rss>

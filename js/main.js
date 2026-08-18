@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "cosmic-dodge",
+      title: "우주 회피",
+      tag: "아케이드 · 무한 회피",
+      href: "/games/cosmic-dodge/",
+      emoji: "🚀",
+      category: "action",
+    },
+    {
       id: "dino-hunt",
       title: "공룡 헌터",
       tag: "슈팅 · 나무 오르기",

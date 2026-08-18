@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0e14" />
+    <title>우주 회피 - 오늘의 게임 (Today Game)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-bgm="hub">
+    <div class="stage">
+      <div class="hud">
+        <a class="home" href="/">← 홈</a>
+        <div class="score-pill">점수 <b id="hud-score">0</b></div>
+        <div class="score-pill soft">최고 <b id="hud-best">0</b></div>
+      </div>
+      <canvas id="game" width="390" height="700"></canvas>
+      <p class="hint">드래그 / 방향키로 비행선 조종 · 별을 모으고 운석을 피하세요!</p>
+
+      <div class="overlay" id="title">
+        <div class="badge">COSMIC</div>
+        <div class="hero-art-icon">🚀</div>
+        <h1>우주 회피</h1>
+        <p>쏟아지는 운석과 광선을 피하고<br />우주 에테르 별을 수집하세요!</p>
+        <button type="button" class="btn" id="start-btn">게임 시작!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>우주 탐사 종료!</h1>
+        <p id="over-detail">최종 점수: 0점</p>
+        <div id="rank-form-container"></div>
+        <button type="button" class="btn soft" id="retry-btn">다시 도전!</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

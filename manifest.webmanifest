@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "오늘의 게임",
-  "short_name": "오늘의 게임",
-  "description": "작고 귀여운 미니게임과 오늘의 챌린지를 즐겨보세요.",
+  "name": "오늘의게임",
+  "short_name": "오늘의게임",
+  "description": "오늘의게임(todaygame.co.kr) — 작고 귀여운 미니게임과 오늘의 챌린지",
   "lang": "ko-KR",
   "start_url": "/?source=pwa",
   "scope": "/",

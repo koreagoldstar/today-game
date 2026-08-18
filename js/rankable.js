@@ -47,6 +47,7 @@
     { id: "number-hole", title: "넘버 홀" },
     { id: "penalty-kick", title: "승부차기 히어로" },
     { id: "dino-hunt", title: "공룡 헌터" },
+    { id: "cosmic-dodge", title: "우주 회피" },
     { id: "fruit-catch", title: "과일 바스켓" },
     { id: "bubble-pop", title: "팝팝 방울" },
     { id: "pinball", title: "핀볼팡팡" },

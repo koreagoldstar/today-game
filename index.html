@@ -4,11 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#7ec8ff" />
+    <!-- Google & Naver Search Engine Verification -->
     <!-- Google Search Console: add <meta name="google-site-verification" content="..." /> here -->
     <meta name="naver-site-verification" content="09ebc68b022f547b2446e9f892beb2e75b760293" />
-    <meta name="description" content="작고 귀여운 미니게임 모음 · 오늘의 챌린지에 도전해 보세요!" />
-    <title>오늘의 게임</title>
+    <meta name="naver-site-verification" content="naverb23dd9bf56633165b12f89c0de3ff0dd" />
+    <title>오늘의 게임 | 오늘의게임 - 무료 미니게임 모음 (Today Game)</title>
+    <meta
+      name="description"
+      content="오늘의 게임(오늘의게임, Today Game) — 별도 설치 없이 웹 브라우저에서 바로 즐기는 무료 미니게임 모음 사이트! 테트리스, 플래피, 2048, 팩맨, 수박게임 등 다양한 미니게임과 일일 챌린지에 도전해보세요."
+    />
+    <meta
+      name="keywords"
+      content="오늘의 게임, 오늘의게임, Today Game, todaygame, 미니게임, 무료 미니게임, 무료게임, 브라우저 게임, 플래시게임, 랭킹게임, 무료게임사이트"
+    />
     <link rel="canonical" href="https://www.todaygame.co.kr/" />
+    <link rel="alternate" type="application/rss+xml" title="오늘의 게임 RSS" href="https://www.todaygame.co.kr/rss.xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
@@ -16,18 +26,24 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="오늘의 게임" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:site_name" content="오늘의 게임 (오늘의게임)" />
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:url" content="https://www.todaygame.co.kr/" />
-    <meta property="og:title" content="오늘의 게임" />
-    <meta property="og:description" content="작고 귀여운 미니게임 모음 · 오늘 뭐하고 놀까?" />
+    <meta property="og:title" content="오늘의 게임 | 오늘의게임 - 무료 미니게임 모음 (Today Game)" />
+    <meta
+      property="og:description"
+      content="오늘의 게임(오늘의게임, Today Game) — 별도 설치 없이 브라우저에서 바로 즐기는 무료 미니게임 모음 사이트!"
+    />
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="오늘의 게임 — 오늘 뭐하고 놀까?" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="오늘의 게임" />
-    <meta name="twitter:description" content="작고 귀여운 미니게임 모음 · 오늘 뭐하고 놀까?" />
+    <meta name="twitter:title" content="오늘의 게임 | 오늘의게임 - 무료 미니게임 모음 (Today Game)" />
+    <meta
+      name="twitter:description"
+      content="오늘의 게임(오늘의게임, Today Game) — 별도 설치 없이 브라우저에서 바로 즐기는 무료 미니게임 모음 사이트!"
+    />
     <meta name="twitter:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,6 +52,23 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "오늘의 게임",
+        "alternateName": ["오늘의게임", "Today Game", "todaygame", "TodayGame", "todaygame.co.kr"],
+        "url": "https://www.todaygame.co.kr/",
+        "description": "오늘의 게임(오늘의게임, Today Game) — 브라우저에서 바로 즐기는 무료 미니게임 모음 사이트",
+        "inLanguage": "ko-KR",
+        "publisher": {
+          "@type": "Organization",
+          "name": "오늘의 게임",
+          "url": "https://www.todaygame.co.kr/",
+          "logo": "https://www.todaygame.co.kr/assets/pwa-icon-512.png"
+        }
+      }
+    </script>
   </head>
   <body data-bgm="hub">
     <div class="sky" aria-hidden="true">
@@ -54,8 +87,11 @@
             <strong class="visit-count" id="visit-count">…</strong>
           </div>
         </div>
-        <h1 class="brand">오늘의 게임</h1>
+        <h1 class="brand">오늘의게임</h1>
         <p class="tagline">작고 귀여운 게임들을 모아둔 플레이룸</p>
+        <p class="brand-intro">
+          <strong>오늘의게임</strong>(todaygame.co.kr)은 설치 없이 브라우저에서 바로 즐기는 무료 미니게임 사이트입니다.
+        </p>
         <p class="hero-links">
           <a class="hero-link" href="/rankings/">전체 게임 랭킹</a>
           <a class="hero-link hero-link-fame" href="/fame/">🏆 Hall of Fame</a>
@@ -207,9 +243,16 @@
               <h3 class="cat-title" id="cat-title-action">액션 · 슈팅</h3>
               <p class="cat-desc">손맛 있게 쏘고 피하는 게임</p>
             </div>
-            <span class="cat-count">12개</span>
+            <span class="cat-count">13개</span>
           </div>
           <div class="game-grid">
+            <a class="slot" href="/games/cosmic-dodge/" aria-label="우주 회피 플레이">
+              <div class="slot-art"><span class="slot-emoji" aria-hidden="true">🎮</span></div>
+              <div class="slot-meta">
+                <p class="slot-name">우주 회피</p>
+                <p class="slot-tag">아케이드 · 무한 회피</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
             <a class="slot has-photo" href="/games/dino-hunt/" aria-label="공룡 헌터 플레이">
               <div class="slot-art"><img src="/assets/thumbs/dino-hunt.png" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
