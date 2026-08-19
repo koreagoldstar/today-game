@@ -33,7 +33,6 @@
         const r = d[i];
         const g = d[i + 1];
         const b = d[i + 2];
-        // Chroma key black background
         if (r < 32 && g < 32 && b < 32) {
           d[i + 3] = 0;
         }
@@ -212,12 +211,16 @@
     y: H - 140,
     r: 26,
     vx: 0,
-    targetX: W / 2,
     hasShield: false,
     weaponLevel: 1,
     fireCooldown: 0,
     tilt: 0,
   };
+
+  // Touch & Drag Position Tracking
+  let touchX = W / 2;
+  let touchY = H - 140;
+  let isPointerDown = false;
 
   // Boss State
   let boss = null;
@@ -244,20 +247,68 @@
   }
   initStarfield();
 
-  // Input Controls
+  // Input Controls (Touch Drag + Keyboard + Pad Buttons)
   const keys = {};
   let isPadLeft = false;
   let isPadRight = false;
-  let isDragging = false;
 
-  function getXFromEvent(e) {
+  function getPosFromEvent(e) {
     const rect = canvas.getBoundingClientRect();
     let clientX = e.clientX;
+    let clientY = e.clientY;
     if (e.touches && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
     }
-    return clientX - rect.left;
+    const x = ((clientX - rect.left) / rect.width) * W;
+    const y = ((clientY - rect.top) / rect.height) * H;
+    return { x, y };
   }
+
+  function handleTouchStart(e) {
+    getAudioCtx();
+    if (state !== "playing") return;
+    const target = e.target;
+    // Don't override if touching UI buttons
+    if (target && target.classList && (target.classList.contains("pad") || target.classList.contains("fire") || target.classList.contains("primary"))) {
+      return;
+    }
+    isPointerDown = true;
+    const pos = getPosFromEvent(e);
+    touchX = pos.x;
+    touchY = pos.y - 35; // offset slightly above fingertip for vision
+  }
+
+  function handleTouchMove(e) {
+    if (state !== "playing" || !isPointerDown) return;
+    const pos = getPosFromEvent(e);
+    touchX = pos.x;
+    touchY = pos.y - 35;
+  }
+
+  function handleTouchEnd() {
+    isPointerDown = false;
+  }
+
+  const stageEl = document.querySelector(".stage") || canvas;
+
+  stageEl.addEventListener("pointerdown", handleTouchStart);
+  stageEl.addEventListener("pointermove", handleTouchMove);
+  window.addEventListener("pointerup", handleTouchEnd);
+  window.addEventListener("pointercancel", handleTouchEnd);
+
+  stageEl.addEventListener("touchstart", (e) => {
+    handleTouchStart(e);
+  }, { passive: true });
+
+  stageEl.addEventListener("touchmove", (e) => {
+    handleTouchMove(e);
+  }, { passive: true });
+
+  window.addEventListener("touchend", handleTouchEnd);
 
   window.addEventListener("keydown", (e) => {
     keys[e.key] = true;
@@ -269,22 +320,6 @@
 
   window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
-  });
-
-  canvas.addEventListener("pointerdown", (e) => {
-    getAudioCtx();
-    if (state !== "playing") return;
-    isDragging = true;
-    player.targetX = getXFromEvent(e);
-  });
-
-  canvas.addEventListener("pointermove", (e) => {
-    if (state !== "playing" || !isDragging) return;
-    player.targetX = getXFromEvent(e);
-  });
-
-  window.addEventListener("pointerup", () => {
-    isDragging = false;
   });
 
   function bindPad(btn, onDown, onUp) {
@@ -489,21 +524,37 @@
     itemTimer += dt;
     warningTimer += dt;
 
-    let moveX = 0;
-    if (keys["ArrowLeft"] || keys["a"] || keys["A"] || isPadLeft) {
-      moveX -= 8.0;
-    }
-    if (keys["ArrowRight"] || keys["d"] || keys["D"] || isPadRight) {
-      moveX += 8.0;
+    // Keyboard / Touch Pad Movement Delta
+    let kbX = 0;
+    let kbY = 0;
+    if (keys["ArrowLeft"] || keys["a"] || keys["A"] || isPadLeft) kbX -= 380 * dt;
+    if (keys["ArrowRight"] || keys["d"] || keys["D"] || isPadRight) kbX += 380 * dt;
+    if (keys["ArrowUp"] || keys["w"] || keys["W"]) kbY -= 380 * dt;
+    if (keys["ArrowDown"] || keys["s"] || keys["S"]) kbY += 380 * dt;
+
+    if (kbX !== 0 || kbY !== 0) {
+      touchX = player.x + kbX;
+      touchY = player.y + kbY;
     }
 
-    player.targetX += moveX;
-    player.targetX = Math.max(player.r, Math.min(W - player.r, player.targetX));
-    const dx = player.targetX - player.x;
-    player.x += dx * 0.24;
-    player.tilt = dx * 0.04;
+    touchX = Math.max(player.r, Math.min(W - player.r, touchX));
+    touchY = Math.max(player.r + 60, Math.min(H - player.r - 40, touchY));
 
-    if (keys[" "] || keys["f"] || keys["F"]) {
+    const dx = touchX - player.x;
+    const dy = touchY - player.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 2) {
+      const step = Math.min(dist, 500 * dt);
+      player.x += (dx / dist) * step;
+      player.y += (dy / dist) * step;
+      player.tilt = (dx / dist) * Math.min(1, dist / 35) * 0.35;
+    } else {
+      player.tilt *= 0.8;
+    }
+
+    // Auto Fire bullets whenever touching screen or holding keys
+    if (isPointerDown || keys[" "] || keys["f"] || keys["F"]) {
       fireBullet();
     }
 
@@ -895,7 +946,9 @@
     player.weaponLevel = 1;
     player.hasShield = false;
     player.x = W / 2;
-    player.targetX = W / 2;
+    player.y = H - 140;
+    touchX = W / 2;
+    touchY = H - 140;
 
     state = "playing";
     if (titleOverlay) titleOverlay.classList.add("hidden");
