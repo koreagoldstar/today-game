@@ -299,12 +299,18 @@ canvas {
   opacity: 0.85;
 }
 
+.up-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .up-btn {
   appearance: none;
   border: none;
   font-family: inherit;
-  font-size: 14px;
-  padding: 10px 14px;
+  font-size: 13px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: linear-gradient(180deg, #ffe28a, #e0b030);
   color: #2a1a05;
@@ -313,9 +319,20 @@ canvas {
   box-shadow: 0 4px 0 #9a6e10;
 }
 
+.up-btn.sell-btn {
+  background: linear-gradient(180deg, #ff7a7a, #d03030);
+  color: #ffffff;
+  box-shadow: 0 4px 0 #801818;
+}
+
 .up-btn:active {
   transform: translateY(2px);
   box-shadow: 0 2px 0 #9a6e10;
+}
+
+.up-btn.sell-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #801818;
 }
 
 .up-btn:disabled {

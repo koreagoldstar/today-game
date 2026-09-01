@@ -3,13 +3,13 @@
 
   const W = 390;
   const H = 640;
-  const GRAVITY = 980;
+  const GRAVITY = 850;
   const WALL_L = 24;
   const WALL_R = W - 24;
   const FLOOR_Y = H - 28;
   const DANGER_Y = 108;
   const DROP_COOLDOWN = 0.35;
-  const DANGER_TIME = 1.2;
+  const DANGER_TIME = 1.4;
   const MAX_TYPE = 10;
   const STORAGE_KEY = "suika-best";
 
@@ -18,19 +18,25 @@
     "#ffeaa7", "#fdcb6e", "#55efc4", "#e17055", "#00b894", "#2ed573",
   ];
 
+  const FRUIT_EMOJIS = [
+    "🍒", "🍓", "🍇", "🍊", "🍎",
+    "🍋", "🍑", "🥝", "🍅", "🍈", "🍉",
+  ];
+
   const FRUIT_NAMES = [
     "체리", "딸기", "포도", "귤", "사과",
     "레몬", "복숭아", "키위", "석류", "멜론", "수박",
   ];
 
   function fruitRadius(type) {
-    return 14 + type * 5.6;
+    return 15 + type * 5.5;
   }
 
   const canvas = document.getElementById("game");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const previewCanvas = document.getElementById("preview");
-  const previewCtx = previewCanvas.getContext("2d");
+  const previewCtx = previewCanvas ? previewCanvas.getContext("2d") : null;
 
   const hudScore = document.getElementById("hud-score");
   const hudBest = document.getElementById("hud-best");
@@ -43,7 +49,6 @@
   const clearDetail = document.getElementById("clear-detail");
 
   const fruitImgs = Array.from({ length: 12 }, () => null);
-  let imgsReady = false;
 
   function loadImages() {
     return Promise.all(
@@ -58,10 +63,9 @@
           img.src = `assets/f${i}.png`;
         })
       )
-    ).then(() => {
-      imgsReady = fruitImgs.some(Boolean);
-    });
+    );
   }
+  loadImages();
 
   let state = "title";
   let fruits = [];
@@ -69,7 +73,6 @@
   let floats = [];
   let nextType = 0;
   let dropX = W / 2;
-  let pointerActive = false;
   let score = 0;
   let best = 0;
   let dropTimer = 0;
@@ -83,14 +86,14 @@
 
   function readBest() {
     best = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10) || 0;
-    hudBest.textContent = best;
+    if (hudBest) hudBest.textContent = best;
   }
 
   function saveBest() {
     if (score > best) {
       best = score;
       localStorage.setItem(STORAGE_KEY, String(best));
-      hudBest.textContent = best;
+      if (hudBest) hudBest.textContent = best;
     }
   }
 
@@ -100,7 +103,9 @@
   }
 
   function showOverlay(name) {
-    Object.values(overlays).forEach((el) => el.classList.add("hidden"));
+    Object.values(overlays).forEach((el) => {
+      if (el) el.classList.add("hidden");
+    });
     if (name && overlays[name]) overlays[name].classList.remove("hidden");
   }
 
@@ -117,7 +122,7 @@
     showedClear = false;
     nextType = randNextType();
     dropX = W / 2;
-    hudScore.textContent = "0";
+    if (hudScore) hudScore.textContent = "0";
     uid = 0;
   }
 
@@ -133,22 +138,23 @@
       radius: r,
       resting: false,
       mergeLock: 0,
+      scale: 0.1, // Smooth pop scale-in animation
     };
   }
 
   function addFloat(x, y, text) {
-    floats.push({ x, y, text, life: 1.2, vy: -40 });
+    floats.push({ x, y, text, life: 1.2, vy: -35 });
   }
 
   function burst(x, y, color, n) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 60 + Math.random() * 180;
+      const sp = 50 + Math.random() * 160;
       particles.push({
         x,
         y,
         vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 40,
+        vy: Math.sin(a) * sp - 30,
         life: 0.5 + Math.random() * 0.4,
         color,
         size: 3 + Math.random() * 5,
@@ -165,6 +171,7 @@
     dropTimer = DROP_COOLDOWN;
   }
 
+  // Stable Physics Circle Collision Solver (Anti-Jitter)
   function resolveCircle(a, b) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
@@ -175,26 +182,34 @@
     const nx = dx / dist;
     const ny = dy / dist;
     const overlap = minDist - dist;
-    const total = a.radius * a.radius + b.radius * b.radius;
-    const wa = b.radius * b.radius / total;
-    const wb = a.radius * a.radius / total;
 
-    a.x -= nx * overlap * wa;
-    a.y -= ny * overlap * wa;
-    b.x += nx * overlap * wb;
-    b.y += ny * overlap * wb;
+    // Smoother mass-based position relaxation (0.8 damping factor prevents vibration)
+    const totalR = a.radius + b.radius;
+    const wa = b.radius / totalR;
+    const wb = a.radius / totalR;
 
+    a.x -= nx * overlap * wa * 0.85;
+    a.y -= ny * overlap * wa * 0.85;
+    b.x += nx * overlap * wb * 0.85;
+    b.y += ny * overlap * wb * 0.85;
+
+    // Dampen relative velocity to stop endless jitter
     const rvx = b.vx - a.vx;
     const rvy = b.vy - a.vy;
     const velAlong = rvx * nx + rvy * ny;
-    if (velAlong > 0) return true;
 
-    const restitution = 0.15;
-    const j = -(1 + restitution) * velAlong / 2;
-    a.vx -= j * nx;
-    a.vy -= j * ny;
-    b.vx += j * nx;
-    b.vy += j * ny;
+    if (velAlong < 0) {
+      const restitution = 0.12;
+      const j = -(1 + restitution) * velAlong / 2;
+      a.vx -= j * nx * 0.9;
+      a.vy -= j * ny * 0.9;
+      b.vx += j * nx * 0.9;
+      b.vy += j * ny * 0.9;
+    }
+
+    // Friction when sliding against each other
+    a.vx *= 0.98;
+    b.vx *= 0.98;
     return true;
   }
 
@@ -205,22 +220,22 @@
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const dist = Math.hypot(dx, dy);
-    if (!touching && dist > a.radius + b.radius + 1) return false;
+    if (!touching && dist > a.radius + b.radius + 2) return false;
 
     const newType = a.type + 1;
     const nx = (a.x + b.x) / 2;
     const ny = (a.y + b.y) / 2;
     const pts = (newType + 1) * 10;
     score += pts;
-    hudScore.textContent = score;
+    if (hudScore) hudScore.textContent = score;
     saveBest();
 
     fruits = fruits.filter((f) => f.id !== a.id && f.id !== b.id);
-    const merged = spawnFruit(newType, nx, ny, 0, -80);
-    merged.mergeLock = 0.25;
+    const merged = spawnFruit(newType, nx, ny, 0, -60);
+    merged.mergeLock = 0.2;
     fruits.push(merged);
 
-    burst(nx, ny, FRUIT_COLORS[newType], 16);
+    burst(nx, ny, FRUIT_COLORS[newType], 18);
     addFloat(nx, ny - 20, `+${pts}`);
 
     if (newType >= unlocked) unlocked = Math.min(newType + 1, MAX_TYPE);
@@ -230,53 +245,65 @@
       if (!showedClear) {
         showedClear = true;
         state = "clear";
-        clearDetail.textContent = `점수 ${score}점! 수박을 만들었어요!`;
+        if (clearDetail) clearDetail.textContent = `최종 점수 ${score}점! 수박 완성!`;
         showOverlay("clear");
         if (window.TodayGameRank) {
-      TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("clear") });
-      TodayGameRank.open(score);
-    }
+          TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("clear") });
+          TodayGameRank.open(score);
+        }
       }
     }
     return true;
   }
 
   function updatePhysics(dt) {
+    // 1. Move & Apply Gravity
     for (const f of fruits) {
+      if (f.scale < 1) f.scale = Math.min(1, f.scale + dt * 6);
+
       f.vy += GRAVITY * dt;
-      f.vx *= Math.pow(0.02, dt);
+      // Damping velocity
+      f.vx *= Math.pow(0.01, dt);
+      f.vy *= Math.pow(0.3, dt);
+
+      // Clamp max velocity to prevent wild tunneling/shaking
+      const maxSpd = 480;
+      const spd = Math.hypot(f.vx, f.vy);
+      if (spd > maxSpd) {
+        f.vx = (f.vx / spd) * maxSpd;
+        f.vy = (f.vy / spd) * maxSpd;
+      }
+
       f.x += f.vx * dt;
       f.y += f.vy * dt;
       if (f.mergeLock > 0) f.mergeLock -= dt;
 
       const r = f.radius;
+      // Wall Bounds
       if (f.x - r < WALL_L) {
         f.x = WALL_L + r;
-        f.vx = Math.abs(f.vx) * 0.35;
+        f.vx = Math.abs(f.vx) * 0.2;
       }
       if (f.x + r > WALL_R) {
         f.x = WALL_R - r;
-        f.vx = Math.abs(f.vx) * -0.35;
+        f.vx = -Math.abs(f.vx) * 0.2;
       }
+      // Floor Bounds
       if (f.y + r > FLOOR_Y) {
         f.y = FLOOR_Y - r;
-        f.vy *= -0.2;
-        f.vx *= 0.92;
-      }
-      if (f.y - r < DANGER_Y && f.y + r > DANGER_Y - 20) {
-        f.y = DANGER_Y + r;
-        f.vy *= -0.1;
+        f.vy *= -0.15;
+        f.vx *= 0.88;
       }
     }
 
+    // 2. Queue Merges
     const mergePairs = [];
     const queued = new Set();
     for (let i = 0; i < fruits.length; i++) {
       for (let j = i + 1; j < fruits.length; j++) {
         const a = fruits[i];
         const b = fruits[j];
-        const touching =
-          Math.hypot(b.x - a.x, b.y - a.y) <= a.radius + b.radius;
+        const touching = Math.hypot(b.x - a.x, b.y - a.y) <= a.radius + b.radius + 1;
         if (
           touching &&
           a.type === b.type &&
@@ -293,34 +320,40 @@
       }
     }
 
-    for (let pass = 0; pass < 4; pass++) {
+    // 3. Multi-Pass Circle Collision Constraint Solver (8 Passes for Rock-Solid Stability)
+    for (let pass = 0; pass < 8; pass++) {
       for (let i = 0; i < fruits.length; i++) {
         for (let j = i + 1; j < fruits.length; j++) {
           resolveCircle(fruits[i], fruits[j]);
         }
       }
+      // Re-apply wall/floor bounds inside solver loop
+      for (const f of fruits) {
+        const r = f.radius;
+        if (f.x - r < WALL_L) f.x = WALL_L + r;
+        if (f.x + r > WALL_R) f.x = WALL_R - r;
+        if (f.y + r > FLOOR_Y) f.y = FLOOR_Y - r;
+      }
     }
 
+    // 4. Perform Merges
     for (const [aId, bId] of mergePairs) {
       const a = fruits.find((f) => f.id === aId);
       const b = fruits.find((f) => f.id === bId);
       if (a && b) mergeFruits(a, b, true);
     }
 
+    // 5. Check Resting State
     for (const f of fruits) {
       const speed = Math.hypot(f.vx, f.vy);
-      f.resting = speed < 18 && f.y + f.radius >= FLOOR_Y - 4;
+      f.resting = speed < 22 && f.y + f.radius >= FLOOR_Y - 8;
     }
   }
 
   function checkDanger(dt) {
     let above = false;
     for (const f of fruits) {
-      if (f.y - f.radius < DANGER_Y && f.resting) {
-        above = true;
-        break;
-      }
-      if (f.y - f.radius < DANGER_Y && Math.hypot(f.vx, f.vy) < 30) {
+      if (f.y - f.radius < DANGER_Y && (f.resting || Math.hypot(f.vx, f.vy) < 25)) {
         above = true;
         break;
       }
@@ -330,75 +363,93 @@
       if (dangerTimer >= DANGER_TIME) {
         state = "over";
         saveBest();
-        overDetail.textContent = `점수 ${score}점 · 최고 ${best}점`;
+        if (overDetail) overDetail.textContent = `최종 점수 ${score}점 · 최고 점수 ${best}점`;
         showOverlay("over");
         if (window.TodayGameRank) {
-      TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("over") });
-      TodayGameRank.open(score);
-    }
+          TodayGameRank.mount({ gameId: "suika", gameTitle: "수박 합치기", formParent: document.getElementById("over") });
+          TodayGameRank.open(score);
+        }
       }
     } else {
       dangerTimer = Math.max(0, dangerTimer - dt * 2);
     }
   }
 
-  function drawFace(cx, cy, r, type) {
-    const eyeY = cy - r * 0.12;
-    const eyeX = r * 0.28;
-    ctx.fillStyle = "#3d2a2a";
-    ctx.beginPath();
-    ctx.arc(cx - eyeX, eyeY, r * 0.1, 0, Math.PI * 2);
-    ctx.arc(cx + eyeX, eyeY, r * 0.1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#3d2a2a";
-    ctx.lineWidth = Math.max(1.5, r * 0.06);
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.arc(cx, cy + r * 0.15, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
-    ctx.stroke();
-    if (type >= 8) {
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.beginPath();
-      ctx.ellipse(cx - r * 0.35, cy - r * 0.35, r * 0.12, r * 0.08, -0.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
+  // Ultra-Legible Fruit Renderer with 3D Spherical Shading & High-Contrast Outlines
   function drawFruit(c, f, alpha) {
     c.save();
     c.globalAlpha = alpha == null ? 1 : alpha;
 
-    // soft circular shadow so fruits read as round balls
-    c.fillStyle = "rgba(80, 40, 60, 0.12)";
+    const r = f.radius * (f.scale || 1);
+    const cx = f.x;
+    const cy = f.y;
+
+    // Drop Shadow for 3D Depth
+    c.fillStyle = "rgba(40, 20, 30, 0.18)";
     c.beginPath();
-    c.ellipse(f.x + 2, f.y + f.radius * 0.82, f.radius * 0.72, f.radius * 0.22, 0, 0, Math.PI * 2);
+    c.ellipse(cx + 2, cy + r * 0.82, r * 0.75, r * 0.22, 0, 0, Math.PI * 2);
     c.fill();
 
     const img = fruitImgs[f.type];
-    if (img) {
-      const d = f.radius * 2.15;
-      c.drawImage(img, f.x - d / 2, f.y - d / 2, d, d);
-    } else {
-      c.fillStyle = FRUIT_COLORS[f.type];
+    if (img && img.complete && img.naturalWidth > 0) {
+      const d = r * 2.15;
+      c.drawImage(img, cx - d / 2, cy - d / 2, d, d);
+
+      // Add clear outer border around image for distinction
+      c.strokeStyle = "rgba(255, 255, 255, 0.6)";
+      c.lineWidth = Math.max(2, r * 0.06);
       c.beginPath();
-      c.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
-      c.fill();
-      c.strokeStyle = "rgba(255,255,255,0.45)";
-      c.lineWidth = 2;
+      c.arc(cx, cy, r, 0, Math.PI * 2);
       c.stroke();
-      drawFace(f.x, f.y, f.radius, f.type);
+    } else {
+      // Procedural Spherical Shaded Fruit
+      const grad = c.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.3, FRUIT_COLORS[f.type] || "#ff4757");
+      grad.addColorStop(1, "#1a0810");
+
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(cx, cy, r, 0, Math.PI * 2);
+      c.fill();
+
+      // Thick Crisp Outline Ring for max readability
+      c.strokeStyle = "#ffffff";
+      c.lineWidth = Math.max(2.5, r * 0.08);
+      c.stroke();
+
+      c.strokeStyle = "rgba(0,0,0,0.25)";
+      c.lineWidth = 1.5;
+      c.stroke();
+
+      // Emoji & Name Badge Icon
+      c.font = `${Math.max(12, Math.floor(r * 0.85))}px sans-serif`;
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillText(FRUIT_EMOJIS[f.type] || "🍎", cx, cy - (r > 28 ? 4 : 0));
+
+      if (r > 28) {
+        c.font = `bold ${Math.max(10, Math.floor(r * 0.32))}px "Jua", sans-serif`;
+        c.fillStyle = "#ffffff";
+        c.shadowColor = "rgba(0,0,0,0.8)";
+        c.shadowBlur = 4;
+        c.fillText(FRUIT_NAMES[f.type] || "", cx, cy + r * 0.5);
+      }
     }
+
     c.restore();
   }
 
   function drawPreview() {
+    if (!previewCtx) return;
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     const r = fruitRadius(nextType);
     const cx = previewCanvas.width / 2;
     const cy = previewCanvas.height / 2;
     const drawR = Math.min(22, r);
     const img = fruitImgs[nextType];
-    if (img) {
+
+    if (img && img.complete && img.naturalWidth > 0) {
       const d = drawR * 2.15;
       previewCtx.drawImage(img, cx - d / 2, cy - d / 2, d, d);
     } else {
@@ -406,6 +457,10 @@
       previewCtx.beginPath();
       previewCtx.arc(cx, cy, drawR, 0, Math.PI * 2);
       previewCtx.fill();
+      previewCtx.font = "16px sans-serif";
+      previewCtx.textAlign = "center";
+      previewCtx.textBaseline = "middle";
+      previewCtx.fillText(FRUIT_EMOJIS[nextType], cx, cy);
     }
   }
 
@@ -417,9 +472,9 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
 
-    // pink fluffy clouds
+    // Pink Fluffy Clouds
     ctx.fillStyle = "rgba(255, 190, 210, 0.45)";
-    for (let i = 0; i < 6; i += 1) {
+    for (let i = 0; i < 6; i++) {
       const cx = 40 + i * 70;
       const cy = 70 + (i % 3) * 28;
       ctx.beginPath();
@@ -429,22 +484,9 @@
       ctx.fill();
     }
 
-    // sparkles
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    for (let i = 0; i < 10; i += 1) {
-      const sx = 30 + ((i * 67) % (W - 60));
-      const sy = 40 + ((i * 93) % 160);
-      ctx.beginPath();
-      ctx.moveTo(sx, sy - 5);
-      ctx.lineTo(sx + 2, sy);
-      ctx.lineTo(sx, sy + 5);
-      ctx.lineTo(sx - 2, sy);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    ctx.strokeStyle = "rgba(255, 150, 180, 0.4)";
-    ctx.lineWidth = 3;
+    // Danger Line
+    ctx.strokeStyle = dangerTimer > 0 ? "#ff0055" : "rgba(255, 120, 160, 0.6)";
+    ctx.lineWidth = dangerTimer > 0 ? 3 : 2;
     ctx.setLineDash([8, 6]);
     ctx.beginPath();
     ctx.moveTo(WALL_L, DANGER_Y);
@@ -452,79 +494,85 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = "rgba(255, 180, 200, 0.12)";
-    ctx.fillRect(WALL_L, DANGER_Y, WALL_R - WALL_L, FLOOR_Y - DANGER_Y);
+    // Glass Container Walls & Floor
+    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.fillRect(0, 0, WALL_L, H);
+    ctx.fillRect(WALL_R, 0, W - WALL_R, H);
+    ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
 
-    ctx.strokeStyle = "#ff9ec0";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(WALL_L, 60);
-    ctx.lineTo(WALL_L, FLOOR_Y);
-    ctx.quadraticCurveTo(WALL_L - 8, FLOOR_Y + 8, WALL_L + 20, FLOOR_Y + 4);
-    ctx.moveTo(WALL_R, 60);
-    ctx.lineTo(WALL_R, FLOOR_Y);
-    ctx.quadraticCurveTo(WALL_R + 8, FLOOR_Y + 8, WALL_R - 20, FLOOR_Y + 4);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(255, 180, 200, 0.55)";
-    ctx.fillRect(WALL_L, FLOOR_Y - 4, WALL_R - WALL_L, 8);
-
-    if (state === "play" && dropTimer <= 0) {
-      const r = fruitRadius(nextType);
-      const ghostY = DANGER_Y + r + 4;
-      ctx.globalAlpha = 0.45;
-      drawFruit(ctx, { type: nextType, x: dropX, y: ghostY, radius: r }, 0.45);
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = "rgba(255, 120, 160, 0.5)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(dropX, ghostY - r - 8);
-      ctx.lineTo(dropX, DANGER_Y - 4);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    if (dangerTimer > 0 && state === "play") {
-      const pulse = 0.3 + 0.3 * Math.sin(Date.now() / 120);
-      ctx.fillStyle = `rgba(255, 80, 100, ${pulse * (dangerTimer / DANGER_TIME)})`;
-      ctx.fillRect(0, 0, W, DANGER_Y);
-    }
+    ctx.strokeStyle = "rgba(255, 150, 180, 0.5)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(WALL_L, DANGER_Y, WALL_R - WALL_L, FLOOR_Y - DANGER_Y);
   }
 
-  function drawParticles(dt) {
-    particles = particles.filter((p) => {
-      p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += 200 * dt;
-      if (p.life <= 0) return false;
-      ctx.globalAlpha = p.life;
+  function render() {
+    drawBackground();
+
+    // Depth Sorting: Render Larger & Bottom fruits first, smaller fruits on top for legibility
+    const sortedFruits = fruits.slice().sort((a, b) => b.radius - a.radius || a.y - b.y);
+    for (const f of sortedFruits) {
+      drawFruit(ctx, f);
+    }
+
+    // Aim Guide Line & Spawning Fruit Preview
+    if (state === "play" && dropTimer <= 0) {
+      const r = fruitRadius(nextType);
+
+      ctx.strokeStyle = "rgba(255, 100, 150, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(dropX, DANGER_Y);
+      ctx.lineTo(dropX, FLOOR_Y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      drawFruit(ctx, { type: nextType, x: dropX, y: DANGER_Y + r + 4, radius: r, scale: 1 }, 0.85);
+    }
+
+    // Render Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * 0.016;
+      p.y += p.vy * 0.016;
+      p.life -= 0.016;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
       ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = 1;
-      return true;
-    });
+    }
+    ctx.globalAlpha = 1;
 
-    floats = floats.filter((fl) => {
-      fl.life -= dt;
-      fl.y += fl.vy * dt;
-      if (fl.life <= 0) return false;
-      ctx.globalAlpha = Math.min(1, fl.life);
-      ctx.fillStyle = "#e85a8a";
-      ctx.font = "bold 18px Jua, sans-serif";
+    // Floating Score Badges
+    for (let i = floats.length - 1; i >= 0; i--) {
+      const fl = floats[i];
+      fl.y += fl.vy * 0.016;
+      fl.life -= 0.016;
+      if (fl.life <= 0) {
+        floats.splice(i, 1);
+        continue;
+      }
+      ctx.font = 'bold 20px "Jua", sans-serif';
+      ctx.fillStyle = "#ff4757";
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 6;
       ctx.textAlign = "center";
+      ctx.globalAlpha = Math.min(1, fl.life * 1.5);
       ctx.fillText(fl.text, fl.x, fl.y);
-      ctx.globalAlpha = 1;
-      return true;
-    });
+      ctx.shadowBlur = 0;
+    }
+    ctx.globalAlpha = 1;
+
+    drawPreview();
   }
 
-  function tick(now) {
-    const dt = Math.min(0.033, (now - last) / 1000 || 0.016);
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
     if (state === "play") {
@@ -533,121 +581,85 @@
       checkDanger(dt);
     }
 
-    drawBackground();
-    for (const f of fruits) drawFruit(ctx, f);
-    drawParticles(dt);
-    drawPreview();
-
-    raf = requestAnimationFrame(tick);
+    render();
+    raf = requestAnimationFrame(loop);
   }
 
-  function setPointer(x) {
+  function getXFromEvent(e) {
     const rect = canvas.getBoundingClientRect();
-    const sx = W / rect.width;
-    dropX = (x - rect.left) * sx;
+    let clientX = e.clientX;
+    if (e.touches && e.touches.length > 0) clientX = e.touches[0].clientX;
     const r = fruitRadius(nextType);
-    dropX = Math.max(WALL_L + r, Math.min(WALL_R - r, dropX));
+    const relX = ((clientX - rect.left) / rect.width) * W;
+    return Math.max(WALL_L + r, Math.min(WALL_R - r, relX));
   }
 
-  let didDrag = false;
-  let downX = 0;
-
-  function onPointerDown(e) {
-    if (state !== "play") return;
-    pointerActive = true;
-    didDrag = false;
-    const x = e.clientX ?? e.touches?.[0]?.clientX ?? dropX;
-    downX = x;
-    setPointer(x);
-    try {
-      canvas.setPointerCapture?.(e.pointerId);
-    } catch (_) {
-      /* ignore */
-    }
-  }
-
-  function onPointerMove(e) {
-    if (!pointerActive && e.type !== "mousemove" && e.type !== "pointermove") return;
-    const x = e.clientX ?? e.touches?.[0]?.clientX;
-    if (x == null) return;
-    if (Math.abs(x - downX) > 6) didDrag = true;
-    setPointer(x);
-  }
-
-  function onPointerUp(e) {
-    if (!pointerActive) return;
-    pointerActive = false;
-    // 탭하거나 드래그 후 손을 떼면 떨어뜨림 (휴대폰·PC 공통)
-    if (state === "play") tryDrop();
-  }
-
-  canvas.addEventListener("pointerdown", onPointerDown);
-  canvas.addEventListener("pointermove", onPointerMove);
-  canvas.addEventListener("pointerup", onPointerUp);
-  canvas.addEventListener("pointercancel", onPointerUp);
-  // 구형 브라우저 폴백
-  canvas.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    onPointerDown(e);
-  }, { passive: false });
-  canvas.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    onPointerMove(e);
-  }, { passive: false });
-  canvas.addEventListener("touchend", onPointerUp);
-
-  window.addEventListener("keydown", (e) => {
-    if (state !== "play") return;
-    const r = fruitRadius(nextType);
-    const step = e.shiftKey ? 28 : 14;
-    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
-      e.preventDefault();
-      dropX = Math.max(WALL_L + r, dropX - step);
-    } else if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
-      e.preventDefault();
-      dropX = Math.min(WALL_R - r, dropX + step);
-    } else if (
-      e.key === " " ||
-      e.key === "Enter" ||
-      e.key === "ArrowDown" ||
-      e.key.toLowerCase() === "s"
-    ) {
-      e.preventDefault();
+  function bindInput() {
+    canvas.addEventListener("pointerdown", (e) => {
+      if (state !== "play") return;
+      dropX = getXFromEvent(e);
       tryDrop();
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (state !== "play") return;
+      dropX = getXFromEvent(e);
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      if (state !== "play") return;
+      e.preventDefault();
+      dropX = getXFromEvent(e);
+      tryDrop();
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (state !== "play") return;
+      e.preventDefault();
+      dropX = getXFromEvent(e);
+    }, { passive: false });
+
+    const startBtn = document.getElementById("start-btn");
+    const retryBtn = document.getElementById("retry-btn");
+    const nextBtn = document.getElementById("next-btn");
+
+    if (startBtn) {
+      startBtn.addEventListener("click", () => {
+        resetGame();
+        state = "play";
+        showOverlay(null);
+        last = performance.now();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(loop);
+      });
     }
-  });
 
-  document.getElementById("start-btn").addEventListener("click", () => {
-    resetGame();
-    state = "play";
-    showOverlay(null);
-  });
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => {
+        resetGame();
+        state = "play";
+        showOverlay(null);
+        last = performance.now();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(loop);
+      });
+    }
 
-  document.getElementById("continue-btn").addEventListener("click", () => {
-    state = "play";
-    showOverlay(null);
-  });
-
-  document.getElementById("retry-btn").addEventListener("click", () => {
-    resetGame();
-    state = "play";
-    showOverlay(null);
-  });
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        resetGame();
+        state = "play";
+        showOverlay(null);
+        last = performance.now();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(loop);
+      });
+    }
+  }
 
   readBest();
-  loadImages().then(() => {
-    drawPreview();
-  });
+  bindInput();
   showOverlay("title");
-  raf = requestAnimationFrame(tick);
-
-  if (window.TodayGameRank) {
-    TodayGameRank.mount({
-      gameId: "suika",
-      gameTitle: "수박 합치기",
-      formParent: document.getElementById("over") || document.body,
-    });
-  }
 
   if (window.TodayPause) {
     TodayPause.mount({
@@ -661,10 +673,13 @@
       resume() {
         if (state !== "paused") return false;
         state = "play";
-        if (typeof last !== "undefined") last = performance.now();
+        last = performance.now();
         return true;
       },
     });
   }
 
+  last = performance.now();
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(loop);
 })();
