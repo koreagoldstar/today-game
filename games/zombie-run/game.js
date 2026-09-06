@@ -13,7 +13,7 @@
   bgImg.src = "assets/bg.jpg";
   let bgScrollY = 0;
 
-  // Real Photorealistic 3D Sprites
+  // Real Full Body Standing 3D Sprites
   const sprites = {
     hero_chick: null,
     hero_rabbit: null,
@@ -266,8 +266,8 @@
     fireCd: 0,
     missileCd: 0,
     tilt: 0,
-    // Boarded Vehicle State
-    vehicle: null, // null | { type: "tank"|"chopper", hp: number, maxHp: number }
+    runCycle: 0,
+    vehicle: null,
   };
 
   // Input Tracking
@@ -473,17 +473,19 @@
 
   function spawnZombie() {
     const isMutant = Math.random() < 0.25 + stage * 0.01;
-    const r = isMutant ? 26 : 18;
+    const r = isMutant ? 28 : 20;
     const hp = (isMutant ? 60 : 25) * (1 + stage * 0.08);
 
     zombies.push({
       x: Math.random() * (W - 60) + 30,
-      y: -30,
+      y: -35,
       r,
       hp,
       maxHp: hp,
       vy: Math.random() * 1.5 + 2.0 + stage * 0.03,
       isMutant,
+      walkCycle: Math.random() * Math.PI * 2,
+      hitFlash: 0,
     });
   }
 
@@ -504,7 +506,7 @@
       x: W / 2,
       y: -80,
       targetY: 110,
-      r: 52,
+      r: 54,
       hp: maxHp,
       maxHp: maxHp,
       vx: 2.2,
@@ -611,13 +613,14 @@
         const z = zombies[j];
         if (Math.hypot(b.x - z.x, b.y - z.y) < b.r + z.r) {
           z.hp -= b.dmg;
+          z.hitFlash = 0.1;
           hit = true;
           addExplosion(b.x, b.y, "#00f0ff", 5);
           if (z.hp <= 0) {
             score += z.isMutant ? 150 : 60;
             coins += z.isMutant ? 5 : 2;
             playSound("hit");
-            addExplosion(z.x, z.y, "#ff0055", 16);
+            addExplosion(z.x, z.y, "#ff0055", 18);
             zombies.splice(j, 1);
           }
           break;
@@ -661,6 +664,7 @@
           const z = zombies[j];
           if (Math.hypot(m.x - z.x, m.y - z.y) <= m.splashR) {
             z.hp -= m.dmg;
+            z.hitFlash = 0.15;
             if (z.hp <= 0) {
               score += 120;
               coins += 4;
@@ -702,8 +706,8 @@
       boss.patternTimer += dt;
       if (boss.patternTimer > 1.2) {
         boss.patternTimer = 0;
-        zombies.push({ x: boss.x - 20, y: boss.y + 35, r: 18, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
-        zombies.push({ x: boss.x + 20, y: boss.y + 35, r: 18, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
+        zombies.push({ x: boss.x - 20, y: boss.y + 35, r: 20, hp: 30, maxHp: 30, vy: 3.5, isMutant: false, walkCycle: 0, hitFlash: 0 });
+        zombies.push({ x: boss.x + 20, y: boss.y + 35, r: 20, hp: 30, maxHp: 30, vy: 3.5, isMutant: false, walkCycle: 0, hitFlash: 0 });
       }
     } else {
       const spawnInterval = Math.max(0.3, 1.1 - stage * 0.015);
@@ -727,6 +731,8 @@
     for (let i = zombies.length - 1; i >= 0; i--) {
       const z = zombies[i];
       z.y += z.vy;
+      z.walkCycle = (z.walkCycle || 0) + dt * 10;
+      if (z.hitFlash > 0) z.hitFlash -= dt;
 
       if (Math.hypot(z.x - player.x, z.y - player.y) < z.r + player.r - 4) {
         playerHit(z.isMutant ? 25 : 12);
@@ -926,7 +932,7 @@
     });
   }
 
-  // Ultra-High Definition 3D Sprite Renderer
+  // Ultra-High Definition 3D Standing Character Renderer
   function render() {
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -970,21 +976,35 @@
       ctx.restore();
     });
 
-    // 2. Zombies & Boss 3D Sprites
+    // 2. Zombies & Boss Full Standing Body Render with Animated Walking Stride
     zombies.forEach((z) => {
       ctx.save();
       ctx.translate(z.x, z.y);
 
+      // Walking Stride Rotation & Body Step Bobbing
+      const walkTilt = Math.sin(z.walkCycle || 0) * 0.14;
+      const walkBob = Math.cos((z.walkCycle || 0) * 2) * 3;
+      ctx.rotate(walkTilt);
+      ctx.translate(0, walkBob);
+
       ctx.shadowColor = z.isMutant ? "#ff0055" : "#00b894";
       ctx.shadowBlur = 18;
 
+      if (z.hitFlash > 0) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, z.r * 1.2, z.r * 1.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       if (isReady(sprites.zombie)) {
-        const sz = z.r * 2.8;
-        ctx.drawImage(sprites.zombie, -sz / 2, -sz / 2, sz, sz);
+        const szw = z.r * 2.6;
+        const szh = z.r * 3.4; // Full standing body silhouette ratio
+        ctx.drawImage(sprites.zombie, -szw / 2, -szh / 2, szw, szh);
       } else {
         ctx.fillStyle = z.isMutant ? "#ff0055" : "#00b894";
         ctx.beginPath();
-        ctx.arc(0, 0, z.r, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, z.r * 0.9, z.r * 1.4, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.font = "24px sans-serif";
         ctx.textAlign = "center";
@@ -998,16 +1018,20 @@
     if (boss) {
       ctx.save();
       ctx.translate(boss.x, boss.y);
+      const bossBob = Math.sin(Date.now() / 200) * 4;
+      ctx.translate(0, bossBob);
+
       ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = 32;
 
       if (isReady(sprites.boss)) {
-        const bsz = boss.r * 3.2;
-        ctx.drawImage(sprites.boss, -bsz / 2, -bsz / 2, bsz, bsz);
+        const bsw = boss.r * 3.0;
+        const bsh = boss.r * 3.8;
+        ctx.drawImage(sprites.boss, -bsw / 2, -bsh / 2, bsw, bsh);
       } else {
         ctx.fillStyle = "#ff0055";
         ctx.beginPath();
-        ctx.arc(0, 0, boss.r, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, boss.r, boss.r * 1.5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.font = "40px sans-serif";
         ctx.textAlign = "center";
@@ -1066,13 +1090,16 @@
       const heroDef = HERO_DEFS[selectedHeroKey] || HERO_DEFS.chick;
       const heroSprite = sprites[heroDef.spriteKey];
 
+      player.runCycle = (player.runCycle || 0) + 0.15;
+      const runBob = Math.sin(player.runCycle) * 3;
+
       if (player.vehicle) {
         const vSprite = player.vehicle.type === "tank" ? sprites.tank : sprites.chopper;
         ctx.shadowColor = player.vehicle.type === "tank" ? "#ff9e00" : "#00f0ff";
         ctx.shadowBlur = 24;
 
         if (isReady(vSprite)) {
-          const vsz = player.r * 3.4;
+          const vsz = player.r * 3.6;
           ctx.drawImage(vSprite, -vsz / 2, -vsz / 2, vsz, vsz);
         } else {
           ctx.font = "46px sans-serif";
@@ -1083,21 +1110,25 @@
 
         // Draw Hero Mounted on Vehicle
         if (isReady(heroSprite)) {
-          const hsz = player.r * 1.8;
-          ctx.drawImage(heroSprite, -hsz / 2, -hsz * 0.8, hsz, hsz);
+          const hszw = player.r * 1.8;
+          const hszh = player.r * 2.2;
+          ctx.drawImage(heroSprite, -hszw / 2, -hszh * 0.85 + runBob, hszw, hszh);
         }
       } else {
-        // Hero On Foot
+        // Hero On Foot with Running Stride
         ctx.shadowColor = heroDef.color;
         ctx.shadowBlur = 20;
 
+        ctx.translate(0, runBob);
+
         if (isReady(heroSprite)) {
-          const sz = (player.r * 2.8) * (1 + (upgrades.evoLv - 1) * 0.15);
-          ctx.drawImage(heroSprite, -sz / 2, -sz / 2, sz, sz);
+          const szw = (player.r * 2.6) * (1 + (upgrades.evoLv - 1) * 0.15);
+          const szh = (player.r * 3.4) * (1 + (upgrades.evoLv - 1) * 0.15);
+          ctx.drawImage(heroSprite, -szw / 2, -szh / 2, szw, szh);
         } else {
           ctx.fillStyle = heroDef.color;
           ctx.beginPath();
-          ctx.arc(0, 0, player.r, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, player.r, player.r * 1.3, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.font = "30px sans-serif";
           ctx.textAlign = "center";
