@@ -13,11 +13,16 @@
   bgImg.src = "assets/bg.jpg";
   let bgScrollY = 0;
 
-  // Real 3D Transparent Sprites
+  // Real Photorealistic 3D Sprites
   const sprites = {
     hero_chick: null,
     hero_rabbit: null,
     hero_bear: null,
+    hero_bird: null,
+    tank: null,
+    chopper: null,
+    zombie: null,
+    boss: null,
   };
 
   function chromaKey(img) {
@@ -61,10 +66,20 @@
     loadImg("assets/hero_chick.png"),
     loadImg("assets/hero_rabbit.png"),
     loadImg("assets/hero_bear.png"),
-  ]).then(([chick, rabbit, bear]) => {
+    loadImg("assets/hero_bird.png"),
+    loadImg("assets/tank.png"),
+    loadImg("assets/chopper.png"),
+    loadImg("assets/zombie.png"),
+    loadImg("assets/boss.png"),
+  ]).then(([chick, rabbit, bear, bird, tank, chopper, zombie, boss]) => {
     sprites.hero_chick = chick;
     sprites.hero_rabbit = rabbit;
     sprites.hero_bear = bear;
+    sprites.hero_bird = bird;
+    sprites.tank = tank;
+    sprites.chopper = chopper;
+    sprites.zombie = zombie;
+    sprites.boss = boss;
   });
 
   // HUD & UI Elements
@@ -100,7 +115,7 @@
 
   const heroCards = document.querySelectorAll(".hero-card");
 
-  // Web Audio Synth
+  // Web Audio Synth Engine
   let audioCtx = null;
   function getAudioCtx() {
     try {
@@ -125,8 +140,8 @@
         const osc = ac.createOscillator();
         const gain = ac.createGain();
         osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(650, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+        osc.frequency.setValueAtTime(680, now);
+        osc.frequency.exponentialRampToValueAtTime(130, now + 0.08);
         gain.gain.setValueAtTime(0.2, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
         osc.connect(gain);
@@ -240,7 +255,7 @@
       color: "#55efc4",
       accent: "#00b894",
       speed: 400,
-      spriteKey: null,
+      spriteKey: "hero_bird",
       emoji: "🐦",
     },
   };
@@ -480,7 +495,7 @@
 
   function spawnZombie() {
     const isMutant = Math.random() < 0.25 + stage * 0.01;
-    const r = isMutant ? 24 : 16;
+    const r = isMutant ? 24 : 18;
     const hp = (isMutant ? 60 : 25) * (1 + stage * 0.08);
 
     zombies.push({
@@ -511,7 +526,7 @@
       x: W / 2,
       y: -80,
       targetY: 110,
-      r: 45,
+      r: 48,
       hp: maxHp,
       maxHp: maxHp,
       vx: 2.2,
@@ -709,8 +724,8 @@
       boss.patternTimer += dt;
       if (boss.patternTimer > 1.2) {
         boss.patternTimer = 0;
-        zombies.push({ x: boss.x - 20, y: boss.y + 35, r: 16, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
-        zombies.push({ x: boss.x + 20, y: boss.y + 35, r: 16, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
+        zombies.push({ x: boss.x - 20, y: boss.y + 35, r: 18, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
+        zombies.push({ x: boss.x + 20, y: boss.y + 35, r: 18, hp: 30, maxHp: 30, vy: 3.5, isMutant: false });
       }
     } else {
       const spawnInterval = Math.max(0.3, 1.1 - stage * 0.015);
@@ -933,7 +948,7 @@
     });
   }
 
-  // Frame Rendering
+  // Ultra-High Definition 3D Sprite Renderer
   function render() {
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -953,61 +968,75 @@
       ctx.fillRect(0, 0, W, H);
     }
 
-    // Vehicle Pickups (Tank / Chopper)
+    // 1. Vehicle Drop Pickups (Tank / Chopper)
     vehiclePickups.forEach((vp) => {
       ctx.save();
       ctx.translate(vp.x, vp.y);
-      ctx.fillStyle = "rgba(0, 240, 255, 0.25)";
+
+      ctx.fillStyle = "rgba(0, 240, 255, 0.28)";
+      ctx.shadowColor = "#00f0ff";
+      ctx.shadowBlur = 18;
       ctx.beginPath();
-      ctx.arc(0, 0, vp.r + 6, 0, Math.PI * 2);
+      ctx.arc(0, 0, vp.r + 8, 0, Math.PI * 2);
       ctx.fill();
-      ctx.font = "28px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(vp.type === "tank" ? "🚜" : "🚁", 0, 0);
+
+      const vSprite = vp.type === "tank" ? sprites.tank : sprites.chopper;
+      if (vSprite && vSprite.complete && vSprite.naturalWidth > 0) {
+        ctx.drawImage(vSprite, -vp.r * 1.5, -vp.r * 1.5, vp.r * 3, vp.r * 3);
+      } else {
+        ctx.font = "32px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(vp.type === "tank" ? "🚜" : "🚁", 0, 0);
+      }
       ctx.restore();
     });
 
-    // Zombies & Boss
+    // 2. Zombies & Boss 3D Sprites
     zombies.forEach((z) => {
       ctx.save();
       ctx.translate(z.x, z.y);
-      ctx.fillStyle = z.isMutant ? "#ff0055" : "#00b894";
+
       ctx.shadowColor = z.isMutant ? "#ff0055" : "#00b894";
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(0, 0, z.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `${Math.floor(z.r * 1.2)}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(z.isMutant ? "🧟‍♂️" : "🧟", 0, 0);
+      ctx.shadowBlur = 18;
+
+      if (sprites.zombie && sprites.zombie.complete && sprites.zombie.naturalWidth > 0) {
+        const sz = z.r * 2.8;
+        ctx.drawImage(sprites.zombie, -sz / 2, -sz / 2, sz, sz);
+      } else {
+        ctx.fillStyle = z.isMutant ? "#ff0055" : "#00b894";
+        ctx.beginPath();
+        ctx.arc(0, 0, z.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
     });
 
     if (boss) {
       ctx.save();
       ctx.translate(boss.x, boss.y);
-      ctx.fillStyle = "#ff0055";
       ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 24;
-      ctx.beginPath();
-      ctx.arc(0, 0, boss.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "42px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("👑", 0, 0);
+      ctx.shadowBlur = 30;
+
+      if (sprites.boss && sprites.boss.complete && sprites.boss.naturalWidth > 0) {
+        const bsz = boss.r * 3.2;
+        ctx.drawImage(sprites.boss, -bsz / 2, -bsz / 2, bsz, bsz);
+      } else {
+        ctx.fillStyle = "#ff0055";
+        ctx.beginPath();
+        ctx.arc(0, 0, boss.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
     }
 
-    // Bullets & Missiles
+    // 3. Laser Bullets & Homing Missiles
     bullets.forEach((b) => {
       ctx.fillStyle = b.type === "tank_shell" ? "#ff9e00" : "#00f0ff";
       ctx.shadowColor = b.type === "tank_shell" ? "#ff9e00" : "#00f0ff";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 14;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       ctx.fill();
@@ -1016,13 +1045,13 @@
     missiles.forEach((m) => {
       ctx.fillStyle = "#ff0055";
       ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
       ctx.beginPath();
       ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    // Particles
+    // 4. Particles
     particles.forEach((p) => {
       ctx.fillStyle = p.color;
       ctx.globalAlpha = Math.max(0, p.life);
@@ -1032,7 +1061,7 @@
     });
     ctx.globalAlpha = 1;
 
-    // Floating Badges
+    // 5. Floating Score Text
     floats.forEach((f) => {
       ctx.font = 'bold 16px "Jua", sans-serif';
       ctx.fillStyle = f.color;
@@ -1042,37 +1071,38 @@
     });
     ctx.globalAlpha = 1;
 
-    // Player Hero & Vehicle Render
+    // 6. Player Hero & Boarded Vehicles 3D Render
     if (state === "playing" || state === "title") {
       ctx.save();
       ctx.translate(player.x, player.y);
       ctx.rotate(player.tilt || 0);
 
       const heroDef = HERO_DEFS[selectedHeroKey] || HERO_DEFS.chick;
-      const sprite = sprites[heroDef.spriteKey];
+      const heroSprite = sprites[heroDef.spriteKey];
 
       if (player.vehicle) {
-        ctx.font = "46px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(player.vehicle.type === "tank" ? "🚜" : "🚁", 0, 0);
+        const vSprite = player.vehicle.type === "tank" ? sprites.tank : sprites.chopper;
+        ctx.shadowColor = player.vehicle.type === "tank" ? "#ff9e00" : "#00f0ff";
+        ctx.shadowBlur = 24;
+
+        if (vSprite && vSprite.complete && vSprite.naturalWidth > 0) {
+          const vsz = player.r * 3.4;
+          ctx.drawImage(vSprite, -vsz / 2, -vsz / 2, vsz, vsz);
+        }
+
+        // Draw Hero Mounted on Vehicle
+        if (heroSprite && heroSprite.complete && heroSprite.naturalWidth > 0) {
+          const hsz = player.r * 1.8;
+          ctx.drawImage(heroSprite, -hsz / 2, -hsz * 0.8, hsz, hsz);
+        }
       } else {
-        if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+        // Hero On Foot
+        ctx.shadowColor = heroDef.color;
+        ctx.shadowBlur = 20;
+
+        if (heroSprite && heroSprite.complete && heroSprite.naturalWidth > 0) {
           const sz = (player.r * 2.8) * (1 + (upgrades.evoLv - 1) * 0.15);
-          ctx.shadowColor = heroDef.color;
-          ctx.shadowBlur = 16;
-          ctx.drawImage(sprite, -sz / 2, -sz / 2, sz, sz);
-        } else {
-          ctx.fillStyle = heroDef.color;
-          ctx.shadowColor = heroDef.color;
-          ctx.shadowBlur = 16;
-          ctx.beginPath();
-          ctx.arc(0, 0, player.r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.font = "30px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(heroDef.emoji, 0, 0);
+          ctx.drawImage(heroSprite, -sz / 2, -sz / 2, sz, sz);
         }
       }
 
