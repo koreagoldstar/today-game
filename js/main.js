@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "zombie-run",
+      title: "좀비런 (지혁 제작)",
+      tag: "액션 · 탑승 · 50스테이지",
+      href: "/games/zombie-run/",
+      thumb: "/assets/thumbs/zombie-run.png",
+      category: "action",
+    },
+    {
       id: "cosmic-dodge",
       title: "우주 회피",
       tag: "슈팅 · 50스테이지",

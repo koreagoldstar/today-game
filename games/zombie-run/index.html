@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a121d" />
+    <title>좀비런 (지혁 제작) - 오늘의 게임</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+  </head>
+  <body data-bgm="zombie-run">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <!-- Top HUD -->
+      <div class="hud">
+        <div class="panel">
+          <span class="stage-tag">STAGE <b id="hud-stage">1</b>/50</span>
+          <span>점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>히어로 HP <b id="hud-hp">100</b></span>
+          <span class="gold">🪙 <b id="hud-coin">0</b></span>
+        </div>
+      </div>
+
+      <!-- Vehicle Boarding Status Bar -->
+      <div class="vehicle-bar hidden" id="vehicle-bar">
+        <div class="v-info">
+          <span id="v-name">🚜 대형 파괴 탱크</span>
+          <span id="v-hp-text">내구도 100%</span>
+        </div>
+        <div class="bar-bg"><i id="v-fill"></i></div>
+      </div>
+
+      <div class="dist-meter"><i id="dist-fill"></i></div>
+      <div class="hint" id="hint">화면 터치/드래그 시 손가락을 추적합니다! · 탱크/헬기 탑승 지원</div>
+
+      <!-- Touch Control Buttons -->
+      <div class="controls">
+        <button type="button" class="pad" id="left-btn" aria-label="왼쪽 이동">◀</button>
+        <button type="button" class="pad missile" id="missile-btn" aria-label="미사일 발사">🚀 미사일</button>
+        <button type="button" class="pad" id="right-btn" aria-label="오른쪽 이동">▶</button>
+        <button type="button" class="fire" id="fire-btn" aria-label="사격">⚡ 쏘기</button>
+      </div>
+
+      <!-- Hero Selection Overlay -->
+      <div class="overlay" id="title">
+        <div class="badge">NEW GAME · (지혁 제작)</div>
+        <img class="hero-art" src="assets/thumb.png" alt="좀비런" width="140" height="140" />
+        <h1>좀비런 <em>(지혁 제작)</em></h1>
+        <p>4종의 히어로와 함께 50스테이지를 돌파하세요!<br />탱크와 전투 헬기를 타고 좀비 군단을 소탕하세요!</p>
+
+        <div class="hero-select-title">🎮 히어로 선택</div>
+        <div class="hero-grid">
+          <div class="hero-card active" data-hero="chick">
+            <span class="emoji">🐣</span>
+            <b>병아리</b>
+            <small>메카 로스터 진화</small>
+          </div>
+          <div class="hero-card" data-hero="rabbit">
+            <span class="emoji">🐰</span>
+            <b>새끼토끼</b>
+            <small>버니 가디언 진화</small>
+          </div>
+          <div class="hero-card" data-hero="bear">
+            <span class="emoji">🐻</span>
+            <b>새끼곰</b>
+            <small>그리즐리 타이탄 진화</small>
+          </div>
+          <div class="hero-card" data-hero="bird">
+            <span class="emoji">🐦</span>
+            <b>새끼새</b>
+            <small>스톰 팔콘 진화</small>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="btn primary" id="start-btn">작전 개시!</button>
+          <button type="button" class="btn secondary" id="shop-btn">🛒 성장의 상점</button>
+        </div>
+        <a href="/" class="back-link">← 오늘의 게임 목록</a>
+      </div>
+
+      <!-- Upgrade Shop Overlay -->
+      <div class="overlay hidden" id="shop">
+        <div class="badge">HERO ARMORY</div>
+        <h2>🛒 히어로 강화 상점</h2>
+        <p>획득한 코인으로 히어로와 무기를 강화하세요!</p>
+
+        <div class="shop-list">
+          <div class="shop-item">
+            <div class="info">
+              <b>⚡ 공격력 강화</b>
+              <span id="shop-dmg-lv">Lv.1 (+15%)</span>
+            </div>
+            <button type="button" class="shop-buy-btn" id="buy-dmg">강화 <span id="cost-dmg">100</span>🪙</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="info">
+              <b>🔥 연사 속도</b>
+              <span id="shop-rate-lv">Lv.1 (-10% 대기)</span>
+            </div>
+            <button type="button" class="shop-buy-btn" id="buy-rate">강화 <span id="cost-rate">150</span>🪙</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="info">
+              <b>🚀 유도 미사일 폭발</b>
+              <span id="shop-missile-lv">Lv.1 (범위 60px)</span>
+            </div>
+            <button type="button" class="shop-buy-btn" id="buy-missile">강화 <span id="cost-missile">200</span>🪙</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="info">
+              <b>✨ 성체 진화 & 코스튬</b>
+              <span id="shop-evo-lv">Lv.1 아기 형태</span>
+            </div>
+            <button type="button" class="shop-buy-btn" id="buy-evo">진화 <span id="cost-evo">300</span>🪙</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn secondary" id="shop-close-btn">닫기</button>
+      </div>
+
+      <!-- Stage Clear Overlay -->
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">STAGE CLEAR</div>
+        <h2 id="clear-title">STAGE 1 통과!</h2>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn primary" id="next-btn">다음 구역으로</button>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div class="overlay hidden" id="over">
+        <div class="badge">HERO FALLEN</div>
+        <h2>작전 실패</h2>
+        <p id="over-detail"></p>
+        <button type="button" class="btn primary" id="retry-btn">다시 도전</button>
+        <a href="/" class="back-link">← 오늘의 게임 목록</a>
+      </div>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=1"></script>
+  </body>
+</html>
