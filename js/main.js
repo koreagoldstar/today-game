@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "chick-rescue",
+      title: "병아리 구출",
+      tag: "퍼즐 · 물길 · 100스테이지",
+      href: "/games/chick-rescue/",
+      thumb: "/assets/thumbs/chick-rescue.png",
+      category: "puzzle",
+    },
+    {
       id: "lava-monster",
       title: "용암괴물을 물리쳐라 (지혁요청)",
       tag: "아케이드 · 물총 · 50스테이지",

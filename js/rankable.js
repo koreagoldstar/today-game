@@ -26,6 +26,7 @@
     { id: "alggagi", title: "알까기" },
     { id: "whack-mole", title: "두더지 팡팡" },
     { id: "omok", title: "오목" },
+    { id: "chick-rescue", title: "병아리 구출" },
     { id: "lava-monster", title: "용암괴물을 물리쳐라 (지혁요청)" },
     { id: "rhythm-easy", title: "리듬 톡톡 지혁이용" },
     { id: "rhythm", title: "리듬 톡톡" },

@@ -337,6 +337,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.todaygame.co.kr/games/chick-rescue/</loc>
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.todaygame.co.kr/games/lava-monster/</loc>
     <lastmod>2026-09-06</lastmod>
     <changefreq>weekly</changefreq>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#e8f4ff" />
+    <title>병아리 구출 - 오늘의 게임</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css?v=1" />
+  </head>
+  <body data-bgm="chick-rescue">
+    <div class="stage">
+      <div class="top-bar">
+        <span class="chip">STAGE <b id="hud-stage">1</b>/<b>100</b></span>
+        <span class="chip">점수 <b id="hud-score">0</b></span>
+        <span class="chip">이동 <b id="hud-moves">0</b></span>
+      </div>
+
+      <div class="board-wrap">
+        <canvas id="game"></canvas>
+        <div class="toast" id="toast"></div>
+
+        <div class="overlay show" id="title">
+          <div class="card">
+            <div class="badge">퍼즐 · 물길 · 100 STAGES</div>
+            <img class="hero-art" src="assets/thumb.png?v=1" alt="병아리 구출" width="180" height="180" />
+            <h1>병아리 구출</h1>
+            <p>칸막이를 눌러 제거하고 물길을 연결해<br />고립된 병아리에게 물을 보내세요!</p>
+            <button type="button" class="btn" id="start-btn">▶ 시작하기</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="clear">
+          <div class="card">
+            <div class="stars" id="clear-stars">★★★</div>
+            <h1>구출 성공!</h1>
+            <p id="clear-detail">병아리가 물을 마셨어요!</p>
+            <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="fail">
+          <div class="card">
+            <h1>물이 부족해요</h1>
+            <p>다른 칸막이 순서로 다시 시도해 보세요.</p>
+            <button type="button" class="btn secondary" id="retry-btn">다시하기</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="allclear">
+          <div class="card">
+            <img class="hero-art" src="assets/chick.png?v=1" alt="" width="140" height="140" />
+            <h1>100단계 완주!</h1>
+            <p id="all-detail">모든 병아리를 구출했습니다!</p>
+            <button type="button" class="btn" id="again-btn">처음부터</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint" id="hint">나무 칸막이를 탭해서 제거 · 물이 병아리에게 닿으면 클리어!</div>
+
+      <div class="bottom-bar">
+        <button type="button" class="btn ghost" id="reset-btn">↺ 리셋</button>
+        <button type="button" class="btn secondary" id="flow-btn">💧 물 흐르기</button>
+      </div>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="js/levels.js?v=1"></script>
+    <script src="js/water.js?v=1"></script>
+    <script src="js/game.js?v=1"></script>
+  </body>
+</html>
