@@ -998,9 +998,8 @@
       }
 
       if (isReady(sprites.zombie)) {
-        const szw = z.r * 2.6;
-        const szh = z.r * 3.4; // Full standing body silhouette ratio
-        ctx.drawImage(sprites.zombie, -szw / 2, -szh / 2, szw, szh);
+        const sz = z.r * 3.0; // 1:1 ratio for clean standing body silhouette
+        ctx.drawImage(sprites.zombie, -sz / 2, -sz / 2, sz, sz);
       } else {
         ctx.fillStyle = z.isMutant ? "#ff0055" : "#00b894";
         ctx.beginPath();
@@ -1025,9 +1024,8 @@
       ctx.shadowBlur = 32;
 
       if (isReady(sprites.boss)) {
-        const bsw = boss.r * 3.0;
-        const bsh = boss.r * 3.8;
-        ctx.drawImage(sprites.boss, -bsw / 2, -bsh / 2, bsw, bsh);
+        const bsz = boss.r * 3.4;
+        ctx.drawImage(sprites.boss, -bsz / 2, -bsz / 2, bsz, bsz);
       } else {
         ctx.fillStyle = "#ff0055";
         ctx.beginPath();
@@ -1122,9 +1120,8 @@
         ctx.translate(0, runBob);
 
         if (isReady(heroSprite)) {
-          const szw = (player.r * 2.6) * (1 + (upgrades.evoLv - 1) * 0.15);
-          const szh = (player.r * 3.4) * (1 + (upgrades.evoLv - 1) * 0.15);
-          ctx.drawImage(heroSprite, -szw / 2, -szh / 2, szw, szh);
+          const sz = (player.r * 3.0) * (1 + (upgrades.evoLv - 1) * 0.15);
+          ctx.drawImage(heroSprite, -sz / 2, -sz / 2, sz, sz);
         } else {
           ctx.fillStyle = heroDef.color;
           ctx.beginPath();
