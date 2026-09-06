@@ -25,38 +25,16 @@
     boss: null,
   };
 
-  function chromaKey(img) {
-    if (!img) return null;
-    try {
-      const c = document.createElement("canvas");
-      const w = img.naturalWidth || img.width;
-      const h = img.naturalHeight || img.height;
-      if (!w || !h) return img;
-      c.width = w;
-      c.height = h;
-      const x = c.getContext("2d");
-      x.drawImage(img, 0, 0);
-      const data = x.getImageData(0, 0, w, h);
-      const d = data.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const r = d[i];
-        const g = d[i + 1];
-        const b = d[i + 2];
-        if (r < 35 && g < 35 && b < 35) {
-          d[i + 3] = 0;
-        }
-      }
-      x.putImageData(data, 0, 0);
-      return c;
-    } catch (_) {
-      return img;
-    }
+  function isReady(img) {
+    if (!img) return false;
+    if (typeof HTMLCanvasElement !== "undefined" && img instanceof HTMLCanvasElement) return true;
+    return Boolean(img.complete && (img.naturalWidth > 0 || img.width > 0));
   }
 
   function loadImg(src) {
     return new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => resolve(chromaKey(img) || img);
+      img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
       img.src = src;
     });
@@ -495,7 +473,7 @@
 
   function spawnZombie() {
     const isMutant = Math.random() < 0.25 + stage * 0.01;
-    const r = isMutant ? 24 : 18;
+    const r = isMutant ? 26 : 18;
     const hp = (isMutant ? 60 : 25) * (1 + stage * 0.08);
 
     zombies.push({
@@ -514,7 +492,7 @@
     vehiclePickups.push({
       x: Math.random() * (W - 80) + 40,
       y: -40,
-      r: 22,
+      r: 24,
       type,
       vy: 2.2,
     });
@@ -526,7 +504,7 @@
       x: W / 2,
       y: -80,
       targetY: 110,
-      r: 48,
+      r: 52,
       hp: maxHp,
       maxHp: maxHp,
       vx: 2.2,
@@ -958,7 +936,7 @@
     }
 
     // High-Res Scrolling Background
-    if (bgImg.complete && bgImg.naturalWidth > 0) {
+    if (isReady(bgImg)) {
       ctx.drawImage(bgImg, 0, bgScrollY, W, H);
       ctx.drawImage(bgImg, 0, bgScrollY - H, W, H);
       ctx.fillStyle = "rgba(5, 8, 17, 0.35)";
@@ -981,7 +959,7 @@
       ctx.fill();
 
       const vSprite = vp.type === "tank" ? sprites.tank : sprites.chopper;
-      if (vSprite && vSprite.complete && vSprite.naturalWidth > 0) {
+      if (isReady(vSprite)) {
         ctx.drawImage(vSprite, -vp.r * 1.5, -vp.r * 1.5, vp.r * 3, vp.r * 3);
       } else {
         ctx.font = "32px sans-serif";
@@ -1000,7 +978,7 @@
       ctx.shadowColor = z.isMutant ? "#ff0055" : "#00b894";
       ctx.shadowBlur = 18;
 
-      if (sprites.zombie && sprites.zombie.complete && sprites.zombie.naturalWidth > 0) {
+      if (isReady(sprites.zombie)) {
         const sz = z.r * 2.8;
         ctx.drawImage(sprites.zombie, -sz / 2, -sz / 2, sz, sz);
       } else {
@@ -1008,6 +986,10 @@
         ctx.beginPath();
         ctx.arc(0, 0, z.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(z.isMutant ? "🧟‍♂️" : "🧟", 0, 0);
       }
 
       ctx.restore();
@@ -1019,7 +1001,7 @@
       ctx.shadowColor = "#ff0055";
       ctx.shadowBlur = 30;
 
-      if (sprites.boss && sprites.boss.complete && sprites.boss.naturalWidth > 0) {
+      if (isReady(sprites.boss)) {
         const bsz = boss.r * 3.2;
         ctx.drawImage(sprites.boss, -bsz / 2, -bsz / 2, bsz, bsz);
       } else {
@@ -1027,6 +1009,10 @@
         ctx.beginPath();
         ctx.arc(0, 0, boss.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.font = "40px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("👑", 0, 0);
       }
 
       ctx.restore();
@@ -1085,13 +1071,18 @@
         ctx.shadowColor = player.vehicle.type === "tank" ? "#ff9e00" : "#00f0ff";
         ctx.shadowBlur = 24;
 
-        if (vSprite && vSprite.complete && vSprite.naturalWidth > 0) {
+        if (isReady(vSprite)) {
           const vsz = player.r * 3.4;
           ctx.drawImage(vSprite, -vsz / 2, -vsz / 2, vsz, vsz);
+        } else {
+          ctx.font = "46px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(player.vehicle.type === "tank" ? "🚜" : "🚁", 0, 0);
         }
 
         // Draw Hero Mounted on Vehicle
-        if (heroSprite && heroSprite.complete && heroSprite.naturalWidth > 0) {
+        if (isReady(heroSprite)) {
           const hsz = player.r * 1.8;
           ctx.drawImage(heroSprite, -hsz / 2, -hsz * 0.8, hsz, hsz);
         }
@@ -1100,9 +1091,18 @@
         ctx.shadowColor = heroDef.color;
         ctx.shadowBlur = 20;
 
-        if (heroSprite && heroSprite.complete && heroSprite.naturalWidth > 0) {
+        if (isReady(heroSprite)) {
           const sz = (player.r * 2.8) * (1 + (upgrades.evoLv - 1) * 0.15);
           ctx.drawImage(heroSprite, -sz / 2, -sz / 2, sz, sz);
+        } else {
+          ctx.fillStyle = heroDef.color;
+          ctx.beginPath();
+          ctx.arc(0, 0, player.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = "30px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(heroDef.emoji, 0, 0);
         }
       }
 
