@@ -17,6 +17,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "lava-monster",
+      title: "용암괴물을 물리쳐라 (지혁요청)",
+      tag: "아케이드 · 물총 · 50스테이지",
+      href: "/games/lava-monster/",
+      thumb: "/assets/thumbs/lava-monster.png",
+      category: "arcade",
+    },
+    {
       id: "zombie-run",
       title: "좀비런 (지혁 제작)",
       tag: "액션 · 탑승 · 50스테이지",
@@ -289,6 +297,14 @@
       category: "rhythm",
     },
     {
+      id: "rhythm-easy",
+      title: "리듬 톡톡 지혁이용",
+      tag: "쉬운 모드 · 50곡",
+      href: "/games/rhythm-easy/",
+      thumb: "/assets/thumbs/rhythm.png",
+      category: "jihyeok",
+    },
+    {
       id: "rhythm",
       title: "리듬 톡톡",
       tag: "리듬 · 50곡",
@@ -443,6 +459,8 @@
   ];
 
   const catalog = document.getElementById("catalog");
+  const jihyeokSection = document.getElementById("jihyeok-section");
+  const jihyeokGrid = document.getElementById("jihyeok-grid");
   const archiveList = document.getElementById("archive-list");
   const todayLabel = document.getElementById("today-label");
   const sparkles = document.getElementById("sparkles");
@@ -513,7 +531,6 @@
   );
   /** 카탈로그 맨 아래 고정 */
   const BOTTOM_IDS = new Set(["pinball"]);
-
   /**
    * 콜드스타트용 인기 시드 (실제 플레이 수가 쌓이면 자동으로 그 순서로 올라감)
    * 앞쪽일수록 기본 인기 높음
@@ -591,10 +608,6 @@
       const seedB = seedRank(b);
       if (seedA !== seedB) return seedA - seedB;
 
-      if (catId === "rhythm") {
-        if (a.id === "rhythm") return -1;
-        if (b.id === "rhythm") return 1;
-      }
       if (catId === "archive") {
         if (a.id === "goindol") return -1;
         if (b.id === "goindol") return 1;
@@ -728,10 +741,23 @@
       grid.className = "game-grid";
       games.forEach((game) => grid.appendChild(createGameSlot(game)));
       section.appendChild(grid);
+
       frag.appendChild(section);
     });
 
     catalog.appendChild(frag);
+  }
+
+  function renderJihyeokSection() {
+    if (!jihyeokSection || !jihyeokGrid) return;
+    const games = GAMES.filter((g) => g.category === "jihyeok");
+    if (!games.length) {
+      jihyeokSection.hidden = true;
+      return;
+    }
+    jihyeokSection.hidden = false;
+    jihyeokGrid.innerHTML = "";
+    games.forEach((game) => jihyeokGrid.appendChild(createGameSlot(game)));
   }
 
   function renderArchiveRail() {
@@ -773,9 +799,11 @@
     /* ignore */
   }
   renderCatalog();
+  renderJihyeokSection();
   renderArchiveRail();
   loadPlayCounts().then(() => {
     renderCatalog();
+    renderJihyeokSection();
     renderArchiveRail();
   });
 

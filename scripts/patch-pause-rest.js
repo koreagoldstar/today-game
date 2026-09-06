@@ -30,6 +30,7 @@ const games = [
   "minigolf",
   "odd-even",
   "omok",
+  "rhythm-easy",
   "rhythm",
   "rps",
   "slide-beat",

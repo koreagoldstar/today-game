@@ -13,7 +13,12 @@
   bgImg.src = "assets/bg.jpg";
   let bgScrollY = 0;
 
-  // Real Full Body Standing 3D Sprites
+  const SPRITE_FRAMES = 4;
+  const ASSET_V = "14";
+  let spritesReady = false;
+  let animTime = 0;
+
+  // High-quality sprite sheets (4-frame walk cycles, 512px per frame)
   const sprites = {
     hero_chick: null,
     hero_rabbit: null,
@@ -22,6 +27,7 @@
     tank: null,
     chopper: null,
     zombie: null,
+    zombie_mutant: null,
     boss: null,
   };
 
@@ -31,12 +37,58 @@
     return Boolean(img.complete && (img.naturalWidth > 0 || img.width > 0));
   }
 
+  function getAnimFrame(cycle, frameCount = SPRITE_FRAMES) {
+    return Math.abs(Math.floor(cycle || 0)) % frameCount;
+  }
+
+  function drawGroundShadow(width, yOffset) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+    ctx.beginPath();
+    ctx.ellipse(0, yOffset, width * 0.42, width * 0.11, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawSpriteWithFlash(img, frameIndex, frameCount, dx, dy, dw, dh, flash) {
+    const ok = drawSpriteSheet(img, frameIndex, frameCount, dx, dy, dw, dh);
+    if (ok && flash > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = Math.min(0.75, flash * 5);
+      drawSpriteSheet(img, frameIndex, frameCount, dx, dy, dw, dh);
+      ctx.restore();
+    }
+    return ok;
+  }
+
+  function drawVehicleSprite(type, frameIndex, size, hoverY) {
+    const img = type === "tank" ? sprites.tank : sprites.chopper;
+    const hy = hoverY || 0;
+    drawGroundShadow(size, size * 0.38);
+    return drawSpriteSheet(img, frameIndex, SPRITE_FRAMES, -size / 2, -size / 2 + hy, size, size);
+  }
+
+  function drawSpriteSheet(img, frameIndex, frameCount, dx, dy, dw, dh) {
+    if (!isReady(img)) return false;
+    const nw = img.naturalWidth || img.width;
+    const nh = img.naturalHeight || img.height;
+    const fw = nw / frameCount;
+    const sx = Math.floor(frameIndex * fw);
+    const sw = Math.ceil(fw);
+    ctx.imageSmoothingEnabled = true;
+    if (typeof ctx.imageSmoothingQuality !== "undefined") {
+      ctx.imageSmoothingQuality = "high";
+    }
+    ctx.drawImage(img, sx, 0, sw, nh, Math.round(dx), Math.round(dy), Math.round(dw), Math.round(dh));
+    return true;
+  }
+
   function loadImg(src) {
     return new Promise((resolve) => {
       const img = new Image();
+      img.decoding = "async";
       img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
-      img.src = src;
+      img.src = `${src}?v=${ASSET_V}`;
     });
   }
 
@@ -48,8 +100,9 @@
     loadImg("assets/tank.png"),
     loadImg("assets/chopper.png"),
     loadImg("assets/zombie.png"),
+    loadImg("assets/zombie_mutant.png"),
     loadImg("assets/boss.png"),
-  ]).then(([chick, rabbit, bear, bird, tank, chopper, zombie, boss]) => {
+  ]).then(([chick, rabbit, bear, bird, tank, chopper, zombie, zombieMutant, boss]) => {
     sprites.hero_chick = chick;
     sprites.hero_rabbit = rabbit;
     sprites.hero_bear = bear;
@@ -57,7 +110,9 @@
     sprites.tank = tank;
     sprites.chopper = chopper;
     sprites.zombie = zombie;
+    sprites.zombie_mutant = zombieMutant;
     sprites.boss = boss;
+    spritesReady = Boolean(chick && rabbit && bear && bird && zombie && zombieMutant && boss);
   });
 
   // HUD & UI Elements
@@ -71,6 +126,10 @@
   const vNameEl = document.getElementById("v-name");
   const vHpTextEl = document.getElementById("v-hp-text");
   const vFillEl = document.getElementById("v-fill");
+  const bossBar = document.getElementById("boss-bar");
+  const bossNameEl = document.getElementById("boss-name");
+  const bossHpTextEl = document.getElementById("boss-hp-text");
+  const bossFillEl = document.getElementById("boss-fill");
 
   const titleOverlay = document.getElementById("title");
   const shopOverlay = document.getElementById("shop");
@@ -83,8 +142,30 @@
   const startBtn = document.getElementById("start-btn");
   const shopBtn = document.getElementById("shop-btn");
   const shopCloseBtn = document.getElementById("shop-close-btn");
+  const hudShopBtn = document.getElementById("hud-shop-btn");
+  const clearShopBtn = document.getElementById("clear-shop-btn");
+  const overShopBtn = document.getElementById("over-shop-btn");
+  let shopReturnState = "title";
   const nextBtn = document.getElementById("next-btn");
   const retryBtn = document.getElementById("retry-btn");
+
+  function hideAllOverlays() {
+    if (titleOverlay) titleOverlay.classList.add("hidden");
+    if (shopOverlay) shopOverlay.classList.add("hidden");
+    if (clearOverlay) clearOverlay.classList.add("hidden");
+    if (overOverlay) overOverlay.classList.add("hidden");
+  }
+
+  function showOverlayForState(targetState) {
+    hideAllOverlays();
+    if (targetState === "title" && titleOverlay) titleOverlay.classList.remove("hidden");
+    else if (targetState === "clear" && clearOverlay) clearOverlay.classList.remove("hidden");
+    else if (targetState === "over" && overOverlay) overOverlay.classList.remove("hidden");
+  }
+
+  function resumeGameplayClock() {
+    lastTime = performance.now();
+  }
 
   const buyDmgBtn = document.getElementById("buy-dmg");
   const buyRateBtn = document.getElementById("buy-rate");
@@ -174,6 +255,35 @@
         gain.connect(ac.destination);
         osc.start(now);
         osc.stop(now + 0.4);
+      } else if (type === "explosion") {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        const filter = ac.createBiquadFilter();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(28, now + 0.55);
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(900, now);
+        filter.frequency.linearRampToValueAtTime(80, now + 0.55);
+        gain.gain.setValueAtTime(0.55, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+        osc.start(now);
+        osc.stop(now + 0.55);
+      } else if (type === "missile_launch") {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = "square";
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(520, now + 0.18);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
       }
     } catch (_) {}
   }
@@ -246,8 +356,16 @@
   let score = 0;
   let coins = 0;
   let stageDist = 0;
-  const STAGE_MAX_DIST = 2400;
+  const STAGE_BASE_DIST = 5200;
+  let bossArming = false;
+  let bossSpawnTimerId = null;
   let screenShake = 0;
+  let lastTime = performance.now();
+
+  const MISSILE_MAX = 3;
+  const MISSILE_START = 2;
+  let missileAmmo = MISSILE_START;
+  let stageMissileSpawned = false;
 
   // Player Stats & Upgrades
   let upgrades = {
@@ -264,10 +382,11 @@
     hp: 100,
     maxHp: 100,
     fireCd: 0,
-    missileCd: 0,
     tilt: 0,
     runCycle: 0,
     vehicle: null,
+    vehicleAnim: 0,
+    recoil: 0,
   };
 
   // Input Tracking
@@ -283,8 +402,10 @@
   let missiles = [];
   let zombies = [];
   let vehiclePickups = [];
+  let missilePickups = [];
   let coinPickups = [];
   let particles = [];
+  let explosions = [];
   let floats = [];
   let boss = null;
 
@@ -393,6 +514,7 @@
     player.fireCd = player.vehicle ? baseRate * 0.7 : baseRate;
 
     playSound(player.vehicle?.type === "tank" ? "cannon" : "laser");
+    if (player.vehicle?.type === "tank") player.recoil = 1;
 
     const dmg = (15 + upgrades.dmgLv * 4) * (player.vehicle ? 1.8 : 1);
 
@@ -413,22 +535,68 @@
     }
   }
 
+  function applyMissileBlast(m) {
+    const dmg = m.dmg;
+
+    for (let j = zombies.length - 1; j >= 0; j--) {
+      const z = zombies[j];
+      z.hp -= dmg;
+      z.hitFlash = 0.2;
+      if (z.hp <= 0) {
+        score += z.isMutant ? 150 : 80;
+        coins += z.isMutant ? 5 : 2;
+        addExplosion(z.x, z.y, "#ff0055", 12);
+        zombies.splice(j, 1);
+      }
+    }
+
+    if (boss) {
+      boss.hp -= dmg * 1.4;
+      boss.hitFlash = 0.2;
+      if (boss.hp <= 0) destroyBoss();
+    }
+  }
+
+  function detonateMissile(m) {
+    addMissileExplosion(m.x, m.y, m.splashR);
+    applyMissileBlast(m);
+  }
+
   function fireMissile() {
-    if (state !== "playing" || player.missileCd > 0) return;
+    if (state !== "playing" || missileAmmo <= 0) return;
 
-    player.missileCd = 1.2;
-    playSound("cannon");
+    missileAmmo--;
+    updateHUD();
+    playSound("missile_launch");
 
-    const splashR = 50 + upgrades.missileLv * 15;
     const dmg = 45 + upgrades.missileLv * 15;
+    const launchX = player.x;
+    const launchY = player.y - (player.vehicle ? 42 : 28);
+
+    addSmoke(launchX, launchY + 8, 6, 2.5);
+    for (let i = 0; i < 8; i++) {
+      particles.push({
+        x: launchX + (Math.random() - 0.5) * 10,
+        y: launchY + 6,
+        vx: (Math.random() - 0.5) * 2,
+        vy: Math.random() * 2 + 1,
+        r: Math.random() * 3 + 1,
+        color: "#ffd166",
+        life: 1,
+        decay: 0.06,
+        kind: "spark",
+      });
+    }
 
     missiles.push({
-      x: player.x,
-      y: player.y - 30,
-      vy: -13,
-      r: 10,
+      x: launchX,
+      y: launchY,
+      vx: 0,
+      vy: -34,
+      r: 11,
       dmg,
-      splashR,
+      splashR: W * 0.92,
+      age: 0,
     });
   }
 
@@ -444,8 +612,158 @@
         color,
         life: 1,
         decay: Math.random() * 0.05 + 0.02,
+        kind: "spark",
       });
     }
+  }
+
+  function addSmoke(x, y, count, spread) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = Math.random() * spread + 0.5;
+      particles.push({
+        x: x + (Math.random() - 0.5) * 12,
+        y: y + (Math.random() - 0.5) * 12,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 0.5,
+        r: Math.random() * 10 + 8,
+        color: `rgba(${120 + Math.random() * 40 | 0},${115 + Math.random() * 30 | 0},${110 + Math.random() * 20 | 0},0.55)`,
+        life: 1,
+        decay: Math.random() * 0.015 + 0.012,
+        kind: "smoke",
+        grow: 1.04,
+      });
+    }
+  }
+
+  function addMissileExplosion(x, y, splashR) {
+    playSound("explosion");
+    screenShake = Math.min(22, 10 + splashR * 0.08);
+
+    explosions.push({ x, y, r: 6, maxR: splashR * 0.35, life: 1, type: "ring", color: "#ffffff", width: 4 });
+    explosions.push({ x, y, r: 10, maxR: splashR * 0.65, life: 1, type: "ring", color: "#ffd166", width: 3 });
+    explosions.push({ x, y, r: 14, maxR: splashR, life: 1, type: "ring", color: "#ff6b00", width: 2 });
+    explosions.push({ x, y, r: 0, maxR: splashR * 0.45, life: 0.7, type: "flash", color: "#fff4cc" });
+
+    addExplosion(x, y, "#ff4500", 38);
+    addExplosion(x, y, "#ffd166", 28);
+    addExplosion(x, y, "#ff0055", 18);
+    addSmoke(x, y, 16, 4.5);
+
+    for (let i = 0; i < 10; i++) {
+      const a = Math.random() * Math.PI * 2;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * (Math.random() * 3 + 1),
+        vy: Math.sin(a) * (Math.random() * 3 + 1),
+        r: Math.random() * 3 + 1,
+        color: "#fff8e7",
+        life: 1,
+        decay: 0.08,
+        kind: "spark",
+      });
+    }
+  }
+
+  function drawMissile(m) {
+    const angle = Math.atan2(m.vy, m.vx) + Math.PI / 2;
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(angle);
+
+    const bodyL = m.r * 2.8;
+    const bodyW = m.r * 0.85;
+
+    // Exhaust flame
+    const flame = 0.55 + Math.sin(m.age * 40) * 0.25;
+    const gradFlame = ctx.createLinearGradient(0, bodyL * 0.35, 0, bodyL * 1.4);
+    gradFlame.addColorStop(0, `rgba(255, 240, 120, ${0.95 * flame})`);
+    gradFlame.addColorStop(0.35, `rgba(255, 120, 30, ${0.85 * flame})`);
+    gradFlame.addColorStop(1, "rgba(255, 40, 0, 0)");
+    ctx.fillStyle = gradFlame;
+    ctx.beginPath();
+    ctx.moveTo(-bodyW * 0.55, bodyL * 0.45);
+    ctx.lineTo(0, bodyL * 1.35);
+    ctx.lineTo(bodyW * 0.55, bodyL * 0.45);
+    ctx.closePath();
+    ctx.fill();
+
+    // Smoke trail wisps
+    ctx.fillStyle = "rgba(180, 180, 180, 0.35)";
+    for (let i = 0; i < 3; i++) {
+      const ty = bodyL * (0.55 + i * 0.18);
+      ctx.beginPath();
+      ctx.ellipse((i - 1) * 3, ty, 4 + i, 7 + i * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Fins
+    ctx.fillStyle = "#444";
+    ctx.beginPath();
+    ctx.moveTo(-bodyW * 1.05, bodyL * 0.15);
+    ctx.lineTo(-bodyW * 0.55, bodyL * 0.45);
+    ctx.lineTo(-bodyW * 0.55, bodyL * 0.05);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(bodyW * 1.05, bodyL * 0.15);
+    ctx.lineTo(bodyW * 0.55, bodyL * 0.45);
+    ctx.lineTo(bodyW * 0.55, bodyL * 0.05);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body
+    const gradBody = ctx.createLinearGradient(-bodyW, 0, bodyW, 0);
+    gradBody.addColorStop(0, "#5a5f68");
+    gradBody.addColorStop(0.45, "#dfe4ec");
+    gradBody.addColorStop(1, "#4d525a");
+    ctx.fillStyle = gradBody;
+    ctx.beginPath();
+    ctx.moveTo(0, -bodyL * 0.55);
+    ctx.lineTo(bodyW * 0.55, bodyL * 0.42);
+    ctx.lineTo(0, bodyL * 0.32);
+    ctx.lineTo(-bodyW * 0.55, bodyL * 0.42);
+    ctx.closePath();
+    ctx.fill();
+
+    // Warhead tip
+    ctx.fillStyle = "#ff3344";
+    ctx.beginPath();
+    ctx.moveTo(0, -bodyL * 0.78);
+    ctx.lineTo(bodyW * 0.35, -bodyL * 0.35);
+    ctx.lineTo(-bodyW * 0.35, -bodyL * 0.35);
+    ctx.closePath();
+    ctx.fill();
+
+    // Stripe + glow window
+    ctx.fillStyle = "#ffd166";
+    ctx.fillRect(-bodyW * 0.45, -bodyL * 0.05, bodyW * 0.9, bodyW * 0.22);
+    ctx.fillStyle = "#00f0ff";
+    ctx.globalAlpha = 0.75 + Math.sin(m.age * 24) * 0.15;
+    ctx.beginPath();
+    ctx.arc(0, -bodyL * 0.18, bodyW * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  function getStageMaxDist() {
+    return STAGE_BASE_DIST + stage * 80;
+  }
+
+  function getStageDifficulty() {
+    return {
+      spawnInterval: Math.max(0.22, 1.05 - stage * 0.016),
+      scrollSpeed: 95 + stage * 0.45,
+      zombieHpMul: 1 + stage * 0.11,
+      mutantChance: Math.min(0.62, 0.18 + stage * 0.013),
+      bossHp: Math.floor(300 + stage * 115),
+      bossSpeed: 2.0 + stage * 0.055,
+      bossPattern: Math.max(0.55, 1.25 - stage * 0.011),
+      minionHp: Math.floor(28 + stage * 4),
+    };
   }
 
   function addFloat(x, y, text, color) {
@@ -458,7 +776,30 @@
     if (hudHp) hudHp.textContent = `${Math.max(0, Math.floor(player.hp))}%`;
     if (hudCoin) hudCoin.textContent = coins.toLocaleString("ko-KR");
 
-    if (distFill) distFill.style.width = `${Math.min(100, (stageDist / STAGE_MAX_DIST) * 100)}%`;
+    if (missileBtn) {
+      missileBtn.disabled = missileAmmo <= 0;
+    }
+    const missileCountEl = document.getElementById("missile-count");
+    if (missileCountEl) missileCountEl.textContent = `${missileAmmo}/${MISSILE_MAX}`;
+
+    if (distFill) {
+      const maxDist = getStageMaxDist();
+      if (boss) {
+        distFill.style.width = "100%";
+      } else {
+        distFill.style.width = `${Math.min(100, (stageDist / maxDist) * 100)}%`;
+      }
+    }
+
+    if (boss) {
+      if (bossBar) bossBar.classList.remove("hidden");
+      if (bossNameEl) bossNameEl.textContent = boss.name || `👑 STAGE ${stage} 보스`;
+      const bpct = Math.max(0, Math.floor((boss.hp / boss.maxHp) * 100));
+      if (bossHpTextEl) bossHpTextEl.textContent = `${bpct}%`;
+      if (bossFillEl) bossFillEl.style.width = `${bpct}%`;
+    } else if (bossBar) {
+      bossBar.classList.add("hidden");
+    }
 
     if (player.vehicle) {
       if (vehicleBar) vehicleBar.classList.remove("hidden");
@@ -472,9 +813,11 @@
   }
 
   function spawnZombie() {
-    const isMutant = Math.random() < 0.25 + stage * 0.01;
-    const r = isMutant ? 28 : 20;
-    const hp = (isMutant ? 60 : 25) * (1 + stage * 0.08);
+    const diff = getStageDifficulty();
+    const isMutant = Math.random() < diff.mutantChance;
+    const r = isMutant ? 28 + Math.min(stage * 0.3, 8) : 20;
+    const baseHp = isMutant ? 60 : 25;
+    const hp = baseHp * diff.zombieHpMul;
 
     zombies.push({
       x: Math.random() * (W - 60) + 30,
@@ -482,7 +825,7 @@
       r,
       hp,
       maxHp: hp,
-      vy: Math.random() * 1.5 + 2.0 + stage * 0.03,
+      vy: Math.random() * 1.5 + 2.0 + stage * 0.035,
       isMutant,
       walkCycle: Math.random() * Math.PI * 2,
       hitFlash: 0,
@@ -500,54 +843,94 @@
     });
   }
 
+  function spawnMissilePickup() {
+    missilePickups.push({
+      x: Math.random() * (W - 80) + 40,
+      y: -40,
+      r: 22,
+      vy: 2.3,
+      spin: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function cancelBossSpawnTimer() {
+    if (bossSpawnTimerId) {
+      clearTimeout(bossSpawnTimerId);
+      bossSpawnTimerId = null;
+    }
+  }
+
   function spawnBoss() {
-    const maxHp = 400 + stage * 120;
+    const diff = getStageDifficulty();
+    screenShake = 16;
+    bossArming = false;
     boss = {
       x: W / 2,
-      y: -80,
-      targetY: 110,
-      r: 54,
-      hp: maxHp,
-      maxHp: maxHp,
-      vx: 2.2,
+      y: -160,
+      targetY: 130,
+      r: 58 + Math.min(stage * 1.2, 26),
+      hp: diff.bossHp,
+      maxHp: diff.bossHp,
+      vx: diff.bossSpeed,
       patternTimer: 0,
-      name: `STAGE ${stage} 킹 좀비 거함`,
+      patternCd: diff.bossPattern,
+      walkCycle: 0,
+      hitFlash: 0,
+      name: `👑 STAGE ${stage} 킹 좀비`,
     };
+    addFloat(W / 2, 120, "보스 등장!", "#ff0055");
     playSound("vehicle");
+    updateHUD();
+  }
+
+  function triggerBossPhase() {
+    if (boss || bossArming) return;
+    bossArming = true;
+    addFloat(W / 2, 90, "⚠️ 보스 접근중…", "#ffd166");
+    cancelBossSpawnTimer();
+    bossSpawnTimerId = window.setTimeout(() => {
+      bossSpawnTimerId = null;
+      bossArming = false;
+      if (state === "playing" && !boss) spawnBoss();
+    }, 900);
   }
 
   let spawnTimer = 0;
   let vehicleTimer = 0;
 
   function setupStage() {
+    cancelBossSpawnTimer();
     stageDist = 0;
     spawnTimer = 0;
     vehicleTimer = 0;
+    stageMissileSpawned = false;
     bullets = [];
     missiles = [];
     zombies = [];
     vehiclePickups = [];
+    missilePickups = [];
     coinPickups = [];
     particles = [];
+    explosions = [];
     floats = [];
     boss = null;
-
-    if (stage % 5 === 0) {
-      spawnBoss();
-    }
+    bossArming = false;
     updateHUD();
   }
 
   function update(dt) {
+    animTime += dt;
     bgScrollY = (bgScrollY + dt * 60) % H;
 
     if (state !== "playing") return;
 
     if (screenShake > 0) screenShake -= dt * 25;
     if (player.fireCd > 0) player.fireCd -= dt;
-    if (player.missileCd > 0) player.missileCd -= dt;
 
-    if (!boss) stageDist += dt * 110;
+    if (!boss) {
+      const diff = getStageDifficulty();
+      stageDist += dt * diff.scrollSpeed;
+    }
 
     spawnTimer += dt;
     vehicleTimer += dt;
@@ -584,6 +967,40 @@
       player.tilt *= 0.8;
     }
 
+    if (player.recoil > 0) player.recoil -= dt * 6;
+
+    if (player.vehicle) {
+      const vSpeed = player.vehicle.type === "chopper" ? 16 : 10;
+      player.vehicleAnim = (player.vehicleAnim || 0) + dt * vSpeed;
+      const moving = Math.hypot(dx, dy) > 1 || isPointerDown || isPadLeft || isPadRight;
+      if (moving && player.vehicle.type === "tank" && Math.random() < dt * 12) {
+        particles.push({
+          x: player.x + (Math.random() - 0.5) * 28,
+          y: player.y + player.r * 0.55,
+          vx: (Math.random() - 0.5) * 2,
+          vy: Math.random() * 2 + 1,
+          r: Math.random() * 4 + 2,
+          color: "rgba(180, 170, 150, 0.7)",
+          life: 1,
+          decay: 0.04,
+        });
+      }
+      if (moving && player.vehicle.type === "chopper" && Math.random() < dt * 8) {
+        particles.push({
+          x: player.x + (Math.random() - 0.5) * 40,
+          y: player.y + player.r * 0.7,
+          vx: (Math.random() - 0.5) * 3,
+          vy: Math.random() * 1.5 + 0.5,
+          r: Math.random() * 3 + 1,
+          color: "rgba(0, 240, 255, 0.35)",
+          life: 1,
+          decay: 0.05,
+        });
+      }
+    } else if (Math.hypot(dx, dy) > 1 || isPointerDown || isPadLeft || isPadRight) {
+      player.runCycle = (player.runCycle || 0) + dt * 11;
+    }
+
     // Auto Fire when touching screen or holding keys
     if (isPointerDown || keys[" "] || keys["f"] || keys["F"]) {
       fireLaser();
@@ -602,6 +1019,7 @@
 
       if (boss && Math.hypot(b.x - boss.x, b.y - boss.y) < b.r + boss.r) {
         boss.hp -= b.dmg;
+        boss.hitFlash = 0.12;
         addExplosion(b.x, b.y, "#ffd166", 4);
         bullets.splice(i, 1);
         if (boss.hp <= 0) destroyBoss();
@@ -629,50 +1047,75 @@
       if (hit) bullets.splice(i, 1);
     }
 
-    // Homing Missiles
+    // Homing Missiles — fast forward blast
     for (let i = missiles.length - 1; i >= 0; i--) {
       const m = missiles[i];
+      m.age = (m.age || 0) + dt;
       m.y += m.vy;
+      m.x += m.vx;
 
-      if (m.y < -30) {
-        missiles.splice(i, 1);
-        continue;
+      if (Math.random() < 0.9) {
+        particles.push({
+          x: m.x + (Math.random() - 0.5) * 6,
+          y: m.y + 12,
+          vx: (Math.random() - 0.5) * 1.2,
+          vy: Math.random() * 2 + 2,
+          r: Math.random() * 4 + 2,
+          color: Math.random() < 0.5 ? "rgba(255,170,60,0.85)" : "rgba(200,200,200,0.45)",
+          life: 1,
+          decay: Math.random() * 0.05 + 0.04,
+          kind: "trail",
+        });
       }
 
-      let exploded = false;
-      for (let j = zombies.length - 1; j >= 0; j--) {
-        const z = zombies[j];
-        if (Math.hypot(m.x - z.x, m.y - z.y) < m.r + z.r) {
-          exploded = true;
-          break;
-        }
-      }
+      let exploded = m.y < 70;
 
-      if (boss && Math.hypot(m.x - boss.x, m.y - boss.y) < m.r + boss.r) exploded = true;
-
-      if (exploded) {
-        playSound("cannon");
-        screenShake = 14;
-        addExplosion(m.x, m.y, "#ff9e00", 30);
-
-        if (boss && Math.hypot(m.x - boss.x, m.y - boss.y) <= m.splashR) {
-          boss.hp -= m.dmg * 1.5;
-          if (boss.hp <= 0) destroyBoss();
-        }
-
-        for (let j = zombies.length - 1; j >= 0; j--) {
+      if (!exploded) {
+        for (let j = 0; j < zombies.length; j++) {
           const z = zombies[j];
-          if (Math.hypot(m.x - z.x, m.y - z.y) <= m.splashR) {
-            z.hp -= m.dmg;
-            z.hitFlash = 0.15;
-            if (z.hp <= 0) {
-              score += 120;
-              coins += 4;
-              zombies.splice(j, 1);
-            }
+          if (Math.hypot(m.x - z.x, m.y - z.y) < m.r + z.r) {
+            exploded = true;
+            break;
           }
         }
+      }
+
+      if (!exploded && boss && Math.hypot(m.x - boss.x, m.y - boss.y) < m.r + boss.r) {
+        exploded = true;
+      }
+
+      if (exploded) {
+        detonateMissile(m);
         missiles.splice(i, 1);
+      }
+    }
+
+    for (let i = explosions.length - 1; i >= 0; i--) {
+      const e = explosions[i];
+      e.life -= dt * (e.type === "flash" ? 3.2 : 1.8);
+      e.r += (e.maxR - e.r) * dt * 7;
+      if (e.life <= 0) explosions.splice(i, 1);
+    }
+
+    // Missile ammo pickups
+    for (let i = missilePickups.length - 1; i >= 0; i--) {
+      const mp = missilePickups[i];
+      mp.y += mp.vy;
+      mp.spin = (mp.spin || 0) + dt * 4;
+
+      if (Math.hypot(mp.x - player.x, mp.y - player.y) < mp.r + player.r) {
+        if (missileAmmo < MISSILE_MAX) {
+          missileAmmo++;
+          playSound("coin");
+          addFloat(player.x, player.y - 30, "🚀 미사일 +1", "#ff9e00");
+        } else {
+          addFloat(mp.x, mp.y - 20, "미사일 MAX", "#888");
+        }
+        addExplosion(mp.x, mp.y, "#ff9e00", 14);
+        missilePickups.splice(i, 1);
+        updateHUD();
+      } else if (mp.y > H + 40) {
+        missilePickups.splice(i, 1);
       }
     }
 
@@ -687,6 +1130,7 @@
           hp: vp.type === "tank" ? 150 : 120,
           maxHp: vp.type === "tank" ? 150 : 120,
         };
+        player.vehicleAnim = 0;
         playSound("vehicle");
         addFloat(player.x, player.y - 30, vp.type === "tank" ? "🚜 탱크 탑승!" : "🚁 헬기 탑승!", "#00f0ff");
         addExplosion(player.x, player.y, "#00f0ff", 20);
@@ -699,19 +1143,23 @@
 
     // Zombie Spawning & Behavior
     if (boss) {
-      if (boss.y < boss.targetY) boss.y += 2;
+      if (boss.y < boss.targetY) boss.y += 2.8;
       boss.x += boss.vx;
-      if (boss.x < 60 || boss.x > W - 60) boss.vx *= -1;
+      if (boss.x < boss.r + 20 || boss.x > W - boss.r - 20) boss.vx *= -1;
+      boss.walkCycle = (boss.walkCycle || 0) + dt * 6;
+      if (boss.hitFlash > 0) boss.hitFlash -= dt;
 
       boss.patternTimer += dt;
-      if (boss.patternTimer > 1.2) {
+      const diff = getStageDifficulty();
+      if (boss.patternTimer > boss.patternCd) {
         boss.patternTimer = 0;
-        zombies.push({ x: boss.x - 20, y: boss.y + 35, r: 20, hp: 30, maxHp: 30, vy: 3.5, isMutant: false, walkCycle: 0, hitFlash: 0 });
-        zombies.push({ x: boss.x + 20, y: boss.y + 35, r: 20, hp: 30, maxHp: 30, vy: 3.5, isMutant: false, walkCycle: 0, hitFlash: 0 });
+        const mh = diff.minionHp;
+        zombies.push({ x: boss.x - 24, y: boss.y + 38, r: 20, hp: mh, maxHp: mh, vy: 3.2 + stage * 0.02, isMutant: stage >= 8, walkCycle: 0, hitFlash: 0 });
+        zombies.push({ x: boss.x + 24, y: boss.y + 38, r: 20, hp: mh, maxHp: mh, vy: 3.2 + stage * 0.02, isMutant: stage >= 8, walkCycle: 0, hitFlash: 0 });
       }
     } else {
-      const spawnInterval = Math.max(0.3, 1.1 - stage * 0.015);
-      if (spawnTimer > spawnInterval) {
+      const diff = getStageDifficulty();
+      if (spawnTimer > diff.spawnInterval) {
         spawnTimer = 0;
         spawnZombie();
       }
@@ -721,9 +1169,15 @@
         spawnVehiclePickup();
       }
 
-      if (stageDist >= STAGE_MAX_DIST) {
-        stageClear();
-        return;
+      const maxDist = getStageMaxDist();
+      const missileDropDist = maxDist * (0.38 + (stage % 2) * 0.08);
+      if (!stageMissileSpawned && stage >= 2 && stageDist >= missileDropDist) {
+        stageMissileSpawned = true;
+        spawnMissilePickup();
+      }
+
+      if (stageDist >= maxDist) {
+        triggerBossPhase();
       }
     }
 
@@ -742,11 +1196,23 @@
       }
     }
 
+    if (boss) {
+      if (Math.hypot(boss.x - player.x, boss.y - player.y) < boss.r + player.r - 10) {
+        playerHit(16 + stage * 0.8);
+      }
+      updateHUD();
+    }
+
     // Particles Update
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.x += p.vx;
       p.y += p.vy;
+      if (p.kind === "smoke" || p.kind === "trail") {
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        if (p.grow) p.r *= p.grow;
+      }
       p.life -= p.decay;
       if (p.life <= 0) particles.splice(i, 1);
     }
@@ -785,10 +1251,13 @@
     score += 3000 + stage * 500;
     coins += 50;
     boss = null;
+    bossArming = false;
+    updateHUD();
     stageClear();
   }
 
   function stageClear() {
+    cancelBossSpawnTimer();
     state = "clear";
     playSound("coin");
 
@@ -801,7 +1270,7 @@
       if (clearDetail) clearDetail.textContent = `점수: ${score.toLocaleString("ko-KR")}점 · 코인 +${coins}🪙`;
       if (nextBtn) nextBtn.textContent = "다음 스테이지";
     }
-    if (clearOverlay) clearOverlay.classList.remove("hidden");
+    showOverlayForState("clear");
   }
 
   function nextStage() {
@@ -809,16 +1278,21 @@
       startGame();
       return;
     }
+    cancelBossSpawnTimer();
+    if (shopOverlay) shopOverlay.classList.add("hidden");
     stage++;
     state = "playing";
-    if (clearOverlay) clearOverlay.classList.add("hidden");
+    hideAllOverlays();
+    resumeGameplayClock();
     setupStage();
+    updateHUD();
   }
 
   function gameOver() {
+    cancelBossSpawnTimer();
     state = "over";
+    showOverlayForState("over");
     if (overDetail) overDetail.textContent = `STAGE ${stage} · 최종 점수: ${score.toLocaleString("ko-KR")}점`;
-    if (overOverlay) overOverlay.classList.remove("hidden");
 
     if (window.TodayGameRank) {
       window.TodayGameRank.mount({ gameId: GAME_ID, gameTitle: GAME_TITLE, formParent: overOverlay });
@@ -830,21 +1304,47 @@
     getAudioCtx();
     stage = 1;
     score = 0;
+    missileAmmo = MISSILE_START;
     player.hp = 100;
     player.vehicle = null;
     player.x = W / 2;
     player.y = H - 140;
 
     state = "playing";
-    if (titleOverlay) titleOverlay.classList.add("hidden");
-    if (shopOverlay) shopOverlay.classList.add("hidden");
-    if (clearOverlay) clearOverlay.classList.add("hidden");
-    if (overOverlay) overOverlay.classList.add("hidden");
+    hideAllOverlays();
+    resumeGameplayClock();
 
     setupStage();
+    updateHUD();
   }
 
   // Shop System Upgrades
+  function openShop(fromState) {
+    shopReturnState = fromState || state;
+    state = "shop";
+    hideAllOverlays();
+    updateShopUI();
+    if (shopOverlay) shopOverlay.classList.remove("hidden");
+  }
+
+  function closeShop() {
+    if (shopOverlay) shopOverlay.classList.add("hidden");
+    const returnTo = shopReturnState || "title";
+
+    if (returnTo === "playing" || returnTo === "paused") {
+      state = returnTo;
+      resumeGameplayClock();
+      if (returnTo === "playing" && stageDist >= getStageMaxDist() && !boss && !bossArming) {
+        triggerBossPhase();
+      }
+      return;
+    }
+
+    state = returnTo;
+    showOverlayForState(returnTo);
+    resumeGameplayClock();
+  }
+
   function updateShopUI() {
     const costDmg = 100 * upgrades.dmgLv;
     const costRate = 150 * upgrades.rateLv;
@@ -855,6 +1355,20 @@
     const elRate = document.getElementById("cost-rate");
     const elMissile = document.getElementById("cost-missile");
     const elEvo = document.getElementById("cost-evo");
+    const elShopCoin = document.getElementById("shop-coin");
+    const lvDmg = document.getElementById("shop-dmg-lv");
+    const lvRate = document.getElementById("shop-rate-lv");
+    const lvMissile = document.getElementById("shop-missile-lv");
+    const lvEvo = document.getElementById("shop-evo-lv");
+
+    if (elShopCoin) elShopCoin.textContent = coins.toLocaleString("ko-KR");
+    if (lvDmg) lvDmg.textContent = `Lv.${upgrades.dmgLv} (+${upgrades.dmgLv * 15}% 공격)`;
+    if (lvRate) lvRate.textContent = `Lv.${upgrades.rateLv} (연사 ${Math.max(8, 10 - upgrades.rateLv)}%↑)`;
+    if (lvMissile) lvMissile.textContent = `Lv.${upgrades.missileLv} (폭발 ${45 + upgrades.missileLv * 15} dmg)`;
+    if (lvEvo) {
+      const evoNames = ["아기 형태", "성장 형태", "성체 진화", "MAX 코스튬"];
+      lvEvo.textContent = `Lv.${upgrades.evoLv} ${evoNames[Math.min(upgrades.evoLv - 1, 3)]}`;
+    }
 
     if (elDmg) elDmg.textContent = costDmg;
     if (elRate) elRate.textContent = costRate;
@@ -920,16 +1434,23 @@
   }
 
   if (shopBtn) {
-    shopBtn.addEventListener("click", () => {
-      updateShopUI();
-      if (shopOverlay) shopOverlay.classList.remove("hidden");
-    });
+    shopBtn.addEventListener("click", () => openShop("title"));
+  }
+
+  if (hudShopBtn) {
+    hudShopBtn.addEventListener("click", () => openShop("playing"));
+  }
+
+  if (clearShopBtn) {
+    clearShopBtn.addEventListener("click", () => openShop("clear"));
+  }
+
+  if (overShopBtn) {
+    overShopBtn.addEventListener("click", () => openShop("over"));
   }
 
   if (shopCloseBtn) {
-    shopCloseBtn.addEventListener("click", () => {
-      if (shopOverlay) shopOverlay.classList.add("hidden");
-    });
+    shopCloseBtn.addEventListener("click", closeShop);
   }
 
   // Ultra-High Definition 3D Standing Character Renderer
@@ -952,22 +1473,47 @@
       ctx.fillRect(0, 0, W, H);
     }
 
-    // 1. Vehicle Drop Pickups (Tank / Chopper)
+    // 1. Missile & vehicle pickups
+    missilePickups.forEach((mp) => {
+      ctx.save();
+      ctx.translate(mp.x, mp.y);
+      const bob = Math.sin((mp.spin || 0) * 2) * 3;
+      ctx.strokeStyle = "rgba(255, 158, 0, 0.65)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, bob, mp.r + 8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.rotate(mp.spin || 0);
+      ctx.fillStyle = "#ff3344";
+      ctx.beginPath();
+      ctx.moveTo(0, -mp.r * 0.9 + bob);
+      ctx.lineTo(mp.r * 0.45, mp.r * 0.55 + bob);
+      ctx.lineTo(-mp.r * 0.45, mp.r * 0.55 + bob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#ffd166";
+      ctx.fillRect(-mp.r * 0.22, mp.r * 0.1 + bob, mp.r * 0.44, mp.r * 0.18);
+      ctx.font = 'bold 11px "Jua", sans-serif';
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText("+1", 0, mp.r * 0.24 + bob);
+      ctx.restore();
+    });
+
     vehiclePickups.forEach((vp) => {
       ctx.save();
       ctx.translate(vp.x, vp.y);
-
-      ctx.fillStyle = "rgba(0, 240, 255, 0.28)";
-      ctx.shadowColor = "#00f0ff";
-      ctx.shadowBlur = 18;
+      const pulse = Math.sin(animTime * 4 + vp.x) * 2;
+      ctx.strokeStyle = "rgba(0, 240, 255, 0.55)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, vp.r + 8, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(0, 0, vp.r + 10 + pulse, 0, Math.PI * 2);
+      ctx.stroke();
 
-      const vSprite = vp.type === "tank" ? sprites.tank : sprites.chopper;
-      if (isReady(vSprite)) {
-        ctx.drawImage(vSprite, -vp.r * 1.5, -vp.r * 1.5, vp.r * 3, vp.r * 3);
-      } else {
+      const vFrame = getAnimFrame(animTime * 8);
+      const vSize = vp.r * 4.2;
+      if (!drawVehicleSprite(vp.type, vFrame, vSize, 0)) {
         ctx.font = "32px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -976,31 +1522,17 @@
       ctx.restore();
     });
 
-    // 2. Zombies & Boss Full Standing Body Render with Animated Walking Stride
+    // 2. Zombies & Boss — sprite-sheet walk animation
     zombies.forEach((z) => {
       ctx.save();
       ctx.translate(z.x, z.y);
 
-      // Walking Stride Rotation & Body Step Bobbing
-      const walkTilt = Math.sin(z.walkCycle || 0) * 0.14;
-      const walkBob = Math.cos((z.walkCycle || 0) * 2) * 3;
-      ctx.rotate(walkTilt);
-      ctx.translate(0, walkBob);
+      const zSprite = z.isMutant ? sprites.zombie_mutant : sprites.zombie;
+      const zFrame = getAnimFrame(z.walkCycle);
+      const sz = z.r * (z.isMutant ? 4.2 : 3.8);
 
-      ctx.shadowColor = z.isMutant ? "#ff0055" : "#00b894";
-      ctx.shadowBlur = 18;
-
-      if (z.hitFlash > 0) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        ctx.beginPath();
-        ctx.ellipse(0, 0, z.r * 1.2, z.r * 1.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (isReady(sprites.zombie)) {
-        const sz = z.r * 3.0; // 1:1 ratio for clean standing body silhouette
-        ctx.drawImage(sprites.zombie, -sz / 2, -sz / 2, sz, sz);
-      } else {
+      drawGroundShadow(sz, sz * 0.4);
+      if (!drawSpriteWithFlash(zSprite, zFrame, SPRITE_FRAMES, -sz / 2, -sz / 2, sz, sz, z.hitFlash)) {
         ctx.fillStyle = z.isMutant ? "#ff0055" : "#00b894";
         ctx.beginPath();
         ctx.ellipse(0, 0, z.r * 0.9, z.r * 1.4, 0, 0, Math.PI * 2);
@@ -1017,16 +1549,11 @@
     if (boss) {
       ctx.save();
       ctx.translate(boss.x, boss.y);
-      const bossBob = Math.sin(Date.now() / 200) * 4;
-      ctx.translate(0, bossBob);
+      const bsz = boss.r * 5.2;
+      drawGroundShadow(bsz, bsz * 0.42);
 
-      ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 32;
-
-      if (isReady(sprites.boss)) {
-        const bsz = boss.r * 3.4;
-        ctx.drawImage(sprites.boss, -bsz / 2, -bsz / 2, bsz, bsz);
-      } else {
+      const bFrame = getAnimFrame(boss.walkCycle);
+      if (!drawSpriteWithFlash(sprites.boss, bFrame, SPRITE_FRAMES, -bsz / 2, -bsz / 2, bsz, bsz, boss.hitFlash || 0)) {
         ctx.fillStyle = "#ff0055";
         ctx.beginPath();
         ctx.ellipse(0, 0, boss.r, boss.r * 1.5, 0, 0, Math.PI * 2);
@@ -1042,34 +1569,62 @@
 
     // 3. Laser Bullets & Homing Missiles
     bullets.forEach((b) => {
-      ctx.fillStyle = b.type === "tank_shell" ? "#ff9e00" : "#00f0ff";
-      ctx.shadowColor = b.type === "tank_shell" ? "#ff9e00" : "#00f0ff";
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.save();
+      ctx.shadowBlur = 0;
+      if (b.type === "tank_shell") {
+        ctx.fillStyle = "#ff9e00";
+        ctx.fillRect(b.x - b.r, b.y - b.r * 1.6, b.r * 2, b.r * 3.2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fillRect(b.x - b.r * 0.4, b.y - b.r * 2, b.r * 0.8, b.r * 1.2);
+      } else {
+        ctx.fillStyle = "#00f0ff";
+        ctx.beginPath();
+        ctx.ellipse(b.x, b.y, b.r * 0.7, b.r * 1.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath();
+        ctx.ellipse(b.x, b.y - b.r * 0.3, b.r * 0.25, b.r * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     });
 
-    missiles.forEach((m) => {
-      ctx.fillStyle = "#ff0055";
-      ctx.shadowColor = "#ff0055";
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
-      ctx.fill();
+    missiles.forEach((m) => drawMissile(m));
+
+    // 4. Explosion shockwaves & flash
+    explosions.forEach((e) => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, e.life);
+      if (e.type === "flash") {
+        const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r);
+        g.addColorStop(0, "rgba(255, 245, 210, 0.85)");
+        g.addColorStop(0.45, "rgba(255, 120, 40, 0.45)");
+        g.addColorStop(1, "rgba(255, 0, 0, 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = e.width || 2;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
     });
 
-    // 4. Particles
+    // 5. Particles
     particles.forEach((p) => {
       ctx.fillStyle = p.color;
-      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.globalAlpha = Math.max(0, p.life * (p.kind === "smoke" ? 0.55 : 1));
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fill();
     });
     ctx.globalAlpha = 1;
 
-    // 5. Floating Score Text
+    // 6. Floating Score Text
     floats.forEach((f) => {
       ctx.font = 'bold 16px "Jua", sans-serif';
       ctx.fillStyle = f.color;
@@ -1079,50 +1634,44 @@
     });
     ctx.globalAlpha = 1;
 
-    // 6. Player Hero & Boarded Vehicles 3D Render
+    // 7. Player Hero & Boarded Vehicles
     if (state === "playing" || state === "title") {
       ctx.save();
       ctx.translate(player.x, player.y);
-      ctx.rotate(player.tilt || 0);
+      const lean = player.tilt || 0;
+      ctx.rotate(lean * (player.vehicle ? 0.35 : 1));
 
       const heroDef = HERO_DEFS[selectedHeroKey] || HERO_DEFS.chick;
       const heroSprite = sprites[heroDef.spriteKey];
-
-      player.runCycle = (player.runCycle || 0) + 0.15;
-      const runBob = Math.sin(player.runCycle) * 3;
+      const heroFrame = getAnimFrame(player.runCycle);
 
       if (player.vehicle) {
-        const vSprite = player.vehicle.type === "tank" ? sprites.tank : sprites.chopper;
-        ctx.shadowColor = player.vehicle.type === "tank" ? "#ff9e00" : "#00f0ff";
-        ctx.shadowBlur = 24;
+        const vType = player.vehicle.type;
+        const vFrame = getAnimFrame(player.vehicleAnim);
+        const hover = vType === "chopper" ? Math.sin(animTime * 10) * 3 : 0;
+        const recoilY = vType === "tank" ? player.recoil * 5 : 0;
+        const vsz = player.r * (vType === "tank" ? 5.4 : 5.0);
 
-        if (isReady(vSprite)) {
-          const vsz = player.r * 3.6;
-          ctx.drawImage(vSprite, -vsz / 2, -vsz / 2, vsz, vsz);
-        } else {
-          ctx.font = "46px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(player.vehicle.type === "tank" ? "🚜" : "🚁", 0, 0);
+        drawVehicleSprite(vType, vFrame, vsz, hover - recoilY);
+
+        // Hatch gunner — small hero upper body on tank/chopper
+        if (isReady(heroSprite)) {
+          const headW = player.r * 1.35;
+          const headH = player.r * 1.55;
+          const headY = vType === "tank" ? -player.r * 1.05 - recoilY : -player.r * 0.55 + hover;
+          drawSpriteSheet(heroSprite, heroFrame, SPRITE_FRAMES, -headW / 2, headY - headH * 0.55, headW, headH);
         }
 
-        // Draw Hero Mounted on Vehicle
-        if (isReady(heroSprite)) {
-          const hszw = player.r * 1.8;
-          const hszh = player.r * 2.2;
-          ctx.drawImage(heroSprite, -hszw / 2, -hszh * 0.85 + runBob, hszw, hszh);
+        if (player.recoil > 0.2 && vType === "tank") {
+          ctx.fillStyle = "rgba(255, 158, 0, 0.75)";
+          ctx.beginPath();
+          ctx.arc(0, -vsz * 0.42 - recoilY * 2, 7, 0, Math.PI * 2);
+          ctx.fill();
         }
       } else {
-        // Hero On Foot with Running Stride
-        ctx.shadowColor = heroDef.color;
-        ctx.shadowBlur = 20;
-
-        ctx.translate(0, runBob);
-
-        if (isReady(heroSprite)) {
-          const sz = (player.r * 3.0) * (1 + (upgrades.evoLv - 1) * 0.15);
-          ctx.drawImage(heroSprite, -sz / 2, -sz / 2, sz, sz);
-        } else {
+        const sz = player.r * 3.8 * (1 + (upgrades.evoLv - 1) * 0.15);
+        drawGroundShadow(sz, sz * 0.4);
+        if (!drawSpriteSheet(heroSprite, heroFrame, SPRITE_FRAMES, -sz / 2, -sz / 2, sz, sz)) {
           ctx.fillStyle = heroDef.color;
           ctx.beginPath();
           ctx.ellipse(0, 0, player.r, player.r * 1.3, 0, 0, Math.PI * 2);
@@ -1139,8 +1688,6 @@
 
     ctx.restore();
   }
-
-  let lastTime = performance.now();
 
   function loop(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);

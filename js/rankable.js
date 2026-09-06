@@ -26,6 +26,8 @@
     { id: "alggagi", title: "알까기" },
     { id: "whack-mole", title: "두더지 팡팡" },
     { id: "omok", title: "오목" },
+    { id: "lava-monster", title: "용암괴물을 물리쳐라 (지혁요청)" },
+    { id: "rhythm-easy", title: "리듬 톡톡 지혁이용" },
     { id: "rhythm", title: "리듬 톡톡" },
     { id: "racing", title: "스피드 삐약이" },
     { id: "drift-chick", title: "드리프트 삐약이" },

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a0800" />
+    <title>용암괴물을 물리쳐라 (지혁요청) - 오늘의 게임</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=6" />
+  </head>
+  <body data-bgm="lava-monster">
+    <div class="stage">
+      <canvas id="game" width="390" height="700"></canvas>
+
+      <div class="hud">
+        <div class="panel">
+          <span class="stage-tag">STAGE <b id="hud-stage">1</b>/<b id="hud-stage-max">50</b></span>
+          <span class="zone-tag" id="hud-zone">용암 입구</span>
+          <span><b id="hud-hero">병아리</b> · 점수 <b id="hud-score">0</b></span>
+        </div>
+        <div class="panel right">
+          <span>HP <b id="hud-hp">100</b></span>
+          <span class="gun-tag">💦 <b>∞</b> · 💣 <b id="hud-bomb">2</b></span>
+        </div>
+      </div>
+
+      <div class="dist-meter"><i id="dist-fill"></i></div>
+      <div class="combo-tag" id="combo-tag" hidden></div>
+
+      <div class="boss-bar hidden" id="boss-bar">
+        <div class="v-info">
+          <span id="boss-name">🔥 용암 왕</span>
+          <span id="boss-hp-text">100%</span>
+        </div>
+        <div class="bar-bg boss"><i id="boss-fill"></i></div>
+      </div>
+
+      <div class="item-hud">
+        <span class="item-pill" id="pill-shield">🛡️ <b id="hud-shield">0</b></span>
+      </div>
+
+      <div class="hint" id="hint">▶ 오른쪽(→) 전진 · 구멍은 ▲ 점프 · 💦/B</div>
+
+      <div class="touch-controls" id="touch-controls">
+        <button type="button" class="touch-shoot" id="fire-btn" aria-label="물총">💦</button>
+        <button type="button" class="touch-bomb" id="bomb-btn" aria-label="물폭탄">💣</button>
+        <div class="touch-dpad">
+          <button type="button" class="dpad-btn dpad-up" id="jump-btn" aria-label="점프">▲</button>
+          <button type="button" class="dpad-btn dpad-left" id="left-btn" aria-label="왼쪽">◀</button>
+          <button type="button" class="dpad-btn dpad-right" id="right-btn" aria-label="오른쪽">▶</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="title">
+        <div class="badge">지혁요청 · 50 STAGES</div>
+        <div class="title-cover">
+          <img class="hero-art" src="assets/thumb.png?v=2" alt="용암괴물을 물리쳐라" width="240" height="240" />
+        </div>
+        <h1>용암괴물을 물리쳐라 <em>(지혁요청)</em></h1>
+        <p>용암 몬스터를 물리치며 50스테이지를 돌파! 5스테이지마다 보스!</p>
+
+        <div class="hero-select-title">🎮 주인공 선택</div>
+        <div class="hero-grid">
+          <div class="hero-card active" data-hero="chick">
+            <img class="hero-preview" src="assets/hero_chick_preview.png?v=5" alt="" width="56" height="56" />
+            <b>병아리</b><small>스피드형</small>
+          </div>
+          <div class="hero-card" data-hero="bear">
+            <img class="hero-preview" src="assets/hero_bear_preview.png?v=5" alt="" width="56" height="56" />
+            <b>곰</b><small>탱커형</small>
+          </div>
+          <div class="hero-card" data-hero="rabbit">
+            <img class="hero-preview" src="assets/hero_rabbit_preview.png?v=5" alt="" width="56" height="56" />
+            <b>토끼</b><small>점프형</small>
+          </div>
+          <div class="hero-card" data-hero="squirrel">
+            <img class="hero-preview" src="assets/hero_squirrel_preview.png?v=5" alt="" width="56" height="56" />
+            <b>다람쥐</b><small>물총형</small>
+          </div>
+        </div>
+
+        <ul class="rules">
+          <li>💦 물총 기본 무한 · 💣 물폭탄 2개 시작</li>
+          <li>2~3스테이지마다 숨은 아이템</li>
+          <li>5 · 10 · 15 … 스테이지마다 보스</li>
+        </ul>
+        <button type="button" class="btn" id="start-btn">출발!</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft">STAGE CLEAR</div>
+        <h1 id="clear-title">스테이지 클리어!</h1>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h1>용암에 잠겼습니다…</h1>
+        <p id="over-detail"></p>
+        <button type="button" class="btn" id="retry-btn">다시 도전</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h1>용암괴물 완전 퇴치!</h1>
+        <p id="all-detail"></p>
+        <button type="button" class="btn" id="again-btn">처음부터</button>
+        <a href="/">← 오늘의 게임</a>
+      </div>
+    </div>
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="game.js?v=17"></script>
+  </body>
+</html>
