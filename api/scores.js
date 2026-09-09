@@ -21,7 +21,6 @@ module.exports = async function handler(req, res) {
     "alggagi",
     "whack-mole",
     "omok",
-    "chick-rescue",
     "lava-monster",
     "rhythm-easy",
     "rhythm",

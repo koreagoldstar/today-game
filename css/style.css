@@ -231,7 +231,7 @@ body {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.2;
-  pointer-events: none;
+  pointer-events: auto;
   background: rgba(255, 255, 255, 0.55);
   border-radius: 999px;
   backdrop-filter: blur(8px);
@@ -1408,6 +1408,27 @@ body {
 
 .foot p {
   margin: 0;
+}
+
+.foot-legal {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.foot-legal a {
+  pointer-events: auto;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.88;
+}
+
+.foot-legal a:hover,
+.foot-legal a:focus-visible {
+  text-decoration: underline;
+  opacity: 1;
 }
 
 @keyframes drift {
