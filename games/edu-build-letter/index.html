@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>글자 조립 놀이</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/edu-play.css" />
+    <link rel="stylesheet" href="/css/game-seo.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <header class="hud">
+        <a class="icon-btn home" href="/" aria-label="홈">🏠</a>
+        <p class="progress-pill" id="progress-pill">1 / 5</p>
+        <button type="button" class="icon-btn" id="speak-btn" aria-label="다시 듣기">🔊</button>
+      </header>
+
+      <main class="play" id="play">
+        <p class="hint-line" id="hint">초성과 중성을 가운데로 끌어다 놓아요</p>
+        <div class="drop-pad" id="pad" aria-label="조립 공간"></div>
+        <div class="assoc" id="assoc">
+          <img id="assoc-img" alt="" width="88" height="88" />
+          <span id="assoc-word"></span>
+        </div>
+        <div class="blocks" id="blocks"></div>
+      </main>
+
+      <div class="overlay" id="title">
+        <p class="badge">교육 · 레벨 2</p>
+        <img class="hero" src="/assets/edu/edu_backpack.svg" alt="" width="140" height="140" />
+        <h1>글자 조립 놀이</h1>
+        <p class="lead">초성과 중성을 붙여<br />글자를 만들어요</p>
+        <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
+        <a class="home-link" href="/">🏠</a>
+      </div>
+
+      <div class="overlay hidden" id="done">
+        <p class="badge soft">잘했어요</p>
+        <img class="hero small" src="/assets/edu/edu_chick.svg" alt="" width="110" height="110" />
+        <h2>오늘 배운 것</h2>
+        <p class="learned" id="learned">가</p>
+        <p class="parent-note">부모님께: 자음과 모음을 붙여 음절이 되는 원리를 익히는 놀이예요.</p>
+        <div class="done-actions">
+          <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
+          <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/edu-progress.js?v=3"></script>
+    <script src="/js/edu-speech.js?v=7"></script>
+    <script src="/js/edu-words.js?v=1"></script>
+    <script src="game.js?v=2"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="글자 조립 놀이 소개">
+  <h2>글자 조립 놀이 소개</h2>
+  <p>초성과 중성을 붙여 한글 음절이 되는 원리를 익히는 조합 놀이입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>아래 자음·모음 블록을 가운데로 끌어다 놓으면 글자가 합쳐지고 소리를 읽어 줍니다. 조금 익숙해지면 받침도 나옵니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>드래그가 어려운가요?</dt>
+    <dd>블록을 살짝 탭해도 가운데로 들어갑니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>
