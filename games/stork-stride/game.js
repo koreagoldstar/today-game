@@ -272,6 +272,9 @@
       distance >= best - 0.05 ? "오늘의 서빙왕" : "접시가 떨어졌어요";
     document.getElementById("over-detail").innerHTML =
       `<b>${distance.toFixed(1)}m</b> 이동 · 최고 콤보 <b>${Math.floor(maxCombo)}</b><br/>기록 <b>${best.toFixed(1)}m</b>`;
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow("stork-stride", lastScore, true, document.getElementById("over"));
+    }
   }
 
   function update(dt) {

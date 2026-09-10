@@ -563,7 +563,9 @@
     overDetail.textContent = `점수 ${score} · 헤드샷 ${headshots}`;
     over.classList.remove("hidden");
     stageEl.classList.remove("playing");
-    window.TodayGameRank?.show?.(GAME_ID, score);
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow(GAME_ID, score, true, over);
+    }
   }
 
   function nextStage() {
@@ -577,7 +579,9 @@
       allDetail.textContent = `최종 ${score}점 · 헤드샷 ${headshots}`;
       clear.classList.add("hidden");
       allclear.classList.remove("hidden");
-      window.TodayGameRank?.show?.(GAME_ID, score);
+      if (window.TodayVisit) {
+        TodayVisit.compareAndShow(GAME_ID, score, true, allclear);
+      }
       return;
     }
     hideOverlays();

@@ -1,0 +1,110 @@
+.seo-about {
+  max-width: 640px;
+  margin: 12px auto 28px;
+  padding: 16px 16px 18px;
+  border-radius: 16px;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: "Jua", system-ui, sans-serif;
+  line-height: 1.55;
+  box-shadow: 0 8px 24px rgba(61, 42, 54, 0.08);
+}
+
+.seo-about h2,
+.overlay .seo-about h2,
+#title .seo-about h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+}
+
+.seo-about h3,
+.overlay .seo-about h3,
+#title .seo-about h3 {
+  margin: 16px 0 6px;
+  font-size: 15px;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+}
+
+.seo-about p,
+.overlay .seo-about p,
+#title .seo-about p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+}
+
+.seo-about dl {
+  margin: 0;
+}
+
+.seo-about dt,
+.overlay .seo-about dt,
+#title .seo-about dt {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+}
+
+.seo-about dd,
+.overlay .seo-about dd,
+#title .seo-about dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+  opacity: 1;
+}
+
+/* Keep crawler copy in HTML, but never steal width/height from the game stage. */
+body > .seo-about {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#title .seo-about,
+.overlay#title .seo-about,
+.overlay .seo-about {
+  position: relative;
+  width: min(100%, 340px);
+  height: auto;
+  max-height: 26vh;
+  overflow: auto;
+  clip: auto;
+  white-space: normal;
+  margin: 8px 0 0;
+  padding: 10px 12px 12px;
+  text-align: left;
+  pointer-events: auto;
+  flex-shrink: 1;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+#title .seo-about h2 {
+  font-size: 15px;
+}
+
+#title .seo-about h3,
+#title .seo-about p,
+#title .seo-about dt,
+#title .seo-about dd {
+  font-size: 12px;
+}
+
+#title:has(.seo-about) {
+  overflow-y: auto;
+}

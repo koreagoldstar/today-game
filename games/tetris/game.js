@@ -532,6 +532,9 @@
       document.getElementById("all-detail").textContent =
         `${TOTAL_STAGES}단계 완주! 총점 ${score} · 라인 ${totalLines}`;
       showOverlay("all");
+      if (window.TodayVisit) {
+        TodayVisit.compareAndShow("tetris", score, true, document.getElementById("allclear"));
+      }
     } else {
       showOverlay("clear");
     }
@@ -729,6 +732,9 @@
       rankPanel.classList.add("hidden");
     }
     showOverlay("over");
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow("tetris", score, true, document.getElementById("over"));
+    }
   }
 
   async function submitRank() {

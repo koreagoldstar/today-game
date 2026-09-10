@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>소리 듣고 글자 찾기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/edu-play.css" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <header class="hud">
+        <a class="icon-btn home" href="/" aria-label="홈">🏠</a>
+        <p class="progress-pill" id="progress-pill">1 / 5</p>
+        <button type="button" class="icon-btn" id="speak-btn" aria-label="다시 듣기">🔊</button>
+      </header>
+
+      <main class="play" id="play">
+        <button type="button" class="speaker" id="speaker" aria-label="소리 듣기">🔊</button>
+        <p class="prompt" id="prompt">소리를 듣고 같은 글자를 찾아보세요</p>
+        <div class="choices letters" id="choices"></div>
+      </main>
+
+      <div class="overlay" id="title">
+        <p class="badge">교육 · 레벨 1</p>
+        <img class="hero" src="/assets/edu/edu_apple.svg" alt="" width="140" height="140" />
+        <h1>소리 듣고 글자 찾기</h1>
+        <p class="lead">소리를 듣고<br />같은 글자에 콕!</p>
+        <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
+        <a class="home-link" href="/">🏠</a>
+      </div>
+
+      <div class="overlay hidden" id="done">
+        <p class="badge soft">잘했어요</p>
+        <img class="hero small" src="/assets/edu/edu_chick.svg" alt="" width="110" height="110" />
+        <h2>오늘 배운 것</h2>
+        <p class="learned" id="learned">ㄱ</p>
+        <p class="parent-note">부모님께: 듣고 글자 모양을 연결하는 놀이예요. 틀려도 감점이 없습니다.</p>
+        <div class="done-actions">
+          <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
+          <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/edu-progress.js?v=3"></script>
+    <script src="/js/edu-speech.js?v=7"></script>
+    <script src="/js/edu-words.js?v=1"></script>
+    <script src="game.js?v=2"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="소리 듣고 글자 찾기 소개">
+  <h2>소리 듣고 글자 찾기 소개</h2>
+  <p>자음 소리를 듣고 같은 글자 카드를 찾는 유아용 한글 듣기 게임입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>스피커를 눌러 소리를 들은 뒤, 화면에 나온 글자 카드 중에서 같은 글자를 탭하세요. 틀려도 감점이 없고 다시 들을 수 있습니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>글자를 몰라도 할 수 있나요?</dt>
+    <dd>네, 먼저 소리를 들려주고 같은 모양을 고르면 됩니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

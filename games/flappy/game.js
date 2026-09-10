@@ -198,6 +198,9 @@
     document.getElementById("over-detail").textContent =
       `점수 ${score} · 최고 ${best}`;
     showOverlay("over");
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow("flappy", score, true, document.getElementById("over"));
+    }
   }
 
   function startGame() {

@@ -264,6 +264,15 @@
       submitted = false;
       lastRank = { rankDay: null, rankWeek: null };
       const form = ensureDom(cfg && cfg.formParent);
+      if (window.TodayVisit && cfg && cfg.gameId && !TodayVisit.skipCompare(cfg.gameId)) {
+        const parent = (cfg && cfg.formParent) || (form && form.parentElement);
+        const compareScore = opts && opts.compareScore != null ? opts.compareScore : lastScore;
+        const better =
+          opts && opts.higherIsBetter != null
+            ? opts.higherIsBetter
+            : TodayVisit.higherIsBetter(cfg.gameId);
+        TodayVisit.compareAndShow(cfg.gameId, compareScore, better, parent);
+      }
       if (!form) return;
       form.hidden = false;
       const btn = form.querySelector("#today-rank-submit");

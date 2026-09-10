@@ -277,7 +277,10 @@
     const rankScore = Math.max(1, wins * 100 + leftover * 15);
     if (window.TodayGameRank) {
       TodayGameRank.mount({ gameId: "wordle", gameTitle: "오늘의 워들", formParent: result });
-      TodayGameRank.open(rankScore);
+      TodayGameRank.open(rankScore, {
+        compareScore: won ? row + 1 : 7,
+        higherIsBetter: false,
+      });
     }
   }
 

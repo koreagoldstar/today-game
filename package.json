@@ -6,6 +6,8 @@
   "scripts": {
     "start": "npx --yes serve . -l 3456",
     "deploy": "npx vercel deploy --prod --yes",
-    "seo:fallback": "node scripts/generate-seo-fallback.js"
+    "seo:fallback": "node scripts/generate-seo-fallback.js",
+    "seo:sitemap": "node scripts/generate-sitemap.js",
+    "seo:copy": "node scripts/inject-game-seo.js"
   }
 }

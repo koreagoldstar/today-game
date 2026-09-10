@@ -430,6 +430,9 @@
       document.getElementById("over-detail").textContent =
         `${st.name} · 점수 ${score}점 · 최고 ${best}`;
       showOverlay("over");
+      if (window.TodayVisit) {
+        TodayVisit.compareAndShow("ninja-dodge", score, true, document.getElementById("over"));
+      }
     }
   }
 

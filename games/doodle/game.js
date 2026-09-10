@@ -215,6 +215,9 @@
     }
     document.getElementById("over-detail").textContent = `높이 ${score} · 최고 ${best}`;
     showOverlay("over");
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow("doodle", score, true, document.getElementById("over"));
+    }
   }
 
   function startGame() {

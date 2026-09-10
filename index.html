@@ -51,7 +51,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=11" />
+    <link rel="stylesheet" href="css/style.css?v=15" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -99,6 +99,8 @@
         </p>
         <p class="pwa-install-hint" id="pwa-install-hint" role="status" hidden></p>
 
+        <p class="streak-badge" id="streak-badge" hidden aria-live="polite"></p>
+
         <section class="challenge" id="today-challenge" aria-label="오늘의 챌린지">
           <p class="challenge-eyebrow">🏆 오늘의 챌린지</p>
           <div class="challenge-body">
@@ -138,6 +140,61 @@
           </div>
         </section>
       </header>
+
+      <section class="edu-section" id="edu-section" aria-labelledby="edu-section-title">
+        <div class="edu-section-head">
+          <h2 class="edu-section-title" id="edu-section-title">아이 교육</h2>
+          <p class="edu-section-desc">듣고 그림에 콕 · 한글 놀이</p>
+        </div>
+        <p class="edu-lock-hint" id="edu-lock-hint" hidden></p>
+        <p class="edu-parent-summary" id="edu-parent-summary" hidden></p>
+        <div class="edu-section-grid" id="edu-grid">
+          <!-- seo:edu:start -->
+          <a class="slot has-photo" href="/games/edu-jamo-zoo/" aria-label="자음 동물원 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_giraffe.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">자음 동물원</p>
+              <p class="slot-tag">레벨 1 · 자음</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <a class="slot has-photo" href="/games/edu-listen-find/" aria-label="소리 듣고 글자 찾기 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_umbrella.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">소리 듣고 글자 찾기</p>
+              <p class="slot-tag">레벨 1 · 듣기</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <a class="slot has-photo" href="/games/edu-match-pair/" aria-label="같은 소리 짝짓기 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_apple.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">같은 소리 짝짓기</p>
+              <p class="slot-tag">레벨 2 · 짝짓기</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <a class="slot has-photo" href="/games/edu-build-letter/" aria-label="글자 조립 놀이 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_backpack.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">글자 조립 놀이</p>
+              <p class="slot-tag">레벨 2 · 조합</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <a class="slot has-photo" href="/games/edu-word-puzzle/" aria-label="낱말 완성 퍼즐 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_banana.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">낱말 완성 퍼즐</p>
+              <p class="slot-tag">레벨 3 · 읽기</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <a class="slot has-photo" href="/games/edu-dictation/" aria-label="받아쓰기 플레이">
+            <div class="slot-art"><img src="/assets/edu/edu_pencil.svg" alt="" width="220" height="220" loading="lazy" /></div>
+            <div class="slot-meta">
+              <p class="slot-name">받아쓰기</p>
+              <p class="slot-tag">레벨 3 · 듣기</p><span class="slot-play">플레이</span>
+            </div>
+          </a>
+          <!-- seo:edu:end -->
+        </div>
+      </section>
 
       <section class="shelf" aria-label="게임 목록">
         <h2 class="shelf-title">오늘 뭐하고 놀까</h2>
@@ -438,7 +495,7 @@
             <span class="cat-count">12개</span>
           </div>
           <div class="game-grid">
-            <a class="slot has-photo" href="/games/lava-monster/" aria-label="용암괴물을 물리쳐라 지혁요청 플레이">
+            <a class="slot has-photo" href="/games/lava-monster/" aria-label="용암괴물을 물리쳐라 (지혁요청) 플레이">
               <div class="slot-art"><img src="/assets/thumbs/lava-monster.png" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
                 <p class="slot-name">용암괴물을 물리쳐라 (지혁요청)</p>
@@ -623,8 +680,11 @@
     <script src="js/bgm.js?v=3"></script>
     <script src="js/scores.js"></script>
     <script src="js/rankable.js?v=3"></script>
+    <script src="js/retention.js"></script>
+    <script src="js/edu-progress.js?v=3"></script>
+    <script src="js/edu-speech.js?v=7"></script>
     <script src="js/game-rank.js"></script>
-    <script src="js/main.js?v=10"></script>
+    <script src="js/main.js?v=14"></script>
     <script src="js/pwa.js?v=2"></script>
   </body>
 </html>

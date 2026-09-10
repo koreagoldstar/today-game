@@ -620,6 +620,9 @@
     const st = getDifficulty();
     document.getElementById("over-detail").innerHTML =
       `${st.name} · 점수 <b>${Math.floor(score)}</b><br />거리 ${Math.floor(distance)} · 최고 ${best}`;
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow("jump-run", Math.floor(score), true, document.getElementById("over"));
+    }
     submitted = false;
     document.getElementById("rank-msg").textContent = "";
     document.getElementById("submit-btn").disabled = false;

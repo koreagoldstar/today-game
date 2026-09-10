@@ -14,8 +14,71 @@
 
   /** 고전 게임은 오른쪽 레일로 분리 */
 
+  const EDU_ORDER = [
+    "edu-jamo-zoo",
+    "edu-listen-find",
+    "edu-match-pair",
+    "edu-build-letter",
+    "edu-word-puzzle",
+    "edu-dictation",
+  ];
+
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
+    {
+      id: "edu-dictation",
+      title: "받아쓰기",
+      tag: "레벨 3 · 듣기",
+      href: "/games/edu-dictation/",
+      thumb: "/assets/edu/edu_pencil.svg",
+      category: "edu",
+      eduLevel: 3,
+    },
+    {
+      id: "edu-word-puzzle",
+      title: "낱말 완성 퍼즐",
+      tag: "레벨 3 · 읽기",
+      href: "/games/edu-word-puzzle/",
+      thumb: "/assets/edu/edu_banana.svg",
+      category: "edu",
+      eduLevel: 3,
+    },
+    {
+      id: "edu-build-letter",
+      title: "글자 조립 놀이",
+      tag: "레벨 2 · 조합",
+      href: "/games/edu-build-letter/",
+      thumb: "/assets/edu/edu_backpack.svg",
+      category: "edu",
+      eduLevel: 2,
+    },
+    {
+      id: "edu-match-pair",
+      title: "같은 소리 짝짓기",
+      tag: "레벨 2 · 짝짓기",
+      href: "/games/edu-match-pair/",
+      thumb: "/assets/edu/edu_apple.svg",
+      category: "edu",
+      eduLevel: 2,
+    },
+    {
+      id: "edu-listen-find",
+      title: "소리 듣고 글자 찾기",
+      tag: "레벨 1 · 듣기",
+      href: "/games/edu-listen-find/",
+      thumb: "/assets/edu/edu_umbrella.svg",
+      category: "edu",
+      eduLevel: 1,
+    },
+    {
+      id: "edu-jamo-zoo",
+      title: "자음 동물원",
+      tag: "레벨 1 · 자음",
+      href: "/games/edu-jamo-zoo/",
+      thumb: "/assets/edu/edu_giraffe.svg",
+      category: "edu",
+      eduLevel: 1,
+    },
     {
       id: "lava-monster",
       title: "용암괴물을 물리쳐라 (지혁요청)",
@@ -459,6 +522,8 @@
   ];
 
   const catalog = document.getElementById("catalog");
+  const eduSection = document.getElementById("edu-section");
+  const eduGrid = document.getElementById("edu-grid");
   const jihyeokSection = document.getElementById("jihyeok-section");
   const jihyeokGrid = document.getElementById("jihyeok-grid");
   const archiveList = document.getElementById("archive-list");
@@ -680,17 +745,36 @@
     if (opts.external) {
       a.classList.add("slot-external");
     }
+    if (opts.locked) {
+      a.classList.add("slot-locked");
+      a.href = "#edu-section";
+      a.setAttribute("aria-label", `${game.title} 아직 잠김. 쉬운 게임을 하면 열려요`);
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const hint =
+          (window.TodayEdu && typeof TodayEdu.unlockHint === "function" && TodayEdu.unlockHint()) ||
+          "아직 잠겨 있어요. 먼저 쉬운 게임을 해 볼까?";
+        const box = document.getElementById("edu-lock-hint");
+        if (box) {
+          box.hidden = false;
+          box.textContent = hint;
+        }
+        if (window.speakSoftly) speakSoftly(hint);
+      });
+    }
     const art = game.thumb
       ? `<img src="${game.thumb}" alt="" loading="lazy" width="220" height="220" />`
       : `<span class="slot-emoji" aria-hidden="true">${game.emoji || "🎮"}</span>`;
-    const tag = opts.external
-      ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
-      : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
+    const play = opts.locked
+      ? `<p class="slot-tag">아직 잠김</p><span class="slot-play">다음 단계</span>`
+      : opts.external
+        ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
+        : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
     a.innerHTML = `
       <div class="slot-art">${art}</div>
       <div class="slot-meta">
         <p class="slot-name">${game.title}</p>
-        ${tag}
+        ${play}
       </div>
     `;
     return a;
@@ -748,6 +832,52 @@
     catalog.appendChild(frag);
   }
 
+  function renderEduSection() {
+    if (!eduSection || !eduGrid) return;
+    const games = GAMES.filter((g) => g.category === "edu").sort((a, b) => {
+      const ia = EDU_ORDER.indexOf(a.id);
+      const ib = EDU_ORDER.indexOf(b.id);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    if (!games.length) {
+      eduSection.hidden = true;
+      return;
+    }
+    const data = window.TodayEdu ? TodayEdu.load() : null;
+    const open2 = !(window.TodayEdu && typeof TodayEdu.level2Unlocked === "function") || TodayEdu.level2Unlocked(data);
+    const open3 = !(window.TodayEdu && typeof TodayEdu.level3Unlocked === "function") || TodayEdu.level3Unlocked(data);
+    eduSection.hidden = false;
+    eduGrid.innerHTML = "";
+    games.forEach((game) => {
+      const level = game.eduLevel || 1;
+      const locked = (level === 2 && !open2) || (level === 3 && !open3);
+      eduGrid.appendChild(createGameSlot(game, { locked }));
+    });
+    const lockHint = document.getElementById("edu-lock-hint");
+    if (lockHint) {
+      const hint = window.TodayEdu && typeof TodayEdu.unlockHint === "function" ? TodayEdu.unlockHint(data) : "";
+      if (hint) {
+        lockHint.hidden = false;
+        lockHint.textContent = hint;
+      } else {
+        lockHint.hidden = true;
+        lockHint.textContent = "";
+      }
+    }
+    if (window.TodayEdu) {
+      const summary = TodayEdu.todaySummary();
+      const box = document.getElementById("edu-parent-summary");
+      if (box) {
+        if (summary) {
+          box.hidden = false;
+          box.textContent = summary;
+        } else {
+          box.hidden = true;
+        }
+      }
+    }
+  }
+
   function renderJihyeokSection() {
     if (!jihyeokSection || !jihyeokGrid) return;
     const games = GAMES.filter((g) => g.category === "jihyeok");
@@ -791,6 +921,10 @@
   todayLabel.textContent = formatToday();
   spawnSparkles();
   loadVisitors();
+  if (window.TodayVisit) {
+    const visit = TodayVisit.updateStreak();
+    TodayVisit.renderStreakBadge(document.getElementById("streak-badge"), visit.streakCount);
+  }
   // 오늘 캐시가 있으면 바로 인기순, 없으면 시드로 즉시 표시
   try {
     const raw = localStorage.getItem(popularityCacheKey());
@@ -799,10 +933,12 @@
     /* ignore */
   }
   renderCatalog();
+  renderEduSection();
   renderJihyeokSection();
   renderArchiveRail();
   loadPlayCounts().then(() => {
     renderCatalog();
+    renderEduSection();
     renderJihyeokSection();
     renderArchiveRail();
   });

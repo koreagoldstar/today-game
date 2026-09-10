@@ -6,6 +6,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { writeSitemap } = require("./generate-sitemap");
 
 const root = path.join(__dirname, "..");
 const src = fs.readFileSync(path.join(root, "js/main.js"), "utf8");
@@ -95,48 +96,27 @@ function buildArchive() {
     .join("\n");
 }
 
-function buildSitemap() {
-  const today = new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
-  const urls = [
-    { loc: "https://www.todaygame.co.kr/", changefreq: "daily", priority: "1.0" },
-    { loc: "https://www.todaygame.co.kr/rankings/", changefreq: "daily", priority: "0.9" },
-    { loc: "https://www.todaygame.co.kr/fame/", changefreq: "daily", priority: "0.9" },
-  ];
-  const seen = new Set(urls.map((u) => u.loc));
-  for (const game of GAMES) {
-    const loc = `https://www.todaygame.co.kr${game.href}`;
-    if (seen.has(loc)) continue;
-    seen.add(loc);
-    urls.push({ loc, changefreq: "weekly", priority: "0.8" });
-  }
-  // Folders that exist but may not be in the hub catalog
-  for (const extra of ["/games/odd-even/", "/games/rps/"]) {
-    const loc = `https://www.todaygame.co.kr${extra}`;
-    if (seen.has(loc)) continue;
-    seen.add(loc);
-    urls.push({ loc, changefreq: "weekly", priority: "0.7" });
-  }
-  urls.sort((a, b) => {
-    if (a.priority !== b.priority) return Number(b.priority) - Number(a.priority);
-    return a.loc.localeCompare(b.loc);
-  });
-  return [
-    `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
-    ...urls.flatMap((u) => [
-      `  <url>`,
-      `    <loc>${u.loc}</loc>`,
-      `    <lastmod>${today}</lastmod>`,
-      `    <changefreq>${u.changefreq}</changefreq>`,
-      `    <priority>${u.priority}</priority>`,
-      `  </url>`,
-    ]),
-    `</urlset>`,
-    ``,
-  ].join("\n");
+const EDU_ORDER = [
+  "edu-jamo-zoo",
+  "edu-listen-find",
+  "edu-match-pair",
+  "edu-build-letter",
+  "edu-word-puzzle",
+  "edu-dictation",
+];
+
+function buildEdu() {
+  return GAMES.filter((g) => g.category === "edu")
+    .sort((a, b) => {
+      const ia = EDU_ORDER.indexOf(a.id);
+      const ib = EDU_ORDER.indexOf(b.id);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    })
+    .map((g) => indent(slot(g), 10))
+    .join("\n");
 }
 
-function patchIndex(catalogHtml, archiveHtml) {
+function patchIndex(catalogHtml, archiveHtml, eduHtml) {
   const indexPath = path.join(root, "index.html");
   let html = fs.readFileSync(indexPath, "utf8");
 
@@ -183,7 +163,12 @@ function patchIndex(catalogHtml, archiveHtml) {
     );
   }
 
-  // Google Search Console — paste meta tag from Search Console when verifying.
+  if (html.includes("<!-- seo:edu:start -->")) {
+    html = html.replace(
+      /<!-- seo:edu:start -->[\s\S]*?<!-- seo:edu:end -->/,
+      `<!-- seo:edu:start -->\n${eduHtml}\n          <!-- seo:edu:end -->`
+    );
+  }
   if (!html.includes("google-site-verification") && !html.includes("Google Search Console")) {
     html = html.replace(
       '<meta name="naver-site-verification"',
@@ -239,8 +224,9 @@ function patchRankingsAndFame() {
 
 const catalogHtml = buildCatalog();
 const archiveHtml = buildArchive();
-fs.writeFileSync(path.join(root, "sitemap.xml"), buildSitemap());
-patchIndex(catalogHtml, archiveHtml);
+const eduHtml = buildEdu();
+writeSitemap();
+patchIndex(catalogHtml, archiveHtml, eduHtml);
 patchRankingsAndFame();
 
 console.log(

@@ -294,7 +294,7 @@
       const rankScore = Math.max(1, 10000 - timer * 10);
       if (window.TodayGameRank) {
       TodayGameRank.mount({ gameId: "minesweeper", gameTitle: "지뢰찾기", formParent: document.getElementById("win") });
-      TodayGameRank.open(rankScore);
+      TodayGameRank.open(rankScore, { compareScore: timer, higherIsBetter: false });
     }
     }
   }

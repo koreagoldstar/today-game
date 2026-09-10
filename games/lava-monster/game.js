@@ -741,6 +741,9 @@
     document.getElementById("over-detail").textContent =
       `STAGE ${stageIdx + 1} · ${meta().name} · ${heroMeta().name} · 점수 ${score}`;
     showOverlay("over");
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow(GAME_ID, score, true, document.getElementById("over"));
+    }
     if (window.submitGameScore) window.submitGameScore(GAME_ID, score);
   }
 
@@ -760,6 +763,9 @@
     document.getElementById("all-detail").textContent =
       `최종 점수 ${score} · ${heroMeta().name} · 50스테이지 완주!`;
     showOverlay("allclear");
+    if (window.TodayVisit) {
+      TodayVisit.compareAndShow(GAME_ID, score, true, document.getElementById("allclear"));
+    }
     if (window.submitGameScore) window.submitGameScore(GAME_ID, score);
   }
 
