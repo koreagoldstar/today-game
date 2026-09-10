@@ -100,6 +100,8 @@
     { word: "지렁이", syllables: ["지", "렁", "이"], blank: 0, file: "edu_worm.svg", wrong: ["고", "사"] },
     { word: "호랑이", syllables: ["호", "랑", "이"], blank: 1, file: "edu_tiger.svg", wrong: ["다", "바"] },
     { word: "크레용", syllables: ["크", "레", "용"], blank: 0, file: "edu_crayon.svg", wrong: ["치", "코"] },
+    { word: "거북이", syllables: ["거", "북", "이"], blank: 1, file: "edu_opp_slow.svg", wrong: ["다", "사"] },
+    { word: "도토리", syllables: ["도", "토", "리"], blank: 0, file: "edu_acorn.svg", wrong: ["나", "고"] },
   ];
 
   const OPPOSITES = [

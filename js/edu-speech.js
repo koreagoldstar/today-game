@@ -108,8 +108,8 @@
   function makeUtterance(text, slow) {
     const utter = new SpeechSynthesisUtterance(String(text));
     utter.lang = "ko-KR";
-    utter.rate = slow ? 0.7 : 0.8;
-    utter.pitch = 1.0;
+    utter.rate = slow ? 0.75 : 0.85;
+    utter.pitch = 1.15;
     utter.volume = 1.0;
     const preferred = pickVoice();
     if (preferred) utter.voice = preferred;

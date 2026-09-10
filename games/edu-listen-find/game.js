@@ -2,7 +2,7 @@
   "use strict";
 
   const ROUNDS = 5;
-  const { JAMOS, shuffle } = window.TodayEduWords;
+  const { JAMOS, SYLLABLES, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
 
@@ -28,28 +28,52 @@
     els.done.classList.toggle("hidden", name !== "done");
   }
 
-  function speakTarget() {
-    if (!current) return;
-    speak(`${current.name}. ${current.name}`);
+  function syllableCards() {
+    const seen = new Set();
+    return SYLLABLES.filter((item) => {
+      if (seen.has(item.text)) return false;
+      seen.add(item.text);
+      return true;
+    }).map((item) => ({ id: item.text, name: item.text, kind: "syl" }));
+  }
+
+  function jamoCards() {
+    return JAMOS.map((item) => ({ id: item.id, name: item.name, kind: "jamo" }));
+  }
+
+  function useSyllables() {
+    const data = window.TodayEdu ? TodayEdu.load() : null;
+    if (!data) return false;
+    const ready = (data.level1.attemptsCompleted || 0) >= 3 || (data.level1.mastered || []).length >= 5;
+    return ready && Math.random() < 0.6;
   }
 
   function pickQuestion() {
-    const pool = JAMOS.filter((j) => !used.includes(j.id));
-    const answer = (pool.length ? pool : JAMOS)[Math.floor(Math.random() * (pool.length || JAMOS.length))];
-    const others = shuffle(JAMOS.filter((j) => j.id !== answer.id)).slice(0, 4);
-    const cards = shuffle([answer, ...others]);
-    return { ...answer, cards };
+    const source = useSyllables() ? syllableCards() : jamoCards();
+    const pool = source.filter((item) => !used.includes(item.id));
+    const src = pool.length ? pool : source;
+    const answer = src[Math.floor(Math.random() * src.length)];
+    const extra = 3 + Math.floor(Math.random() * 3);
+    const others = shuffle(source.filter((item) => item.id !== answer.id)).slice(0, extra);
+    return { ...answer, cards: shuffle([answer, ...others]) };
+  }
+
+  function speakTarget() {
+    if (!current) return;
+    els.speaker.classList.remove("hint");
+    if (current.kind === "syl") speak(current.name);
+    else speak(`${current.name}. ${current.name}`);
   }
 
   function renderCards() {
     els.choices.innerHTML = "";
-    current.cards.forEach((jamo) => {
+    current.cards.forEach((item) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "choice letter";
-      btn.textContent = jamo.id;
-      btn.setAttribute("aria-label", jamo.name);
-      btn.addEventListener("click", () => onPick(btn, jamo));
+      btn.textContent = item.id;
+      btn.setAttribute("aria-label", item.name);
+      btn.addEventListener("click", () => onPick(btn, item));
       els.choices.appendChild(btn);
     });
   }
@@ -63,13 +87,14 @@
     speakTarget();
   }
 
-  function onPick(btn, jamo) {
+  function onPick(btn, item) {
     if (locked || !current) return;
-    if (jamo.id === current.id) {
+    if (item.id === current.id) {
       locked = true;
+      els.speaker.classList.remove("hint");
       btn.classList.add("correct");
       ding();
-      speak(current.name);
+      speak(current.kind === "syl" ? current.name : current.name);
       if (window.TodayEdu) TodayEdu.recordResult("level1", current.id, true);
       window.setTimeout(nextRound, 900);
       return;
@@ -77,6 +102,7 @@
     btn.classList.remove("shake");
     void btn.offsetWidth;
     btn.classList.add("shake");
+    els.speaker.classList.add("hint");
     speak("다시 들어볼까?");
     window.setTimeout(speakTarget, 700);
   }

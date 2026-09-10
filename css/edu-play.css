@@ -189,7 +189,7 @@ body {
 }
 
 .choice.correct {
-  animation: pop 0.45s ease;
+  animation: bounce 0.7s ease;
   border-color: #6fd6b0;
   background: #e8fff4;
 }
@@ -220,6 +220,10 @@ body {
   box-shadow: 0 4px 0 rgba(201, 138, 62, 0.28);
 }
 
+.speaker.hint {
+  animation: glow 0.9s ease-in-out infinite;
+}
+
 .picture {
   width: 120px;
   height: 120px;
@@ -229,6 +233,10 @@ body {
 
 .picture[hidden] {
   display: none;
+}
+
+.picture.bounce {
+  animation: bounce 0.7s ease;
 }
 
 .blank-word {
