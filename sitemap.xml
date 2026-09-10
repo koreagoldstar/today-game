@@ -6,6 +6,8 @@
   <url><loc>https://www.todaygame.co.kr/privacy/</loc><priority>0.3</priority></url>
   <url><loc>https://www.todaygame.co.kr/terms/</loc><priority>0.3</priority></url>
 
+  <url><loc>https://www.todaygame.co.kr/games/edu-sentence-builder/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/edu-opposites/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/edu-dictation/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/edu-word-puzzle/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/edu-build-letter/</loc><priority>0.7</priority></url>

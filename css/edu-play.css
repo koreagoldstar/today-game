@@ -411,6 +411,149 @@ body {
   animation: shake 0.35s ease;
 }
 
+.mem-grid.pairs-5 {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.mem-grid.pairs-5 .mem-card {
+  min-height: 78px;
+  padding: 4px;
+}
+
+.mem-grid.pairs-5 .mem-card img {
+  width: 42px;
+  height: 42px;
+}
+
+.mem-grid.pairs-5 .mem-card .word {
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+.sent-hero {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  margin: 0 0 6px;
+}
+
+.sent-hero.bounce {
+  animation: bounce 0.7s ease;
+}
+
+.sent-line {
+  min-height: 28px;
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #ff6b3d;
+  text-align: center;
+}
+
+.sent-slots {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sent-slot {
+  min-height: 118px;
+  padding: 6px 4px;
+  border-radius: 18px;
+  border: 4px dashed rgba(201, 138, 62, 0.45);
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sent-slot.filled {
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.sent-slot.ready {
+  border-color: #6fd6b0;
+  background: #e8fff4;
+  animation: pop 0.45s ease;
+}
+
+.sent-slot.shake {
+  animation: shake 0.35s ease;
+}
+
+.sent-slot img {
+  width: 48px;
+  height: 48px;
+  background: #fff8e8;
+  border-radius: 12px;
+}
+
+.sent-slot .word,
+.sent-chunk .word {
+  font-size: 16px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.sent-chunks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.sent-chunk {
+  appearance: none;
+  border: 4px solid #fff;
+  border-radius: 18px;
+  min-height: 68px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #ffe27a;
+  box-shadow: 0 5px 0 rgba(201, 138, 62, 0.28);
+  font-family: inherit;
+  color: inherit;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sent-chunk img {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  background: #fff8e8;
+  border-radius: 12px;
+}
+
+.sent-chunk.ghost {
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.sent-chunk.dragging {
+  position: fixed;
+  z-index: 8;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.sent-chunk:nth-child(2) {
+  background: #b8f0d0;
+}
+
+.sent-chunk:nth-child(3) {
+  background: #ffd4c4;
+}
+
 @keyframes pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.08); }
@@ -426,6 +569,13 @@ body {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-14px) scale(1.08); }
+  55% { transform: translateY(0) scale(1); }
+  75% { transform: translateY(-7px); }
 }
 
 .overlay {

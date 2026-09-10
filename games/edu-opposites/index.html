@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>반대말 짝꿍</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/edu-play.css?v=3" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <header class="hud">
+        <a class="icon-btn home" href="/" aria-label="홈">🏠</a>
+        <p class="progress-pill" id="progress-pill">반대말</p>
+        <button type="button" class="icon-btn" id="speak-btn" aria-label="다시 듣기">🔊</button>
+      </header>
+
+      <main class="play" id="play">
+        <p class="prompt" id="prompt">반대되는 그림을 짝지어요</p>
+        <div class="mem-grid pairs-5" id="board"></div>
+      </main>
+
+      <div class="overlay" id="title">
+        <p class="badge">교육 · 레벨 4</p>
+        <img class="hero" src="/assets/edu/edu_opp_big.svg" alt="" width="140" height="140" />
+        <h1>반대말 짝꿍</h1>
+        <p class="lead">카드를 뒤집고<br />반대되는 말을 찾아요</p>
+        <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
+        <a class="home-link" href="/">🏠</a>
+      </div>
+
+      <div class="overlay hidden" id="done">
+        <p class="badge soft">잘했어요</p>
+        <img class="hero small" src="/assets/edu/edu_opp_small.svg" alt="" width="110" height="110" />
+        <h2>오늘 배운 것</h2>
+        <p class="learned" id="learned">크다 작다</p>
+        <p class="parent-note">부모님께: 크다·작다처럼 반대되는 뜻을 그림으로 짝짓는 놀이예요.</p>
+        <div class="done-actions">
+          <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
+          <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/edu-progress.js?v=4"></script>
+    <script src="/js/edu-speech.js?v=7"></script>
+    <script src="/js/edu-words.js?v=2"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="반대말 짝꿍 소개">
+  <h2>반대말 짝꿍 소개</h2>
+  <p>크다와 작다처럼 반대되는 뜻을 그림 카드로 짝짓는 한글 어휘 게임입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>카드를 두 장씩 뒤집어 반대되는 그림끼리 짝을 찾으세요. 맞으면 두 낱말을 함께 읽어 줍니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>몇 쌍을 찾나요?</dt>
+    <dd>한 판에 다섯 쌍, 카드 열 장을 찾습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

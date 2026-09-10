@@ -103,6 +103,8 @@ const EDU_ORDER = [
   "edu-build-letter",
   "edu-word-puzzle",
   "edu-dictation",
+  "edu-opposites",
+  "edu-sentence-builder",
 ];
 
 function buildEdu() {

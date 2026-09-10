@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>짧은 문장 만들기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/edu-play.css?v=3" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <header class="hud">
+        <a class="icon-btn home" href="/" aria-label="홈">🏠</a>
+        <p class="progress-pill" id="progress-pill">1 / 5</p>
+        <button type="button" class="icon-btn" id="speak-btn" aria-label="다시 듣기">🔊</button>
+      </header>
+
+      <main class="play" id="play">
+        <p class="hint-line" id="hint">조각을 순서대로 놓아 문장을 만들어요</p>
+        <img class="sent-hero" id="hero" src="/assets/edu/edu_chick.svg" alt="" width="92" height="92" hidden />
+        <p class="sent-line" id="sentence"></p>
+        <div class="sent-slots" id="slots"></div>
+        <div class="sent-chunks" id="chunks"></div>
+      </main>
+
+      <div class="overlay" id="title">
+        <p class="badge">교육 · 레벨 4</p>
+        <img class="hero" src="/assets/edu/edu_chick.svg" alt="" width="140" height="140" />
+        <h1>짧은 문장 만들기</h1>
+        <p class="lead">세 조각을 순서대로 놓아<br />문장을 만들어요</p>
+        <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
+        <a class="home-link" href="/">🏠</a>
+      </div>
+
+      <div class="overlay hidden" id="done">
+        <p class="badge soft">잘했어요</p>
+        <img class="hero small" src="/assets/edu/edu_panda.svg" alt="" width="110" height="110" />
+        <h2>오늘 배운 것</h2>
+        <p class="learned" id="learned">병아리가 사과를 먹어요</p>
+        <p class="parent-note">부모님께: 주어·목적어·동사 조각을 순서대로 놓아 짧은 문장을 익히는 놀이예요.</p>
+        <div class="done-actions">
+          <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
+          <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/edu-progress.js?v=4"></script>
+    <script src="/js/edu-speech.js?v=7"></script>
+    <script src="/js/edu-words.js?v=2"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="짧은 문장 만들기 소개">
+  <h2>짧은 문장 만들기 소개</h2>
+  <p>주어·목적어·동사 세 조각을 순서대로 놓아 짧은 문장을 만드는 한글 문장 놀이입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>아래 조각을 위 칸에 끌어다 놓거나 탭해서 순서대로 놓으세요. 문장이 맞으면 전체를 읽어 줍니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>드래그가 어려운가요?</dt>
+    <dd>조각을 살짝 탭해도 빈칸으로 들어갑니다. 잘못 놓으면 칸을 다시 눌러 빼면 됩니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

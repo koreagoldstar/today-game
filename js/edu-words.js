@@ -102,6 +102,113 @@
     { word: "크레용", syllables: ["크", "레", "용"], blank: 0, file: "edu_crayon.svg", wrong: ["치", "코"] },
   ];
 
+  const OPPOSITES = [
+    { id: "크다-작다", a: { word: "크다", file: "edu_opp_big.svg" }, b: { word: "작다", file: "edu_opp_small.svg" } },
+    { id: "길다-짧다", a: { word: "길다", file: "edu_opp_long.svg" }, b: { word: "짧다", file: "edu_opp_short.svg" } },
+    { id: "뜨겁다-차갑다", a: { word: "뜨겁다", file: "edu_opp_hot.svg" }, b: { word: "차갑다", file: "edu_opp_cold.svg" } },
+    { id: "빠르다-느리다", a: { word: "빠르다", file: "edu_opp_fast.svg" }, b: { word: "느리다", file: "edu_opp_slow.svg" } },
+    { id: "많다-적다", a: { word: "많다", file: "edu_opp_many.svg" }, b: { word: "적다", file: "edu_opp_few.svg" } },
+  ];
+
+  const SENTENCES = [
+    {
+      sentence: "병아리가 사과를 먹어요",
+      parts: [
+        { text: "병아리", file: "edu_chick.svg" },
+        { text: "사과", file: "edu_apple.svg" },
+        { text: "먹어요", file: null },
+      ],
+    },
+    {
+      sentence: "강아지가 공을 던져요",
+      parts: [
+        { text: "강아지", file: "edu_puppy.svg" },
+        { text: "공", file: "edu_ball.svg" },
+        { text: "던져요", file: null },
+      ],
+    },
+    {
+      sentence: "고양이가 물고기를 봐요",
+      parts: [
+        { text: "고양이", file: "edu_cat.svg" },
+        { text: "물고기", file: "edu_fish.svg" },
+        { text: "봐요", file: null },
+      ],
+    },
+    {
+      sentence: "토끼가 당근을 먹어요",
+      parts: [
+        { text: "토끼", file: "edu_rabbit.svg" },
+        { text: "당근", file: "edu_carrot.svg" },
+        { text: "먹어요", file: null },
+      ],
+    },
+    {
+      sentence: "오리가 물에서 헤엄쳐요",
+      parts: [
+        { text: "오리", file: "edu_duck.svg" },
+        { text: "물", file: "edu_water.svg" },
+        { text: "헤엄쳐요", file: null },
+      ],
+    },
+    {
+      sentence: "사자가 크게 소리쳐요",
+      parts: [
+        { text: "사자", file: "edu_lion.svg" },
+        { text: "크게", file: "edu_opp_big.svg" },
+        { text: "소리쳐요", file: null },
+      ],
+    },
+    {
+      sentence: "나비가 꽃 위에 앉아요",
+      parts: [
+        { text: "나비", file: "edu_butterfly.svg" },
+        { text: "꽃", file: "edu_sunflower.svg" },
+        { text: "앉아요", file: null },
+      ],
+    },
+    {
+      sentence: "다람쥐가 도토리를 먹어요",
+      parts: [
+        { text: "다람쥐", file: "edu_squirrel.svg" },
+        { text: "도토리", file: "edu_acorn.svg" },
+        { text: "먹어요", file: null },
+      ],
+    },
+    {
+      sentence: "코끼리가 물을 뿌려요",
+      parts: [
+        { text: "코끼리", file: "edu_elephant.svg" },
+        { text: "물", file: "edu_water.svg" },
+        { text: "뿌려요", file: null },
+      ],
+    },
+    {
+      sentence: "거북이가 느리게 걸어요",
+      parts: [
+        { text: "거북이", file: "edu_opp_slow.svg" },
+        { text: "느리게", file: null },
+        { text: "걸어요", file: null },
+      ],
+    },
+    {
+      sentence: "토끼가 빠르게 뛰어요",
+      parts: [
+        { text: "토끼", file: "edu_rabbit.svg" },
+        { text: "빠르게", file: "edu_opp_fast.svg" },
+        { text: "뛰어요", file: null },
+      ],
+    },
+    {
+      sentence: "판다가 낮잠을 자요",
+      parts: [
+        { text: "판다", file: "edu_panda.svg" },
+        { text: "낮잠을", file: null },
+        { text: "자요", file: null },
+      ],
+    },
+  ];
+
   const DICTATION = [
     { word: "사과", file: "edu_apple.svg" },
     { word: "바나나", file: "edu_banana.svg" },
@@ -137,6 +244,8 @@
     BATCHIM,
     WORDS3,
     DICTATION,
+    OPPOSITES,
+    SENTENCES,
     shuffle,
   };
 })();

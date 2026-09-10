@@ -20,6 +20,7 @@
       level1: { attemptsCompleted: 0, mastered: [], streaks: {} },
       level2: { attemptsCompleted: 0, mastered: [], streaks: {} },
       level3: { attemptsCompleted: 0, mastered: [], streaks: {} },
+      level4: { attemptsCompleted: 0, mastered: [], streaks: {} },
       todayLearned: [],
       lastPlayedDate: "",
     };
@@ -42,6 +43,7 @@
         level1: mergeLevel(parsed.level1),
         level2: mergeLevel(parsed.level2),
         level3: mergeLevel(parsed.level3),
+        level4: mergeLevel(parsed.level4),
         todayLearned: Array.isArray(parsed.todayLearned) ? parsed.todayLearned.slice() : [],
         lastPlayedDate: typeof parsed.lastPlayedDate === "string" ? parsed.lastPlayedDate : "",
       };
@@ -111,6 +113,12 @@
     return (d.level2.mastered || []).length >= 5 || (d.level2.attemptsCompleted || 0) >= 8;
   }
 
+  function level4Unlocked(data) {
+    const d = data || load();
+    if (!level3Unlocked(d)) return false;
+    return (d.level3.mastered || []).length >= 5 || (d.level3.attemptsCompleted || 0) >= 8;
+  }
+
   function todaySummary(data) {
     const d = data || load();
     const today = todayKey();
@@ -126,6 +134,9 @@
     if (!level3Unlocked(d)) {
       return "자물쇠는 다음 단계예요. 짝짓기랑 글자 조립을 하면 열려요.";
     }
+    if (!level4Unlocked(d)) {
+      return "자물쇠는 다음 단계예요. 낱말 퍼즐이랑 받아쓰기를 하면 열려요.";
+    }
     return "";
   }
 
@@ -138,6 +149,7 @@
     completeAttempt,
     level2Unlocked,
     level3Unlocked,
+    level4Unlocked,
     todaySummary,
     unlockHint,
   };

@@ -1,15 +1,15 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v25`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v25`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v26`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v26`;
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
   "/manifest.webmanifest",
   "/css/style.css?v=15",
-  "/js/main.js?v=14",
+  "/js/main.js?v=15",
   "/js/pwa.js?v=2",
   "/assets/pwa-icon-192.png",
   "/assets/pwa-icon-512.png"

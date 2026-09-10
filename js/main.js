@@ -14,17 +14,37 @@
 
   /** 고전 게임은 오른쪽 레일로 분리 */
 
-  const EDU_ORDER = [
+    const EDU_ORDER = [
     "edu-jamo-zoo",
     "edu-listen-find",
     "edu-match-pair",
     "edu-build-letter",
     "edu-word-puzzle",
     "edu-dictation",
+    "edu-opposites",
+    "edu-sentence-builder",
   ];
 
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
+    {
+      id: "edu-sentence-builder",
+      title: "짧은 문장 만들기",
+      tag: "레벨 4 · 문장",
+      href: "/games/edu-sentence-builder/",
+      thumb: "/assets/edu/edu_chick.svg",
+      category: "edu",
+      eduLevel: 4,
+    },
+    {
+      id: "edu-opposites",
+      title: "반대말 짝꿍",
+      tag: "레벨 4 · 짝짓기",
+      href: "/games/edu-opposites/",
+      thumb: "/assets/edu/edu_opp_big.svg",
+      category: "edu",
+      eduLevel: 4,
+    },
     {
       id: "edu-dictation",
       title: "받아쓰기",
@@ -846,11 +866,12 @@
     const data = window.TodayEdu ? TodayEdu.load() : null;
     const open2 = !(window.TodayEdu && typeof TodayEdu.level2Unlocked === "function") || TodayEdu.level2Unlocked(data);
     const open3 = !(window.TodayEdu && typeof TodayEdu.level3Unlocked === "function") || TodayEdu.level3Unlocked(data);
+    const open4 = !(window.TodayEdu && typeof TodayEdu.level4Unlocked === "function") || TodayEdu.level4Unlocked(data);
     eduSection.hidden = false;
     eduGrid.innerHTML = "";
     games.forEach((game) => {
       const level = game.eduLevel || 1;
-      const locked = (level === 2 && !open2) || (level === 3 && !open3);
+      const locked = (level === 2 && !open2) || (level === 3 && !open3) || (level === 4 && !open4);
       eduGrid.appendChild(createGameSlot(game, { locked }));
     });
     const lockHint = document.getElementById("edu-lock-hint");
