@@ -1,0 +1,20 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#FFB84D" stroke-width="8" stroke-linecap="round">
+    <line x1="100" y1="20" x2="100" y2="42"/>
+    <line x1="100" y1="158" x2="100" y2="180"/>
+    <line x1="20" y1="100" x2="42" y2="100"/>
+    <line x1="158" y1="100" x2="180" y2="100"/>
+    <line x1="42" y1="42" x2="58" y2="58"/>
+    <line x1="142" y1="142" x2="158" y2="158"/>
+    <line x1="158" y1="42" x2="142" y2="58"/>
+    <line x1="58" y1="142" x2="42" y2="158"/>
+  </g>
+  <circle cx="100" cy="100" r="48" fill="#FFD966" stroke="#4A3728" stroke-width="4"/>
+  <circle cx="85" cy="92" r="5.5" fill="#4A3728"/>
+  <circle cx="115" cy="92" r="5.5" fill="#4A3728"/>
+  <circle cx="86.6" cy="90.3" r="1.6" fill="#fff"/>
+  <circle cx="116.6" cy="90.3" r="1.6" fill="#fff"/>
+  <path d="M85 110 Q100 122 115 110" stroke="#4A3728" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="72" cy="102" r="5" fill="#FF8FA3" opacity="0.5"/>
+  <circle cx="128" cy="102" r="5" fill="#FF8FA3" opacity="0.5"/>
+</svg>

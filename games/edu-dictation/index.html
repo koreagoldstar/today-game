@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>받아쓰기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/edu-play.css" />
+    <link rel="stylesheet" href="/css/game-seo.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <header class="hud">
+        <a class="icon-btn home" href="/" aria-label="홈">🏠</a>
+        <p class="progress-pill" id="progress-pill">1 / 5</p>
+        <button type="button" class="icon-btn" id="speak-btn" aria-label="다시 듣기">🔊</button>
+      </header>
+
+      <main class="play" id="play">
+        <button type="button" class="speaker" id="speaker" aria-label="소리 듣기">🔊</button>
+        <img class="picture" id="picture" alt="" width="120" height="120" hidden />
+        <div class="choices words" id="choices"></div>
+      </main>
+
+      <div class="overlay" id="title">
+        <p class="badge">교육 · 레벨 3</p>
+        <img class="hero" src="/assets/edu/edu_pencil.svg" alt="" width="140" height="140" />
+        <h1>받아쓰기</h1>
+        <p class="lead">소리를 듣고<br />같은 낱말을 고르세요</p>
+        <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
+        <a class="home-link" href="/">🏠</a>
+      </div>
+
+      <div class="overlay hidden" id="done">
+        <p class="badge soft">잘했어요</p>
+        <img class="hero small" src="/assets/edu/edu_chick.svg" alt="" width="110" height="110" />
+        <h2>오늘 배운 것</h2>
+        <p class="learned" id="learned">사과</p>
+        <p class="parent-note">부모님께: 듣고 낱말을 고르는 선택형 받아쓰기예요. 틀려도 감점이 없습니다.</p>
+        <div class="done-actions">
+          <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
+          <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/edu-progress.js?v=3"></script>
+    <script src="/js/edu-speech.js?v=8"></script>
+    <script src="/js/edu-words.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="받아쓰기 소개">
+  <h2>받아쓰기 소개</h2>
+  <p>낱말 소리를 듣고 같은 글자를 고르는 선택형 받아쓰기 미니게임입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>스피커로 낱말을 들은 뒤 화면에 나온 단어 카드 중에서 들은 것을 고르세요. 맞히면 그림이 나와 확인합니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>직접 글자를 써야 하나요?</dt>
+    <dd>지금은 고르기만 하면 됩니다. 틀려도 감점이 없습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>

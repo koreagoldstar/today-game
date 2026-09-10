@@ -1,0 +1,17 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="45" fill="#FFCB8E" stroke="#4A3728" stroke-width="4"/>
+  <circle cx="65" cy="65" r="14" fill="#FFCB8E" stroke="#4A3728" stroke-width="3.5"/>
+  <circle cx="135" cy="65" r="14" fill="#FFCB8E" stroke="#4A3728" stroke-width="3.5"/>
+  <path d="M85 75 Q80 100 68 118" stroke="#4A3728" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M115 75 Q120 100 132 118" stroke="#4A3728" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="85" cy="95" r="5.5" fill="#4A3728"/>
+  <circle cx="115" cy="95" r="5.5" fill="#4A3728"/>
+  <circle cx="86.6" cy="93.3" r="1.6" fill="#fff"/>
+  <circle cx="116.6" cy="93.3" r="1.6" fill="#fff"/>
+  <ellipse cx="100" cy="112" rx="6" ry="4" fill="#4A3728"/>
+  <path d="M92 120 Q100 126 108 120" stroke="#4A3728" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="70" cy="88" r="3" fill="#4A3728" opacity="0.6"/>
+  <circle cx="130" cy="88" r="3" fill="#4A3728" opacity="0.6"/>
+  <circle cx="78" cy="70" r="3" fill="#4A3728" opacity="0.6"/>
+  <circle cx="122" cy="70" r="3" fill="#4A3728" opacity="0.6"/>
+</svg>

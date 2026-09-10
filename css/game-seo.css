@@ -1,0 +1,43 @@
+.seo-about {
+  max-width: 640px;
+  margin: 12px auto 28px;
+  padding: 16px 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #3d2a36;
+  font-family: "Jua", system-ui, sans-serif;
+  line-height: 1.55;
+  box-shadow: 0 8px 24px rgba(61, 42, 54, 0.08);
+}
+
+.seo-about h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+}
+
+.seo-about h3 {
+  margin: 16px 0 6px;
+  font-size: 15px;
+}
+
+.seo-about p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.seo-about dl {
+  margin: 0;
+}
+
+.seo-about dt {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.seo-about dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  opacity: 0.92;
+}
