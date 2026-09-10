@@ -1,14 +1,9 @@
 /**
- * 교육 게임 공통 TTS · 딩동
+ * 교육 게임 공통 음성
  *
- * 한글 자음·모음은 엔진이 "ㄱ"을 거의 안 읽으므로 기역/니은처럼 풀어 읽고,
- * 짧게 천천히, 높낮이는 보통으로 둔다.
- *
- * Chrome / iOS 주의:
- * - 첫 재생은 반드시 클릭/터치 핸들러 스택에서 speak() 해야 함
- * - unlock()에서 무음 프리임 + AudioContext resume
- * - cancel() 직후 바로 speak() 하면 먹통이 되므로 짧게 쉬고 다시 speak()
- * - speechSynthesis가 실패하면 번역 TTS(audio)로 폴백
+ * 휴대폰(특히 iOS)에서는 speechSynthesis / 외부 TTS가 자주 막혀서
+ * 미리 만들어 둔 로컬 MP3(/assets/edu/voice)를 우선 재생한다.
+ * 파일이 없을 때만 Web Speech로 폴백한다.
  */
 (() => {
   "use strict";
@@ -55,7 +50,9 @@
     ㅟ: "위",
     ㅢ: "의",
   };
-  const JAMO_NAMES = new Set(Object.values(JAMO_SAY));
+
+  const VOICE_BASE = "/assets/edu/voice/";
+  const MANIFEST_URL = VOICE_BASE + "manifest.json?v=8";
 
   let speakTimer = null;
   let cachedVoice = null;
@@ -64,8 +61,15 @@
   let unlocked = false;
   let keepAliveTimer = null;
   /** @type {HTMLAudioElement | null} */
-  let fallbackAudio = null;
-  let preferFallback = false;
+  let audioEl = null;
+  /** @type {Record<string, string> | null} */
+  let manifest = null;
+  let manifestPromise = null;
+  let playToken = 0;
+
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+  }
 
   function hasSynth() {
     return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
@@ -82,7 +86,6 @@
     const preferred =
       voices.find((v) => v.localService && /Heami|Hyemi|혜미|Yuna|SunHi|선희|female|여성/i.test(v.name)) ||
       voices.find((v) => v.localService) ||
-      voices.find((v) => /^ko-KR/i.test(v.lang) && /Heami|Google|여성|female/i.test(v.name)) ||
       voices.find((v) => /^ko-KR/i.test(v.lang)) ||
       voices[0] ||
       null;
@@ -97,107 +100,109 @@
     return s.replace(/[ \t]+/g, " ").replace(/ \./g, ".").trim();
   }
 
-  function prepareSpeech(text) {
-    const original = String(text).trim();
-    let said = clarifySpeech(original);
-    const compact = original.replace(/[\s.,!?]/g, "");
-    const jamoOnly = /^[ㄱ-ㅎㅏ-ㅣ]+$/.test(compact);
-    if (jamoOnly || JAMO_NAMES.has(said) || JAMO_NAMES.has(original)) {
-      said = `${said}. ${said}`;
-    }
-    return { said, slow: jamoOnly || said.length <= 8 };
+  function loadManifest() {
+    if (manifest) return Promise.resolve(manifest);
+    if (manifestPromise) return manifestPromise;
+    manifestPromise = fetch(MANIFEST_URL, { cache: "force-cache" })
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data) => {
+        manifest = data && typeof data === "object" ? data : {};
+        return manifest;
+      })
+      .catch(() => {
+        manifest = {};
+        return manifest;
+      });
+    return manifestPromise;
   }
 
-  function stopFallback() {
-    if (!fallbackAudio) return;
+  function resolveVoiceFile(text) {
+    if (!manifest) return null;
+    const raw = String(text || "").trim();
+    if (!raw) return null;
+    if (manifest[raw]) return manifest[raw];
+    const clarified = clarifySpeech(raw);
+    if (manifest[clarified]) return manifest[clarified];
+    // "기역. 기역으로 ..." 앞 이름만으로라도 재생
+    const name = clarified.split(/[.\s]/)[0];
+    if (name && manifest[`${name}. ${name}`]) return manifest[`${name}. ${name}`];
+    if (name && manifest[name]) return manifest[name];
+    return null;
+  }
+
+  function ensureAudioEl() {
+    if (audioEl) return audioEl;
+    audioEl = new Audio();
+    audioEl.preload = "auto";
+    audioEl.setAttribute("playsinline", "true");
+    audioEl.playsInline = true;
+    return audioEl;
+  }
+
+  function stopAudio() {
+    playToken += 1;
+    if (!audioEl) return;
     try {
-      fallbackAudio.onended = null;
-      fallbackAudio.onerror = null;
-      fallbackAudio.pause();
-      fallbackAudio.removeAttribute("src");
-      fallbackAudio.load();
+      audioEl.onended = null;
+      audioEl.onerror = null;
+      audioEl.pause();
+      audioEl.removeAttribute("src");
+      audioEl.load();
     } catch (_) {
       /* ignore */
     }
-    fallbackAudio = null;
   }
 
-  function speakFallback(text) {
-    stopFallback();
-    const said = prepareSpeech(text).said;
-    if (!said) return;
-    // Google Translate TTS — Web Speech 미지원/실패 시 폴백 (아동 한글 학습용)
-    const url =
-      "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=" +
-      encodeURIComponent(said.slice(0, 80));
-    const audio = new Audio();
-    fallbackAudio = audio;
-    audio.preload = "auto";
-    audio.src = url;
-    const play = () => {
-      const p = audio.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          lastStatus = "fallback-blocked";
-        });
+  function playVoiceFile(file) {
+    const el = ensureAudioEl();
+    const token = ++playToken;
+    const url = VOICE_BASE + file;
+    return new Promise((resolve) => {
+      const done = (ok) => {
+        if (token !== playToken) return;
+        lastStatus = ok ? "end" : "file-error";
+        resolve(ok);
+      };
+      try {
+        el.onended = () => done(true);
+        el.onerror = () => done(false);
+        el.src = url;
+        el.currentTime = 0;
+        const p = el.play();
+        lastStatus = "start";
+        if (p && typeof p.catch === "function") {
+          p.catch(() => done(false));
+        }
+      } catch (_) {
+        done(false);
       }
-    };
-    audio.onended = () => {
-      lastStatus = "end";
-    };
-    audio.onerror = () => {
-      lastStatus = "fallback-error";
-    };
-    play();
+    });
   }
 
-  function makeUtterance(text, slow) {
-    const utter = new SpeechSynthesisUtterance(String(text));
-    utter.lang = "ko-KR";
-    utter.rate = slow ? 0.78 : 0.88;
-    utter.pitch = 1.0;
-    utter.volume = 1.0;
-    const preferred = pickVoice();
-    if (preferred) utter.voice = preferred;
-    utter.onstart = () => {
-      lastStatus = "start";
-    };
-    utter.onend = () => {
-      lastStatus = "end";
-    };
-    utter.onerror = (event) => {
-      const err = (event && event.error) || "error";
-      lastStatus = err;
-      if (err === "canceled" || err === "interrupted") return;
-      // 엔진/보이스 오류 → 폴백
-      preferFallback = true;
-      speakFallback(text);
-    };
-    return utter;
-  }
-
-  function playUtterance(utter) {
-    if (!hasSynth()) {
-      speakFallback(utter.text);
-      return;
-    }
+  function speakSynth(text) {
+    if (!hasSynth()) return false;
     try {
       if (speechSynthesis.paused) speechSynthesis.resume();
+      const utter = new SpeechSynthesisUtterance(clarifySpeech(text));
+      utter.lang = "ko-KR";
+      utter.rate = isMobile() ? 0.9 : 0.85;
+      utter.pitch = 1;
+      utter.volume = 1;
+      const preferred = pickVoice();
+      if (preferred) utter.voice = preferred;
+      utter.onstart = () => {
+        lastStatus = "start";
+      };
+      utter.onend = () => {
+        lastStatus = "end";
+      };
+      utter.onerror = () => {
+        lastStatus = "synth-error";
+      };
       speechSynthesis.speak(utter);
-      // 엔진이 완전히 무시하는 경우만 폴백 (시작 신호 없이 큐도 비면)
-      window.setTimeout(() => {
-        if (
-          lastStatus === "idle" &&
-          !speechSynthesis.speaking &&
-          !speechSynthesis.pending
-        ) {
-          preferFallback = true;
-          speakFallback(utter.text);
-        }
-      }, 500);
+      return true;
     } catch (_) {
-      preferFallback = true;
-      speakFallback(utter.text);
+      return false;
     }
   }
 
@@ -207,34 +212,37 @@
       clearTimeout(speakTimer);
       speakTimer = null;
     }
-    stopFallback();
-    lastStatus = "idle";
-
-    const { said, slow } = prepareSpeech(text);
-    if (!said) return;
-
-    if (!unlocked) unlock();
-
-    if (preferFallback || !hasSynth()) {
-      speakFallback(said);
-      return;
-    }
-
-    const utter = makeUtterance(said, slow);
-    const busy = speechSynthesis.speaking || speechSynthesis.pending;
-
-    if (busy) {
+    stopAudio();
+    if (hasSynth()) {
       try {
         speechSynthesis.cancel();
       } catch (_) {
         /* ignore */
       }
-      // cancel 직후 즉시 speak 하면 Chrome에서 무음이 됨
-      speakTimer = window.setTimeout(() => playUtterance(utter), 160);
-      return;
     }
 
-    playUtterance(utter);
+    if (!unlocked) unlock();
+
+    const raw = String(text).trim();
+    loadManifest().then((man) => {
+      const file = resolveVoiceFile(raw);
+      if (file) {
+        playVoiceFile(file).then((ok) => {
+          if (!ok && !isMobile()) speakSynth(raw);
+        });
+        return;
+      }
+      // 파일이 없으면 데스크톱만 synth 시도 (모바일 synth는 불안정)
+      if (!isMobile()) speakSynth(raw);
+      else {
+        // 모바일: 이름만이라도 재생
+        const clarified = clarifySpeech(raw);
+        const name = clarified.split(/[.\s]/)[0];
+        const fallbackFile = (man && (man[name] || man[`${name}. ${name}`])) || null;
+        if (fallbackFile) playVoiceFile(fallbackFile);
+        else lastStatus = "missing-voice";
+      }
+    });
   }
 
   function ensureAudio() {
@@ -271,57 +279,60 @@
     start();
   }
 
-  function startKeepAlive() {
-    if (keepAliveTimer || !hasSynth()) return;
-    // Chrome 장기 무음 버그 완화
-    keepAliveTimer = window.setInterval(() => {
-      try {
-        if (!speechSynthesis.speaking) {
-          speechSynthesis.pause();
-          speechSynthesis.resume();
-        }
-      } catch (_) {
-        /* ignore */
-      }
-    }, 12000);
-  }
-
   function unlock() {
     unlocked = true;
     pickVoice();
+    loadManifest();
+
     const ctx = ensureAudio();
     if (ctx && ctx.state === "suspended") {
       ctx.resume().catch(() => {});
     }
-    if (!hasSynth()) {
-      preferFallback = true;
-      return;
-    }
+
+    // iOS/Android: 제스처 안에서 Audio를 한 번 울려 재생 권한을 연다
+    const el = ensureAudioEl();
     try {
-      if (speechSynthesis.paused) speechSynthesis.resume();
+      el.muted = true;
+      el.src = VOICE_BASE + "unlock.mp3";
+      const p = el.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          try {
+            el.pause();
+            el.currentTime = 0;
+          } catch (_) {
+            /* ignore */
+          }
+          el.muted = false;
+        }).catch(() => {
+          el.muted = false;
+        });
+      } else {
+        el.muted = false;
+      }
     } catch (_) {
-      /* ignore */
+      el.muted = false;
     }
-    // 제스처 안에서 보이스 목록만 준비한다.
-    // 여기서 speak() 하면 이어지는 본 음성이 busy/cancel 경로로 밀려
-    // iOS/Chrome에서 무음이 될 수 있다.
-    try {
-      speechSynthesis.getVoices();
-      if (speechSynthesis.paused) speechSynthesis.resume();
-    } catch (_) {
-      /* ignore */
+
+    if (hasSynth()) {
+      try {
+        speechSynthesis.getVoices();
+        if (speechSynthesis.paused) speechSynthesis.resume();
+      } catch (_) {
+        /* ignore */
+      }
     }
-    startKeepAlive();
   }
 
+  // 미리 매니페스트·오디오 권한 준비
+  loadManifest();
   if (hasSynth()) {
-    speechSynthesis.addEventListener("voiceschanged", () => {
-      cachedVoice = null;
-      pickVoice();
-    });
-    // 일부 브라우저는 이벤트 전에 getVoices()가 비어 있음
     try {
       speechSynthesis.getVoices();
+      speechSynthesis.addEventListener("voiceschanged", () => {
+        cachedVoice = null;
+        pickVoice();
+      });
     } catch (_) {
       /* ignore */
     }
@@ -335,9 +346,7 @@
     unlock,
     pickVoice,
     lastStatus: () => lastStatus,
-    useFallback: () => {
-      preferFallback = true;
-    },
+    loadManifest,
   };
   if (window.TodayEdu) {
     TodayEdu.speakSoftly = speakSoftly;
