@@ -1,0 +1,45 @@
+---
+description: 집 PC 작업분을 GitHub에 올리는 방법 (아이 교육 한글 게임 포함)
+alwaysApply: true
+---
+
+# 집 PC → GitHub 동기화
+
+이 저장소에는 Cloud Agent가 Vercel 배포본에서 복구한 **아이 교육(한글) 게임**과 **음성(TTS) 수정**이 이미 있습니다.
+
+- 브랜치: `cursor/fix-edu-hangul-speech-1e8b`
+- PR: https://github.com/koreagoldstar/today-game/pull/1
+- 관련 경로: `games/edu-*`, `js/edu-*.js`, `assets/edu/`, `css/edu-play.css`
+
+## 집에서 Cursor로 할 일
+
+1. Cursor에서 `today-game` 폴더를 연다.
+2. 터미널에서 원격 최신을 받는다:
+
+```bash
+git fetch origin
+git checkout cursor/fix-edu-hangul-speech-1e8b
+git pull origin cursor/fix-edu-hangul-speech-1e8b
+```
+
+3. 집 PC에만 있는 파일/수정이 있으면 확인한다:
+
+```bash
+git status
+```
+
+4. 집 로컬 변경분을 같은 브랜치에 올린다:
+
+```bash
+git add -A
+git commit -m "chore: sync home PC edu hangul work"
+git push -u origin cursor/fix-edu-hangul-speech-1e8b
+```
+
+5. 충돌이 나면 **교육 게임·음성 파일**은 GitHub(이 브랜치) 쪽을 우선하되, 집에만 있는 새 에셋/스테이지는 남겨 합친다.
+
+## 주의
+
+- Vercel만 배포하고 GitHub에 안 올리면, Cloud Agent/다른 PC에서 다시 못 찾습니다.
+- 앞으로는 작업 끝날 때마다 `commit` + `push` 하세요.
+- `master`에 바로 푸시하지 말고, 이 feature 브랜치(또는 새 `cursor/...` 브랜치)에 올린 뒤 PR로 합치세요.
