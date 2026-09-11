@@ -1,0 +1,252 @@
+:root {
+  --ink: #4a3728;
+  --muted: #7a5a48;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: "Jua", system-ui, sans-serif;
+  color: var(--ink);
+  background: #f3e2b0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 0.557));
+  height: min(100dvh, calc(100vw / 0.557));
+  max-width: 420px;
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.8), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(255, 203, 76, 0.45), transparent 32%),
+    linear-gradient(180deg, #fff3b0 0%, #ffe0c2 52%, #ffd4e4 100%);
+  box-shadow: 0 18px 44px rgba(74, 55, 40, 0.18);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px 16px;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home,
+.pill {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 4px 0 rgba(201, 138, 62, 0.22);
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.play {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  align-items: center;
+}
+
+h1 {
+  margin: 8px 0 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 28px;
+  text-align: center;
+}
+
+.lead {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.tabs {
+  width: 100%;
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  margin-bottom: 16px;
+}
+
+.tab {
+  flex: 1;
+  appearance: none;
+  border: 0;
+  min-height: 40px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #fff;
+  color: #d96a28;
+  box-shadow: 0 3px 0 rgba(201, 138, 62, 0.2);
+}
+
+.draw,
+.result {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.draw.hide,
+.result {
+  display: none;
+}
+
+.result.show {
+  display: flex;
+}
+
+.result .hero {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 8px 0 rgba(201, 138, 62, 0.18);
+  margin-bottom: 8px;
+}
+
+.egg {
+  width: 168px;
+  height: 190px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+.egg:active {
+  transform: scale(0.96);
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.egg svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 0 rgba(201, 138, 62, 0.18));
+}
+
+.egg.shaking {
+  animation: none;
+}
+
+.egg.shaking svg {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-9deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+
+.hint,
+.timer {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.emoji {
+  font-size: 52px;
+  line-height: 1;
+}
+
+.title {
+  margin: 10px 0 8px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 24px;
+  color: #ff6b3d;
+}
+
+.desc {
+  margin: 0 8px 18px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  flex: 1;
+  appearance: none;
+  border: 0;
+  min-height: 52px;
+  border-radius: 16px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #ffb347, #ff8c42);
+  box-shadow: 0 6px 0 #d96a28;
+  cursor: pointer;
+}
+
+.btn.soft {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 0 rgba(201, 138, 62, 0.22);
+}
+
+.row .btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.link {
+  margin-top: 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.today-pause-btn {
+  display: none !important;
+}

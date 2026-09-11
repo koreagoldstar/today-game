@@ -28,6 +28,22 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "wisdom-quiz",
+      title: "오늘의 상식퀴즈",
+      tag: "퀴즈 · 매일 5문제",
+      href: "/games/wisdom-quiz/",
+      thumb: "/assets/thumbs/wisdom-quiz.png",
+      category: "puzzle",
+    },
+    {
+      id: "fortune-draw",
+      title: "오늘의 운세 뽑기",
+      tag: "운세 · 메뉴 · 행운템",
+      href: "/games/fortune-draw/",
+      thumb: "/assets/thumbs/fortune-draw.png",
+      category: "arcade",
+    },
+    {
       id: "edu-sentence-builder",
       title: "짧은 문장 만들기",
       tag: "레벨 4 · 문장",

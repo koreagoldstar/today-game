@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffe27a" />
+    <title>오늘의 상식퀴즈</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body data-bgm="wisdom-quiz">
+    <div class="stage">
+      <header class="hud">
+        <a class="home" href="/">← 홈</a>
+        <p class="pill" id="day-pill">오늘 5문제</p>
+      </header>
+
+      <main class="play">
+        <div class="quiz" id="quiz-view">
+          <img class="hero" src="assets/thumb.png" alt="" width="88" height="88" />
+          <h1>오늘의 상식퀴즈</h1>
+          <p class="lead">매일 새로운 다섯 문제 · 중복은 잘 안 나와요</p>
+          <div class="dots" id="dots"></div>
+          <p class="qnum" id="qnum">1 / 5</p>
+          <p class="qtext" id="qtext"></p>
+          <div class="opts" id="opts"></div>
+          <p class="feedback" id="feedback"></p>
+          <button type="button" class="next" id="next-btn">다음 문제</button>
+        </div>
+
+        <div class="result" id="result-view">
+          <img class="hero" src="assets/thumb.png" alt="" width="88" height="88" />
+          <h1>오늘의 결과</h1>
+          <p class="score" id="score-text">0<small>/5</small></p>
+          <p class="msg" id="msg-text"></p>
+          <p class="best" id="best-badge">최고기록 0/5</p>
+          <div class="row">
+            <button type="button" class="btn" id="share-btn">공유</button>
+            <a class="btn soft" href="/">홈으로</a>
+          </div>
+          <p class="timer" id="timer-text"></p>
+          <div id="rank-slot"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/js/bgm.js"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="questions.js"></script>
+    <script src="game.js"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="오늘의 상식퀴즈 소개">
+  <h2>오늘의 상식퀴즈 소개</h2>
+  <p>매일 다섯 문제가 바뀌는 상식 퀴즈입니다. 문항이 1600개 넘게 들어 있어 같은 문제가 잘 반복되지 않습니다.</p>
+  <h3>플레이 방법</h3>
+  <p>보기 네 개 중 정답을 고르세요. 다섯 문제를 다 풀면 오늘의 점수가 나오고, 자정이 지나면 새 문제가 열립니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>하루에 몇 번 할 수 있나요?</dt>
+    <dd>하루 한 세트입니다. 다음 날부터 새 다섯 문제가 나옵니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

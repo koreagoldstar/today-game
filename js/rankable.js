@@ -11,6 +11,7 @@
     "minigolf",
     "wordle",
     "sokoban",
+    "wisdom-quiz",
   ]);
 
   /** 랭킹 등록 가능 게임 (점수제) — archive 제외 전 플레이어블 */
@@ -61,6 +62,7 @@
     { id: "sokoban", title: "상자야 굴러가" },
     { id: "reaction", title: "번쩍 반응" },
     { id: "order-memo", title: "순서톡톡" },
+    { id: "wisdom-quiz", title: "오늘의 상식퀴즈" },
   ];
 
   /** 챌린지 로테이션 풀 (고정 순서) */
