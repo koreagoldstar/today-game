@@ -23,6 +23,21 @@
     default: [0, 1, 2, 3, 4, 5, 6, 7, 8],
   };
 
+  const UNIQUE_PACKS = {
+    "rhythm-battle": {
+      dir: "/assets/audio/packs/rhythm-battle/",
+      bpms: [128, 132, 136, 140, 126, 144, 138, 148, 134, 142, 150, 130, 146, 152, 128, 154, 136, 148, 140, 156],
+    },
+    "neon-runner": {
+      dir: "/assets/audio/packs/neon-runner/",
+      bpms: [118, 122, 128, 132, 120, 136, 140, 124, 144, 130, 148, 126, 134, 150, 122, 138, 146, 128, 142, 152],
+    },
+    "mirror-rhythm": {
+      dir: "/assets/audio/packs/mirror-rhythm/",
+      bpms: [120, 124, 128, 132, 126, 136, 140, 122, 134, 144, 130, 138, 148, 124, 142, 152, 128, 136, 146, 154],
+    },
+  };
+
   const TITLE_POOLS = {
     "beat-tap": [
       "원버튼 스톰", "펄스 캐논", "탭 메가톤", "비트 펀치", "도파민 탭",
@@ -48,6 +63,24 @@
       "크로마 킥", "버추얼 레이브", "신스웨이브", "제로 쿨다운", "하이퍼 링크",
       "픽셀 애시드", "퀀텀 비트", "미러넷 러시", "볼트 댄서", "코어 멜트",
     ],
+    "rhythm-battle": [
+      "배틀 아레나", "폭스 레이브", "VS 드롭", "핑크 대결", "히트 스톰",
+      "삐약이 펀치", "라이벌 비트", "네온 격투", "콤보 캐논", "체력전 드롭",
+      "폭스 카운터", "아레나 킥", "배틀 코어", "하이퍼 대결", "글리치 펀치",
+      "메가 히트", "듀얼 스톰", "크래시 레이브", "울트라 VS", "인피니티 배틀",
+    ],
+    "neon-runner": [
+      "네온 하이웨이", "시티 러시", "슬라이드 나이트", "점프 서킷", "사이버 런",
+      "핑크 로드", "레이저 대시", "빌딩 러너", "스파크 레일", "미드나잇 런",
+      "글리치 시티", "볼트 점프", "네온 슬라이드", "하이퍼 대시", "크롬 러너",
+      "메가 스트리트", "펄스 하이웨이", "울트라 런", "서킷 스트리크", "인피니티 시티",
+    ],
+    "mirror-rhythm": [
+      "미러 코어", "양손 시메트리", "스플릿 레이브", "트윈 게이트", "리플렉트",
+      "왼손 오른손", "대칭 드롭", "미러 탭", "스플릿 캐논", "듀얼 미러",
+      "핑크 리플렉트", "시메트리 스톰", "양손 레이브", "미러 볼트", "트윈 서킷",
+      "메가 스플릿", "글리치 미러", "울트라 대칭", "레이저 리플렉트", "인피니티 미러",
+    ],
     default: [
       "도파민 드롭", "네온 하이", "애시드 러시", "클럽 그리드", "하이퍼 펀치",
       "비트 캐논", "핑크 볼트", "사이버 붐", "레이브 코어", "글리치 파티",
@@ -59,10 +92,22 @@
     "slide-beat": { scale: [55, 73.42, 87.31, 110, 146.83], lead: 660, kickGap: 2 },
     "dual-pad": { scale: [49, 61.74, 73.42, 98, 123.47], lead: 990, kickGap: 4 },
     rhythm: { scale: [82.41, 98, 123.47, 164.81, 196], lead: 1320, kickGap: 4 },
+    "rhythm-battle": { scale: [73.42, 98, 123.47, 146.83, 196], lead: 1046, kickGap: 4 },
+    "neon-runner": { scale: [55, 73.42, 98, 110, 146.83], lead: 784, kickGap: 2 },
+    "mirror-rhythm": { scale: [61.74, 82.41, 98, 123.47, 164.81], lead: 1174, kickGap: 4 },
     default: { scale: [55, 65.41, 73.42, 82.41, 98, 110], lead: 660, kickGap: 4 },
   };
 
   function tracksFor(packId) {
+    const unique = UNIQUE_PACKS[packId];
+    if (unique) {
+      const titles = TITLE_POOLS[packId] || TITLE_POOLS.default;
+      return unique.bpms.map((bpm, i) => ({
+        src: `${unique.dir}${String(i + 1).padStart(2, "0")}.mp3`,
+        baseBpm: bpm,
+        label: titles[i] || `Track ${i + 1}`,
+      }));
+    }
     const idx = PACKS[packId] || PACKS.default;
     return idx.map((i) => ALL_TRACKS[i]);
   }
@@ -85,14 +130,28 @@
     const tracks = tracksFor(packId);
     const titles = TITLE_POOLS[packId] || TITLE_POOLS.default;
     const rand = mulberry32(seed);
+    const unique = Boolean(UNIQUE_PACKS[packId]);
     const songs = [];
     for (let i = 0; i < count; i += 1) {
       const track = i % tracks.length;
-      // 팩마다 배속 곡선도 다르게
+      const diff = Math.min(5, 1 + Math.floor(i / 5) + (i % 4 === 3 ? 1 : 0));
+      if (unique) {
+        songs.push({
+          id: i,
+          name: titles[i % titles.length],
+          bpm: tracks[track].baseBpm,
+          rate: 1,
+          track,
+          pack: packId,
+          diff,
+          bars: 12 + diff * 2 + Math.floor(rand() * 3),
+          offset: 0,
+        });
+        continue;
+      }
       const rateBase = packId === "slide-beat" ? 1.12 : packId === "dual-pad" ? 1.18 : 1.22;
       const rate = Math.min(1.58, rateBase + (i % 7) * 0.04 + (i % 3) * 0.025);
       const bpm = Math.round(Math.min(182, Math.max(140, tracks[track].baseBpm * rate)));
-      const diff = Math.min(5, 1 + Math.floor(i / 5) + (i % 4 === 3 ? 1 : 0));
       songs.push({
         id: i,
         name: titles[i % titles.length],
@@ -102,8 +161,7 @@
         pack: packId,
         diff,
         bars: 12 + diff * 2 + Math.floor(rand() * 3),
-        // 같은 파일이라도 시작 지점을 다르게
-        offset: (i * 7.3 + seed % 11) % 28,
+        offset: (i * 7.3 + (seed % 11)) % 28,
       });
     }
     return songs;
@@ -125,6 +183,7 @@
     let usingEl = false;
     let synthTimer = 0;
     let musicOffset = 0;
+    let synthBpm = 128;
 
     function ensure() {
       if (!ctx) {
@@ -222,6 +281,7 @@
     function startSynth(bpm) {
       stopSynth();
       ensure();
+      synthBpm = bpm || synthBpm;
       let step = 0;
       const ms = ((60 / bpm) * 1000) / 2;
       const scale = style.scale;
@@ -282,6 +342,25 @@
       return (performance.now() - startedAt) / 1000;
     }
 
+    function pause() {
+      if (!playing) return;
+      pausedAt = (performance.now() - startedAt) / 1000;
+      playing = false;
+      if (el) el.pause();
+      stopSynth();
+    }
+
+    function resume() {
+      if (playing) return;
+      playing = true;
+      startedAt = performance.now() - pausedAt * 1000;
+      if (el) {
+        el.play().catch(() => {});
+      } else {
+        startSynth(synthBpm);
+      }
+    }
+
     function sfxHit(kind) {
       ensure();
       if (kind === "perfect") {
@@ -301,6 +380,8 @@
       ensure,
       playTrack,
       stop,
+      pause,
+      resume,
       now,
       sfxHit,
       get playing() {

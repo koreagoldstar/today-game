@@ -28,6 +28,30 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "rhythm-battle",
+      title: "리듬 배틀",
+      tag: "대결 · 체력전",
+      href: "/games/rhythm-battle/",
+      thumb: "/assets/thumbs/rhythm-battle.png",
+      category: "rhythm",
+    },
+    {
+      id: "neon-runner",
+      title: "네온 러너",
+      tag: "점프 · 슬라이드",
+      href: "/games/neon-runner/",
+      thumb: "/assets/thumbs/neon-runner.png",
+      category: "rhythm",
+    },
+    {
+      id: "mirror-rhythm",
+      title: "미러 리듬",
+      tag: "양손 · 대칭",
+      href: "/games/mirror-rhythm/",
+      thumb: "/assets/thumbs/mirror-rhythm.png",
+      category: "rhythm",
+    },
+    {
       id: "wisdom-quiz",
       title: "오늘의 상식퀴즈",
       tag: "퀴즈 · 매일 5문제",
@@ -637,6 +661,9 @@
    * 앞쪽일수록 기본 인기 높음
    */
   const POPULAR_SEED = [
+    "rhythm-battle",
+    "neon-runner",
+    "mirror-rhythm",
     "flappy",
     "tetris",
     "doodle",

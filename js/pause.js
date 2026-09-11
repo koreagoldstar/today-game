@@ -165,7 +165,8 @@
       goHome();
       return;
     }
-    if (e.code !== "Escape" && e.code !== "KeyP") return;
+    const extraPause = cfg.pauseKey === "esc" ? false : e.code === "KeyP";
+    if (e.code !== "Escape" && !extraPause) return;
     const tag = (e.target && e.target.tagName) || "";
     if (tag === "INPUT" || tag === "TEXTAREA") return;
     e.preventDefault();

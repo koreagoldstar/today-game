@@ -78,7 +78,12 @@
     listEl.innerHTML = data.scores
       .map((entry, i) => {
         const row = window.TodayScores.formatScoreRow(entry, i);
-        const pts = game === "reaction" ? `${row.score.toLocaleString("ko-KR")}ms` : row.score.toLocaleString("ko-KR");
+        const pts =
+          game === "reaction"
+            ? `${row.score.toLocaleString("ko-KR")}ms`
+            : game === "neon-runner"
+              ? `${row.score.toLocaleString("ko-KR")}m`
+              : row.score.toLocaleString("ko-KR");
         return `<li><span class="rank">${row.rank}</span><span class="name">${row.name}</span><span class="pts">${pts}</span></li>`;
       })
       .join("");

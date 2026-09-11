@@ -57,6 +57,9 @@ module.exports = async function handler(req, res) {
     "reaction",
     "order-memo",
     "wisdom-quiz",
+    "rhythm-battle",
+    "neon-runner",
+    "mirror-rhythm",
     "zombie-run",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms 등) */

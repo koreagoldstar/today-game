@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#070714" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>리듬 배틀</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <div class="grid-bg" aria-hidden="true"></div>
+
+      <div class="hud">
+        <div class="versus">
+          <div class="fighter me">
+            <img class="face" id="face-me" src="assets/chick.png" alt="" width="52" height="52" />
+            <div class="fighter-meta">
+              <div class="name"><span>삐약이</span><b id="me-hp-text">100</b></div>
+              <div class="hpbar"><i id="me-hp"></i></div>
+            </div>
+          </div>
+          <div class="vs-mark">VS</div>
+          <div class="fighter rival">
+            <div class="fighter-meta">
+              <div class="name"><b id="rival-hp-text">100</b><span>폭스</span></div>
+              <div class="hpbar rival"><i id="rival-hp"></i></div>
+            </div>
+            <img class="face" id="face-rival" src="assets/fox.png" alt="" width="52" height="52" />
+          </div>
+        </div>
+        <div class="statusbar">
+          <div class="combo" id="combo-text">0<small>COMBO</small></div>
+          <div class="song-chip" id="song-chip">배틀 아레나</div>
+          <div class="score" id="score-text">0</div>
+        </div>
+      </div>
+
+      <div class="field" id="field">
+        <div class="lanes" id="lanes"></div>
+        <div class="hitline" id="hitline"></div>
+        <div class="judge-pop" id="judge-pop"></div>
+        <div class="progress"><i id="progress"></i></div>
+      </div>
+
+      <div class="controls" id="controls">
+        <button type="button" class="pad" data-lane="0" style="--c:#00f5ff"><span>D</span><small>1번</small></button>
+        <button type="button" class="pad" data-lane="1" style="--c:#7b5cfa"><span>F</span><small>2번</small></button>
+        <button type="button" class="pad" data-lane="2" style="--c:#ffe156"><span>J</span><small>3번</small></button>
+        <button type="button" class="pad" data-lane="3" style="--c:#ff2d95"><span>K</span><small>4번</small></button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">BATTLE</div>
+        <h1>리듬 배틀</h1>
+        <p class="lead">노트를 맞춰 폭스의 체력을 깎아요</p>
+        <div class="howto" aria-label="플레이 방법">
+          <div class="howto-title">이렇게 해요</div>
+          <ol class="howto-steps">
+            <li><span class="num">1</span><span>노트가 아래 <b class="c-cyan">빛나는 선</b>에 닿을 때 같은 칸을 눌러요</span></li>
+            <li><span class="num">2</span><span>맞히면 <b class="c-mag">폭스</b> 체력이 줄고, 놓치면 <b class="c-lime">삐약이</b>가 아파요</span></li>
+            <li><span class="num">3</span><span>콤보가 이어지면 체력이 조금 회복돼요</span></li>
+          </ol>
+          <p class="howto-keys">컴퓨터 <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> · 휴대폰은 아래 네 칸</p>
+        </div>
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST · 20</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <button type="button" class="btn" id="start-btn">배틀 시작</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="count">
+        <div class="count-num" id="count-num">3</div>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <img class="hero-art small" id="over-art" src="assets/chick.png" alt="" width="120" height="120" />
+        <div class="badge" id="over-badge">WIN</div>
+        <h1 id="over-title">승리!</h1>
+        <p id="over-detail"></p>
+        <p class="statline" id="over-score"></p>
+        <p class="statline" id="over-combo"></p>
+        <button type="button" class="btn" id="retry-btn">다시 도전</button>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+        <button type="button" class="btn ghost" id="share-btn">결과 공유</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="/js/hip-core.js?v=3"></script>
+    <script src="game.js?v=4"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="리듬 배틀 소개">
+  <h2>리듬 배틀 소개</h2>
+  <p>삐약이와 폭스가 체력을 걸고 싸우는 4레인 리듬 배틀입니다. 노트를 맞히면 상대 체력이 줄고, 놓치면 내 체력이 깎입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>노트가 아래 선에 닿을 때 D F J K(또는 화면 네 칸)를 누르세요. 콤보가 이어지면 체력이 조금 회복됩니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>조작이 어렵나요?</dt>
+    <dd>컴퓨터는 D F J K, 휴대폰은 아래 네 버튼을 누르면 됩니다. 판정 폭이 넓어 처음에도 맞히기 쉽습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

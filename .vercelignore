@@ -1,0 +1,10 @@
+.vercel
+.DS_Store
+node_modules
+.agents
+skills-lock.json
+test-results
+.env*
+scratch
+*.zip
+edu-svg-assets

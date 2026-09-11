@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#070714" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>미러 리듬</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <div class="stage-bg" aria-hidden="true"></div>
+      <div class="hud">
+        <div class="combo" id="combo-text">0<small>COMBO</small></div>
+        <div class="song-chip" id="song-chip">미러 코어</div>
+        <div class="acc" id="acc-text">ACC 100%</div>
+        <div class="score" id="score-text">0</div>
+      </div>
+
+      <div class="field" id="field">
+        <div class="side left">
+          <div class="lane" data-lane="0"></div>
+          <div class="lane" data-lane="1"></div>
+        </div>
+        <div class="mirror-line" aria-hidden="true"></div>
+        <div class="side right">
+          <div class="lane" data-lane="2"></div>
+          <div class="lane" data-lane="3"></div>
+        </div>
+        <div class="hitline"></div>
+        <div class="judge-pop" id="judge-pop"></div>
+        <div class="side-tags"><span>왼손</span><span>오른손</span></div>
+      </div>
+
+      <div class="controls">
+        <div class="side-controls">
+          <button type="button" class="pad" data-lane="0" style="--c:#00f5ff"><span>Q</span><small>왼 1</small></button>
+          <button type="button" class="pad" data-lane="1" style="--c:#7b5cfa"><span>W</span><small>왼 2</small></button>
+        </div>
+        <div class="side-controls">
+          <button type="button" class="pad" data-lane="2" style="--c:#ff2d95"><span>O</span><small>오른 1</small></button>
+          <button type="button" class="pad" data-lane="3" style="--c:#ffe156"><span>P</span><small>오른 2</small></button>
+        </div>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">MIRROR</div>
+        <h1>미러 리듬</h1>
+        <p class="lead">양손이 서로 다른 패턴을 연주해요</p>
+        <div class="howto" aria-label="플레이 방법">
+          <div class="howto-title">이렇게 해요</div>
+          <ol class="howto-steps">
+            <li><span class="num">1</span><span>왼쪽 노트는 <b class="c-cyan">Q · W</b></span></li>
+            <li><span class="num">2</span><span>오른쪽 노트는 <b class="c-mag">O · P</b></span></li>
+            <li><span class="num">3</span><span>선에 닿을 때 같은 손을 눌러요. 끝나면 결과 카드를 저장할 수 있어요</span></li>
+          </ol>
+          <p class="howto-keys">일시정지는 <kbd>Esc</kbd> · 휴대폰은 아래 네 칸</p>
+        </div>
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST · 20</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <button type="button" class="btn" id="start-btn">도전 시작</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="count">
+        <div class="count-num" id="count-num">3</div>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <img class="hero-art small" src="assets/chick.png" alt="" width="96" height="96" />
+        <div class="badge soft" id="over-badge">CLEAR</div>
+        <div class="rank" id="rank-text">S</div>
+        <p class="statline" id="over-score">SCORE 0</p>
+        <p class="statline" id="over-combo">MAX COMBO 0</p>
+        <p class="statline" id="over-acc">ACC 100%</p>
+        <button type="button" class="btn" id="retry-btn">다시 도전</button>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="save-btn">결과 카드 저장</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+    <canvas id="share-canvas" width="640" height="360" hidden></canvas>
+
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="/js/hip-core.js?v=3"></script>
+    <script src="game.js?v=4"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="미러 리듬 소개">
+  <h2>미러 리듬 소개</h2>
+  <p>왼손과 오른손이 서로 다른 패턴을 동시에 연주하는 대칭 리듬 게임입니다. 끝나면 등급과 결과 카드를 저장할 수 있습니다.</p>
+  <h3>플레이 방법</h3>
+  <p>왼쪽 노트는 Q·W, 오른쪽 노트는 O·P입니다. 휴대폰에서는 화면 아래 네 칸을 탭하세요. 일시정지는 Esc입니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>결과 카드는 어디에 쓰나요?</dt>
+    <dd>결과 화면의 저장 버튼으로 PNG가 내려받아지며, 카카오톡 등에 바로 공유할 수 있습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

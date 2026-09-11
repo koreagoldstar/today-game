@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0618" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>네온 러너</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body>
+    <div class="stage">
+      <canvas id="game"></canvas>
+      <div class="hud">
+        <div class="panel">
+          <span id="song-chip">곡</span>
+          <b id="dist-text">0m</b>
+        </div>
+        <div class="hearts" id="hearts" aria-label="목숨"></div>
+        <div class="panel right">
+          <span>BEST</span>
+          <b id="best-text">0m</b>
+        </div>
+      </div>
+
+      <div class="actions hidden" id="actions">
+        <button type="button" class="act jump" id="jump-btn">
+          <span>점프</span>
+          <small>SPACE</small>
+        </button>
+        <button type="button" class="act slide" id="slide-btn">
+          <span>슬라이드</span>
+          <small>↓</small>
+        </button>
+      </div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
+        <div class="badge">RUNNER</div>
+        <h1>네온 러너</h1>
+        <p class="lead">비트에 맞춰 점프하고 슬라이드해요</p>
+        <div class="howto" aria-label="플레이 방법">
+          <div class="howto-title">이렇게 해요</div>
+          <ol class="howto-steps">
+            <li><span class="num">1</span><span>분홍 상자는 <b class="c-mag">점프</b>로 넘어요</span></li>
+            <li><span class="num">2</span><span>노란 가로막은 <b class="c-cyan">슬라이드</b>로 피해요</span></li>
+            <li><span class="num">3</span><span>하트가 3개예요. 한 번 맞아도 잠깐 무적!</span></li>
+          </ol>
+          <p class="howto-keys">컴퓨터 <kbd>SPACE</kbd> 점프 · <kbd>↓</kbd> 슬라이드</p>
+        </div>
+        <div class="song-box">
+          <div class="song-head">
+            <span>TRACK LIST · 20</span>
+            <span id="pick-label">1. —</span>
+          </div>
+          <div class="song-list" id="song-list"></div>
+        </div>
+        <button type="button" class="btn" id="start-btn">달리기 시작</button>
+        <a href="/">← 홈</a>
+      </div>
+
+      <div class="overlay hidden" id="count">
+        <div class="count-num" id="count-num">3</div>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <img class="hero-art small" src="assets/thumb.png" alt="" width="120" height="120" />
+        <div class="badge">CRASH</div>
+        <h1>게임 종료</h1>
+        <p class="statline" id="over-dist">0m</p>
+        <p class="statline" id="over-best">BEST 0m</p>
+        <button type="button" class="btn" id="retry-btn">다시 달리기</button>
+        <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
+        <button type="button" class="btn ghost" id="share-btn">결과 공유</button>
+        <a href="/">← 홈</a>
+      </div>
+    </div>
+
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js"></script>
+    <script src="/js/hip-core.js?v=3"></script>
+    <script src="game.js?v=5"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="네온 러너 소개">
+  <h2>네온 러너 소개</h2>
+  <p>네온 도시를 달리며 점프와 슬라이드로 장애물을 피하는 리듬 러닝 게임입니다. 하트 3개와 무적 시간이 있어 한 번에 끝나지 않습니다.</p>
+  <h3>플레이 방법</h3>
+  <p>분홍 상자는 점프(스페이스), 노란 가로막은 슬라이드(아래 방향키)로 피하세요. 화면 아래 버튼으로도 조작할 수 있습니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>점수는 어떻게 올라가나요?</dt>
+    <dd>달린 거리가 점수입니다. 오래 달릴수록 랭킹에 유리합니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
