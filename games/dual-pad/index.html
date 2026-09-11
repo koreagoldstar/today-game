@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
   <body>
@@ -41,12 +41,14 @@
       </div>
 
       <div class="dual-pads hidden" id="dual-pads">
-        <button type="button" class="pad pad-left" data-side="0" aria-label="Left pad">
+        <button type="button" class="pad pad-left" data-side="0" aria-label="왼쪽 패드 L">
           <span class="pad-label">L</span>
+          <span class="pad-key">왼쪽</span>
           <span class="pad-glow"></span>
         </button>
-        <button type="button" class="pad pad-right" data-side="1" aria-label="Right pad">
+        <button type="button" class="pad pad-right" data-side="1" aria-label="오른쪽 패드 R">
           <span class="pad-label">R</span>
+          <span class="pad-key">오른쪽</span>
           <span class="pad-glow"></span>
         </button>
       </div>
@@ -56,7 +58,7 @@
         <img class="hero-art" src="assets/thumb.png" alt="" width="168" height="168" />
         <div class="badge">DUAL</div>
         <h1>DUAL PAD</h1>
-        <p>노트가 판정선에 닿을 때<br /><b>양쪽 패드를 탭!</b></p>
+        <p>노트가 아래 선에 닿을 때<br /><b>같은 쪽 패드</b>를 눌러요</p>
         <div class="song-box">
           <div class="song-head">
             <span>TRACK LIST</span>
@@ -68,7 +70,7 @@
           <div class="pad-preview">
             <i class="left"></i><i class="right"></i>
           </div>
-          <p class="sub">모바일 · 양손 엄지 &nbsp;|&nbsp; PC · A F / J L</p>
+          <p class="sub">컴퓨터 · <b>L</b> 왼쪽 / <b>R</b> 오른쪽<br />휴대폰 · 아래 분홍·파랑 패드</p>
         </div>
         <button type="button" class="btn" id="start-btn">PLAY</button>
         <a href="/">← 홈</a>
@@ -103,13 +105,13 @@
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js"></script>
     <script src="/js/hip-core.js"></script>
-    <script src="game.js"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="듀얼 패드 소개">
   <h2>듀얼 패드 소개</h2>
   <p>양손으로 좌우 패드를 번갈아 두드리며 리듬을 맞추는 20곡 수록 리듬 게임입니다.</p>
   <h3>플레이 방법</h3>
-  <p>화면 좌우에 떨어지는 노트에 맞춰 좌우 패드를 정확한 타이밍에 탭하세요.</p>
+  <p>왼쪽 노트는 L, 오른쪽 노트는 R을 누르세요. 컴퓨터에서는 키보드 L/R, 휴대폰에서는 아래 분홍·파랑 패드를 탭하면 됩니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>곡 난이도가 다 다른가요?</dt>

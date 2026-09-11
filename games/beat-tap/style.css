@@ -239,10 +239,10 @@ canvas {
 .tap-pad {
   position: absolute;
   left: 50%;
-  bottom: max(28px, calc(12% + env(safe-area-inset-bottom)));
+  bottom: max(18px, calc(8% + env(safe-area-inset-bottom)));
   transform: translateX(-50%);
-  width: min(220px, 58vw);
-  height: min(220px, 58vw);
+  width: min(168px, 44vw);
+  height: min(168px, 44vw);
   appearance: none;
   border: none;
   border-radius: 50%;
@@ -295,11 +295,43 @@ canvas {
     inset 0 0 40px rgba(0, 245, 255, 0.1);
 }
 
-.tap-pad.miss-hit {
+.tap-pad.hot {
+  transform: translateX(-50%) scale(1.08);
   box-shadow:
-    0 0 0 3px var(--magenta),
-    0 0 36px rgba(255, 45, 149, 0.5),
-    inset 0 0 30px rgba(255, 45, 149, 0.1);
+    0 0 0 4px var(--lime),
+    0 0 42px rgba(200, 255, 0, 0.7),
+    inset 0 0 50px rgba(200, 255, 0, 0.16);
+  animation: pad-hot 0.45s ease-in-out infinite;
+}
+
+.tap-pad.hot .tap-label {
+  color: var(--lime);
+  text-shadow: 0 0 18px rgba(200, 255, 0, 0.9);
+}
+
+.tap-pad.early-hit {
+  box-shadow:
+    0 0 0 3px #ffe566,
+    0 0 36px rgba(255, 230, 100, 0.45),
+    inset 0 0 30px rgba(255, 230, 100, 0.1);
+}
+
+.judge-flash.early {
+  color: #ffe566;
+  text-shadow:
+    0 0 20px rgba(255, 230, 100, 0.85),
+    0 0 36px rgba(255, 230, 100, 0.4);
+  animation: judge-pop 0.45s ease-out forwards;
+}
+
+@keyframes pad-hot {
+  0%,
+  100% {
+    filter: brightness(1.05);
+  }
+  50% {
+    filter: brightness(1.22);
+  }
 }
 
 .tap-ring {
@@ -450,11 +482,9 @@ h1 {
   margin: 0 0 10px;
   padding: 10px 12px 8px;
   text-align: left;
-  flex: 0 1 auto;
-  max-height: min(28vh, 200px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+  flex: 0 0 auto;
+  max-height: none;
+  overflow: visible;
   border: 1px solid rgba(0, 245, 255, 0.28);
   border-radius: 14px;
   background:
@@ -484,9 +514,9 @@ h1 {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #c5d2ea;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #d7e3f8;
 }
 
 .howto-steps .num {

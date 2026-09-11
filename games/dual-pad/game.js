@@ -46,12 +46,18 @@
   }
 
   const KEY_LEFT = {
-    KeyF: true,
+    KeyL: true,
     KeyA: true,
+    KeyF: true,
+    KeyZ: true,
+    ArrowLeft: true,
   };
   const KEY_RIGHT = {
+    KeyR: true,
     KeyJ: true,
-    KeyL: true,
+    KeyK: true,
+    KeyX: true,
+    ArrowRight: true,
   };
 
   const SONG_META = HipCore.buildSongList(20, 6262, "dual-pad");
@@ -655,13 +661,23 @@
 
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
-    if (KEY_LEFT[e.code]) {
+    const key = String(e.key || "").toLowerCase();
+    const left = KEY_LEFT[e.code] || key === "l";
+    const right = KEY_RIGHT[e.code] || key === "r";
+    if (left) {
       e.preventDefault();
       tapSide(LEFT);
-    } else if (KEY_RIGHT[e.code]) {
+    } else if (right) {
       e.preventDefault();
       tapSide(RIGHT);
     }
+  });
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (state !== "play") return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    tapSide(x < 0.5 ? LEFT : RIGHT);
   });
 
   document.getElementById("start-btn").addEventListener("click", () => {

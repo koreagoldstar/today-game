@@ -7,10 +7,10 @@
   const CY = H * 0.34;
   const TARGET_R = 62;
   const OUTER_R = 155;
-  const APPROACH = 1.15;
-  const PERFECT = 0.08;
-  const GOOD = 0.15;
-  const MAX_LIVES = 5;
+  const APPROACH = 1.45;
+  const PERFECT = 0.12;
+  const GOOD = 0.28;
+  const MAX_LIVES = 6;
   const SEED = 4242;
 
   const COLORS = {
@@ -45,10 +45,16 @@
     );
   }
 
-  const SONGS = HipCore.buildSongList(20, SEED, "beat-tap").map((song) => ({
-    ...song,
-    chart: buildChart(song),
-  }));
+  const SONGS = HipCore.buildSongList(20, SEED, "beat-tap").map((song, i) => {
+    const next = { ...song };
+    if (i < 5) {
+      const factor = i === 0 ? 0.8 : i < 3 ? 0.88 : 0.94;
+      next.rate = +(song.rate * factor).toFixed(3);
+      next.bpm = Math.max(118, Math.round(song.bpm * factor));
+    }
+    next.chart = buildChart(next);
+    return next;
+  });
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -93,28 +99,28 @@
     const beat = 60 / song.bpm;
     const totalBeats = song.bars * 4;
     const chart = [];
-    let t = 1.1;
+    let t = 2.0;
 
     for (let b = 0; b < totalBeats; b += 1) {
-      const dens = 0.72 + song.diff * 0.05;
+      const dens = song.diff <= 1 ? 0.24 : 0.42 + song.diff * 0.05;
 
       if (rand() < dens) {
         chart.push({ time: roundTime(t) });
       }
 
-      if (rand() < 0.58 + song.diff * 0.04) {
+      if (song.diff >= 2 && rand() < 0.28 + song.diff * 0.04) {
         chart.push({ time: roundTime(t + beat * 0.5) });
       }
 
-      if (song.diff >= 2 && rand() < 0.14) {
+      if (song.diff >= 3 && rand() < 0.12) {
         chart.push({ time: roundTime(t + beat * 0.25) });
       }
 
-      if (b % 4 === 0 && rand() < 0.22) {
+      if (song.diff >= 2 && b % 4 === 0 && rand() < 0.16) {
         chart.push({ time: roundTime(t + beat * 0.75) });
       }
 
-      if (song.diff >= 3 && b % 8 === 4 && rand() < 0.35) {
+      if (song.diff >= 4 && b % 8 === 4 && rand() < 0.28) {
         chart.push({ time: roundTime(t + beat * 0.5) });
         chart.push({ time: roundTime(t + beat * 0.75) });
       }
@@ -127,7 +133,7 @@
     const cleaned = [];
     let prev = -1;
     for (const n of chart) {
-      if (prev >= 0 && n.time - prev < 0.08) continue;
+      if (prev >= 0 && n.time - prev < (song.diff <= 2 ? 0.28 : 0.12)) continue;
       cleaned.push(n);
       prev = n.time;
     }
@@ -226,7 +232,7 @@
   }
 
   function showJudge(kind) {
-    const labels = { perfect: "PERFECT", good: "GOOD", miss: "MISS" };
+    const labels = { perfect: "PERFECT", good: "GOOD", miss: "MISS", early: "아직!" };
     judgeFlash.textContent = labels[kind] || "";
     judgeFlash.className = "judge-flash " + kind;
     clearTimeout(judgeTimer);
@@ -235,9 +241,15 @@
       judgeFlash.textContent = "";
     }, 560);
 
-    tapPad.classList.remove("perfect-hit", "good-hit", "miss-hit", "vibe");
+    tapPad.classList.remove("perfect-hit", "good-hit", "miss-hit", "early-hit", "vibe");
     void tapPad.offsetWidth;
     tapPad.classList.add(kind + "-hit", "vibe");
+  }
+
+  function syncTapPad(inWindow) {
+    const label = tapPad.querySelector(".tap-label");
+    if (label) label.textContent = inWindow ? "지금!" : "탭";
+    tapPad.classList.toggle("hot", !!inWindow);
   }
 
   function spawnPerfectBurst() {
@@ -331,6 +343,9 @@
       applyHit("perfect");
     } else if (Math.abs(delta) <= GOOD) {
       applyHit("good");
+    } else if (delta < 0) {
+      showJudge("early");
+      audio.sfxHit("tap");
     }
   }
 
@@ -340,7 +355,7 @@
     const note = nextNote();
     if (!note) return;
 
-    if (t > note.time + GOOD) {
+    if (t > note.time + GOOD && t > 1.9) {
       applyHit("miss");
     }
   }
@@ -500,7 +515,7 @@
       if (layer === 0) {
         leadProg = prog;
         leadDelta = delta;
-        inWindow = Math.abs(delta) <= PERFECT;
+        inWindow = Math.abs(delta) <= GOOD;
       }
 
       const eased = easeOutCubic(Math.min(1, Math.max(0, prog)));
@@ -548,22 +563,22 @@
       drawTapCue(leadProg, leadDelta, inWindow);
     }
 
+    syncTapPad(inWindow);
     return inWindow;
   }
 
   function drawTapCue(prog, delta, inWindow) {
-    const abs = Math.abs(delta);
     let label = "";
     let color = COLORS.cyan;
 
     if (inWindow) {
-      label = "지금!";
+      label = "지금 탭!";
       color = COLORS.lime;
-    } else if (abs <= GOOD && delta < 0) {
-      label = "준비…";
+    } else if (prog > 0.72 && delta < 0) {
+      label = "곧이에요";
       color = "#ffe566";
-    } else if (prog > 0.55 && delta < 0) {
-      label = "모이는 중";
+    } else if (prog > 0.28 && delta < 0) {
+      label = "원이 모이면 눌러요";
       color = COLORS.magenta;
     } else if (delta > GOOD) {
       label = "";
@@ -643,7 +658,7 @@
     ctx.fillStyle = "rgba(200, 210, 230, 0.7)";
     ctx.font = '600 11px "Chakra Petch", sans-serif';
     ctx.textAlign = "center";
-    ctx.fillText("점이 오른쪽 끝에 오면 탭!", CX, y + 32);
+    ctx.fillText("점이 노란·초록 칸에 오면 탭!", CX, y + 32);
   }
 
   function roundRect(x, y, w, h, r) {
@@ -711,6 +726,18 @@
     if (state === "play") {
       const inWindow = drawApproachRings(now);
       drawTargetRing(inWindow);
+      if (now < 1.8) {
+        const n = now < 0.6 ? "3" : now < 1.2 ? "2" : "1";
+        ctx.save();
+        ctx.font = '700 72px "Bagel Fat One", "Chakra Petch", cursive';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = COLORS.lime;
+        ctx.shadowColor = COLORS.lime;
+        ctx.shadowBlur = 24;
+        ctx.fillText(n, CX, CY);
+        ctx.restore();
+      }
       drawTimingMeter(now);
       drawExpandingRings(dt);
       drawParticles(dt);
@@ -801,22 +828,25 @@
 
     canvas.addEventListener("pointerdown", (e) => {
       if (state !== "play") return;
-      const rect = canvas.getBoundingClientRect();
-      const sx = ((e.clientX - rect.left) / rect.width) * W;
-      const sy = ((e.clientY - rect.top) / rect.height) * H;
-      const dist = Math.hypot(sx - CX, sy - CY);
-      if (dist < OUTER_R + 30) tryTap();
+      e.preventDefault();
+      tryTap();
     });
 
     window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        if (state === "title") {
-          audio.ensure();
-          startPlay(true);
-        } else {
-          tryTap();
-        }
+      if (e.repeat) return;
+      const tapKey =
+        e.code === "Space" ||
+        e.code === "Enter" ||
+        e.code === "KeyF" ||
+        e.code === "KeyJ" ||
+        e.code === "KeyZ";
+      if (!tapKey) return;
+      e.preventDefault();
+      if (state === "title" && (e.code === "Space" || e.code === "Enter")) {
+        audio.ensure();
+        startPlay(true);
+      } else {
+        tryTap();
       }
     });
 

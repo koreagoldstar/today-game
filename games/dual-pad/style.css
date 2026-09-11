@@ -200,6 +200,12 @@ canvas {
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 8px 12px;
   transition: transform 0.08s ease, filter 0.08s ease, box-shadow 0.08s ease;
   min-height: 0;
 }
@@ -218,6 +224,19 @@ canvas {
   font-family: "Bagel Fat One", cursive;
   font-size: clamp(42px, 12vw, 56px);
   line-height: 1;
+  pointer-events: none;
+}
+
+.pad-key {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 4px;
+  font-family: "Chakra Petch", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.88;
   pointer-events: none;
 }
 
