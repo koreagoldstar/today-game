@@ -453,10 +453,15 @@ h1 {
 }
 
 .pad-preview i {
-  display: block;
-  height: 36px;
+  display: grid;
+  place-items: center;
+  height: 42px;
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.25);
+  font-family: "Bagel Fat One", cursive;
+  font-size: 22px;
+  font-style: normal;
+  color: #fff;
 }
 
 .pad-preview .left {

@@ -46,17 +46,13 @@
   }
 
   const KEY_LEFT = {
-    KeyL: true,
     KeyA: true,
     KeyF: true,
-    KeyZ: true,
     ArrowLeft: true,
   };
   const KEY_RIGHT = {
-    KeyR: true,
     KeyJ: true,
-    KeyK: true,
-    KeyX: true,
+    KeyL: true,
     ArrowRight: true,
   };
 
@@ -446,6 +442,13 @@
       ctx.fillStyle = hexAlpha(color, 0.4 + flash * 0.45);
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.font = '700 20px "Chakra Petch", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#fff";
+      ctx.globalAlpha = 0.95;
+      ctx.fillText(side === LEFT ? "F" : "J", x, HIT_Y + 30);
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -661,13 +664,10 @@
 
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
-    const key = String(e.key || "").toLowerCase();
-    const left = KEY_LEFT[e.code] || key === "l";
-    const right = KEY_RIGHT[e.code] || key === "r";
-    if (left) {
+    if (KEY_LEFT[e.code]) {
       e.preventDefault();
       tapSide(LEFT);
-    } else if (right) {
+    } else if (KEY_RIGHT[e.code]) {
       e.preventDefault();
       tapSide(RIGHT);
     }
