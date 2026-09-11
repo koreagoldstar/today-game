@@ -56,6 +56,8 @@ module.exports = async function handler(req, res) {
     "sokoban",
     "reaction",
     "order-memo",
+    "wisdom-quiz",
+    "zombie-run",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms 등) */
   const LOWER_BETTER = new Set(["reaction"]);

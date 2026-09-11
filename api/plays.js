@@ -53,6 +53,17 @@ module.exports = async function handler(req, res) {
     "cosmic-dodge",
     "fruit-catch",
     "bubble-pop",
+    "wisdom-quiz",
+    "fortune-draw",
+    "zombie-run",
+    "edu-sentence-builder",
+    "edu-opposites",
+    "edu-dictation",
+    "edu-word-puzzle",
+    "edu-build-letter",
+    "edu-match-pair",
+    "edu-listen-find",
+    "edu-jamo-zoo",
     "pinball",
     "dual-pad",
     "slide-beat",
@@ -75,6 +86,9 @@ module.exports = async function handler(req, res) {
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "wisdom-quiz",
+    "fortune-draw",
+    "zombie-run",
     "flappy",
     "tetris",
     "doodle",
