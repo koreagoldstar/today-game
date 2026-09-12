@@ -102,21 +102,16 @@
     return data;
   }
 
-  function level2Unlocked(data) {
-    const d = data || load();
-    return (d.level1.mastered || []).length >= 7 || (d.level1.attemptsCompleted || 0) >= 10;
+  function level2Unlocked() {
+    return true;
   }
 
-  function level3Unlocked(data) {
-    const d = data || load();
-    if (!level2Unlocked(d)) return false;
-    return (d.level2.mastered || []).length >= 5 || (d.level2.attemptsCompleted || 0) >= 8;
+  function level3Unlocked() {
+    return true;
   }
 
-  function level4Unlocked(data) {
-    const d = data || load();
-    if (!level3Unlocked(d)) return false;
-    return (d.level3.mastered || []).length >= 5 || (d.level3.attemptsCompleted || 0) >= 8;
+  function level4Unlocked() {
+    return true;
   }
 
   function todaySummary(data) {
@@ -126,17 +121,7 @@
     return `오늘 ${d.todayLearned.join(", ")} 을 배웠어요`;
   }
 
-  function unlockHint(data) {
-    const d = data || load();
-    if (!level2Unlocked(d)) {
-      return "자물쇠는 다음 단계예요. 자음 동물원이랑 글자 찾기를 하면 열려요.";
-    }
-    if (!level3Unlocked(d)) {
-      return "자물쇠는 다음 단계예요. 짝짓기랑 글자 조립을 하면 열려요.";
-    }
-    if (!level4Unlocked(d)) {
-      return "자물쇠는 다음 단계예요. 낱말 퍼즐이랑 받아쓰기를 하면 열려요.";
-    }
+  function unlockHint() {
     return "";
   }
 

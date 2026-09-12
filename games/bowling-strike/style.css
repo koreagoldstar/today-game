@@ -1,0 +1,297 @@
+:root {
+  --navy: #1a0f18;
+  --gold: #ffc145;
+  --cyan: #ffd98a;
+  --pink: #ff5c5c;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #fff;
+  font-family: "Jua", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255, 180, 80, 0.16), transparent 32%),
+    linear-gradient(160deg, #12080e, #1a0f18 55%, #0c0810);
+  touch-action: none;
+}
+
+body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+button, a { font: inherit; }
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 390 / 700), 430px);
+  aspect-ratio: 390 / 700;
+  overflow: hidden;
+  border: 1px solid rgba(232, 196, 138, 0.16);
+  border-radius: clamp(0px, 2.4vw, 22px);
+  background: #1a0f18;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.62);
+  isolation: isolate;
+}
+
+canvas { display: block; width: 100%; height: 100%; }
+
+.hud {
+  position: absolute;
+  z-index: 5;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  border: 1px solid rgba(232, 196, 138, 0.2);
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(32, 18, 24, 0.96), rgba(16, 8, 12, 0.92));
+  box-shadow: 0 9px 28px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(12px);
+}
+
+.hud-block { display: flex; flex-direction: column; gap: 1px; }
+.hud-block.right { text-align: right; }
+.hud-block span, .hud-score span {
+  color: #e8c48a;
+  font: 700 8px/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+.hud-block strong, .hud-score strong {
+  color: var(--gold);
+  font: 900 16px/1.1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.hud-score { text-align: center; }
+.hud-score strong { display: block; font-size: 22px; color: #fff; }
+
+.frame-strip {
+  position: absolute;
+  z-index: 5;
+  top: 70px;
+  left: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  pointer-events: none;
+}
+
+.fbox {
+  min-height: 28px;
+  padding: 3px 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #5a4030;
+  font: 700 10px/1.1 system-ui, sans-serif;
+  text-align: center;
+}
+
+.fbox.cur { background: #fff; color: #c43c3c; box-shadow: 0 0 0 2px #ffd84c; }
+
+.coach {
+  position: absolute;
+  z-index: 5;
+  left: 10px;
+  right: 10px;
+  bottom: 118px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff4e6;
+  font-size: 14px;
+  background: rgba(28, 14, 18, 0.72);
+  pointer-events: none;
+}
+
+.meter {
+  position: absolute;
+  z-index: 6;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  padding: 12px 14px 14px;
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.94);
+  color: #2a2018;
+}
+
+.meter.hidden { display: none !important; }
+
+.meter-label {
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 13px;
+  color: #7a5a40;
+}
+
+.meter-track {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid #e4d3b4;
+  border-radius: 999px;
+  background: #f1e7d5;
+}
+
+.meter-sweet {
+  position: absolute;
+  inset: 0 42%;
+  background: #ffd98a;
+}
+
+#meter-cursor {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 0;
+  width: 6px;
+  border-radius: 3px;
+  background: #2a2018;
+  transform: translateX(-50%);
+}
+
+#lock-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  color: #4a3300;
+  font-size: 16px;
+  background: linear-gradient(180deg, #ffe27a, #ffc145);
+  box-shadow: 0 4px 0 #c98a20;
+  cursor: pointer;
+}
+
+#lock-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #c98a20; }
+
+.overlay {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(20, 10, 14, 0.42), rgba(16, 8, 12, 0.93) 74%),
+    radial-gradient(circle at 50% 28%, rgba(255, 180, 80, 0.16), transparent 34%);
+  backdrop-filter: blur(7px);
+}
+
+.hidden { display: none !important; }
+
+.title-hero {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.35));
+  animation: float 2.4s ease-in-out infinite;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font: 900 11px/1 system-ui, sans-serif;
+  letter-spacing: 0.16em;
+}
+
+.overlay h1 {
+  margin: 0 0 12px;
+  color: #fff;
+  font: 400 clamp(32px, 9vw, 44px)/0.94 "Bagel Fat One", sans-serif;
+  text-shadow: 0 4px 0 #4a2208, 0 12px 28px rgba(0, 0, 0, 0.46);
+}
+
+.overlay > p:not(.eyebrow) {
+  margin: 0 0 16px;
+  color: #f0e2d0;
+  line-height: 1.5;
+}
+
+.rules {
+  width: min(310px, 100%);
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  text-align: left;
+}
+
+.rules li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border: 1px solid rgba(232, 196, 138, 0.12);
+  border-radius: 9px;
+  color: #fff4e6;
+  font-size: 13px;
+  background: rgba(32, 16, 18, 0.62);
+}
+
+.rules b {
+  flex: 0 0 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #3a2208;
+  background: var(--gold);
+}
+
+.primary {
+  min-width: 200px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  color: #4a3300;
+  font-size: 18px;
+  background: linear-gradient(180deg, #ffe27a, #ffc145);
+  box-shadow: 0 6px 0 #c98a20;
+  cursor: pointer;
+}
+
+.primary:active { transform: translateY(3px); box-shadow: 0 3px 0 #c98a20; }
+
+.overlay a {
+  margin-top: 12px;
+  color: #e8c48a;
+  text-decoration: none;
+}
+
+.final-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.final-stats span {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

@@ -665,3 +665,114 @@ h1, h2 {
   font-size: 28px;
   text-decoration: none;
 }
+
+.play-trace {
+  padding-bottom: 10px;
+}
+
+.trace-wrap {
+  position: relative;
+  width: 88%;
+  aspect-ratio: 1;
+  max-height: 44%;
+  flex: 0 0 auto;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.78);
+  border: 4px dashed rgba(201, 138, 62, 0.4);
+  touch-action: none;
+}
+
+.trace-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.trace-wrap #guide-canvas {
+  z-index: 1;
+}
+
+.trace-wrap #draw-canvas {
+  z-index: 2;
+}
+
+.trace-pop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.trace-pop[hidden] {
+  display: none;
+}
+
+.trace-pop.show {
+  animation: pop 0.65s ease;
+}
+
+.trace-tools {
+  display: flex;
+  gap: 8px;
+  width: 88%;
+  margin: 8px 0 4px;
+}
+
+.trace-tools .icon-btn {
+  flex: 1;
+  min-height: 48px;
+  font-size: 16px;
+}
+
+.trace-tools .trace-done {
+  background: #b8f0d0;
+}
+
+.picker-label {
+  margin: 4px 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.trace-picker {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.trace-letter {
+  appearance: none;
+  aspect-ratio: 1;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  background: #ffe27a;
+  box-shadow: 0 3px 0 rgba(201, 138, 62, 0.22);
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+}
+
+.trace-letter.on {
+  background: #b8f0d0;
+  border-color: #6fd6b0;
+}
+
+.trace-letter.done {
+  opacity: 0.42;
+}
+
+.trace-letter:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(201, 138, 62, 0.22);
+}

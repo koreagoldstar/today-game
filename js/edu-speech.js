@@ -58,6 +58,8 @@
   let audioCtx = null;
   let voiceAudio = null;
   let lastStatus = "idle";
+  let speakGen = 0;
+  let activeFinish = null;
 
   function koVoices() {
     if (!window.speechSynthesis) return [];
@@ -105,7 +107,7 @@
     return voiceAudio;
   }
 
-  function makeUtterance(text, slow) {
+  function makeUtterance(text, slow, hooks) {
     const utter = new SpeechSynthesisUtterance(String(text));
     utter.lang = "ko-KR";
     utter.rate = slow ? 0.75 : 0.85;
@@ -118,27 +120,37 @@
     };
     utter.onend = () => {
       lastStatus = "end";
+      if (hooks && hooks.gen === speakGen && hooks.onEnd) hooks.onEnd();
     };
     utter.onerror = (event) => {
       lastStatus = (event && event.error) || "error";
-      if (!event || event.error === "canceled" || event.error === "interrupted") return;
+      if (!event || event.error === "canceled" || event.error === "interrupted") {
+        if (hooks && hooks.gen === speakGen && hooks.onCancel) hooks.onCancel();
+        return;
+      }
       if (utter.voice) {
         utter.voice = null;
         window.setTimeout(() => {
+          if (hooks && hooks.gen !== speakGen) return;
           try {
             speechSynthesis.speak(utter);
           } catch (_) {
-            /* ignore */
+            if (hooks && hooks.onEnd) hooks.onEnd();
           }
         }, 40);
+        return;
       }
+      if (hooks && hooks.gen === speakGen && hooks.onEnd) hooks.onEnd();
     };
     return utter;
   }
 
-  function speakBrowser(text, slow) {
-    if (!window.speechSynthesis || !text) return;
-    const utter = makeUtterance(text, slow);
+  function speakBrowser(text, slow, hooks) {
+    if (!window.speechSynthesis || !text) {
+      if (hooks && hooks.onEnd) hooks.onEnd();
+      return;
+    }
+    const utter = makeUtterance(text, slow, hooks);
     const busy = speechSynthesis.speaking || speechSynthesis.pending;
     if (busy) {
       try {
@@ -147,11 +159,12 @@
         /* ignore */
       }
       speakTimer = window.setTimeout(() => {
+        if (hooks && hooks.gen !== speakGen) return;
         try {
           if (speechSynthesis.paused) speechSynthesis.resume();
           speechSynthesis.speak(utter);
         } catch (_) {
-          /* ignore */
+          if (hooks && hooks.onEnd) hooks.onEnd();
         }
       }, 80);
       return;
@@ -160,12 +173,18 @@
       if (speechSynthesis.paused) speechSynthesis.resume();
       speechSynthesis.speak(utter);
     } catch (_) {
-      /* ignore */
+      if (hooks && hooks.onEnd) hooks.onEnd();
     }
   }
 
-  function speakServer(text, slow) {
+  function speakServer(text, slow, hooks) {
     const audio = ensureVoiceAudio();
+    let fellBack = false;
+    const fallback = () => {
+      if (fellBack || (hooks && hooks.gen !== speakGen)) return;
+      fellBack = true;
+      speakBrowser(text, slow, hooks);
+    };
     try {
       audio.pause();
     } catch (_) {
@@ -176,21 +195,29 @@
     };
     audio.onended = () => {
       lastStatus = "end";
+      if (fellBack) return;
+      if (hooks && hooks.gen === speakGen && hooks.onEnd) hooks.onEnd();
     };
     audio.onerror = () => {
       lastStatus = "error";
-      speakBrowser(text, slow);
+      fallback();
     };
     audio.playbackRate = slow ? 0.88 : 0.96;
     audio.src = `/api/speak?q=${encodeURIComponent(text)}`;
     const play = audio.play();
     if (play && typeof play.catch === "function") {
-      play.catch(() => speakBrowser(text, slow));
+      play.catch(() => fallback());
     }
   }
 
   function speakSoftly(text) {
-    if (!text) return;
+    if (!text) return Promise.resolve(true);
+    if (activeFinish) {
+      const prev = activeFinish;
+      activeFinish = null;
+      prev(false);
+    }
+    const gen = ++speakGen;
     if (speakTimer) {
       clearTimeout(speakTimer);
       speakTimer = null;
@@ -201,7 +228,29 @@
       /* ignore */
     }
     const { said, slow } = prepareSpeech(text);
-    speakServer(said, slow);
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        if (activeFinish === finish) activeFinish = null;
+        resolve(ok);
+      };
+      activeFinish = finish;
+      const watchdog = window.setTimeout(() => finish(gen === speakGen), 10000);
+      const hooks = {
+        gen,
+        onEnd: () => {
+          window.clearTimeout(watchdog);
+          finish(gen === speakGen);
+        },
+        onCancel: () => {
+          window.clearTimeout(watchdog);
+          finish(false);
+        },
+      };
+      speakServer(said, slow, hooks);
+    });
   }
 
   function ensureAudio() {

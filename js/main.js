@@ -16,7 +16,9 @@
 
     const EDU_ORDER = [
     "edu-jamo-zoo",
+    "edu-vowel-zoo",
     "edu-listen-find",
+    "edu-letter-trace",
     "edu-match-pair",
     "edu-build-letter",
     "edu-word-puzzle",
@@ -27,6 +29,30 @@
 
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
+    {
+      id: "homerun-derby",
+      title: "홈런왕",
+      tag: "야구 · 10구 더비",
+      href: "/games/homerun-derby/",
+      thumb: "/assets/thumbs/homerun-derby.png",
+      category: "sports",
+    },
+    {
+      id: "basketball-shootout",
+      title: "농구 슛아웃",
+      tag: "농구 · 60초",
+      href: "/games/basketball-shootout/",
+      thumb: "/assets/thumbs/basketball-shootout.png",
+      category: "sports",
+    },
+    {
+      id: "bowling-strike",
+      title: "볼링 스트라이크",
+      tag: "볼링 · 10프레임",
+      href: "/games/bowling-strike/",
+      thumb: "/assets/thumbs/bowling-strike.png",
+      category: "sports",
+    },
     {
       id: "rhythm-battle",
       title: "리듬 배틀",
@@ -66,6 +92,24 @@
       href: "/games/fortune-draw/",
       thumb: "/assets/thumbs/fortune-draw.png",
       category: "arcade",
+    },
+    {
+      id: "edu-vowel-zoo",
+      title: "모음 놀이터",
+      tag: "레벨 1 · 모음",
+      href: "/games/edu-vowel-zoo/",
+      thumb: "/assets/edu/edu_duck.svg",
+      category: "edu",
+      eduLevel: 1,
+    },
+    {
+      id: "edu-letter-trace",
+      title: "글자 따라쓰기",
+      tag: "레벨 1 · 쓰기",
+      href: "/games/edu-letter-trace/",
+      thumb: "/assets/edu/edu_crayon.svg",
+      category: "edu",
+      eduLevel: 1,
     },
     {
       id: "edu-sentence-builder",
@@ -808,31 +852,12 @@
     if (opts.external) {
       a.classList.add("slot-external");
     }
-    if (opts.locked) {
-      a.classList.add("slot-locked");
-      a.href = "#edu-section";
-      a.setAttribute("aria-label", `${game.title} 아직 잠김. 쉬운 게임을 하면 열려요`);
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        const hint =
-          (window.TodayEdu && typeof TodayEdu.unlockHint === "function" && TodayEdu.unlockHint()) ||
-          "아직 잠겨 있어요. 먼저 쉬운 게임을 해 볼까?";
-        const box = document.getElementById("edu-lock-hint");
-        if (box) {
-          box.hidden = false;
-          box.textContent = hint;
-        }
-        if (window.speakSoftly) speakSoftly(hint);
-      });
-    }
     const art = game.thumb
       ? `<img src="${game.thumb}" alt="" loading="lazy" width="220" height="220" />`
       : `<span class="slot-emoji" aria-hidden="true">${game.emoji || "🎮"}</span>`;
-    const play = opts.locked
-      ? `<p class="slot-tag">아직 잠김</p><span class="slot-play">다음 단계</span>`
-      : opts.external
-        ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
-        : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
+    const play = opts.external
+      ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
+      : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
     a.innerHTML = `
       <div class="slot-art">${art}</div>
       <div class="slot-meta">
@@ -906,28 +931,11 @@
       eduSection.hidden = true;
       return;
     }
-    const data = window.TodayEdu ? TodayEdu.load() : null;
-    const open2 = !(window.TodayEdu && typeof TodayEdu.level2Unlocked === "function") || TodayEdu.level2Unlocked(data);
-    const open3 = !(window.TodayEdu && typeof TodayEdu.level3Unlocked === "function") || TodayEdu.level3Unlocked(data);
-    const open4 = !(window.TodayEdu && typeof TodayEdu.level4Unlocked === "function") || TodayEdu.level4Unlocked(data);
     eduSection.hidden = false;
     eduGrid.innerHTML = "";
     games.forEach((game) => {
-      const level = game.eduLevel || 1;
-      const locked = (level === 2 && !open2) || (level === 3 && !open3) || (level === 4 && !open4);
-      eduGrid.appendChild(createGameSlot(game, { locked }));
+      eduGrid.appendChild(createGameSlot(game));
     });
-    const lockHint = document.getElementById("edu-lock-hint");
-    if (lockHint) {
-      const hint = window.TodayEdu && typeof TodayEdu.unlockHint === "function" ? TodayEdu.unlockHint(data) : "";
-      if (hint) {
-        lockHint.hidden = false;
-        lockHint.textContent = hint;
-      } else {
-        lockHint.hidden = true;
-        lockHint.textContent = "";
-      }
-    }
     if (window.TodayEdu) {
       const summary = TodayEdu.todaySummary();
       const box = document.getElementById("edu-parent-summary");

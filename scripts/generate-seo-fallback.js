@@ -98,7 +98,9 @@ function buildArchive() {
 
 const EDU_ORDER = [
   "edu-jamo-zoo",
+  "edu-vowel-zoo",
   "edu-listen-find",
+  "edu-letter-trace",
   "edu-match-pair",
   "edu-build-letter",
   "edu-word-puzzle",

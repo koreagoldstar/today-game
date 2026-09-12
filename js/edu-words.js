@@ -36,6 +36,19 @@
     { id: "ㅣ", name: "이" },
   ];
 
+  const VOWELS = [
+    { id: "ㅏ", name: "아", items: [{ file: "edu_icecream.svg", word: "아이스크림" }] },
+    { id: "ㅑ", name: "야", items: [{ file: "edu_ball.svg", word: "야구공" }] },
+    { id: "ㅓ", name: "어", items: [{ file: "edu_fish.svg", word: "어항" }] },
+    { id: "ㅕ", name: "여", items: [{ file: "edu_pencil.svg", word: "연필" }] },
+    { id: "ㅗ", name: "오", items: [{ file: "edu_duck.svg", word: "오리" }] },
+    { id: "ㅛ", name: "요", items: [{ file: "edu_balloon.svg", word: "요요" }] },
+    { id: "ㅜ", name: "우", items: [{ file: "edu_umbrella.svg", word: "우산" }] },
+    { id: "ㅠ", name: "유", items: [{ file: "edu_cup.svg", word: "유리컵" }] },
+    { id: "ㅡ", name: "으", items: [{ file: "edu_lion.svg", word: "으르렁" }] },
+    { id: "ㅣ", name: "이", items: [{ file: "edu_water.svg", word: "이슬" }] },
+  ];
+
   const PAIRS = [
     { word: "사과", file: "edu_apple.svg" },
     { word: "바나나", file: "edu_banana.svg" },
@@ -241,6 +254,7 @@
     ASSET,
     JAMOS,
     JUNGS,
+    VOWELS,
     PAIRS,
     SYLLABLES,
     BATCHIM,

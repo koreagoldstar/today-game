@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#3a1608" />
+    <meta name="description" content="60초 동안 공을 당겨 림에 넣는 농구 슛아웃. 스와이시와 연속 골로 점수를 쌓으세요." />
+    <title>농구 슛아웃 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/basketball-shootout/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+    <body data-bgm="basketball-shootout">
+    <main class="stage">
+      <canvas id="game" width="390" height="700" aria-label="농구 코트"></canvas>
+
+      <header class="hud" aria-live="polite">
+        <div class="hud-block">
+          <span>TIME</span>
+          <strong id="hud-time">60</strong>
+        </div>
+        <div class="hud-score">
+          <span>SCORE</span>
+          <strong id="hud-score">0</strong>
+        </div>
+        <div class="hud-block right">
+          <span>STREAK</span>
+          <strong id="hud-streak">0</strong>
+        </div>
+      </header>
+
+      <p class="coach" id="coach">공을 당겨서 놓고 슛!</p>
+
+      <section class="overlay" id="title">
+        <img class="title-hero" src="assets/player.png" alt="" width="160" height="160" />
+        <p class="eyebrow">BASKETBALL SHOOTOUT</p>
+        <h1>농구 슛아웃</h1>
+        <p>60초 안에 최대한 많이 넣으세요<br />림에 안 닿으면 스와이시 보너스</p>
+        <ol class="rules">
+          <li><b>1</b><span>공을 손가락·마우스로 잡고 반대 방향으로 당기세요</span></li>
+          <li><b>2</b><span>점선이 림을 향할 때 손을 떼면 슛</span></li>
+          <li><b>3</b><span>일반 골 +2, 스와이시 +3, 연속 골 보너스</span></li>
+        </ol>
+        <button type="button" class="primary" id="start-btn">챌린지 시작</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+
+      <section class="overlay hidden" id="game-over">
+        <p class="eyebrow">TIME UP</p>
+        <h1 id="over-title">타임 업!</h1>
+        <p id="over-detail"></p>
+        <div class="final-stats">
+          <span>성공 <b id="final-made">0</b></span>
+          <span>시도 <b id="final-att">0</b></span>
+          <span>최고 연속 <b id="final-streak">0</b></span>
+        </div>
+        <button type="button" class="primary" id="retry-btn">다시 도전</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+    </main>
+
+    <script src="/js/bgm.js?v=5"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=2"></script>
+    <script src="game.js?v=2"></script>
+    <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="농구 슛아웃 소개">
+  <h2>농구 슛아웃 소개</h2>
+  <p>60초 동안 공을 당겨 림에 넣는 농구 슛 챌린지입니다. 스와이시와 연속 골에 보너스가 붙습니다.</p>
+  <h3>플레이 방법</h3>
+  <p>공을 손가락이나 마우스로 잡고 반대 방향으로 당긴 뒤 손을 떼면 슛이 나갑니다. 점선이 림을 향할 때 놓으세요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>스와이시는 몇 점인가요?</dt>
+    <dd>림과 백보드에 안 닿으면 +3점, 일반 골은 +2점입니다. 연속 골이면 1점이 더해집니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>

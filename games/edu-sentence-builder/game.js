@@ -22,6 +22,7 @@
   };
 
   let roundIndex = 0;
+  let playGen = 0;
   let locked = false;
   let current = null;
   let pieces = [];
@@ -29,6 +30,15 @@
   let placed = [null, null, null];
   let dragging = null;
   const used = [];
+
+  function speakAndWait(text) {
+    if (!text) return Promise.resolve(false);
+    if (window.TodayEduSpeak && typeof TodayEduSpeak.speakSoftly === "function") {
+      return Promise.resolve(TodayEduSpeak.speakSoftly(text));
+    }
+    speak(text);
+    return new Promise((resolve) => window.setTimeout(() => resolve(true), 2800));
+  }
 
   function showOverlay(name) {
     els.title.classList.toggle("hidden", name !== "title");
@@ -169,10 +179,17 @@
       els.hero.classList.add("bounce");
     }
     ding();
-    speak(current.sentence);
-    used.push(current.sentence);
-    if (window.TodayEdu) TodayEdu.recordResult("level4", current.sentence, true);
-    window.setTimeout(nextRound, 1600);
+    const sentence = current.sentence;
+    const gen = playGen;
+    used.push(sentence);
+    if (window.TodayEdu) TodayEdu.recordResult("level4", sentence, true);
+    speakAndWait(sentence).then((heard) => {
+      if (gen !== playGen) return;
+      window.setTimeout(() => {
+        if (gen !== playGen) return;
+        nextRound();
+      }, heard ? 500 : 2800);
+    });
   }
 
   function startRound() {
@@ -209,6 +226,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    playGen += 1;
     roundIndex = 0;
     used.length = 0;
     queue = shuffle(SENTENCES).slice(0, ROUNDS);
@@ -219,6 +237,7 @@
   els.startBtn.addEventListener("click", startGame);
   els.againBtn.addEventListener("click", startGame);
   els.speakBtn.addEventListener("click", () => {
+    if (locked && els.sentence.textContent) return;
     if (els.sentence.textContent) speak(els.sentence.textContent);
     else speak("조각을 순서대로 놓아볼까?");
   });

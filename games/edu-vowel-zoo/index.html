@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#ffe27a" />
-    <title>낱말 완성 퍼즐</title>
+    <title>모음 놀이터</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/edu-play.css?v=4" />
+    <link rel="stylesheet" href="/css/edu-play.css?v=6" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
   <body>
@@ -20,16 +20,16 @@
       </header>
 
       <main class="play" id="play">
-        <img class="picture" id="picture" alt="" width="120" height="120" />
-        <div class="blank-word" id="blank"></div>
-        <div class="choices letters" id="choices"></div>
+        <p class="jamo" id="jamo">아</p>
+        <p class="prompt" id="prompt" aria-hidden="true"></p>
+        <div class="choices" id="choices"></div>
       </main>
 
       <div class="overlay" id="title">
-        <p class="badge">교육 · 레벨 3</p>
-        <img class="hero" src="/assets/edu/edu_banana.svg" alt="" width="140" height="140" />
-        <h1>낱말 완성 퍼즐</h1>
-        <p class="lead">빈칸에 들어갈<br />소리를 찾아요</p>
+        <p class="badge">교육 · 레벨 1</p>
+        <img class="hero" src="/assets/edu/edu_duck.svg" alt="" width="140" height="140" />
+        <h1>모음 놀이터</h1>
+        <p class="lead">소리를 듣고<br />같은 그림에 콕!</p>
         <button type="button" class="icon-play" id="start-btn" aria-label="시작">▶</button>
         <a class="home-link" href="/">🏠</a>
       </div>
@@ -38,8 +38,8 @@
         <p class="badge soft">잘했어요</p>
         <img class="hero small" src="/assets/edu/edu_chick.svg" alt="" width="110" height="110" />
         <h2>오늘 배운 것</h2>
-        <p class="learned" id="learned">바나나</p>
-        <p class="parent-note">부모님께: 그림과 빈칸으로 낱말을 맞추는 초기 읽기 놀이예요.</p>
+        <p class="learned" id="learned">아</p>
+        <p class="parent-note">부모님께: 아부터 이까지 모음 소리와 그림을 연결하는 놀이예요. 자음 동물원과 짝입니다.</p>
         <div class="done-actions">
           <button type="button" class="icon-play" id="again-btn" aria-label="다시하기">↻</button>
           <a class="icon-btn lg" href="/" aria-label="홈">🏠</a>
@@ -48,22 +48,22 @@
     </div>
 
     <script src="/js/edu-progress.js?v=5"></script>
-    <script src="/js/edu-speech.js?v=8"></script>
-    <script src="/js/edu-words.js?v=3"></script>
+    <script src="/js/edu-speech.js?v=9"></script>
+    <script src="/js/edu-words.js?v=4"></script>
     <script src="game.js?v=1"></script>
-    <!-- seo:game:start -->
-<section class="seo-about" aria-label="낱말 완성 퍼즐 소개">
-  <h2>낱말 완성 퍼즐 소개</h2>
-  <p>그림과 빈칸 낱말을 보고 빠진 소리를 고르는 초기 읽기 퍼즐입니다.</p>
+    <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="모음 놀이터 소개">
+  <h2>모음 놀이터 소개</h2>
+  <p>아·야·어·여처럼 모음 소리를 듣고 그 소리로 시작하는 그림을 찾는 유아용 한글 게임입니다. 자음 동물원과 짝을 이룹니다.</p>
   <h3>플레이 방법</h3>
-  <p>그림과 바_나처럼 빈칸 있는 낱말을 보고, 보기 음절 세 개 중 알맞은 것을 탭하세요.</p>
+  <p>크게 나온 모음을 듣고, 그 소리로 시작하는 그림을 고르세요. 틀려도 감점이 없고 다시 들을 수 있습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>힌트가 있나요?</dt>
-    <dd>그림이 먼저 보이니 소리만 떠올려도 고를 수 있습니다.</dd>
+    <dt>자음 동물원과 무엇이 다른가요?</dt>
+    <dd>자음 대신 아부터 이까지 모음 소리를 익히는 놀이입니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
-      <script src="/js/game-seo.js?v=1"></script>
   </body>
 </html>

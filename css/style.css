@@ -130,8 +130,8 @@ body {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "hero"
-    "edu"
     "shelf"
+    "edu"
     "jihyeok"
     "archive";
   gap: 14px;
@@ -575,8 +575,8 @@ body {
     grid-template-columns: 1fr;
     grid-template-areas:
       "hero"
-      "edu"
       "shelf"
+      "edu"
       "jihyeok"
       "archive";
     align-items: start;
@@ -1251,22 +1251,6 @@ body {
   color: #6a4a28;
 }
 
-.edu-lock-hint {
-  margin: 0 auto 10px;
-  max-width: 420px;
-  padding: 8px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  font-size: 14px;
-  font-weight: 700;
-  color: #8a4a12;
-  line-height: 1.4;
-}
-
-.edu-lock-hint[hidden] {
-  display: none;
-}
-
 .edu-section .edu-parent-summary {
   margin: 8px auto 12px;
   max-width: 360px;
@@ -1295,25 +1279,6 @@ body {
 
 .edu-section-grid .slot-tag {
   color: #7a5a38;
-}
-
-.edu-section-grid .slot-locked {
-  filter: grayscale(0.25);
-}
-
-.edu-section-grid .slot-locked .slot-art {
-  position: relative;
-}
-
-.edu-section-grid .slot-locked .slot-art::after {
-  content: "🔒";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42px;
-  background: rgba(74, 55, 40, 0.32);
 }
 
 .jihyeok-section {

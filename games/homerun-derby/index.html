@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#07182c" />
+    <meta name="description" content="10구 홈런더비! 공이 홈플레이트에 오는 순간 스윙해 루타를 쌓는 야구 미니게임" />
+    <title>홈런왕 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/homerun-derby/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+    <body data-bgm="homerun-derby">
+    <main class="stage">
+      <canvas id="game" width="390" height="700" aria-label="홈런더비 구장"></canvas>
+
+      <header class="hud" aria-live="polite">
+        <div class="hud-block">
+          <span>PITCH</span>
+          <strong><b id="hud-pitch">1</b>/10</strong>
+        </div>
+        <div class="hud-score">
+          <span>TOTAL BASES</span>
+          <strong id="hud-bases">0</strong>
+        </div>
+        <div class="hud-block right">
+          <span>SCORE</span>
+          <strong id="hud-score">0</strong>
+        </div>
+      </header>
+
+      <p class="coach" id="coach">공이 홈에 오면 탭해서 스윙!</p>
+
+      <section class="overlay" id="title">
+        <img class="title-hero" src="assets/batter.png" alt="" width="160" height="160" />
+        <p class="eyebrow">HOME RUN DERBY</p>
+        <h1>홈런왕</h1>
+        <p>10번의 투구, 한 번의 완벽한 스윙<br />타이밍을 맞추면 담장을 넘깁니다</p>
+        <ol class="rules">
+          <li><b>1</b><span>투수가 공을 던지면 홈플레이트까지 지켜보세요</span></li>
+          <li><b>2</b><span>공이 홈 앞에 왔을 때 화면을 탭하거나 스페이스</span></li>
+          <li><b>3</b><span>홈런·3루타·2루타·안타로 누적 루타 도전</span></li>
+        </ol>
+        <button type="button" class="primary" id="start-btn">타석에 들어서기</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+
+      <section class="overlay compact hidden" id="round-result">
+        <p class="eyebrow" id="result-badge">HIT</p>
+        <h1 id="result-title">안타!</h1>
+        <p id="result-detail"></p>
+        <button type="button" class="primary" id="next-btn">다음 투구</button>
+      </section>
+
+      <section class="overlay hidden" id="game-over">
+        <p class="eyebrow">DERBY OVER</p>
+        <h1 id="over-title">더비 종료</h1>
+        <p id="over-detail"></p>
+        <div class="final-stats" id="final-stats"></div>
+        <button type="button" class="primary" id="retry-btn">다시 도전</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+    </main>
+
+    <script src="/js/bgm.js?v=5"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=2"></script>
+    <script src="game.js?v=2"></script>
+    <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="홈런왕 소개">
+  <h2>홈런왕 소개</h2>
+  <p>10구 홈런더비에서 공이 홈플레이트에 오는 순간 스윙해 루타를 쌓는 야구 타이밍 게임입니다.</p>
+  <h3>플레이 방법</h3>
+  <p>투수가 공을 던지면 홈 앞에 왔을 때 화면을 탭하거나 스페이스로 스윙하세요. 타이밍이 좋을수록 홈런·3루타가 납니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>점수는 어떻게 계산되나요?</dt>
+    <dd>홈런 400점, 3루타 250점, 2루타 150점, 안타 80점이며 누적 루타도 함께 보여 줍니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>
