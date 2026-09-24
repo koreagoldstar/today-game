@@ -1087,7 +1087,8 @@
   }
 
   setZoom(HIP_ZOOM);
-  waitAssets().then(() => requestAnimationFrame(loop));
+  // 이미지 준비는 따로 하고, 루프는 하나만 돌려요. 예전에는 두 개가 돌아서 게임이 항상 2배로 빨랐어요.
+  waitAssets();
   requestAnimationFrame(loop);
 
   window.TodayGamePause?.attach?.({

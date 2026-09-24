@@ -1552,6 +1552,8 @@
   loadAssets().then(() => {
     makeClouds();
     draw();
+    // 이미지가 오기 전에 시작을 눌렀으면 루프가 이미 돌고 있어요. 두 번 돌면 게임이 2배로 빨라져요.
+    if (raf) return;
     last = performance.now();
     raf = requestAnimationFrame(loop);
   });
