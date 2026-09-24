@@ -665,6 +665,12 @@ kbd {
   box-shadow: none;
 }
 
+.btn.kakao {
+  color: #191919;
+  background: linear-gradient(180deg, #fee500, #f5d800);
+  box-shadow: 0 5px 0 #c4a800;
+}
+
 a {
   margin-top: 12px;
   color: var(--muted);

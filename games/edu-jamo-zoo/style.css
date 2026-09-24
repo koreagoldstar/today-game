@@ -1,11 +1,12 @@
 :root {
-  --ink: #4a3728;
-  --muted: #7a5a48;
+  --ink: #2a2118;
+  --muted: #534033;
   --cream: #fffdf4;
   --lemon: #ffe27a;
   --mint: #b8f0d0;
   --peach: #ffd4c4;
   --pink: #ff9ec4;
+  --edu-font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
 * {
@@ -20,8 +21,10 @@ body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
-  font-family: "Jua", system-ui, sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 700;
   color: var(--ink);
+  -webkit-font-smoothing: antialiased;
   background: #f3e2b0;
   display: flex;
   align-items: center;
@@ -114,10 +117,11 @@ body {
 
 .jamo {
   margin: 0 0 6px;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: clamp(72px, 22vw, 108px);
   line-height: 1;
-  color: #ff6b3d;
+  color: #c94a16;
   text-shadow: 0 4px 0 #fff;
 }
 
@@ -241,8 +245,8 @@ body {
 
 h1, h2 {
   margin: 0;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
-  font-weight: 400;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: 34px;
 }
 
@@ -255,13 +259,14 @@ h1, h2 {
 
 .learned {
   font-size: 28px;
-  color: #ff6b3d;
+  color: #c94a16;
 }
 
 .parent-note {
   margin: 0;
   max-width: 280px;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--muted);
   line-height: 1.45;
 }

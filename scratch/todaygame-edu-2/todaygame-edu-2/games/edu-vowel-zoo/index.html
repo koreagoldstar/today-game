@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>모음 놀이터 | 오늘의게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFFBF2;
+    --sky:#7EC8FF;
+    --sky-deep:#4FA8E8;
+    --coral:#FF9E85;
+    --yolk:#FFCB4C;
+    --mint:#8FE3C4;
+    --ink:#2C2A26;
+    --ink-soft:#6B6660;
+    --ok:#5FBE8A;
+    --bad:#FFB199;
+    --card:#FFFFFF;
+    --ring:#F0E6D2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(60% 50% at 15% 0%, #E8F5FF 0%, transparent 60%),
+      radial-gradient(50% 40% at 100% 100%, #FFF0E4 0%, transparent 55%),
+      var(--cream);
+    font-family:'Gowun Dodum', sans-serif;
+    color:var(--ink);
+    padding:22px 16px;
+    touch-action:manipulation;
+  }
+  .stage{ width:100%; max-width:440px; }
+  .brand{ display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:12px; color:var(--ink-soft); font-size:13px; }
+  .brand b{ color:var(--sky-deep); font-family:'Jua', sans-serif; font-size:15px; }
+
+  .card{
+    background:var(--card); border-radius:30px; padding:26px 22px 22px;
+    box-shadow:0 2px 0 var(--ring), 0 18px 40px -20px rgba(79,168,232,.35);
+    border:1px solid var(--ring); position:relative; overflow:hidden;
+  }
+  h1{ font-family:'Jua', sans-serif; font-size:22px; margin:0 0 4px; text-align:center; }
+  .sub{ color:var(--ink-soft); font-size:13.5px; margin:0 0 18px; text-align:center; }
+
+  .dots{ display:flex; gap:6px; margin-bottom:20px; }
+  .dot{ flex:1; height:8px; border-radius:6px; background:var(--ring); }
+  .dot.done{ background:var(--ok); }
+  .dot.cur{ background:var(--sky); }
+
+  .stars{ text-align:center; font-size:14px; color:#9C7A1F; font-weight:700; margin-bottom:6px; }
+
+  .target-box{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    margin:6px 0 22px;
+  }
+  .target-syllable{
+    font-family:'Jua', sans-serif; font-size:64px; color:var(--sky-deep);
+    background:#EAF6FF; border-radius:24px; padding:6px 30px;
+  }
+  .speak-btn{
+    width:52px; height:52px; border-radius:50%; border:none;
+    background:var(--yolk); font-size:22px; cursor:pointer;
+    box-shadow:0 4px 0 #E0A82E;
+  }
+  .speak-btn:active{ transform:translateY(2px); box-shadow:0 2px 0 #E0A82E; }
+
+  .prompt{ text-align:center; font-size:14.5px; color:var(--ink-soft); margin-bottom:16px; }
+
+  .choices{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:6px; }
+  .choice{
+    border:2px solid var(--ring); background:#FFFDF9; border-radius:20px;
+    padding:14px 6px 10px; cursor:pointer; text-align:center;
+    transition:transform .12s ease, border-color .15s ease;
+  }
+  .choice:active{ transform:scale(.95); }
+  .choice .emoji{ font-size:36px; display:block; margin-bottom:6px; }
+  .choice .label{ font-size:13px; color:var(--ink); }
+  .choice.correct{ border-color:var(--ok); background:#EAF9F1; }
+  .choice.wrong{ border-color:var(--bad); background:#FFF1EE; }
+
+  .feedback{ min-height:20px; text-align:center; font-size:14px; color:var(--ink-soft); margin-top:10px; }
+
+  .result{ display:none; text-align:center; }
+  .result.show{ display:block; }
+  .quiz{ display:block; }
+  .quiz.hide{ display:none; }
+  .big-emoji{ font-size:54px; margin-bottom:8px; }
+  .msg{ font-size:15px; color:var(--ink-soft); margin-bottom:20px; }
+  .row{ display:flex; gap:10px; }
+  .btn{ flex:1; padding:14px; border-radius:16px; border:none; font-family:'Jua',sans-serif; font-size:15px; cursor:pointer; }
+  .btn.again{ background:var(--sky); color:#fff; }
+  .btn:active{ transform:scale(.98); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="brand">🐣 <b>오늘의게임</b> · 모음 놀이터</div>
+
+  <div class="card">
+    <div class="quiz" id="quizView">
+      <h1>🌈 모음 놀이터</h1>
+      <p class="sub">소리를 듣고, 어울리는 그림을 찾아보세요</p>
+
+      <div class="stars" id="starsText">⭐️ 0</div>
+      <div class="dots" id="dots"></div>
+
+      <div class="target-box">
+        <div class="target-syllable" id="targetSyllable">아</div>
+        <button class="speak-btn" id="speakBtn">🔊</button>
+      </div>
+      <p class="prompt">이 소리로 시작하는 그림은 무엇일까요?</p>
+
+      <div class="choices" id="choices"></div>
+      <p class="feedback" id="feedback"></p>
+    </div>
+
+    <div class="result" id="resultView">
+      <div class="big-emoji">🎉</div>
+      <h1>다 놀았어요!</h1>
+      <p class="msg" id="msgText">별 10개를 모두 모았어요!</p>
+      <button class="btn again" id="againBtn">또 놀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const ITEMS = [
+    { syl:'아', word:'아이스크림', emoji:'🍦' },
+    { syl:'야', word:'야구공', emoji:'⚾' },
+    { syl:'어', word:'어항 물고기', emoji:'🐟' },
+    { syl:'여', word:'여우', emoji:'🦊' },
+    { syl:'오', word:'오리', emoji:'🦆' },
+    { syl:'요', word:'요트', emoji:'⛵' },
+    { syl:'우', word:'우산', emoji:'☂️' },
+    { syl:'유', word:'유령', emoji:'👻' },
+    { syl:'으', word:'으르렁 곰', emoji:'🐻' },
+    { syl:'이', word:'이빨', emoji:'🦷' }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  let order = shuffle(ITEMS);
+  let cur = 0, stars = 0;
+
+  const dotsEl = document.getElementById('dots');
+  const starsText = document.getElementById('starsText');
+  const targetSyllable = document.getElementById('targetSyllable');
+  const choicesEl = document.getElementById('choices');
+  const feedbackEl = document.getElementById('feedback');
+  const quizView = document.getElementById('quizView');
+  const resultView = document.getElementById('resultView');
+
+  order.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot';
+    dotsEl.appendChild(d);
+  });
+
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ko-KR';
+    u.rate = 0.9;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  function renderRound(){
+    const target = order[cur];
+    targetSyllable.textContent = target.syl;
+    feedbackEl.textContent = '';
+
+    [...dotsEl.children].forEach((d,i)=>{
+      d.className = 'dot' + (i<cur ? ' done' : i===cur ? ' cur' : '');
+    });
+
+    const distractors = shuffle(ITEMS.filter(it=>it.syl !== target.syl)).slice(0,2);
+    const options = shuffle([target, ...distractors]);
+
+    choicesEl.innerHTML = '';
+    options.forEach(opt=>{
+      const b = document.createElement('div');
+      b.className = 'choice';
+      b.innerHTML = `<span class="emoji">${opt.emoji}</span><span class="label">${opt.word}</span>`;
+      b.addEventListener('click', ()=> selectChoice(b, opt, target));
+      choicesEl.appendChild(b);
+    });
+
+    setTimeout(()=> speak(target.word), 300);
+  }
+
+  let locked = false;
+  function selectChoice(el, opt, target){
+    if(locked) return;
+    if(opt.syl === target.syl){
+      locked = true;
+      el.classList.add('correct');
+      stars++;
+      starsText.textContent = '⭐️ ' + stars;
+      feedbackEl.textContent = '참 잘했어요! 👏';
+      setTimeout(()=>{
+        cur++;
+        locked = false;
+        if(cur >= order.length){
+          finish();
+        } else {
+          renderRound();
+        }
+      }, 900);
+    } else {
+      el.classList.add('wrong');
+      feedbackEl.textContent = '다시 한 번 들어볼까요?';
+      speak(target.word);
+      setTimeout(()=> el.classList.remove('wrong'), 500);
+    }
+  }
+
+  function finish(){
+    quizView.classList.add('hide');
+    resultView.classList.add('show');
+    document.getElementById('msgText').textContent = `별 ${stars}개를 모두 모았어요! 최고예요 🌟`;
+  }
+
+  document.getElementById('speakBtn').addEventListener('click', ()=>{
+    speak(order[cur].word);
+  });
+
+  document.getElementById('againBtn').addEventListener('click', ()=>{
+    order = shuffle(ITEMS);
+    cur = 0; stars = 0;
+    starsText.textContent = '⭐️ 0';
+    dotsEl.innerHTML = '';
+    order.forEach(()=>{ const d=document.createElement('div'); d.className='dot'; dotsEl.appendChild(d); });
+    resultView.classList.remove('show');
+    quizView.classList.remove('hide');
+    renderRound();
+  });
+
+  renderRound();
+})();
+</script>
+</body>
+</html>

@@ -304,7 +304,7 @@
   let step = 0;
   let currentId = null;
   let unlocked = false;
-  let muted = false;
+  let muted = Boolean(window.TodayAudio && TodayAudio.isMuted());
 
   function ensureCtx() {
     if (!ctx) {
@@ -497,6 +497,11 @@
     muted = !!v;
     if (muted) stop();
   }
+
+  window.addEventListener("todaygame-mute", (event) => {
+    const next = Boolean(event && event.detail && event.detail.muted);
+    setMuted(next);
+  });
 
   function bindAuto(id) {
     if (!id || id === "rhythm") return; // rhythm has its own per-song BGM

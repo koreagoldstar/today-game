@@ -86,8 +86,8 @@
     const { w, h } = cssSize();
     gctx.clearRect(0, 0, w, h);
     gctx.save();
-    gctx.font = `400 ${Math.floor(w * 0.62)}px "Bagel Fat One", "Jua", sans-serif`;
-    gctx.fillStyle = "rgba(201, 138, 62, 0.28)";
+    gctx.font = `900 ${Math.floor(w * 0.62)}px "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif`;
+    gctx.fillStyle = "rgba(61, 40, 24, 0.48)";
     gctx.textAlign = "center";
     gctx.textBaseline = "middle";
     gctx.fillText(currentLetter(), w / 2, h / 2 + h * 0.02);
@@ -256,4 +256,9 @@
   window.addEventListener("resize", () => {
     if (els.title.classList.contains("hidden")) resizeCanvases();
   });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      if (els.title.classList.contains("hidden")) drawGuide();
+    });
+  }
 })();

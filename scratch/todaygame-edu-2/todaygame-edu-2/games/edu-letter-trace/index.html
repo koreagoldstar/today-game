@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>글자 따라쓰기 | 오늘의게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFFBF2;
+    --sky:#7EC8FF;
+    --sky-deep:#4FA8E8;
+    --coral:#FF9E85;
+    --yolk:#FFCB4C;
+    --mint:#8FE3C4;
+    --ink:#2C2A26;
+    --ink-soft:#6B6660;
+    --card:#FFFFFF;
+    --ring:#F0E6D2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(60% 50% at 85% 0%, #FFF0E4 0%, transparent 60%),
+      radial-gradient(50% 40% at 0% 100%, #E8F5FF 0%, transparent 55%),
+      var(--cream);
+    font-family:'Gowun Dodum', sans-serif;
+    color:var(--ink);
+    padding:20px 14px;
+    touch-action:none;
+  }
+  .stage{ width:100%; max-width:440px; }
+  .brand{ display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:10px; color:var(--ink-soft); font-size:13px; }
+  .brand b{ color:var(--sky-deep); font-family:'Jua', sans-serif; font-size:15px; }
+
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 4px; }
+  h1{ font-family:'Jua', sans-serif; font-size:19px; margin:0; }
+  .stickers{ font-size:13.5px; font-weight:700; color:#9C7A1F; }
+
+  .card{
+    background:var(--card); border-radius:28px; padding:16px;
+    box-shadow:0 2px 0 var(--ring), 0 18px 40px -20px rgba(79,168,232,.35);
+    border:1px solid var(--ring);
+  }
+
+  .canvas-wrap{
+    position:relative; width:100%; aspect-ratio:1/1; border-radius:22px; overflow:hidden;
+    background:#FFFDF7; border:2px dashed var(--ring); touch-action:none;
+  }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  #guideCanvas{ z-index:1; }
+  #drawCanvas{ z-index:2; }
+
+  .sticker-pop{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    font-size:90px; z-index:3; pointer-events:none;
+  }
+  .sticker-pop.show{ display:flex; animation:pop2 .6s ease; }
+  @keyframes pop2{
+    0%{ transform:scale(.3); opacity:0; }
+    40%{ transform:scale(1.15); opacity:1; }
+    100%{ transform:scale(1); opacity:0; }
+  }
+
+  .toolbar{ display:flex; gap:8px; margin-top:12px; }
+  .btn{ flex:1; padding:13px; border-radius:16px; border:none; font-family:'Jua',sans-serif; font-size:14px; cursor:pointer; }
+  .btn.clear{ background:#F3EFE6; color:var(--ink-soft); }
+  .btn.done{ background:var(--mint); color:#1F5C43; }
+  .btn:active{ transform:scale(.97); }
+
+  .picker-label{ font-size:12.5px; color:var(--ink-soft); margin:14px 0 8px; padding:0 2px; }
+  .picker{
+    display:grid; grid-template-columns:repeat(8, 1fr); gap:6px;
+  }
+  .letter-btn{
+    aspect-ratio:1/1; border-radius:12px; border:2px solid var(--ring); background:#FFFDF9;
+    font-family:'Jua', sans-serif; font-size:16px; color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .letter-btn.active{ border-color:var(--sky); background:#EAF6FF; color:var(--sky-deep); }
+  .letter-btn.cleared{ color:#C7B98A; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="brand">🐣 <b>오늘의게임</b> · 글자 따라쓰기</div>
+  <div class="topbar">
+    <h1>✏️ 오늘은 어떤 글자 쓸까?</h1>
+    <div class="stickers" id="stickerCount">🌟 0</div>
+  </div>
+
+  <div class="card">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="guideCanvas"></canvas>
+      <canvas id="drawCanvas"></canvas>
+      <div class="sticker-pop" id="stickerPop">⭐️</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn clear" id="clearBtn">지우기</button>
+      <button class="btn done" id="doneBtn">다 썼어요!</button>
+    </div>
+
+    <p class="picker-label">연습할 글자를 골라보세요</p>
+    <div class="picker" id="picker"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const LETTERS = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ',
+                    'ㅏ','ㅑ','ㅓ','ㅕ','ㅗ','ㅛ','ㅜ','ㅠ','ㅡ','ㅣ'];
+  const COLORS = ['#4FA8E8','#FF9E85','#8FE3C4','#7B5CFA','#FFCB4C','#FF6FA5'];
+
+  const STORAGE_STICKERS = 'tg_letter_trace_stickers';
+  const STORAGE_CLEARED = 'tg_letter_trace_cleared';
+
+  let stickers = parseInt(localStorage.getItem(STORAGE_STICKERS) || '0', 10);
+  let clearedSet = new Set(JSON.parse(localStorage.getItem(STORAGE_CLEARED) || '[]'));
+  let curIdx = 0;
+  let colorIdx = 0;
+
+  document.getElementById('stickerCount').textContent = '🌟 ' + stickers;
+
+  const wrap = document.getElementById('canvasWrap');
+  const guideCanvas = document.getElementById('guideCanvas');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const gctx = guideCanvas.getContext('2d');
+  const dctx = drawCanvas.getContext('2d');
+
+  function resizeCanvases(){
+    const rect = wrap.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    [guideCanvas, drawCanvas].forEach(c=>{
+      c.width = rect.width * dpr;
+      c.height = rect.height * dpr;
+    });
+    gctx.setTransform(dpr,0,0,dpr,0,0);
+    dctx.setTransform(dpr,0,0,dpr,0,0);
+    drawGuide();
+  }
+
+  function drawGuide(){
+    const rect = wrap.getBoundingClientRect();
+    gctx.clearRect(0,0,rect.width,rect.height);
+    gctx.save();
+    gctx.font = `bold ${Math.floor(rect.width*0.6)}px 'Gowun Dodum', sans-serif`;
+    gctx.fillStyle = 'rgba(180,170,150,0.35)';
+    gctx.textAlign = 'center';
+    gctx.textBaseline = 'middle';
+    gctx.fillText(LETTERS[curIdx], rect.width/2, rect.height/2 + rect.height*0.02);
+    gctx.restore();
+  }
+
+  function clearDraw(){
+    const rect = wrap.getBoundingClientRect();
+    dctx.clearRect(0,0,rect.width,rect.height);
+  }
+
+  // drawing logic
+  let drawing = false, lastX=0, lastY=0;
+  function getPos(e){
+    const rect = drawCanvas.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+  }
+  function startDraw(e){
+    e.preventDefault();
+    drawing = true;
+    const pos = getPos(e);
+    lastX = pos.x; lastY = pos.y;
+  }
+  function moveDraw(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    dctx.strokeStyle = COLORS[colorIdx % COLORS.length];
+    dctx.lineWidth = 14;
+    dctx.lineCap = 'round';
+    dctx.lineJoin = 'round';
+    dctx.beginPath();
+    dctx.moveTo(lastX, lastY);
+    dctx.lineTo(pos.x, pos.y);
+    dctx.stroke();
+    lastX = pos.x; lastY = pos.y;
+  }
+  function endDraw(){ drawing = false; }
+
+  drawCanvas.addEventListener('touchstart', startDraw, {passive:false});
+  drawCanvas.addEventListener('touchmove', moveDraw, {passive:false});
+  drawCanvas.addEventListener('touchend', endDraw);
+  drawCanvas.addEventListener('mousedown', startDraw);
+  drawCanvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+
+  document.getElementById('clearBtn').addEventListener('click', clearDraw);
+
+  document.getElementById('doneBtn').addEventListener('click', ()=>{
+    const letter = LETTERS[curIdx];
+    if(!clearedSet.has(letter)){
+      clearedSet.add(letter);
+      stickers++;
+      localStorage.setItem(STORAGE_STICKERS, String(stickers));
+      localStorage.setItem(STORAGE_CLEARED, JSON.stringify([...clearedSet]));
+      document.getElementById('stickerCount').textContent = '🌟 ' + stickers;
+      renderPicker();
+    }
+    const pop = document.getElementById('stickerPop');
+    pop.classList.remove('show');
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    setTimeout(()=>{
+      pop.classList.remove('show');
+      goToNext();
+    }, 700);
+  });
+
+  function goToNext(){
+    curIdx = (curIdx + 1) % LETTERS.length;
+    colorIdx++;
+    clearDraw();
+    drawGuide();
+    renderPicker();
+  }
+
+  function selectLetter(i){
+    curIdx = i;
+    colorIdx++;
+    clearDraw();
+    drawGuide();
+    renderPicker();
+  }
+
+  function renderPicker(){
+    const picker = document.getElementById('picker');
+    picker.innerHTML = '';
+    LETTERS.forEach((l,i)=>{
+      const b = document.createElement('div');
+      b.className = 'letter-btn' + (i===curIdx ? ' active' : '') + (clearedSet.has(l) ? ' cleared' : '');
+      b.textContent = l;
+      b.addEventListener('click', ()=> selectLetter(i));
+      picker.appendChild(b);
+    });
+  }
+
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+  renderPicker();
+})();
+</script>
+</body>
+</html>

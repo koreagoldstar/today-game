@@ -176,16 +176,35 @@
     else renderQuestion();
   });
 
-  els.share.addEventListener("click", () => {
-    const text = `오늘의 상식퀴즈 결과: ${els.score.textContent.replace("/", " / ")}\nhttps://www.todaygame.co.kr/games/wisdom-quiz/`;
-    if (navigator.share) navigator.share({ text }).catch(() => {});
-    else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      els.share.textContent = "복사됐어요!";
-      window.setTimeout(() => {
-        els.share.textContent = "공유";
-      }, 1400);
-    }
+  els.share.addEventListener("click", async () => {
+    if (!window.TodayScores || !TodayScores.shareToKakao) return;
+    const scoreText = `${els.score.textContent.replace("/", " / ")}`;
+    const canvas = TodayScores.makeResultCard
+      ? TodayScores.makeResultCard({
+          eyebrow: "오늘의게임 · 상식퀴즈",
+          title: "오늘의 상식퀴즈",
+          hero: scoreText.replace(/\s/g, ""),
+          lines: [els.msg.textContent || "", `최고기록 ${best}/${questions.length}`].filter(Boolean),
+          bg0: "#3d2a18",
+          bg1: "#1a1208",
+          accent: "#ffe27a",
+        })
+      : null;
+    const result = await TodayScores.shareToKakao({
+      gameId: "wisdom-quiz",
+      gameTitle: "오늘의 상식퀴즈",
+      title: `오늘의 상식퀴즈 ${scoreText}`,
+      description: els.msg.textContent || "오늘 다섯 문제 도전!",
+      score: Number(els.score.textContent) || 0,
+      scoreLabel: scoreText,
+      canvas,
+      buttonTitle: "나도 풀어보기",
+    });
+    const prev = els.share.textContent;
+    els.share.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+    window.setTimeout(() => {
+      els.share.textContent = prev;
+    }, 1600);
   });
 
   const saved = localStorage.getItem(STORAGE_RESULT);

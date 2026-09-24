@@ -100,12 +100,68 @@ canvas { display: block; width: 100%; height: 100%; }
 
 .fbox.cur { background: #fff; color: #c43c3c; box-shadow: 0 0 0 2px #ffd84c; }
 
+.aim-panel {
+  position: absolute;
+  z-index: 6;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  padding: 12px 14px 14px;
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.95);
+  color: #2a2018;
+}
+
+.aim-panel.hidden { display: none !important; }
+
+.panel-label {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #7a5a40;
+}
+
+.hook-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #7a5a40;
+}
+
+.hook-row input[type="range"] {
+  width: 100%;
+  accent-color: #c98a20;
+}
+
+.hook-readout {
+  margin: 6px 0 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #4a3300;
+}
+
+#aim-ok {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  color: #4a3300;
+  font-size: 16px;
+  background: linear-gradient(180deg, #ffe27a, #ffc145);
+  box-shadow: 0 4px 0 #c98a20;
+  cursor: pointer;
+}
+
+#aim-ok:active { transform: translateY(3px); box-shadow: 0 1px 0 #c98a20; }
+
 .coach {
   position: absolute;
   z-index: 5;
   left: 10px;
   right: 10px;
-  bottom: 118px;
+  bottom: 168px;
   margin: 0;
   padding: 8px 12px;
   border-radius: 10px;
@@ -148,7 +204,7 @@ canvas { display: block; width: 100%; height: 100%; }
 
 .meter-sweet {
   position: absolute;
-  inset: 0 42%;
+  inset: 0 34%;
   background: #ffd98a;
 }
 
@@ -161,6 +217,11 @@ canvas { display: block; width: 100%; height: 100%; }
   border-radius: 3px;
   background: #2a2018;
   transform: translateX(-50%);
+}
+
+#meter-cursor.sweet {
+  background: #c43c3c;
+  box-shadow: 0 0 0 3px rgba(255, 216, 76, 0.7);
 }
 
 #lock-btn {
@@ -189,9 +250,9 @@ canvas { display: block; width: 100%; height: 100%; }
   padding: 36px 24px;
   text-align: center;
   background:
-    linear-gradient(180deg, rgba(20, 10, 14, 0.42), rgba(16, 8, 12, 0.93) 74%),
-    radial-gradient(circle at 50% 28%, rgba(255, 180, 80, 0.16), transparent 34%);
-  backdrop-filter: blur(7px);
+    linear-gradient(180deg, rgba(20, 10, 14, 0.22), rgba(16, 8, 12, 0.82) 74%),
+    radial-gradient(circle at 50% 28%, rgba(255, 180, 80, 0.14), transparent 34%);
+  backdrop-filter: blur(4px);
 }
 
 .hidden { display: none !important; }

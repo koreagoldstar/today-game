@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>네온 러너 | 오늘의게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0616;
+    --cyan:#00E5FF;
+    --magenta:#FF3EC9;
+    --yellow:#FFE156;
+    --violet:#7B5CFA;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--bg); color:#EAF0FF;
+    font-family:'Jua', sans-serif; overflow:hidden; touch-action:none;
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+  }
+  .wrap{ width:100%; max-width:480px; height:100vh; max-height:900px; position:relative; }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .hud{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; z-index:3; pointer-events:none; }
+  .hud .distance{ font-family:'Orbitron',sans-serif; font-weight:800; font-size:20px; color:var(--cyan); text-shadow:0 0 12px rgba(0,229,255,.6); }
+  .hud .best{ font-family:'Jua',sans-serif; font-size:12px; color:#9AA7C7; align-self:flex-end; }
+
+  .brand{ position:absolute; top:14px; left:0; right:0; text-align:center; font-size:11px; color:#5E6A8C; z-index:2; }
+
+  .zones{ position:absolute; inset:0; display:flex; z-index:4; }
+  .zone{ flex:1; }
+
+  .overlay{
+    position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(6,3,14,.9); text-align:center; padding:24px; z-index:5;
+  }
+  .overlay.show{ display:flex; }
+  .overlay h1{ font-size:26px; margin:0 0 6px; }
+  .overlay p{ color:#9AA7C7; font-size:13.5px; margin:0 0 22px; }
+  .big-emoji{ font-size:60px; margin-bottom:10px; }
+  .btn{ padding:14px 28px; border-radius:16px; border:none; cursor:pointer; font-family:'Jua',sans-serif; font-size:15px; background:var(--cyan); color:#06121A; margin:4px; }
+  .btn.secondary{ background:#1B1030; color:#EAF0FF; border:1px solid #3A2B5C; }
+  .statline{ font-family:'Orbitron',sans-serif; font-size:14px; color:var(--yellow); margin-bottom:4px; }
+  .hint{ position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:12px; color:#6B7699; z-index:3; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="brand">🐣 오늘의게임 · 네온 러너</div>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div class="distance" id="distText">0m</div>
+    <div class="best" id="bestText">BEST 0m</div>
+  </div>
+  <div class="zones">
+    <div class="zone" id="jumpZone"></div>
+    <div class="zone" id="slideZone"></div>
+  </div>
+  <p class="hint">왼쪽 탭: 점프 · 오른쪽 탭: 슬라이드 (PC는 스페이스 / 아래방향키)</p>
+
+  <div class="overlay show" id="startOverlay">
+    <div class="big-emoji">🐣💨🌆</div>
+    <h1>네온 러너</h1>
+    <p>비트에 맞춰 점프하고 슬라이드하며<br>네온 도시를 끝까지 달려보세요!</p>
+    <button class="btn" id="startBtn">달리기 시작</button>
+  </div>
+
+  <div class="overlay" id="endOverlay">
+    <div class="big-emoji">💥</div>
+    <h1>게임 종료</h1>
+    <div class="statline" id="endDist">0m</div>
+    <div class="statline" id="endBest">BEST 0m</div>
+    <div>
+      <button class="btn" id="retryBtn">다시 달리기</button>
+      <button class="btn secondary" id="shareBtn2">결과 공유</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('wrap');
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W, H, DPR;
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    canvas.width = W*DPR; canvas.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const BPM = 132;
+  const BEAT_MS = 60000/BPM;
+  const GROUND_Y_RATIO = 0.72;
+
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+  }
+  function kick(){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(140, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime+0.12);
+    g.gain.value=0.12;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.15);
+    o.stop(audioCtx.currentTime+0.16);
+  }
+  function jumpSfx(){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type='square'; o.frequency.setValueAtTime(500, audioCtx.currentTime);
+    o.frequency.linearRampToValueAtTime(900, audioCtx.currentTime+0.1);
+    g.gain.value=0.05;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.12);
+    o.stop(audioCtx.currentTime+0.13);
+  }
+  function hitSfx(){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type='sawtooth'; o.frequency.value=120;
+    g.gain.value=0.1;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.25);
+    o.stop(audioCtx.currentTime+0.26);
+  }
+
+  const STORAGE_BEST = 'tg_neon_runner_best';
+  let best = parseInt(localStorage.getItem(STORAGE_BEST)||'0',10);
+  document.getElementById('bestText').textContent = 'BEST ' + best + 'm';
+
+  let running=false, startTime=0, lastTime=0, nextBeatIdx=0;
+  let speed = 260; // px/s
+  let player = { y:0, vy:0, jumping:false, sliding:false, slideT:0 };
+  let obstacles = [];
+  let nextObstacleAt = 1200;
+  let distance = 0;
+  let beatPulse = 0;
+  let particles = [];
+
+  function groundY(){ return H * GROUND_Y_RATIO; }
+
+  function reset(){
+    speed = 260; distance = 0;
+    player = { y:0, vy:0, jumping:false, sliding:false, slideT:0 };
+    obstacles = [];
+    nextObstacleAt = 1400;
+    nextBeatIdx = 0;
+    particles = [];
+  }
+
+  function doJump(){
+    if(player.jumping || player.sliding) return;
+    player.jumping = true;
+    player.vy = -560;
+    jumpSfx();
+  }
+  function doSlide(){
+    if(player.jumping) return;
+    player.sliding = true;
+    player.slideT = 0;
+  }
+
+  function spawnObstacle(){
+    const type = Math.random() < 0.5 ? 'low' : 'high'; // low = jump over, high = slide under
+    obstacles.push({ type, x: W + 40, passed:false });
+  }
+
+  function update(dt, now){
+    // beat pulse
+    const beatTime = nextBeatIdx * BEAT_MS;
+    if(now >= beatTime){
+      beatPulse = 1;
+      kick();
+      nextBeatIdx++;
+    }
+    beatPulse = Math.max(0, beatPulse - dt/300);
+
+    speed += dt*0.012; // gradually speed up
+    distance += (speed*dt/1000)/10;
+
+    // player physics
+    const gy = groundY();
+    if(player.jumping){
+      player.vy += 1500*dt/1000;
+      player.y += player.vy*dt/1000;
+      if(player.y >= 0){ player.y = 0; player.jumping=false; player.vy=0; }
+    }
+    if(player.sliding){
+      player.slideT += dt;
+      if(player.slideT > 480) player.sliding = false;
+    }
+
+    // obstacles
+    nextObstacleAt -= dt;
+    if(nextObstacleAt <= 0){
+      spawnObstacle();
+      nextObstacleAt = BEAT_MS * (Math.random()<0.5 ? 2 : 3);
+    }
+    const playerX = W*0.22;
+    obstacles.forEach(o=>{
+      o.x -= speed*dt/1000;
+      if(!o.passed && o.x < playerX - 20){
+        o.passed = true;
+      }
+      // collision check near player position
+      if(Math.abs(o.x - playerX) < 26){
+        const hitting = (o.type==='low' && !(player.jumping && player.y < -30)) ||
+                         (o.type==='high' && !player.sliding);
+        if(hitting && !o.dead){
+          o.dead = true;
+          gameOver();
+        }
+      }
+    });
+    obstacles = obstacles.filter(o=> o.x > -60 && !o.dead);
+
+    particles.forEach(p=>{ p.x -= speed*dt/1000*0.6; p.life -= dt; });
+    particles = particles.filter(p=>p.life>0);
+    if(Math.random() < 0.4){
+      particles.push({ x:W+10, y: Math.random()*H*0.6, life:1200, c: Math.random()<0.5?'#00E5FF':'#FF3EC9' });
+    }
+  }
+
+  function draw(now){
+    ctx.clearRect(0,0,W,H);
+    // bg gradient
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, '#140A28');
+    g.addColorStop(1, '#0A0616');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    // pulse zoom effect via scale
+    const scale = 1 + beatPulse*0.015;
+    ctx.save();
+    ctx.translate(W/2, H/2);
+    ctx.scale(scale, scale);
+    ctx.translate(-W/2, -H/2);
+
+    // sun
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,62,201,0.15)';
+    ctx.arc(W*0.5, groundY()-40, 90, 0, Math.PI*2);
+    ctx.fill();
+
+    // grid floor
+    const gy = groundY();
+    ctx.strokeStyle = 'rgba(0,229,255,0.35)';
+    ctx.lineWidth = 1;
+    const gridOffset = (now/40) % 40;
+    for(let x=-40; x<W+40; x+=40){
+      ctx.beginPath();
+      ctx.moveTo(x - gridOffset, gy);
+      ctx.lineTo(x - gridOffset + (x-W/2)*0.5, H);
+      ctx.stroke();
+    }
+    for(let yy=gy; yy<H; yy+=14){
+      ctx.beginPath();
+      ctx.moveTo(0,yy); ctx.lineTo(W,yy);
+      ctx.globalAlpha = 0.12;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.beginPath();
+    ctx.moveTo(0,gy); ctx.lineTo(W,gy);
+    ctx.strokeStyle = 'rgba(0,229,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // particles (city lights streaking by)
+    particles.forEach(p=>{
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = Math.max(0, p.life/1200);
+      ctx.fillRect(p.x, p.y, 26, 3);
+      ctx.globalAlpha = 1;
+    });
+
+    // obstacles
+    obstacles.forEach(o=>{
+      if(o.type === 'low'){
+        ctx.fillStyle = '#FF3EC9';
+        ctx.shadowColor = '#FF3EC9'; ctx.shadowBlur = 14;
+        ctx.fillRect(o.x-12, gy-34, 24, 34);
+      } else {
+        ctx.fillStyle = '#FFE156';
+        ctx.shadowColor = '#FFE156'; ctx.shadowBlur = 14;
+        ctx.fillRect(o.x-18, gy-78, 36, 26);
+      }
+      ctx.shadowBlur = 0;
+    });
+
+    // player
+    const playerX = W*0.22;
+    let playerY = gy + player.y;
+    let h = 30;
+    if(player.sliding){ h = 16; playerY = gy - h + 2; } else { playerY = gy - h + player.y; }
+    ctx.font = (player.sliding? '26px' : '30px') + ' sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.save();
+    if(player.sliding){ ctx.translate(playerX, gy-6); } else { ctx.translate(playerX, gy + player.y - 6); }
+    ctx.fillText('🐣', 0, 0);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function gameOver(){
+    running = false;
+    hitSfx();
+    const dist = Math.floor(distance);
+    if(dist > best){ best = dist; localStorage.setItem(STORAGE_BEST, String(best)); }
+    document.getElementById('endDist').textContent = dist + 'm';
+    document.getElementById('endBest').textContent = 'BEST ' + best + 'm';
+    document.getElementById('bestText').textContent = 'BEST ' + best + 'm';
+    document.getElementById('endOverlay').classList.add('show');
+  }
+
+  function frame(ts){
+    if(!running) return;
+    if(!lastTime) lastTime = ts;
+    const dt = Math.min(40, ts - lastTime);
+    lastTime = ts;
+    const now = ts - startTime;
+    update(dt, now);
+    draw(now);
+    document.getElementById('distText').textContent = Math.floor(distance) + 'm';
+    requestAnimationFrame(frame);
+  }
+
+  document.getElementById('jumpZone').addEventListener('touchstart', (e)=>{ e.preventDefault(); ensureAudio(); doJump(); }, {passive:false});
+  document.getElementById('jumpZone').addEventListener('mousedown', ()=>{ ensureAudio(); doJump(); });
+  document.getElementById('slideZone').addEventListener('touchstart', (e)=>{ e.preventDefault(); ensureAudio(); doSlide(); }, {passive:false});
+  document.getElementById('slideZone').addEventListener('mousedown', ()=>{ ensureAudio(); doSlide(); });
+  window.addEventListener('keydown', (e)=>{
+    if(e.code === 'Space'){ ensureAudio(); doJump(); }
+    if(e.code === 'ArrowDown'){ ensureAudio(); doSlide(); }
+  });
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    ensureAudio();
+    document.getElementById('startOverlay').classList.remove('show');
+    reset();
+    running = true;
+    lastTime = 0;
+    startTime = performance.now();
+    requestAnimationFrame((ts)=>{ startTime = ts; lastTime = ts; requestAnimationFrame(frame); });
+  });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{
+    document.getElementById('endOverlay').classList.remove('show');
+    reset();
+    running = true;
+    lastTime = 0;
+    requestAnimationFrame((ts)=>{ startTime = ts; lastTime = ts; requestAnimationFrame(frame); });
+  });
+  document.getElementById('shareBtn2').addEventListener('click', ()=>{
+    const dist = Math.floor(distance);
+    const text = `네온 러너 결과: ${dist}m 달렸어요! 🐣💨\\ntodaygame.co.kr 에서 도전해보세요!`;
+    if(navigator.share){ navigator.share({text}).catch(()=>{}); }
+    else if(navigator.clipboard){
+      navigator.clipboard.writeText(text);
+      const b = document.getElementById('shareBtn2');
+      const o = b.textContent; b.textContent = '복사됐어요!';
+      setTimeout(()=> b.textContent = o, 1400);
+    }
+  });
+
+  draw(0);
+})();
+</script>
+</body>
+</html>

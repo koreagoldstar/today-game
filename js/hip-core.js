@@ -312,6 +312,13 @@
       el.loop = true;
       el.playbackRate = rate;
       el.volume = 0.9;
+      if (window.TodayAudio) {
+        TodayAudio.trackMedia(el);
+        if (TodayAudio.isMuted()) {
+          el.muted = true;
+          el.volume = 0;
+        }
+      }
       try {
         el.currentTime = musicOffset;
         await el.play();

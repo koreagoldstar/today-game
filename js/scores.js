@@ -169,8 +169,70 @@
     return "공유에 실패했어요";
   }
 
+  function thumbUrl(gameId) {
+    if (!gameId) return SHARE_IMAGE;
+    return `https://www.todaygame.co.kr/assets/thumbs/${gameId}.png`;
+  }
+
+  function isPublicHttpUrl(url) {
+    return /^https:\/\/(?!localhost|127\.0\.0\.1)/i.test(String(url || ""));
+  }
+
+  function makeResultCard(opts) {
+    opts = opts || {};
+    const cvs = document.createElement("canvas");
+    cvs.width = 800;
+    cvs.height = 400;
+    const cx = cvs.getContext("2d");
+    const bg0 = opts.bg0 || "#1a1040";
+    const bg1 = opts.bg1 || "#070714";
+    const accent = opts.accent || "#ffe156";
+    const g = cx.createLinearGradient(0, 0, 800, 400);
+    g.addColorStop(0, bg0);
+    g.addColorStop(1, bg1);
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, 800, 400);
+    cx.strokeStyle = accent;
+    cx.globalAlpha = 0.55;
+    cx.lineWidth = 4;
+    cx.strokeRect(16, 16, 768, 368);
+    cx.globalAlpha = 1;
+    cx.fillStyle = "rgba(255,255,255,0.55)";
+    cx.font = '700 18px "Noto Sans KR", "Jua", sans-serif';
+    cx.fillText(opts.eyebrow || "오늘의게임", 40, 58);
+    cx.fillStyle = "#fff";
+    cx.font = '900 42px "Noto Sans KR", "Bagel Fat One", sans-serif';
+    cx.fillText(String(opts.title || "").slice(0, 22), 40, 118);
+    cx.fillStyle = accent;
+    cx.font = '900 72px "Noto Sans KR", sans-serif';
+    cx.fillText(String(opts.hero || "").slice(0, 12), 40, 210);
+    cx.fillStyle = "#eef6ff";
+    cx.font = '700 24px "Noto Sans KR", sans-serif';
+    (opts.lines || []).slice(0, 4).forEach((line, i) => {
+      cx.fillText(String(line), 40, 262 + i * 32);
+    });
+    return cvs;
+  }
+
+  async function uploadShareImage(canvas) {
+    if (!canvas || !canvas.toDataURL) return "";
+    try {
+      const dataUrl = canvas.toDataURL("image/png");
+      const res = await fetch("/api/share-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      const data = await res.json();
+      const url = data && data.ok ? data.url : "";
+      return isPublicHttpUrl(url) ? url : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
   /**
-   * 카카오톡 피드 공유 (로그인 불필요 · 메시지 공유만)
+   * 카카오톡 피드 공유 (이미지 + 제목 + 버튼)
    */
   async function shareToKakao(opts) {
     const ok = await ensureKakao();
@@ -182,13 +244,23 @@
     const score = Number(opts.score) || 0;
     const scoreLabel = opts.scoreLabel || `${score.toLocaleString("ko-KR")}점`;
     const rank = opts.rankDay || opts.rank;
-    const url = opts.url || SITE_URL;
-    const title = rank
-      ? `오늘의 챌린지 결과: ${rank}위!`
-      : `오늘의 게임 · ${gameTitle}`;
-    const description = rank
-      ? `${name} · ${scoreLabel} · ${rank}위 달성! 너도 도전해봐`
-      : `${name} · ${scoreLabel}! 너도 도전해봐`;
+    const url = opts.url || (opts.gameId ? `https://www.todaygame.co.kr/games/${opts.gameId}/` : SITE_URL);
+    const title =
+      opts.title ||
+      (rank ? `오늘의 챌린지 결과: ${rank}위!` : `오늘의 게임 · ${gameTitle}`);
+    const description =
+      opts.description ||
+      (rank ? `${name} · ${scoreLabel} · ${rank}위 달성! 너도 도전해봐` : `${name} · ${scoreLabel}! 너도 도전해봐`);
+    let imageUrl = opts.imageUrl;
+    if (!isPublicHttpUrl(imageUrl) && opts.canvas) {
+      imageUrl = await uploadShareImage(opts.canvas);
+    }
+    if (!isPublicHttpUrl(imageUrl)) {
+      imageUrl = thumbUrl(opts.gameId);
+    }
+    if (!isPublicHttpUrl(imageUrl)) imageUrl = SHARE_IMAGE;
+    const imageWidth = opts.imageWidth || (opts.canvas && opts.canvas.width) || 800;
+    const imageHeight = opts.imageHeight || (opts.canvas && opts.canvas.height) || 400;
 
     try {
       Kakao.Share.sendDefault({
@@ -196,7 +268,9 @@
         content: {
           title,
           description,
-          imageUrl: SHARE_IMAGE,
+          imageUrl,
+          imageWidth,
+          imageHeight,
           link: {
             mobileWebUrl: url,
             webUrl: url,
@@ -204,7 +278,7 @@
         },
         buttons: [
           {
-            title: "나도 도전하기",
+            title: opts.buttonTitle || "나도 도전하기",
             link: {
               mobileWebUrl: url,
               webUrl: url,
@@ -216,6 +290,10 @@
     } catch (_) {
       return { ok: false, mode: "fail", error: "kakao" };
     }
+  }
+
+  async function shareGameResult(opts) {
+    return shareToKakao(opts);
   }
 
   /**
@@ -270,6 +348,9 @@
     buildShareText,
     shareRank,
     shareToKakao,
+    shareGameResult,
+    makeResultCard,
+    uploadShareImage,
     isInAppBrowser,
     isKakaoInApp,
   };

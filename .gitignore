@@ -7,3 +7,6 @@ test-results
 
 .vercel
 .env*
+__pycache__/
+*.pyc
+edu-svg-assets.zip

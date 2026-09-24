@@ -10,8 +10,9 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=2" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=1" />
   </head>
     <body data-bgm="basketball-shootout">
     <main class="stage">
@@ -35,13 +36,13 @@
       <p class="coach" id="coach">공을 당겨서 놓고 슛!</p>
 
       <section class="overlay" id="title">
-        <img class="title-hero" src="assets/player.png" alt="" width="160" height="160" />
+        <img class="title-hero" src="assets/player.png?v=6" alt="" width="180" height="180" />
         <p class="eyebrow">BASKETBALL SHOOTOUT</p>
         <h1>농구 슛아웃</h1>
-        <p>60초 안에 최대한 많이 넣으세요<br />림에 안 닿으면 스와이시 보너스</p>
+        <p>옆에서 각도를 맞춰 포물선을 그리세요<br />림에 안 닿으면 스와이시 보너스</p>
         <ol class="rules">
-          <li><b>1</b><span>공을 손가락·마우스로 잡고 반대 방향으로 당기세요</span></li>
-          <li><b>2</b><span>점선이 림을 향할 때 손을 떼면 슛</span></li>
+          <li><b>1</b><span>왼쪽 선수 쪽을 잡고 반대 방향으로 당기세요</span></li>
+          <li><b>2</b><span>점선 포물선이 림을 지날 때 손을 떼면 슛</span></li>
           <li><b>3</b><span>일반 골 +2, 스와이시 +3, 연속 골 보너스</span></li>
         </ol>
         <button type="button" class="primary" id="start-btn">챌린지 시작</button>
@@ -62,19 +63,21 @@
       </section>
     </main>
 
-    <script src="/js/bgm.js?v=5"></script>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=2"></script>
-    <script src="game.js?v=2"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script src="game.js?v=15"></script>
     <script src="/js/game-seo.js?v=1"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="농구 슛아웃 소개">
   <h2>농구 슛아웃 소개</h2>
-  <p>60초 동안 공을 당겨 림에 넣는 농구 슛 챌린지입니다. 스와이시와 연속 골에 보너스가 붙습니다.</p>
+  <p>옆에서 보는 코트로 각도와 세기를 맞춰 공을 포물선으로 림에 넣는 60초 슛 챌린지입니다. 스와이시와 연속 골에 보너스가 붙습니다.</p>
   <h3>플레이 방법</h3>
-  <p>공을 손가락이나 마우스로 잡고 반대 방향으로 당긴 뒤 손을 떼면 슛이 나갑니다. 점선이 림을 향할 때 놓으세요.</p>
+  <p>왼쪽 선수 쪽을 잡고 반대 방향으로 당기면 점선 포물선이 그려집니다. 곡선이 림을 지날 때 손을 떼세요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>스와이시는 몇 점인가요?</dt>

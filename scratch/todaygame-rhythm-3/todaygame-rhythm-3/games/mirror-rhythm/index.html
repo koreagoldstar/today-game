@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>미러 리듬 | 오늘의게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E1A; --bg2:#131A2E;
+    --cyan:#00E5FF; --magenta:#FF3EC9; --yellow:#FFE156; --violet:#7B5CFA; --line:#26304A;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{ height:100%; }
+  body{
+    margin:0; background: radial-gradient(60% 40% at 50% 0%, #1B2440 0%, transparent 60%), var(--bg);
+    color:#EAF0FF; font-family:'Jua', sans-serif; overflow:hidden; touch-action:none;
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+  }
+  .wrap{ width:100%; max-width:480px; height:100vh; max-height:900px; position:relative; display:flex; flex-direction:column; }
+  .brand{ text-align:center; font-size:11px; color:#5E6A8C; padding:10px 0 4px; }
+  .statusbar{ display:flex; justify-content:space-between; align-items:baseline; padding:0 16px 6px; }
+  .combo{ font-family:'Orbitron', sans-serif; font-weight:800; font-size:24px; color:var(--yellow); }
+  .combo small{ font-family:'Jua',sans-serif; font-size:11px; color:#9AA7C7; margin-left:4px; }
+  .score{ font-family:'Orbitron', sans-serif; font-weight:600; font-size:14px; color:#9AA7C7; }
+  .accuracy{ font-family:'Orbitron', sans-serif; font-size:12px; color:var(--cyan); }
+
+  .field{ flex:1; position:relative; margin:4px 12px 0; border-radius:20px; overflow:hidden; background:linear-gradient(180deg, var(--bg2) 0%, #0E1426 100%); border:1px solid var(--line); display:flex; }
+  .side{ flex:1; position:relative; display:flex; }
+  .side.right{ border-left:2px dashed rgba(255,255,255,.12); }
+  .lane{ flex:1; position:relative; border-left:1px solid rgba(255,255,255,.05); }
+  .lane:first-child{ border-left:none; }
+  .hitline{ position:absolute; left:0; right:0; bottom:82px; height:4px; background:linear-gradient(90deg, transparent, var(--violet), transparent); box-shadow:0 0 16px var(--violet); z-index:2; }
+  .note{ position:absolute; left:10%; right:10%; height:24px; border-radius:8px; }
+  .judge-pop{ position:absolute; left:50%; top:34%; transform:translate(-50%,0); font-family:'Orbitron',sans-serif; font-weight:800; font-size:22px; opacity:0; pointer-events:none; z-index:3;}
+  .judge-pop.show{ animation:pop .4s ease forwards; }
+  @keyframes pop{ 0%{opacity:0; transform:translate(-50%,8px) scale(.7);} 30%{opacity:1; transform:translate(-50%,-2px) scale(1.06);} 100%{opacity:0; transform:translate(-50%,-14px) scale(1);} }
+  .shake{ animation:shake .26s ease; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-7px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(3px);} }
+
+  .controls{ display:flex; gap:10px; padding:10px 12px 16px; }
+  .side-controls{ flex:1; display:flex; gap:8px; }
+  .padbtn{ flex:1; height:60px; border-radius:14px; border:1px solid var(--line); background:#131A2E; color:#EAF0FF; font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  .padbtn.active{ filter:brightness(1.7); }
+
+  .overlay{ position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,8,16,.9); text-align:center; padding:22px; z-index:5; }
+  .overlay.show{ display:flex; }
+  .overlay h1{ font-size:23px; margin:0 0 6px; }
+  .overlay p{ color:#9AA7C7; font-size:13px; margin:0 0 18px; }
+  .big-emoji{ font-size:54px; margin-bottom:10px; }
+  .btn{ padding:13px 24px; border-radius:16px; border:none; cursor:pointer; font-family:'Jua',sans-serif; font-size:14.5px; background:var(--violet); color:#fff; margin:4px; }
+  .btn.secondary{ background:#1B2440; color:#EAF0FF; border:1px solid var(--line); }
+  .statline{ font-family:'Orbitron',sans-serif; font-size:13px; color:var(--yellow); margin-bottom:4px; }
+  .rank{ font-family:'Orbitron',sans-serif; font-size:38px; font-weight:800; margin:6px 0 10px; }
+
+  #shareCanvas{ display:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="brand">🐣 오늘의게임 · 미러 리듬 (대칭 모드)</div>
+  <div class="statusbar">
+    <div class="combo" id="comboText">0<small>COMBO</small></div>
+    <div class="accuracy" id="accText">ACC 100%</div>
+    <div class="score" id="scoreText">SCORE 0</div>
+  </div>
+
+  <div class="field" id="field">
+    <div class="side left">
+      <div class="lane" data-lane="0"></div>
+      <div class="lane" data-lane="1"></div>
+    </div>
+    <div class="side right">
+      <div class="lane" data-lane="2"></div>
+      <div class="lane" data-lane="3"></div>
+    </div>
+    <div class="hitline"></div>
+    <div class="judge-pop" id="judgePop"></div>
+
+    <div class="overlay show" id="startOverlay">
+      <div class="big-emoji">🪞🎹</div>
+      <h1>미러 리듬</h1>
+      <p>양손이 동시에 서로 다른 패턴을 연주해요.<br>왼손 Q·W, 오른손 O·P (모바일은 4버튼 터치)</p>
+      <button class="btn" id="startBtn">도전 시작</button>
+    </div>
+
+    <div class="overlay" id="endOverlay">
+      <div class="big-emoji" id="endEmoji">🎉</div>
+      <div class="rank" id="rankText">S</div>
+      <div class="statline" id="endScore">SCORE 0</div>
+      <div class="statline" id="endCombo">MAX COMBO 0</div>
+      <div class="statline" id="endAcc">ACC 100%</div>
+      <div>
+        <button class="btn" id="retryBtn">다시 도전</button>
+        <button class="btn secondary" id="saveImgBtn">결과 카드 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="side-controls">
+      <div class="padbtn" data-lane="0">Q</div>
+      <div class="padbtn" data-lane="1">W</div>
+    </div>
+    <div class="side-controls">
+      <div class="padbtn" data-lane="2">O</div>
+      <div class="padbtn" data-lane="3">P</div>
+    </div>
+  </div>
+</div>
+
+<canvas id="shareCanvas" width="640" height="360"></canvas>
+
+<script>
+(function(){
+  const LANE_COLORS = ['#00E5FF','#7B5CFA','#FF3EC9','#FFE156'];
+  const KEYMAP = {'q':0,'w':1,'o':2,'p':3};
+  const BPM = 140;
+  const BEAT_MS = 60000/BPM;
+  const NOTE_TRAVEL_MS = 1350;
+  const HIT_WINDOW = { perfect:40, great:85, good:135 };
+
+  function buildChart(){
+    const chart = [];
+    let t = 1800;
+    let seed = 777;
+    function rnd(){ seed = (seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; }
+    const totalBeats = 110;
+    for(let i=0;i<totalBeats;i++){
+      // left side note (lane 0 or 1)
+      if(rnd() > 0.25){
+        chart.push({ time:t, lane: rnd()>0.5?0:1, hit:false, missed:false });
+      }
+      // right side note (lane 2 or 3) - independent pattern, offset slightly for asymmetry
+      if(rnd() > 0.3){
+        const off = rnd()>0.6 ? BEAT_MS/2 : 0;
+        chart.push({ time:t+off, lane: rnd()>0.5?2:3, hit:false, missed:false });
+      }
+      t += BEAT_MS;
+    }
+    chart.sort((a,b)=>a.time-b.time);
+    return chart;
+  }
+
+  let chart = buildChart();
+  const songLen = chart[chart.length-1].time + 1800;
+
+  const laneEls = [0,1,2,3].map(i=> document.querySelector(`.lane[data-lane="${i}"]`));
+  const field = document.getElementById('field');
+  const judgePop = document.getElementById('judgePop');
+
+  let combo=0, maxCombo=0, score=0, hits=0, total=0, running=false, startTime=0, rafId=null;
+  let audioCtx=null;
+  function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
+  function beep(freq,dur,gain){
+    if(!audioCtx) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='square'; o.frequency.value=freq; g.gain.value=gain||0.05;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur+0.01);
+  }
+
+  function updateHUD(){
+    document.getElementById('comboText').innerHTML = combo + '<small>COMBO</small>';
+    document.getElementById('scoreText').textContent = 'SCORE ' + score;
+    const acc = total ? Math.round((hits/total)*100) : 100;
+    document.getElementById('accText').textContent = 'ACC ' + acc + '%';
+  }
+
+  function popJudge(text, color){
+    judgePop.textContent = text;
+    judgePop.style.color = color;
+    judgePop.classList.remove('show'); void judgePop.offsetWidth; judgePop.classList.add('show');
+  }
+
+  function judgeHit(diff){
+    total++;
+    if(diff <= HIT_WINDOW.perfect){ hits++; combo++; score += 320+combo*2; popJudge('PERFECT','#00E5FF'); beep(880,0.08,0.05); }
+    else if(diff <= HIT_WINDOW.great){ hits++; combo++; score += 160+combo; popJudge('GREAT','#7B5CFA'); beep(660,0.07,0.04); }
+    else if(diff <= HIT_WINDOW.good){ hits++; combo++; score += 70; popJudge('GOOD','#FFE156'); beep(440,0.06,0.03); }
+    else { registerMiss(); return; }
+    maxCombo = Math.max(maxCombo, combo);
+    updateHUD();
+  }
+  function registerMiss(){
+    total++; combo=0; popJudge('MISS','#FF4D6D');
+    field.classList.remove('shake'); void field.offsetWidth; field.classList.add('shake');
+    beep(180,0.12,0.04);
+    updateHUD();
+  }
+
+  chart.forEach(n=>{
+    const el = document.createElement('div');
+    el.className='note';
+    el.style.background = `linear-gradient(180deg, ${LANE_COLORS[n.lane]}, transparent)`;
+    el.style.boxShadow = `0 0 10px ${LANE_COLORS[n.lane]}`;
+    el.style.display='none';
+    laneEls[n.lane].appendChild(el);
+    n.el = el;
+  });
+
+  function loop(){
+    if(!running) return;
+    const now = performance.now() - startTime;
+    const fieldH = field.clientHeight;
+    const hitY = fieldH - 82;
+
+    chart.forEach(n=>{
+      if(n.hit) return;
+      const dt = n.time - now;
+      if(dt < -280 && !n.missed){ n.missed=true; n.el.style.display='none'; registerMiss(); return; }
+      if(dt > NOTE_TRAVEL_MS || dt < -280){ n.el.style.display='none'; return; }
+      n.el.style.display='block';
+      const progress = 1 - (dt/NOTE_TRAVEL_MS);
+      n.el.style.top = Math.max(-30, progress*hitY - 12) + 'px';
+    });
+
+    if(now > songLen + 400){ endGame(); return; }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function tryHitLane(lane){
+    if(!running) return;
+    const now = performance.now()-startTime;
+    let best=null, bestDiff=Infinity;
+    chart.forEach(n=>{
+      if(n.hit||n.missed||n.lane!==lane) return;
+      const diff = Math.abs(n.time-now);
+      if(diff<bestDiff){ bestDiff=diff; best=n; }
+    });
+    if(best && bestDiff <= HIT_WINDOW.good){
+      best.hit=true; best.el.style.display='none';
+      judgeHit(bestDiff);
+    }
+  }
+
+  function rankFor(acc){
+    if(acc>=95) return 'S';
+    if(acc>=85) return 'A';
+    if(acc>=70) return 'B';
+    if(acc>=50) return 'C';
+    return 'D';
+  }
+
+  function endGame(){
+    running=false; cancelAnimationFrame(rafId);
+    const acc = total ? Math.round((hits/total)*100) : 100;
+    document.getElementById('endOverlay').classList.add('show');
+    document.getElementById('rankText').textContent = rankFor(acc);
+    document.getElementById('endScore').textContent = 'SCORE '+score;
+    document.getElementById('endCombo').textContent = 'MAX COMBO '+maxCombo;
+    document.getElementById('endAcc').textContent = 'ACC '+acc+'%';
+  }
+
+  const padBtns = document.querySelectorAll('.padbtn');
+  padBtns.forEach(btn=>{
+    const lane = parseInt(btn.dataset.lane,10);
+    const act = (e)=>{ e.preventDefault(); ensureAudio(); btn.classList.add('active'); tryHitLane(lane); setTimeout(()=>btn.classList.remove('active'),90); };
+    btn.addEventListener('touchstart', act, {passive:false});
+    btn.addEventListener('mousedown', act);
+  });
+  window.addEventListener('keydown', (e)=>{
+    const k=e.key.toLowerCase();
+    if(k in KEYMAP){ ensureAudio(); tryHitLane(KEYMAP[k]); }
+  });
+
+  function startGame(){
+    combo=0; maxCombo=0; score=0; hits=0; total=0;
+    chart = buildChart();
+    laneEls.forEach(l=> l.querySelectorAll('.note').forEach(n=>n.remove()));
+    chart.forEach(n=>{
+      const el=document.createElement('div');
+      el.className='note';
+      el.style.background = `linear-gradient(180deg, ${LANE_COLORS[n.lane]}, transparent)`;
+      el.style.boxShadow = `0 0 10px ${LANE_COLORS[n.lane]}`;
+      el.style.display='none';
+      laneEls[n.lane].appendChild(el);
+      n.el=el;
+    });
+    updateHUD();
+    running=true; startTime=performance.now();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    ensureAudio();
+    document.getElementById('startOverlay').classList.remove('show');
+    startGame();
+  });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{
+    document.getElementById('endOverlay').classList.remove('show');
+    startGame();
+  });
+
+  document.getElementById('saveImgBtn').addEventListener('click', ()=>{
+    const cvs = document.getElementById('shareCanvas');
+    const cx = cvs.getContext('2d');
+    const acc = total ? Math.round((hits/total)*100) : 100;
+    const rank = rankFor(acc);
+    const g = cx.createLinearGradient(0,0,640,360);
+    g.addColorStop(0,'#131A2E'); g.addColorStop(1,'#0B0E1A');
+    cx.fillStyle=g; cx.fillRect(0,0,640,360);
+    cx.strokeStyle='rgba(0,229,255,.5)'; cx.lineWidth=2; cx.strokeRect(10,10,620,340);
+    cx.fillStyle='#5E6A8C'; cx.font='16px sans-serif'; cx.fillText('오늘의게임 · 미러 리듬', 32, 46);
+    cx.fillStyle='#FFE156'; cx.font='800 110px Arial'; cx.fillText(rank, 32, 190);
+    cx.fillStyle='#EAF0FF'; cx.font='700 26px Arial';
+    cx.fillText('SCORE ' + score, 220, 130);
+    cx.fillText('MAX COMBO ' + maxCombo, 220, 168);
+    cx.fillText('ACCURACY ' + acc + '%', 220, 206);
+    cx.fillStyle='#00E5FF'; cx.font='16px sans-serif';
+    cx.fillText('todaygame.co.kr', 32, 320);
+
+    const link = document.createElement('a');
+    link.download = 'mirror-rhythm-result.png';
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+  });
+
+  updateHUD();
+})();
+</script>
+</body>
+</html>

@@ -145,6 +145,7 @@
 
   function sharePayload() {
     return {
+      gameId: "reaction",
       gameTitle: GAME_TITLE,
       name: localStorage.getItem("today-game-name") || "나",
       score: lastMs,
@@ -159,7 +160,19 @@
       msg.textContent = "공유 모듈을 불러오지 못했어요";
       return;
     }
-    const result = await TodayScores.shareToKakao(sharePayload());
+    const payload = sharePayload();
+    if (TodayScores.makeResultCard) {
+      payload.canvas = TodayScores.makeResultCard({
+        eyebrow: "오늘의게임 · 번쩍 반응",
+        title: GAME_TITLE,
+        hero: `${lastMs}ms`,
+        lines: [payload.name, "초록이 되면 바로 탭!"],
+        bg0: "#1a4a7a",
+        bg1: "#082030",
+        accent: "#7ec8ff",
+      });
+    }
+    const result = await TodayScores.shareToKakao(payload);
     msg.textContent = TodayScores.formatShareResult
       ? TodayScores.formatShareResult(result)
       : result.ok

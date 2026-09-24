@@ -246,6 +246,12 @@ h1 {
   box-shadow: 0 6px 0 rgba(201, 138, 62, 0.22);
 }
 
+.btn.kakao {
+  color: #191919;
+  background: linear-gradient(180deg, #fee500, #f5d800);
+  box-shadow: 0 6px 0 #c4a800;
+}
+
 .row {
   display: flex;
   gap: 10px;

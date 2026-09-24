@@ -1,11 +1,12 @@
 :root {
-  --ink: #4a3728;
-  --muted: #7a5a48;
+  --ink: #2a2118;
+  --muted: #534033;
   --cream: #fffdf4;
   --lemon: #ffe27a;
   --mint: #b8f0d0;
   --peach: #ffd4c4;
   --pink: #ff9ec4;
+  --edu-font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
 * {
@@ -20,8 +21,10 @@ body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
-  font-family: "Jua", system-ui, sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 700;
   color: var(--ink);
+  -webkit-font-smoothing: antialiased;
   background: #f3e2b0;
   display: flex;
   align-items: center;
@@ -101,7 +104,8 @@ body {
   padding: 8px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.86);
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .play {
@@ -114,11 +118,12 @@ body {
 
 .jamo {
   margin: 0 0 6px;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: clamp(72px, 22vw, 108px);
   line-height: 1;
-  color: #ff6b3d;
-  text-shadow: 0 4px 0 #fff;
+  color: #c94a16;
+  text-shadow: 0 3px 0 #fff;
 }
 
 .prompt {
@@ -178,9 +183,10 @@ body {
 
 .choice.letter {
   min-height: 88px;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: clamp(36px, 11vw, 48px);
-  color: #ff6b3d;
+  color: #c94a16;
 }
 
 .choice:active {
@@ -243,9 +249,10 @@ body {
   display: flex;
   gap: 6px;
   margin-bottom: 14px;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: clamp(36px, 11vw, 48px);
-  color: #ff6b3d;
+  color: #c94a16;
 }
 
 .blank-word .slot-syl {
@@ -270,9 +277,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: 56px;
-  color: #ff6b3d;
+  color: #c94a16;
 }
 
 .drop-pad.ready {
@@ -297,7 +305,8 @@ body {
   border: 4px solid #fff;
   background: #ffe27a;
   box-shadow: 0 6px 0 rgba(201, 138, 62, 0.28);
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: 36px;
   color: #4a3728;
   display: flex;
@@ -328,7 +337,8 @@ body {
 
 .hint-line {
   margin: 0 0 8px;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--muted);
   text-align: center;
 }
@@ -453,8 +463,8 @@ body {
 .sent-line {
   min-height: 28px;
   margin: 0 0 8px;
-  font-size: 18px;
-  color: #ff6b3d;
+  font-size: 20px;
+  color: #c94a16;
   text-align: center;
 }
 
@@ -626,10 +636,14 @@ body {
   height: 110px;
 }
 
-h1, h2 {
+h1, h2,
+.edu-play h1,
+.edu-play h2,
+.edu-play .overlay h1,
+.edu-play .overlay h2 {
   margin: 0;
-  font-family: "Bagel Fat One", "Jua", sans-serif;
-  font-weight: 400;
+  font-family: var(--edu-font) !important;
+  font-weight: 900 !important;
   font-size: 34px;
 }
 
@@ -642,15 +656,16 @@ h1, h2 {
 
 .learned {
   font-size: 28px;
-  color: #ff6b3d;
+  color: #c94a16;
 }
 
 .parent-note {
   margin: 0;
   max-width: 280px;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .done-actions {
@@ -756,7 +771,8 @@ h1, h2 {
   border-radius: 10px;
   background: #ffe27a;
   box-shadow: 0 3px 0 rgba(201, 138, 62, 0.22);
-  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-family: var(--edu-font);
+  font-weight: 900;
   font-size: 15px;
   color: var(--ink);
   cursor: pointer;

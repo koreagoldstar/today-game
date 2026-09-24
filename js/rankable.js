@@ -55,7 +55,6 @@
     { id: "penalty-kick", title: "승부차기 히어로" },
     { id: "homerun-derby", title: "홈런왕" },
     { id: "basketball-shootout", title: "농구 슛아웃" },
-    { id: "bowling-strike", title: "볼링 스트라이크" },
     { id: "dino-hunt", title: "공룡 헌터" },
     { id: "cosmic-dodge", title: "우주 회피" },
     { id: "fruit-catch", title: "과일 바스켓" },

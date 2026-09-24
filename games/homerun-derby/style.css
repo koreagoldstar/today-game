@@ -107,9 +107,9 @@ canvas { display: block; width: 100%; height: 100%; }
   padding: 36px 24px;
   text-align: center;
   background:
-    linear-gradient(180deg, rgba(1, 8, 22, 0.42), rgba(1, 8, 22, 0.93) 74%),
-    radial-gradient(circle at 50% 28%, rgba(29, 150, 227, 0.2), transparent 34%);
-  backdrop-filter: blur(7px);
+    linear-gradient(180deg, rgba(1, 8, 22, 0.18), rgba(1, 8, 22, 0.78) 70%),
+    radial-gradient(circle at 50% 28%, rgba(29, 150, 227, 0.16), transparent 34%);
+  backdrop-filter: blur(4px);
 }
 
 .overlay.compact {
@@ -123,10 +123,10 @@ canvas { display: block; width: 100%; height: 100%; }
 .hidden { display: none !important; }
 
 .title-hero {
-  width: 140px;
-  height: 140px;
+  width: 168px;
+  height: 168px;
   object-fit: contain;
-  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.45));
   animation: float 2.4s ease-in-out infinite;
 }
 

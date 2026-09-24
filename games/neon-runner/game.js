@@ -515,22 +515,35 @@
   });
   document.getElementById("menu-btn").addEventListener("click", backToMenu);
   document.getElementById("share-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("share-btn");
+    if (!window.TodayScores || !TodayScores.shareToKakao) return;
     const dist = Math.floor(distance);
-    const text = `네온 러너 「${currentSong().name}」 ${dist}m 달렸어요!\nhttps://www.todaygame.co.kr/games/neon-runner/`;
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        const b = document.getElementById("share-btn");
-        const o = b.textContent;
-        b.textContent = "복사됐어요!";
-        setTimeout(() => {
-          b.textContent = o;
-        }, 1400);
-      }
-    } catch (_) {
-      /* ignore */
-    }
+    const canvas = TodayScores.makeResultCard
+      ? TodayScores.makeResultCard({
+          eyebrow: "오늘의게임 · 네온 러너",
+          title: currentSong().name,
+          hero: `${dist}m`,
+          lines: [`BEST ${best}m`, "네온 도시를 달려 보세요"],
+          bg0: "#12082a",
+          bg1: "#041018",
+          accent: "#00f5ff",
+        })
+      : null;
+    const result = await TodayScores.shareToKakao({
+      gameId: "neon-runner",
+      gameTitle: "네온 러너",
+      title: `네온 러너 ${dist}m`,
+      description: `「${currentSong().name}」 · BEST ${best}m`,
+      score: dist,
+      scoreLabel: `${dist}m`,
+      canvas,
+      buttonTitle: "나도 달리기",
+    });
+    const prev = btn.textContent;
+    btn.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+    setTimeout(() => {
+      btn.textContent = prev;
+    }, 1600);
   });
 
   window.addEventListener("resize", () => {

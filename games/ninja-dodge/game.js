@@ -34,20 +34,19 @@
   let best = Number(localStorage.getItem(BEST_KEY) || "0") || 0;
 
   function getDifficulty() {
-    // ramp over ~3 minutes to max; start gentler than old stage 0
-    const t = Math.min(1, playTime / 180);
-    const level = 1 + Math.floor(playTime / 12);
+    // ramp over ~4.5 minutes; stay readable much longer
+    const t = Math.min(1, playTime / 270);
+    const level = 1 + Math.floor(playTime / 16);
     return {
       level,
-      name: STAGE_NAMES[Math.min(STAGE_NAMES.length - 1, Math.floor(playTime / 12))] || `수행 ${level}`,
-      meter: (playTime % 12) / 12,
-      // easier early: slower spawn, slower shots, longer warn, no multi/top at start
-      spawn: Math.max(0.42, 1.4 - t * 0.95),
-      speed: 150 + t * 430,
-      goldRate: Math.min(0.28, 0.04 + t * 0.24),
-      multi: t < 0.18 ? 1 : t < 0.45 ? 2 : 3,
-      topRate: Math.min(0.35, Math.max(0, (t - 0.1) * 0.45)),
-      warn: Math.max(0.38, 1.05 - t * 0.6),
+      name: STAGE_NAMES[Math.min(STAGE_NAMES.length - 1, Math.floor(playTime / 16))] || `수행 ${level}`,
+      meter: (playTime % 16) / 16,
+      spawn: Math.max(0.62, 1.7 - t * 0.95),
+      speed: 120 + t * 280,
+      goldRate: Math.min(0.22, 0.05 + t * 0.16),
+      multi: t < 0.34 ? 1 : t < 0.68 ? 2 : 3,
+      topRate: Math.min(0.2, Math.max(0, (t - 0.24) * 0.3)),
+      warn: Math.max(0.58, 1.28 - t * 0.52),
       lives: 3,
     };
   }
@@ -327,7 +326,7 @@
       y,
       t: 0,
       life: st.warn,
-      speed: st.speed * (gold ? 1.15 : 1) * (0.92 + Math.random() * 0.2),
+      speed: st.speed * (gold ? 1.08 : 1) * (0.88 + Math.random() * 0.16),
     });
   }
 
@@ -344,7 +343,7 @@
       vx = -w.speed;
     } else {
       y = -24;
-      x = Math.max(40, Math.min(W - 40, player.x + (Math.random() - 0.5) * 70));
+      x = Math.max(40, Math.min(W - 40, player.x + (Math.random() - 0.5) * 130));
       vy = w.speed * 0.95;
     }
     shots.push({
@@ -363,12 +362,12 @@
 
   function hitbox() {
     if (player.pose === "crouch") {
-      return { x: player.x, y: player.y - 22, w: 40, h: 36 };
+      return { x: player.x, y: player.y - 20, w: 34, h: 32 };
     }
     if (player.pose === "jump") {
-      return { x: player.x, y: player.y - 78, w: 38, h: 52 };
+      return { x: player.x, y: player.y - 76, w: 32, h: 46 };
     }
-    return { x: player.x, y: player.y - 58, w: 40, h: 58 };
+    return { x: player.x, y: player.y - 54, w: 34, h: 50 };
   }
 
   function circleRect(cx, cy, cr, hb) {
@@ -408,7 +407,7 @@
   function hurt() {
     if (invuln > 0) return;
     lives -= 1;
-    invuln = 1.2;
+    invuln = 1.45;
     flash = 0.35;
     shake = 10;
     combo = 0;
@@ -445,7 +444,7 @@
       if (Math.abs(dx) > 6) move = Math.sign(dx);
       player.x += dx * Math.min(1, dt * 10);
     } else {
-      player.vx = move * 280;
+      player.vx = move * 330;
       player.x += player.vx * dt;
     }
     if (move) player.face = move;
@@ -550,7 +549,7 @@
         score += 2;
       }
 
-      if (invuln <= 0 && circleRect(s.x, s.y, s.r * 0.72, hb)) {
+      if (invuln <= 0 && circleRect(s.x, s.y, s.r * 0.6, hb)) {
         s.alive = false;
         hurt();
       }

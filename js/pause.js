@@ -142,7 +142,9 @@
     const ok = cfg.resume();
     if (ok === false) return false;
     try {
-      if (window.TodayBGM && TodayBGM.start) {
+      if (window.TodayAudio && TodayAudio.isMuted()) {
+        /* stay silent */
+      } else if (window.TodayBGM && TodayBGM.start) {
         const id = document.body && document.body.getAttribute("data-bgm");
         if (id) TodayBGM.start(id);
       }
@@ -264,6 +266,9 @@
 
   function boot() {
     ensureAdBoards();
+    try {
+      if (window.TodayChrome && TodayChrome.mount) TodayChrome.mount();
+    } catch (_) {}
     // Give game scripts a moment to mount explicitly, then fall back.
     setTimeout(autoMount, 120);
   }

@@ -10,10 +10,14 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=4" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=1" />
   </head>
     <body data-bgm="bowling-strike">
+    <script>
+      if (/(^|\.)todaygame\.co\.kr$/i.test(location.hostname)) location.replace("/");
+    </script>
     <main class="stage">
       <canvas id="game" width="390" height="700" aria-label="볼링 레인"></canvas>
 
@@ -33,10 +37,21 @@
       </header>
 
       <div class="frame-strip" id="frame-strip" aria-label="프레임 기록"></div>
-      <p class="coach" id="coach">탭해서 방향을 정하세요</p>
+      <p class="coach" id="coach">공을 좌우로 밀어 방향을 정하세요</p>
+
+      <section class="aim-panel hidden" id="aim-panel">
+        <p class="panel-label">레인 아래를 좌우로 밀어 방향을 정하세요</p>
+        <div class="hook-row">
+          <span>훅 L</span>
+          <input id="hook-slider" type="range" min="-80" max="80" value="0" />
+          <span>R</span>
+        </div>
+        <p class="hook-readout" id="hook-readout">직진</p>
+        <button type="button" id="aim-ok">이 방향으로</button>
+      </section>
 
       <section class="meter hidden" id="meter">
-        <div class="meter-label" id="meter-label">방향</div>
+        <div class="meter-label" id="meter-label">노란 칸에 맞추면 딱 맞는 세기</div>
         <div class="meter-track" id="meter-track">
           <i class="meter-sweet"></i>
           <span id="meter-cursor"></span>
@@ -45,13 +60,13 @@
       </section>
 
       <section class="overlay" id="title">
-        <img class="title-hero" src="assets/bowler.png" alt="" width="160" height="160" />
+        <img class="title-hero" src="assets/bowler.png?v=6" alt="" width="180" height="180" />
         <p class="eyebrow">BOWLING STRIKE</p>
         <h1>볼링 스트라이크</h1>
-        <p>10프레임 정식 스코어<br />방향과 파워를 맞춰 핀을 쓰러뜨리세요</p>
+        <p>10프레임 정식 스코어<br />방향·훅·파워를 맞춰 핀을 쓰러뜨리세요</p>
         <ol class="rules">
-          <li><b>1</b><span>움직이는 바로 방향을 고르고 탭</span></li>
-          <li><b>2</b><span>다음 바로 파워를 고르고 탭</span></li>
+          <li><b>1</b><span>공을 좌우로 밀고 훅을 정한 뒤 방향 확인</span></li>
+          <li><b>2</b><span>파워 바의 노란 칸에 맞추면 세기가 딱 맞습니다</span></li>
           <li><b>3</b><span>스트라이크·스페어는 다음 투구까지 보너스</span></li>
         </ol>
         <button type="button" class="primary" id="start-btn">레인에 서기</button>
@@ -72,19 +87,21 @@
       </section>
     </main>
 
-    <script src="/js/bgm.js?v=5"></script>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=2"></script>
-    <script src="game.js?v=3"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script src="game.js?v=11"></script>
     <script src="/js/game-seo.js?v=1"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="볼링 스트라이크 소개">
   <h2>볼링 스트라이크 소개</h2>
-  <p>10프레임 정식 스코어의 볼링 게임입니다. 방향과 파워를 맞춰 핀을 쓰러뜨립니다.</p>
+  <p>10프레임 정식 스코어의 볼링 게임입니다. 레인에서 방향을 밀고 훅과 파워를 맞춰 핀을 쓰러뜨립니다.</p>
   <h3>플레이 방법</h3>
-  <p>먼저 방향 바를 탭으로 고정하고, 다음 파워 바를 고정하면 공이 나갑니다. 스트라이크와 스페어는 다음 투구 점수가 보너스로 붙습니다.</p>
+  <p>공을 좌우로 밀어 방향을 정하고 훅을 고른 뒤, 파워 바의 노란 칸을 맞추면 공이 나갑니다. 스트라이크와 스페어는 다음 투구 점수가 보너스로 붙습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>점수는 진짜 볼링 규칙인가요?</dt>

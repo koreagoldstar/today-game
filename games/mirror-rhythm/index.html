@@ -9,8 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=6" />
+    <link rel="stylesheet" href="style.css?v=7" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=2" />
   </head>
   <body>
     <div class="stage">
@@ -86,6 +87,7 @@
         <p class="statline" id="over-acc">ACC 100%</p>
         <button type="button" class="btn" id="retry-btn">다시 도전</button>
         <button type="button" class="btn" id="next-btn">다음 곡</button>
+        <button type="button" class="btn kakao" id="kakao-btn">카카오톡 공유</button>
         <button type="button" class="btn ghost" id="save-btn">결과 카드 저장</button>
         <button type="button" class="btn ghost" id="menu-btn">곡 목록</button>
         <a href="/">← 홈</a>
@@ -93,12 +95,14 @@
     </div>
     <canvas id="share-canvas" width="640" height="360" hidden></canvas>
 
-    <script src="/js/scores.js"></script>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js?v=7"></script>
     <script src="/js/retention.js"></script>
-    <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js"></script>
-    <script src="/js/hip-core.js?v=3"></script>
-    <script src="game.js?v=4"></script>
+    <script src="/js/game-rank.js?v=2"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/hip-core.js?v=4"></script>
+    <script src="game.js?v=5"></script>
     <!-- seo:game:start -->
 <section class="seo-about" aria-label="미러 리듬 소개">
   <h2>미러 리듬 소개</h2>
@@ -108,7 +112,7 @@
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>결과 카드는 어디에 쓰나요?</dt>
-    <dd>결과 화면의 저장 버튼으로 PNG가 내려받아지며, 카카오톡 등에 바로 공유할 수 있습니다.</dd>
+    <dd>카카오톡 공유를 누르면 등급·점수 카드가 피드로 보내집니다. 저장은 PNG로 내려받아요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

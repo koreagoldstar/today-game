@@ -34,7 +34,7 @@
       title: "홈런왕",
       tag: "야구 · 10구 더비",
       href: "/games/homerun-derby/",
-      thumb: "/assets/thumbs/homerun-derby.png",
+      thumb: "/assets/thumbs/homerun-derby.png?v=2",
       category: "sports",
     },
     {
@@ -42,15 +42,7 @@
       title: "농구 슛아웃",
       tag: "농구 · 60초",
       href: "/games/basketball-shootout/",
-      thumb: "/assets/thumbs/basketball-shootout.png",
-      category: "sports",
-    },
-    {
-      id: "bowling-strike",
-      title: "볼링 스트라이크",
-      tag: "볼링 · 10프레임",
-      href: "/games/bowling-strike/",
-      thumb: "/assets/thumbs/bowling-strike.png",
+      thumb: "/assets/thumbs/basketball-shootout.png?v=2",
       category: "sports",
     },
     {
@@ -1145,9 +1137,11 @@
         if (savedResult && savedResult.score != null) {
           shareRow.hidden = false;
           const payload = {
+            gameId,
             gameTitle: `오늘의 챌린지 · ${data.game.title}`,
             name: savedResult.name || "나",
             score: savedResult.score,
+            scoreLabel: savedResult.label,
             rankDay: savedResult.rank,
             rankWeek: null,
             url: "https://www.todaygame.co.kr/",
@@ -1155,7 +1149,16 @@
           if (kakaoBtn) {
             kakaoBtn.onclick = async () => {
               if (!window.TodayScores || !TodayScores.shareToKakao) return;
-              const result = await TodayScores.shareToKakao(payload);
+              const feed = { ...payload };
+              if (TodayScores.makeResultCard) {
+                feed.canvas = TodayScores.makeResultCard({
+                  eyebrow: "오늘의 챌린지",
+                  title: data.game.title,
+                  hero: savedResult.label || `${Number(savedResult.score).toLocaleString("ko-KR")}점`,
+                  lines: [feed.name, savedResult.rank ? `오늘 ${savedResult.rank}위` : ""].filter(Boolean),
+                });
+              }
+              const result = await TodayScores.shareToKakao(feed);
               kakaoBtn.textContent = result.ok ? "공유 창 열림" : "공유 실패";
               setTimeout(() => {
                 kakaoBtn.textContent = "카카오톡 공유";

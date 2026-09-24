@@ -214,6 +214,7 @@
     });
 
     const sharePayload = () => ({
+      gameId: cfg.gameId,
       gameTitle: isChallengeMode() ? `오늘의 챌린지 · ${cfg.gameTitle}` : cfg.gameTitle,
       name: String(nameInput.value || "").trim() || "나",
       score: lastScore,
@@ -241,7 +242,20 @@
     if (kakaoBtn) {
       kakaoBtn.addEventListener("click", async () => {
         if (!window.TodayScores || !window.TodayScores.shareToKakao) return;
-        const result = await window.TodayScores.shareToKakao(sharePayload());
+        const payload = sharePayload();
+        if (window.TodayScores.makeResultCard) {
+          payload.canvas = window.TodayScores.makeResultCard({
+            eyebrow: isChallengeMode() ? "오늘의 챌린지" : "오늘의게임",
+            title: cfg.gameTitle,
+            hero: lastLabel || `${lastScore.toLocaleString("ko-KR")}점`,
+            lines: [
+              payload.name,
+              lastRank.rankDay ? `오늘 ${lastRank.rankDay}위` : "",
+              lastRank.rankWeek ? `이번주 ${lastRank.rankWeek}위` : "",
+            ].filter(Boolean),
+          });
+        }
+        const result = await window.TodayScores.shareToKakao(payload);
         const msg = form.querySelector("#today-rank-msg");
         if (window.TodayScores.formatShareResult) {
           msg.textContent = window.TodayScores.formatShareResult(result);

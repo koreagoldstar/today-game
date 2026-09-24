@@ -243,16 +243,36 @@
     switchTab(keys[(keys.indexOf(currentCat) + 1) % keys.length]);
   });
 
-  els.share.addEventListener("click", () => {
-    const text = `${els.title.textContent} 결과: ${els.rTitle.textContent}\n${els.rDesc.textContent}\nhttps://www.todaygame.co.kr/games/fortune-draw/`;
-    if (navigator.share) navigator.share({ text }).catch(() => {});
-    else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      els.share.textContent = "복사됐어요!";
-      window.setTimeout(() => {
-        els.share.textContent = "공유";
-      }, 1400);
-    }
+  els.share.addEventListener("click", async () => {
+    if (!window.TodayScores || !TodayScores.shareToKakao) return;
+    const title = els.rTitle.textContent || "오늘의 운세";
+    const desc = els.rDesc.textContent || "";
+    const canvas = TodayScores.makeResultCard
+      ? TodayScores.makeResultCard({
+          eyebrow: "오늘의게임 · 운세 뽑기",
+          title: els.title.textContent || "오늘의 운세",
+          hero: title.slice(0, 12),
+          lines: [desc.slice(0, 28), desc.slice(28, 56)].filter(Boolean),
+          bg0: "#4a2a18",
+          bg1: "#1a0e0a",
+          accent: "#ffe156",
+        })
+      : null;
+    const result = await TodayScores.shareToKakao({
+      gameId: "fortune-draw",
+      gameTitle: "오늘의 운세 뽑기",
+      title: `${els.title.textContent} · ${title}`,
+      description: desc,
+      score: 0,
+      scoreLabel: title,
+      canvas,
+      buttonTitle: "나도 뽑아보기",
+    });
+    const prev = els.share.textContent;
+    els.share.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+    window.setTimeout(() => {
+      els.share.textContent = prev;
+    }, 1600);
   });
 
   switchTab("fortune");

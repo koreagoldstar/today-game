@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>홈런왕 | 오늘의게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky1:#7FD8FF; --sky2:#BDEBFF; --sun:#FFE066;
+    --grass:#5FBE72; --grass2:#4CA860; --dirt:#D9A066; --dirt2:#C98A4B;
+    --ink:#1E2A38; --ink-soft:#5B6B7C; --card:#FFFFFF; --ring:#E9EEF2;
+    --red:#FF5C6C; --gold:#FFC145;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--sky1); color:var(--ink);
+    font-family:'Gowun Dodum', sans-serif; overflow:hidden; touch-action:none;
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+  }
+  .wrap{ width:100%; max-width:480px; height:100vh; max-height:900px; position:relative; display:flex; flex-direction:column; }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .brand{ position:absolute; top:10px; left:0; right:0; text-align:center; font-size:11px; color:rgba(30,42,56,.55); z-index:3; }
+  .hud{ position:absolute; top:30px; left:14px; right:14px; display:flex; justify-content:space-between; z-index:3; pointer-events:none; }
+  .hud .box{ background:rgba(255,255,255,.85); border-radius:14px; padding:8px 14px; font-family:'Jua',sans-serif; }
+  .hud .score{ color:var(--red); font-size:18px; }
+  .hud .swings{ color:var(--ink-soft); font-size:12px; text-align:right; }
+
+  .result-tag{
+    position:absolute; left:50%; top:30%; transform:translate(-50%,-10px);
+    font-family:'Jua', sans-serif; font-size:34px; opacity:0; z-index:4; pointer-events:none;
+    text-shadow:0 3px 0 rgba(0,0,0,.15);
+  }
+  .result-tag.show{ animation:resPop .9s ease forwards; }
+  @keyframes resPop{
+    0%{ opacity:0; transform:translate(-50%,10px) scale(.6); }
+    25%{ opacity:1; transform:translate(-50%,-10px) scale(1.1); }
+    75%{ opacity:1; transform:translate(-50%,-14px) scale(1); }
+    100%{ opacity:0; transform:translate(-50%,-24px) scale(1); }
+  }
+
+  .swing-zone{ position:absolute; inset:0; z-index:2; }
+
+  .meter-wrap{
+    position:absolute; left:20px; right:20px; bottom:26px; z-index:3;
+    background:rgba(255,255,255,.9); border-radius:18px; padding:12px 16px 16px;
+  }
+  .meter-label{ font-family:'Jua',sans-serif; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px; text-align:center; }
+  .meter-track{ position:relative; height:20px; border-radius:12px; background:#EAF3F8; overflow:hidden; border:1px solid var(--ring); }
+  .meter-zone{ position:absolute; top:0; bottom:0; }
+  .meter-zone.perfect{ background:#FFD34D; }
+  .meter-zone.good{ background:#B7E4C7; }
+  .meter-marker{ position:absolute; top:-4px; width:6px; height:28px; background:var(--ink); border-radius:3px; }
+  .swing-hint{ text-align:center; margin-top:10px; font-family:'Jua',sans-serif; font-size:14px; color:var(--red); }
+
+  .overlay{
+    position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(20,30,42,.82); text-align:center; padding:24px; z-index:6;
+  }
+  .overlay.show{ display:flex; }
+  .overlay h1{ font-family:'Jua',sans-serif; font-size:26px; margin:0 0 6px; color:#fff; }
+  .overlay p{ color:#D7E4EE; font-size:13.5px; margin:0 0 20px; }
+  .big-emoji{ font-size:56px; margin-bottom:10px; }
+  .btn{ padding:14px 26px; border-radius:16px; border:none; cursor:pointer; font-family:'Jua',sans-serif; font-size:14.5px; background:var(--gold); color:#4A3300; margin:4px; }
+  .btn.secondary{ background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); }
+  .statline{ font-family:'Orbitron',sans-serif; font-size:15px; color:var(--gold); margin-bottom:4px; }
+  .diamond-summary{ display:flex; gap:8px; margin:10px 0 18px; flex-wrap:wrap; justify-content:center; }
+  .diamond-summary span{ background:rgba(255,255,255,.12); color:#fff; font-size:12px; padding:5px 10px; border-radius:10px; font-family:'Jua',sans-serif; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="brand">🐣 오늘의게임 · 홈런왕</div>
+  <canvas id="c"></canvas>
+
+  <div class="hud">
+    <div class="box score" id="scoreBox">SCORE 0</div>
+    <div class="box swings" id="swingsBox">1 / 10구</div>
+  </div>
+
+  <div class="result-tag" id="resultTag"></div>
+
+  <div class="swing-zone" id="swingZone"></div>
+
+  <div class="meter-wrap">
+    <div class="meter-label">공이 오면 정확한 타이밍에 탭하세요!</div>
+    <div class="meter-track" id="meterTrack">
+      <div class="meter-zone perfect" id="zonePerfect"></div>
+      <div class="meter-zone good" id="zoneGoodL"></div>
+      <div class="meter-zone good" id="zoneGoodR"></div>
+      <div class="meter-marker" id="meterMarker"></div>
+    </div>
+    <div class="swing-hint">화면을 탭해서 스윙!</div>
+  </div>
+
+  <div class="overlay show" id="startOverlay">
+    <div class="big-emoji">🐣⚾️</div>
+    <h1>홈런왕</h1>
+    <p>10번의 스윙 기회! 타이밍을 맞춰서<br>최고의 홈런더비 기록에 도전하세요.</p>
+    <button class="btn" id="startBtn">타석에 들어서기</button>
+  </div>
+
+  <div class="overlay" id="endOverlay">
+    <div class="big-emoji" id="endEmoji">🏆</div>
+    <h1>더비 종료!</h1>
+    <div class="statline" id="endScore">TOTAL BASES 0</div>
+    <div class="diamond-summary" id="diamondSummary"></div>
+    <div>
+      <button class="btn" id="retryBtn">다시 도전</button>
+      <button class="btn secondary" id="shareBtn2">결과 공유</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('wrap');
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W,H,DPR;
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    canvas.width = W*DPR; canvas.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let audioCtx=null;
+  function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
+  function sfx(freq,dur,type,gain){
+    if(!audioCtx) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.value=freq; g.gain.value=gain||0.06;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur+0.02);
+  }
+  function crackSfx(){
+    if(!audioCtx) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(180,audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(60,audioCtx.currentTime+0.15);
+    g.gain.value=0.14;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.18);
+    o.stop(audioCtx.currentTime+0.2);
+  }
+
+  const TOTAL_SWINGS = 10;
+  const STORAGE_BEST = 'tg_homerun_best';
+  let best = parseInt(localStorage.getItem(STORAGE_BEST)||'0',10);
+
+  let swingIdx = 0, totalBases = 0, results = [];
+  let state = 'idle'; // idle, pitching, resolved
+  let pitchStart = 0, pitchDur = 0;
+  let markerPos = 0; // 0..1 across track
+  let markerDir = 1;
+  let markerRAF = null;
+  let ballAnim = null; // {type, startTime, dur}
+
+  const PERFECT_W = 0.10, GOOD_W = 0.22;
+
+  function layoutMeter(){
+    const track = document.getElementById('meterTrack');
+    const w = track.clientWidth;
+    const centerStart = 0.5 - PERFECT_W/2, centerEnd = 0.5 + PERFECT_W/2;
+    document.getElementById('zonePerfect').style.left = (centerStart*w)+'px';
+    document.getElementById('zonePerfect').style.width = (PERFECT_W*w)+'px';
+    document.getElementById('zoneGoodL').style.left = ((centerStart-GOOD_W)*w)+'px';
+    document.getElementById('zoneGoodL').style.width = (GOOD_W*w)+'px';
+    document.getElementById('zoneGoodR').style.left = (centerEnd*w)+'px';
+    document.getElementById('zoneGoodR').style.width = (GOOD_W*w)+'px';
+  }
+
+  function updateHUD(){
+    document.getElementById('scoreBox').textContent = 'SCORE ' + totalBases;
+    document.getElementById('swingsBox').textContent = Math.min(swingIdx+1, TOTAL_SWINGS) + ' / ' + TOTAL_SWINGS + '구';
+  }
+
+  function startPitch(){
+    state = 'pitching';
+    markerPos = 0; markerDir = 1;
+    pitchDur = 900 + Math.random()*300;
+    pitchStart = performance.now();
+    animateMarker();
+    ballFlight = { t0: pitchStart, dur: pitchDur, done:false };
+  }
+
+  function animateMarker(){
+    const track = document.getElementById('meterTrack');
+    const marker = document.getElementById('meterMarker');
+    function step(){
+      if(state !== 'pitching') return;
+      const now = performance.now();
+      const speed = 1/ (pitchDur*0.5);
+      markerPos += markerDir * speed * 16;
+      if(markerPos >= 1){ markerPos = 1; markerDir = -1; }
+      if(markerPos <= 0){ markerPos = 0; markerDir = 1; }
+      marker.style.left = (markerPos*track.clientWidth - 3) + 'px';
+      markerRAF = requestAnimationFrame(step);
+    }
+    markerRAF = requestAnimationFrame(step);
+  }
+
+  let ballFlight = null;
+
+  function judgeSwing(){
+    if(state !== 'pitching') return;
+    cancelAnimationFrame(markerRAF);
+    const diff = Math.abs(markerPos - 0.5);
+    let outcome;
+    if(diff <= PERFECT_W/2) outcome = 'homerun';
+    else if(diff <= PERFECT_W/2 + GOOD_W){
+      outcome = diff <= PERFECT_W/2 + GOOD_W*0.45 ? 'triple' : (diff <= PERFECT_W/2 + GOOD_W*0.75 ? 'double' : 'single');
+    } else outcome = Math.random() < 0.5 ? 'foul' : 'strike';
+    resolveSwing(outcome);
+  }
+
+  function missSwing(){
+    if(state !== 'pitching') return;
+    cancelAnimationFrame(markerRAF);
+    resolveSwing('strike');
+  }
+
+  const BASE_VALUE = { homerun:4, triple:3, double:2, single:1, foul:0, strike:0 };
+  const LABEL = { homerun:'홈런!! 🎆', triple:'3루타!', double:'2루타!', single:'안타!', foul:'파울', strike:'스트라이크' };
+  const COLOR = { homerun:'#FF5C6C', triple:'#FF9E4A', double:'#FFC145', single:'#5FBE72', foul:'#9AA7B4', strike:'#6B7C8C' };
+
+  function resolveSwing(outcome){
+    state = 'resolved';
+    const bases = BASE_VALUE[outcome];
+    totalBases += bases;
+    results.push(outcome);
+    if(outcome==='homerun'){ crackSfx(); } else if(bases>0){ sfx(500,0.1,'square',0.06); } else { sfx(200,0.12,'sawtooth',0.05); }
+
+    const tag = document.getElementById('resultTag');
+    tag.textContent = LABEL[outcome];
+    tag.style.color = COLOR[outcome];
+    tag.classList.remove('show'); void tag.offsetWidth; tag.classList.add('show');
+
+    ballFlight = { outcome, t0: performance.now(), dur: 1100 };
+
+    updateHUD();
+
+    setTimeout(()=>{
+      swingIdx++;
+      if(swingIdx >= TOTAL_SWINGS){
+        endGame();
+      } else {
+        state = 'idle';
+        updateHUD();
+        setTimeout(startPitch, 500);
+      }
+    }, 1200);
+  }
+
+  function endGame(){
+    if(totalBases > best){ best = totalBases; localStorage.setItem(STORAGE_BEST, String(best)); }
+    document.getElementById('endScore').textContent = 'TOTAL BASES ' + totalBases + ' (BEST ' + best + ')';
+    const counts = {};
+    results.forEach(r=> counts[r] = (counts[r]||0)+1);
+    const order = ['homerun','triple','double','single','foul','strike'];
+    const nameMap = {homerun:'홈런',triple:'3루타',double:'2루타',single:'안타',foul:'파울',strike:'삼진'};
+    const summary = document.getElementById('diamondSummary');
+    summary.innerHTML = '';
+    order.forEach(k=>{
+      if(counts[k]){
+        const s = document.createElement('span');
+        s.textContent = `${nameMap[k]} ${counts[k]}`;
+        summary.appendChild(s);
+      }
+    });
+    document.getElementById('endOverlay').classList.add('show');
+  }
+
+  // rendering
+  function drawField(now){
+    ctx.clearRect(0,0,W,H);
+    const skyH = H*0.42;
+    const g = ctx.createLinearGradient(0,0,0,skyH);
+    g.addColorStop(0,'#7FD8FF'); g.addColorStop(1,'#D7F3FF');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,skyH);
+
+    ctx.beginPath(); ctx.fillStyle='#FFE066';
+    ctx.arc(W*0.78, skyH*0.32, 34, 0, Math.PI*2); ctx.fill();
+
+    // clouds
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    [ [W*0.2, skyH*0.35, 26], [W*0.45, skyH*0.55, 20] ].forEach(([x,y,r])=>{
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.arc(x+r*0.8,y+4,r*0.7,0,Math.PI*2); ctx.arc(x-r*0.8,y+4,r*0.7,0,Math.PI*2); ctx.fill();
+    });
+
+    // outfield grass gradient
+    const g2 = ctx.createLinearGradient(0,skyH,0,H);
+    g2.addColorStop(0,'#5FBE72'); g2.addColorStop(1,'#3F9A54');
+    ctx.fillStyle = g2; ctx.fillRect(0,skyH,W,H-skyH);
+
+    // stripe mow pattern
+    ctx.globalAlpha = 0.08;
+    for(let i=0;i<6;i++){
+      ctx.fillStyle = i%2===0 ? '#000' : '#fff';
+      ctx.fillRect(0, skyH + i*(H-skyH)/6, W, (H-skyH)/6);
+    }
+    ctx.globalAlpha = 1;
+
+    // infield dirt diamond near bottom
+    const homeX = W/2, homeY = H - 40;
+    ctx.beginPath();
+    ctx.moveTo(homeX, homeY);
+    ctx.lineTo(homeX - 130, homeY - 160);
+    ctx.quadraticCurveTo(homeX, homeY-260, homeX+130, homeY-160);
+    ctx.closePath();
+    ctx.fillStyle = '#D9A066';
+    ctx.fill();
+
+    // pitcher mound
+    ctx.beginPath();
+    ctx.ellipse(homeX, homeY-150, 26, 12, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#C98A4B';
+    ctx.fill();
+
+    // batter box marker
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.fillRect(homeX-46, homeY-14, 20, 30);
+    ctx.fillRect(homeX+26, homeY-14, 20, 30);
+
+    // ball + swing/flight animation
+    if(state === 'pitching' && ballFlight && !ballFlight.done){
+      const t = Math.min(1, (now - ballFlight.t0)/ballFlight.dur);
+      const bx = homeX, by = (homeY-150) + t*(150-40);
+      const scale = 0.4 + t*0.9;
+      drawBall(bx, by, 5*scale);
+      if(t>=1) ballFlight.done = true;
+    }
+
+    if(state === 'resolved' && ballFlight && ballFlight.outcome){
+      drawHitAnim(now, homeX, homeY);
+    }
+
+    // batter (chick)
+    ctx.font = '34px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('🐣', homeX, homeY+6);
+    ctx.font = '20px sans-serif';
+    ctx.fillText('🏏', homeX+22, homeY-2);
+  }
+
+  function drawBall(x,y,r){
+    ctx.beginPath();
+    ctx.fillStyle = '#fff';
+    ctx.arc(x,y,Math.max(2,r),0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#FF5C6C'; ctx.lineWidth=1;
+    ctx.stroke();
+  }
+
+  function drawHitAnim(now, homeX, homeY){
+    const t = Math.min(1, (now - ballFlight.t0)/ballFlight.dur);
+    const outcome = ballFlight.outcome;
+    if(outcome === 'strike'){ return; }
+    if(outcome === 'foul'){
+      const ang = -Math.PI/2 + (Math.random()<0.5?-0.9:0.9);
+      const dist = 60 * t;
+      drawBall(homeX + Math.cos(ang)*dist, homeY-150 + Math.sin(ang)*dist*1.4, 5);
+      return;
+    }
+    const distMap = { single:0.35, double:0.55, triple:0.75, homerun:1.05 };
+    const dist = distMap[outcome];
+    const arcHeight = 160 * dist;
+    const travel = (H*0.75) * dist;
+    const bx = homeX + Math.sin(t*Math.PI*0.5) * (travel*0.5*(t));
+    // simple parabolic arc going up-screen (toward outfield)
+    const progress = t;
+    const px = homeX + (Math.random()<0.5?-1:1)*0*progress; // keep centered-ish, slight variance could be added
+    const py = (homeY-150) - Math.sin(progress*Math.PI) * arcHeight - progress*travel*0.4;
+    drawBall(homeX, py, 5);
+    if(outcome==='homerun' && progress>0.6){
+      // fireworks particles near peak
+      for(let i=0;i<1;i++){
+        ctx.fillStyle = ['#FFD34D','#FF5C6C','#5FBE72'][Math.floor(Math.random()*3)];
+        ctx.beginPath();
+        ctx.arc(homeX + (Math.random()-0.5)*60, py + (Math.random()-0.5)*30, 2, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function raf(){
+    const now = performance.now();
+    drawField(now);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
+
+  document.getElementById('swingZone').addEventListener('touchstart', (e)=>{ e.preventDefault(); ensureAudio(); judgeSwing(); }, {passive:false});
+  document.getElementById('swingZone').addEventListener('mousedown', ()=>{ ensureAudio(); judgeSwing(); });
+  window.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ ensureAudio(); judgeSwing(); } });
+
+  function resetGame(){
+    swingIdx = 0; totalBases = 0; results = [];
+    state = 'idle';
+    updateHUD();
+    layoutMeter();
+    setTimeout(startPitch, 500);
+  }
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    ensureAudio();
+    document.getElementById('startOverlay').classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('retryBtn').addEventListener('click', ()=>{
+    document.getElementById('endOverlay').classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('shareBtn2').addEventListener('click', ()=>{
+    const text = `홈런왕 결과: TOTAL BASES ${totalBases} (BEST ${best}) ⚾️\\ntodaygame.co.kr 에서 도전해보세요!`;
+    if(navigator.share){ navigator.share({text}).catch(()=>{}); }
+    else if(navigator.clipboard){
+      navigator.clipboard.writeText(text);
+      const b = document.getElementById('shareBtn2');
+      const o = b.textContent; b.textContent='복사됐어요!';
+      setTimeout(()=> b.textContent=o, 1400);
+    }
+  });
+
+  layoutMeter();
+  updateHUD();
+})();
+</script>
+</body>
+</html>

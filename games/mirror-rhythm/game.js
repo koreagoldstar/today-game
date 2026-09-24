@@ -296,7 +296,7 @@
     tick();
   }
 
-  function saveCard() {
+  function drawCard() {
     const cvs = document.getElementById("share-canvas");
     const cx = cvs.getContext("2d");
     const a = acc();
@@ -332,10 +332,38 @@
     cx.fillStyle = "#00f5ff";
     cx.font = "16px sans-serif";
     cx.fillText("https://www.todaygame.co.kr/games/mirror-rhythm/", 32, 318);
+    return cvs;
+  }
+
+  function saveCard() {
+    const cvs = drawCard();
     const link = document.createElement("a");
     link.download = "mirror-rhythm-result.png";
     link.href = cvs.toDataURL("image/png");
     link.click();
+  }
+
+  async function shareKakao() {
+    const btn = document.getElementById("kakao-btn");
+    if (!window.TodayScores || !TodayScores.shareToKakao) return;
+    const a = acc();
+    const rank = rankFor(a);
+    const result = await TodayScores.shareToKakao({
+      gameId: "mirror-rhythm",
+      gameTitle: "미러 리듬",
+      title: `미러 리듬 ${rank} · ${currentSong().name}`,
+      description: `SCORE ${score} · MAX COMBO ${maxCombo} · ACC ${a}%`,
+      score,
+      scoreLabel: `${Number(score).toLocaleString("ko-KR")}점`,
+      canvas: drawCard(),
+      buttonTitle: "나도 연주하기",
+    });
+    if (!btn) return;
+    const prev = btn.textContent;
+    btn.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+    setTimeout(() => {
+      btn.textContent = prev;
+    }, 1600);
   }
 
   pads.forEach((btn) => {
@@ -409,6 +437,7 @@
   });
   document.getElementById("menu-btn").addEventListener("click", backToMenu);
   document.getElementById("save-btn").addEventListener("click", saveCard);
+  document.getElementById("kakao-btn").addEventListener("click", shareKakao);
 
   updateHud();
   syncSongList();

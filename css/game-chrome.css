@@ -1,0 +1,217 @@
+/* Shared game chrome: brand chip, mute, CTA pills, Jua. Genre colors stay. */
+
+.today-brand,
+.today-mute-btn,
+.today-pause-btn,
+.today-pause-overlay,
+.today-pause-overlay button,
+.today-pause-overlay a,
+.today-pause-overlay h2,
+.today-pause-overlay p {
+  font-family: "Jua", system-ui, sans-serif !important;
+}
+
+.today-brand,
+.today-mute-btn {
+  appearance: none;
+  border: none;
+  box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  color: #3d2a36;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 0 rgba(61, 42, 54, 0.18);
+}
+
+.today-brand:active,
+.today-mute-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(61, 42, 54, 0.18);
+}
+
+.today-brand {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  left: 10px;
+  z-index: 32;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+}
+
+.today-brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.today-brand span {
+  font-family: "Bagel Fat One", "Jua", cursive;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #ff4f8b;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.today-mute-btn {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: 10px;
+  z-index: 34;
+  width: 44px;
+  min-width: 44px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.today-mute-btn.is-muted {
+  color: #7a5a68;
+  background: rgba(255, 247, 251, 0.94);
+}
+
+.hero-top > .today-mute-btn {
+  position: static;
+  width: 44px;
+  height: 40px;
+}
+
+.hud > .today-brand,
+.hud > .today-mute-btn,
+header.hud > .today-brand,
+header.hud > .today-mute-btn {
+  position: static;
+}
+
+.hud:has(#speak-btn) > .today-mute-btn {
+  position: static;
+  flex: 0 0 auto;
+}
+
+/* Overlay titles + primary CTAs share one service language */
+body:not(.edu-play) .overlay h1,
+body:not(.edu-play) #title h1,
+body:not(.edu-play) #game-over h1,
+body:not(.edu-play) #over h1,
+body:not(.edu-play) #result h1,
+body:not(.edu-play) .result h1 {
+  font-family: "Bagel Fat One", "Jua", cursive !important;
+}
+
+body:not(.edu-play) .overlay,
+body:not(.edu-play) #title,
+body:not(.edu-play) #game-over,
+body:not(.edu-play) #over,
+body:not(.edu-play) #result,
+body:not(.edu-play) .result,
+body:not(.edu-play) .overlay p,
+body:not(.edu-play) .overlay li,
+body:not(.edu-play) .overlay .lead,
+body:not(.edu-play) .overlay .howto,
+body:not(.edu-play) .overlay .rules {
+  font-family: "Jua", system-ui, sans-serif;
+}
+
+.overlay .btn,
+.overlay .primary,
+.overlay .next,
+#title .btn,
+#title .primary,
+#game-over .btn,
+#game-over .primary,
+#over .btn,
+#over .primary,
+#result .btn,
+#result .primary,
+.result .btn,
+#start-btn,
+#retry-btn,
+#again-btn,
+#next-btn,
+#endless-btn,
+#share-btn,
+#kakao-btn,
+#save-btn,
+#menu-btn {
+  border-radius: 999px !important;
+}
+
+.overlay .btn.kakao,
+.row .btn.kakao,
+#kakao-btn,
+button.kakao {
+  color: #191919 !important;
+  background: linear-gradient(180deg, #fee500, #f5d800) !important;
+  box-shadow: 0 5px 0 #c4a800 !important;
+}
+
+.overlay .btn.kakao:active,
+#kakao-btn:active,
+button.kakao:active {
+  box-shadow: 0 3px 0 #c4a800 !important;
+}
+
+body:not(.edu-play) .overlay .btn,
+body:not(.edu-play) .overlay .primary,
+body:not(.edu-play) #start-btn,
+body:not(.edu-play) #retry-btn,
+body:not(.edu-play) #again-btn,
+body:not(.edu-play) #next-btn,
+body:not(.edu-play) #share-btn,
+body:not(.edu-play) #kakao-btn,
+body:not(.edu-play) #save-btn,
+body:not(.edu-play) #menu-btn {
+  font-family: "Jua", system-ui, sans-serif !important;
+}
+
+.today-pause-btn {
+  border-radius: 999px !important;
+  font-family: "Jua", system-ui, sans-serif !important;
+}
+
+@media (max-width: 360px) {
+  .today-brand span {
+    display: none;
+  }
+  .today-brand {
+    padding: 3px;
+    min-width: 36px;
+    justify-content: center;
+  }
+}
+
+body.edu-play,
+body.edu-play .overlay,
+body.edu-play .overlay h1,
+body.edu-play .overlay h2,
+body.edu-play .overlay p,
+body.edu-play .overlay button,
+body.edu-play button,
+body.edu-play a,
+body.edu-play #start-btn,
+body.edu-play #again-btn,
+body.edu-play .today-mute-btn,
+body.edu-play .today-pause-btn,
+body.edu-play .today-pause-overlay,
+body.edu-play .today-pause-overlay h2,
+body.edu-play .today-pause-overlay p {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+}
+
+body.edu-play .overlay h1,
+body.edu-play h1,
+body.edu-play h2 {
+  font-weight: 900 !important;
+}

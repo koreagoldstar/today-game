@@ -427,21 +427,35 @@
   document.getElementById("menu-btn").addEventListener("click", backToMenu);
 
   document.getElementById("share-btn").addEventListener("click", async () => {
-    const text = `리듬 배틀 「${currentSong().name}」 ${won ? "승리" : "패배"} · SCORE ${score} · MAX COMBO ${maxCombo}\nhttps://www.todaygame.co.kr/games/rhythm-battle/`;
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        const b = document.getElementById("share-btn");
-        const o = b.textContent;
-        b.textContent = "복사됐어요!";
-        setTimeout(() => {
-          b.textContent = o;
-        }, 1400);
-      }
-    } catch (_) {
-      /* ignore */
-    }
+    const btn = document.getElementById("share-btn");
+    if (!window.TodayScores || !TodayScores.shareToKakao) return;
+    const outcome = won ? "승리" : "패배";
+    const canvas = TodayScores.makeResultCard
+      ? TodayScores.makeResultCard({
+          eyebrow: "오늘의게임 · 리듬 배틀",
+          title: currentSong().name,
+          hero: outcome,
+          lines: [`SCORE ${score}`, `MAX COMBO ${maxCombo}`],
+          bg0: "#081828",
+          bg1: "#070714",
+          accent: won ? "#ffe156" : "#ff2d95",
+        })
+      : null;
+    const result = await TodayScores.shareToKakao({
+      gameId: "rhythm-battle",
+      gameTitle: "리듬 배틀",
+      title: `리듬 배틀 ${outcome} · ${currentSong().name}`,
+      description: `SCORE ${score} · MAX COMBO ${maxCombo}`,
+      score,
+      scoreLabel: `${Number(score).toLocaleString("ko-KR")}점`,
+      canvas,
+      buttonTitle: "나도 대결하기",
+    });
+    const prev = btn.textContent;
+    btn.textContent = result.ok ? "공유 창 열림" : "공유 실패";
+    setTimeout(() => {
+      btn.textContent = prev;
+    }, 1600);
   });
 
   updateHud();

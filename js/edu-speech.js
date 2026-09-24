@@ -212,6 +212,7 @@
 
   function speakSoftly(text) {
     if (!text) return Promise.resolve(true);
+    if (window.TodayAudio && TodayAudio.isMuted()) return Promise.resolve(true);
     if (activeFinish) {
       const prev = activeFinish;
       activeFinish = null;
@@ -262,6 +263,7 @@
   }
 
   function ding() {
+    if (window.TodayAudio && TodayAudio.isMuted()) return;
     const ctx = ensureAudio();
     if (!ctx) return;
     const start = () => {
