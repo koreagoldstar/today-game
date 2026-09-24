@@ -572,7 +572,7 @@ body {
 
 @media (max-width: 1100px) {
   .hub-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "hero"
       "shelf"
@@ -1708,4 +1708,33 @@ body {
   .seo-crawl ul {
     columns: 1;
   }
+}
+
+/* 내 얼굴로 플레이 */
+.hero-link-face {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: #d63c78;
+  box-shadow: 0 3px 0 rgba(214, 60, 120, 0.28);
+}
+
+.slot-art {
+  position: relative;
+}
+
+.slot-face {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #ffd23f;
+  pointer-events: none;
 }

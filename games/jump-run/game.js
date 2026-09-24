@@ -1340,6 +1340,9 @@
       ctx.ellipse(0, 2, drawW * 0.28, 5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.drawImage(sprites.hero, -drawW / 2, -drawH + 4, drawW, drawH);
+      if (window.TodayFace) {
+        TodayFace.drawHead(ctx, -drawW / 2 + drawW * 0.6, -drawH + 4 + drawH * 0.34, drawW * 0.3);
+      }
       ctx.restore();
     } else {
       drawChickFallback(x, y, boxW, boxH, jumping);

@@ -55,6 +55,7 @@
     },
     {
       id: "neon-runner",
+      face: true,
       title: "네온 러너",
       tag: "점프 · 슬라이드",
       href: "/games/neon-runner/",
@@ -297,6 +298,7 @@
     },
     {
       id: "jump-run",
+      face: true,
       title: "콩콩 점프",
       tag: "점프런 · 무한 · 랭킹",
       href: "/games/jump-run/",
@@ -497,6 +499,7 @@
     },
     {
       id: "crossy",
+      face: true,
       title: "삐약이 건너기",
       tag: "액션 · 50단계",
       href: "/games/crossy/",
@@ -850,14 +853,21 @@
     const play = opts.external
       ? `<p class="slot-tag">${game.tag}</p><span class="slot-ext">↗ 외부 연결</span>`
       : `<p class="slot-tag">${game.tag}</p><span class="slot-play">플레이</span>`;
+    const face = game.face ? `<span class="slot-face" title="내 얼굴로 플레이할 수 있어요" aria-label="내 얼굴로 플레이 가능">🙂</span>` : "";
     a.innerHTML = `
-      <div class="slot-art">${art}</div>
+      <div class="slot-art">${art}${face}</div>
       <div class="slot-meta">
         <p class="slot-name">${game.title}</p>
         ${play}
       </div>
     `;
     return a;
+  }
+
+  const faceOpen = document.getElementById("face-open");
+  if (faceOpen) {
+    if (window.TodayFace) faceOpen.addEventListener("click", () => TodayFace.open());
+    else faceOpen.hidden = true;
   }
 
   function renderCatalog() {

@@ -290,6 +290,9 @@
     document.getElementById("dist-text").textContent = `${Math.floor(distance)}m`;
   }
 
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름] 비율
+  const FACE_HEAD = { run: [0.58, 0.33, 0.17], jump: [0.58, 0.33, 0.17], slide: [0.6, 0.38, 0.2] };
+
   function drawSprite(img, x, y, w, h) {
     if (!img) return false;
     ctx.drawImage(img, x, y, w, h);
@@ -394,6 +397,10 @@
         py = gy - ph + 8 + player.y;
       }
       const drawn = drawSprite(img, playerX - pw / 2, py, pw, ph);
+      if (drawn && window.TodayFace) {
+        const head = img === sprites.slide ? FACE_HEAD.slide : img === sprites.jump ? FACE_HEAD.jump : FACE_HEAD.run;
+        TodayFace.drawHead(ctx, playerX - pw / 2 + pw * head[0], py + ph * head[1], Math.min(pw, ph) * head[2]);
+      }
       if (!drawn) {
         ctx.font = player.sliding ? "32px sans-serif" : "40px sans-serif";
         ctx.textAlign = "center";

@@ -695,6 +695,7 @@
     ctx.translate(px + TILE / 2, py + TILE / 2);
     ctx.scale(1 / squash, squash);
     drawSprite(imgs.chick, -TILE * 0.43, -TILE * 0.48, TILE * 0.86, TILE * 0.86);
+    if (window.TodayFace) TodayFace.drawHead(ctx, -TILE * 0.02, -TILE * 0.16, TILE * 0.3);
     ctx.restore();
 
     particles.forEach((p) => {

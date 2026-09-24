@@ -1141,6 +1141,7 @@
     ctx.fillRect(-4, 0, canvas.width + 8, canvas.height);
 
     for (let y = 1; y <= rows; y += 1) {
+      if (!grid[y]) continue;
       for (let x = 1; x <= cols; x += 1) {
         const t = grid[y][x];
         if (t == null) continue;
