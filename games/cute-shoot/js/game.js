@@ -1385,6 +1385,7 @@
       ctx.ellipse(p.x, p.y + 26, 22, 8, 0, 0, Math.PI * 2);
       ctx.fill();
       drawChar(p.charId, p.x, p.y, 64);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, p.x - 32, p.y - 32, 64, 64, [0.5, 0.4, 0.26]);
     }
     if (p.shield > 0) {
       ctx.beginPath();

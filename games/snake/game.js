@@ -590,6 +590,7 @@
         ctx.rotate(rot);
         ctx.drawImage(sprites.head, -size / 2, -size / 2, size, size);
         ctx.restore();
+        if (window.TodayFace) TodayFace.drawHead(ctx, c.x, c.y, CELL * 0.36);
       } else {
         drawBodyBall(c, 0.95);
         ctx.fillStyle = "#fff";

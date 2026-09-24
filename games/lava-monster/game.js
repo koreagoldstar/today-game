@@ -13,6 +13,14 @@
   const GRAVITY = 2200;
   const ASSET_V = 5;
 
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
+  const FACE_HEAD = {
+    chick: [0.62, 0.3, 0.2],
+    bear: [0.55, 0.25, 0.18],
+    rabbit: [0.55, 0.35, 0.15],
+    squirrel: [0.62, 0.33, 0.15],
+  };
+
   const HEROES = {
     chick: { id: "chick", name: "병아리", tag: "스피드형", hp: 95, speed: 238, jump: -710, w: 68, h: 68, fireCd: 0.13, sprite: "hero_chick" },
     bear: { id: "bear", name: "곰", tag: "탱커형", hp: 135, speed: 188, jump: -650, w: 78, h: 78, fireCd: 0.17, sprite: "hero_bear" },
@@ -1389,6 +1397,11 @@
       const blink = player.iframe <= 0 || Math.floor(animT * 14) % 2 === 0;
       if (blink) {
         drawSheet(ctx, sheets[heroMeta().sprite], player.frame, player.x, player.y, player.w, player.h, player.facing < 0);
+        if (sheets[heroMeta().sprite] && window.TodayFace) {
+          TodayFace.drawOnSprite(ctx, player.x - player.w / 2, player.y - player.h / 2, player.w, player.h, FACE_HEAD[heroMeta().id] || FACE_HEAD.chick, {
+            flipX: player.facing < 0,
+          });
+        }
       }
       if (player.shield > 0) {
         ctx.strokeStyle = `rgba(120,220,255,${0.42 + Math.sin(animT * 6) * 0.15})`;

@@ -592,6 +592,7 @@
       const ww = 138;
       const wh = 168;
       ctx.drawImage(img, -ww / 2, -wh + 88, ww, wh);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -ww / 2, -wh + 88, ww, wh, [0.44, 0.26, 0.2]);
     } else {
       // fallback stick figure — black tuxedo
       ctx.fillStyle = "#1a1818";

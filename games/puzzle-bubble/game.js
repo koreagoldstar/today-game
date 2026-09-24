@@ -952,6 +952,7 @@
       const dw = 96;
       const dh = 114;
       ctx.drawImage(sprites.dino, W / 2 - dw / 2, SHOOTER_Y + 4, dw, dh);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, W / 2 - dw / 2, SHOOTER_Y + 4, dw, dh, [0.42, 0.28, 0.17]);
     } else {
       ctx.fillStyle = "#7ed957";
       ctx.beginPath();

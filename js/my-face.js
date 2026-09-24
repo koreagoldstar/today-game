@@ -395,9 +395,10 @@
 
   function autoMount() {
     if (!document.body || document.body.dataset.face !== "1") return;
-    const title = document.getElementById("title");
+    const start = document.getElementById("start-btn");
+    const title = document.getElementById("title") || (start && start.parentNode);
     if (!title || title.querySelector(".today-face-chip")) return;
-    mountChip(title, document.getElementById("start-btn"));
+    mountChip(title, start);
   }
 
   window.addEventListener("storage", (e) => {

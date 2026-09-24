@@ -305,6 +305,13 @@
   resize();
 
   // Hero Definitions & Growth
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
+  const FACE_HEAD = {
+    chick: [0.5, 0.25, 0.16],
+    rabbit: [0.5, 0.33, 0.14],
+    bear: [0.45, 0.2, 0.14],
+    bird: [0.5, 0.25, 0.15],
+  };
   const HERO_DEFS = {
     chick: {
       name: "병아리",
@@ -1660,6 +1667,9 @@
           const headH = player.r * 1.55;
           const headY = vType === "tank" ? -player.r * 1.05 - recoilY : -player.r * 0.55 + hover;
           drawSpriteSheet(heroSprite, heroFrame, SPRITE_FRAMES, -headW / 2, headY - headH * 0.55, headW, headH);
+          if (window.TodayFace) {
+            TodayFace.drawOnSprite(ctx, -headW / 2, headY - headH * 0.55, headW, headH, FACE_HEAD[selectedHeroKey] || FACE_HEAD.chick);
+          }
         }
 
         if (player.recoil > 0.2 && vType === "tank") {
@@ -1671,7 +1681,11 @@
       } else {
         const sz = player.r * 3.8 * (1 + (upgrades.evoLv - 1) * 0.15);
         drawGroundShadow(sz, sz * 0.4);
-        if (!drawSpriteSheet(heroSprite, heroFrame, SPRITE_FRAMES, -sz / 2, -sz / 2, sz, sz)) {
+        const heroDrawn = drawSpriteSheet(heroSprite, heroFrame, SPRITE_FRAMES, -sz / 2, -sz / 2, sz, sz);
+        if (heroDrawn && window.TodayFace) {
+          TodayFace.drawOnSprite(ctx, -sz / 2, -sz / 2, sz, sz, FACE_HEAD[selectedHeroKey] || FACE_HEAD.chick);
+        }
+        if (!heroDrawn) {
           ctx.fillStyle = heroDef.color;
           ctx.beginPath();
           ctx.ellipse(0, 0, player.r, player.r * 1.3, 0, 0, Math.PI * 2);

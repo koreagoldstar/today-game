@@ -181,6 +181,7 @@
     },
     {
       id: "lava-monster",
+      face: true,
       title: "용암괴물을 물리쳐라 (지혁요청)",
       tag: "아케이드 · 물총 · 50스테이지",
       href: "/games/lava-monster/",
@@ -189,6 +190,7 @@
     },
     {
       id: "zombie-run",
+      face: true,
       title: "좀비런 (지혁 제작)",
       tag: "액션 · 탑승 · 50스테이지",
       href: "/games/zombie-run/",
@@ -205,6 +207,7 @@
     },
     {
       id: "dino-hunt",
+      face: true,
       title: "공룡 헌터",
       tag: "슈팅 · 나무 오르기",
       href: "/games/dino-hunt/",
@@ -213,6 +216,7 @@
     },
     {
       id: "penalty-kick",
+      face: true,
       title: "승부차기 히어로",
       tag: "축구 · 예측 타이밍",
       href: "/games/penalty-kick/",
@@ -221,6 +225,7 @@
     },
     {
       id: "number-hole",
+      face: true,
       title: "넘버 홀",
       tag: "팩맨 · 30스테이지",
       href: "/games/number-hole/",
@@ -376,6 +381,7 @@
     },
     {
       id: "snake",
+      face: true,
       title: "애플 스네이크",
       tag: "아케이드 · 50단계",
       href: "/games/snake/",
@@ -425,6 +431,7 @@
     },
     {
       id: "stork-stride",
+      face: true,
       title: "서빙왕",
       tag: "균형 · 무한 · 랭킹",
       href: "/games/stork-stride/",
@@ -481,6 +488,7 @@
     },
     {
       id: "minigolf",
+      face: true,
       title: "홀인원 골프",
       tag: "골프 · 18홀",
       href: "/games/minigolf/",
@@ -533,6 +541,7 @@
     },
     {
       id: "cute-shoot",
+      face: true,
       title: "귀염뽀짝 쏘세요",
       tag: "슈팅 · 자체제작",
       href: "/games/cute-shoot/",
@@ -549,6 +558,7 @@
     },
     {
       id: "puzzle-bubble",
+      face: true,
       title: "팝샷 버블",
       tag: "슈팅 · 50단계",
       href: "/games/puzzle-bubble/",
@@ -589,6 +599,7 @@
     },
     {
       id: "sokoban",
+      face: true,
       title: "상자야 굴러가",
       tag: "퍼즐 · 50단계",
       href: "/games/sokoban/",

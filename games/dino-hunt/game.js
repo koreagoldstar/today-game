@@ -908,8 +908,10 @@
     if (player.climbState === "up") ctx.rotate(-0.08);
     else if (player.climbState === "down") ctx.rotate(0.1);
     ctx.scale(player.face, 1);
-    if (loadImgReady(img)) ctx.drawImage(img, -w * 0.45, -h, w, h);
-    else {
+    if (loadImgReady(img)) {
+      ctx.drawImage(img, -w * 0.45, -h, w, h);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -w * 0.45, -h, w, h, [0.42, 0.1, 0.12]);
+    } else {
       ctx.fillStyle = "#d9c08a";
       ctx.fillRect(-18, -90, 36, 90);
     }

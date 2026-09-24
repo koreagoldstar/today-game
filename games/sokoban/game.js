@@ -387,6 +387,9 @@
     });
 
     drawSprite(imgs.bunny, player.x * cell + 2, player.y * cell + 2, cell - 4, "bunny");
+    if (assetsReady && window.TodayFace) {
+      TodayFace.drawOnSprite(ctx, player.x * cell + 2, player.y * cell + 2, cell - 4, cell - 4, [0.5, 0.58, 0.28]);
+    }
 
     const pdt = 0.016;
     particles.forEach((p) => {

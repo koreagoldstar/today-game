@@ -1137,6 +1137,14 @@
     ctx.restore();
   }
 
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
+  const KICK_FACE = [
+    [0.55, 0.1, 0.14],
+    [0.55, 0.11, 0.1],
+    [0.52, 0.12, 0.1],
+    [0.45, 0.11, 0.14],
+  ];
+
   function drawStriker(time) {
     const idleSprite = characterSprites.striker;
     if (!idleSprite.complete || !idleSprite.naturalWidth) {
@@ -1195,12 +1203,14 @@
         drawW,
         drawH
       );
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -drawW / 2, -drawH, drawW, drawH, KICK_FACE[frame]);
     } else {
       const h = 208;
       const w = h * (idleSprite.naturalWidth / idleSprite.naturalHeight);
       ctx.translate(footX, footY);
       ctx.rotate(-0.03);
       ctx.drawImage(idleSprite, -w / 2, -h, w, h);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -w / 2, -h, w, h, [0.5, 0.06, 0.14]);
     }
     ctx.restore();
   }

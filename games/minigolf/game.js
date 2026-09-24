@@ -931,6 +931,7 @@
     ctx.save();
     ctx.globalAlpha = 0.92;
     ctx.drawImage(imgs.mascot, 8, H - 150, 58, 82);
+    if (window.TodayFace) TodayFace.drawOnSprite(ctx, 8, H - 150, 58, 82, [0.5, 0.38, 0.14]);
     ctx.restore();
   }
 

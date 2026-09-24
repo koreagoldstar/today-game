@@ -955,6 +955,8 @@
     g.fill();
 
     g.rotate(-(facing || 0));
+    // 내 얼굴이 켜져 있으면 공 가운데에 얼굴, 숫자는 공 아래로
+    const faced = isPlayer && window.TodayFace && TodayFace.drawHead(g, 0, 0, rad * 0.72, { ring: 0 });
 
     const fs = Math.max(13, Math.min(30, rad * 0.95));
     g.font = `700 ${fs}px "Bagel Fat One","Jua"`;
@@ -964,8 +966,10 @@
       g.lineWidth = Math.max(2.5, fs * 0.14);
       g.strokeStyle = "rgba(255,255,255,0.95)";
       g.fillStyle = "#f5c842";
-      g.strokeText(String(power), rad * 0.06, rad * 0.14);
-      g.fillText(String(power), rad * 0.06, rad * 0.14);
+      const tx = faced ? 0 : rad * 0.06;
+      const ty = faced ? rad + fs * 0.55 : rad * 0.14;
+      g.strokeText(String(power), tx, ty);
+      g.fillText(String(power), tx, ty);
     } else {
       g.fillStyle = "#121820";
       g.fillText(String(power), 0, 2);
