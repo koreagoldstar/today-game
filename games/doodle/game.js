@@ -414,6 +414,7 @@
     const ph = player.h;
     if (sprites.hero) {
       ctx.drawImage(sprites.hero, -pw / 2, -ph / 2, pw, ph);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -pw / 2, -ph / 2, pw, ph, [0.63, 0.36, 0.13]);
     } else {
       ctx.fillStyle = "#6fd6b0";
       ctx.beginPath();

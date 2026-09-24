@@ -562,6 +562,7 @@
     ctx.rotate(opt.rot || 0);
     ctx.globalAlpha = opt.alpha == null ? 1 : opt.alpha;
     ctx.drawImage(img, -w / 2, -h, w, h);
+    if (opt.face && window.TodayFace) TodayFace.drawOnSprite(ctx, -w / 2, -h, w, h, opt.face);
     ctx.restore();
   }
 
@@ -571,6 +572,9 @@
     if (swingT < 0.16) return "contact";
     return "swing";
   }
+
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
+  const FACE_HEAD = { batter: [0.47, 0.26, 0.12], swing: [0.47, 0.26, 0.12], contact: [0.57, 0.23, 0.12] };
 
   function drawActors() {
     const throwing = phase === "pitch" && pitchT >= 0.18 || phase === "flight";
@@ -598,7 +602,7 @@
       const ghost = swingT < 0.1 ? spr.batter : spr.contact;
       drawSprite(ghost, bx + 10, by + 6, 142, 170, { alpha: 0.3, rot: 0.12 });
     }
-    drawSprite(bImg, bx, by, 142, 170, { rot: waggle + (swinging ? 0.06 : 0) });
+    drawSprite(bImg, bx, by, 142, 170, { rot: waggle + (swinging ? 0.06 : 0), face: FACE_HEAD[pose] || FACE_HEAD.batter });
   }
 
   function drawBaseball(x, y, r, rot) {

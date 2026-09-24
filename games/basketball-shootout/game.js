@@ -583,6 +583,9 @@
     ctx.ellipse(START.x - 4, FLOOR + 3, 38, 8, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.drawImage(img, START.x - 88, FLOOR - ph + 8 + bob, pw, ph);
+    if (window.TodayFace) {
+      TodayFace.drawOnSprite(ctx, START.x - 88, FLOOR - ph + 8 + bob, pw, ph, img === spr.shoot ? [0.47, 0.22, 0.12] : [0.5, 0.24, 0.13]);
+    }
   }
 
   function drawFx() {

@@ -31,6 +31,7 @@
   const GAMES = [
     {
       id: "homerun-derby",
+      face: true,
       title: "홈런왕",
       tag: "야구 · 10구 더비",
       href: "/games/homerun-derby/",
@@ -39,6 +40,7 @@
     },
     {
       id: "basketball-shootout",
+      face: true,
       title: "농구 슛아웃",
       tag: "농구 · 60초",
       href: "/games/basketball-shootout/",
@@ -47,6 +49,7 @@
     },
     {
       id: "rhythm-battle",
+      face: true,
       title: "리듬 배틀",
       tag: "대결 · 체력전",
       href: "/games/rhythm-battle/",
@@ -274,6 +277,7 @@
     },
     {
       id: "doodle",
+      face: true,
       title: "폴짝 하늘",
       tag: "점프 · 랭킹",
       href: "/games/doodle/",
@@ -282,6 +286,7 @@
     },
     {
       id: "flappy",
+      face: true,
       title: "펄럭 병아리",
       tag: "아케이드 · 랭킹",
       href: "/games/flappy/",
@@ -411,6 +416,7 @@
     },
     {
       id: "ninja-dodge",
+      face: true,
       title: "닌자 표창 피하기",
       tag: "회피 · 무한 · 랭킹",
       href: "/games/ninja-dodge/",
@@ -483,6 +489,7 @@
     },
     {
       id: "racing",
+      face: true,
       title: "스피드 삐약이",
       tag: "레이싱 · 50단계",
       href: "/games/racing/",
@@ -491,6 +498,7 @@
     },
     {
       id: "drift-chick",
+      face: true,
       title: "드리프트 삐약이",
       tag: "드리프트 · 원터치",
       href: "/games/drift-chick/",
@@ -516,6 +524,7 @@
     },
     {
       id: "chick-shield",
+      face: true,
       title: "막아요 쏴요",
       tag: "슈팅 · 방패",
       href: "/games/chick-shield/",

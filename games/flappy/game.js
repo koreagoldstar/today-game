@@ -348,6 +348,7 @@
     const size = 44;
     if (sprites.bird) {
       ctx.drawImage(sprites.bird, -size * 0.52, -size * 0.48, size, size);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -size * 0.52, -size * 0.48, size, size, [0.6, 0.37, 0.17]);
     } else {
       ctx.fillStyle = "#ffe27a";
       ctx.beginPath();

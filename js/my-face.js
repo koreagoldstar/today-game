@@ -96,6 +96,14 @@
     return true;
   }
 
+  // 스프라이트 상자(x, y, w, h) 안의 머리 위치를 비율 [가로, 세로, 반지름(w 기준)] 으로 받아 그려요.
+  function drawOnSprite(ctx, x, y, w, h, head, opts) {
+    if (!head) return false;
+    const o = opts || {};
+    const fx = o.flipX ? 1 - head[0] : head[0];
+    return drawHead(ctx, x + w * fx, y + h * head[1], w * head[2], o);
+  }
+
   /* ---------- 스타일 ---------- */
 
   function ensureStyle() {
@@ -403,7 +411,10 @@
     has: () => Boolean(data),
     active: () => Boolean(data && data.on !== false),
     ready: () => Boolean(api.active() && faceImg),
+    // 화면 안 <img> 에만 쓰세요. 서버·공유용으로 보내면 안 돼요.
+    dataUrl: () => (api.active() ? data.img : null),
     drawHead,
+    drawOnSprite,
     open: openPicker,
     mountChip,
     onChange(fn) {

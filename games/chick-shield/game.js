@@ -793,6 +793,7 @@
     if (invuln > 0) ctx.globalAlpha = 0.45 + 0.55 * Math.abs(Math.sin(performance.now() / 55));
     const chickOk = drawSprite(imgs.chick, player.x, player.y, 64, 0);
     if (!chickOk) drawChickFallback(player.x, player.y);
+    else if (window.TodayFace) TodayFace.drawOnSprite(ctx, player.x - 32, player.y - 32, 64, 64, [0.5, 0.44, 0.27]);
     ctx.restore();
 
     particles.forEach((p) => {

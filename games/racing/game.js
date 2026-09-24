@@ -316,6 +316,8 @@
       ctx.shadowBlur = 16;
     }
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    // 차가 180도 돌아가 있으니 얼굴은 다시 뒤집어 똑바로
+    if (playerCar && window.TodayFace) TodayFace.drawOnSprite(ctx, -w / 2, -h / 2, w, h, [0.5, 0.23, 0.14], { rotate: Math.PI });
     ctx.restore();
   }
 

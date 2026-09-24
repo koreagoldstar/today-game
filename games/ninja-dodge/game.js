@@ -715,6 +715,9 @@
     ctx.fill();
   }
 
+  // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
+  const FACE_HEAD = { idle: [0.26, 0.34, 0.16], crouch: [0.28, 0.47, 0.18], jump: [0.26, 0.39, 0.18] };
+
   function drawPlayer() {
     const blink = invuln > 0 && Math.floor(invuln * 12) % 2 === 0;
     if (blink) return;
@@ -746,6 +749,11 @@
 
     const ok = drawSprite(img, player.x, y, w, h, player.face < 0);
     if (!ok) drawFallbackNinja();
+    else if (window.TodayFace) {
+      TodayFace.drawOnSprite(ctx, player.x - w / 2, y - h, w, h, FACE_HEAD[player.pose] || FACE_HEAD.idle, {
+        flipX: player.face < 0,
+      });
+    }
 
     // shadow
     ctx.fillStyle = "rgba(0,0,0,0.25)";

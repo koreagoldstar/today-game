@@ -491,4 +491,15 @@
       },
     });
   }
+
+  // 내 얼굴로 플레이: 켜져 있으면 내 쪽 얼굴 사진을 바꿔요 (화면에만 표시)
+  if (window.TodayFace) {
+    const faceMe = document.getElementById("face-me");
+    const chickSrc = faceMe.getAttribute("src");
+    const syncFace = () => {
+      faceMe.src = TodayFace.dataUrl() || chickSrc;
+    };
+    syncFace();
+    TodayFace.onChange(syncFace);
+  }
 })();

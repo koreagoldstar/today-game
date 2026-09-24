@@ -780,6 +780,8 @@
       ctx.shadowBlur = 16;
       ctx.drawImage(playerImg, -iw / 2, -ih / 2, iw, ih);
       ctx.restore();
+      // 스프라이트를 180도 돌렸으니 운전석 머리 위치도 뒤집어서 똑바로 그림
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -iw / 2, -ih / 2, iw, ih, [0.5, 0.7, 0.09]);
     } else {
       drawChickFallback();
     }
