@@ -1516,6 +1516,12 @@ body {
   margin: 0;
 }
 
+.foot .foot-note {
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
 .foot-legal {
   display: flex;
   gap: 8px;
