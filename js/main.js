@@ -1264,7 +1264,11 @@
             rank: i + 1,
             name: entry.name,
             score: entry.score,
-            label: `${Number(entry.score).toLocaleString("ko-KR")}점`,
+            // 게임마다 단위가 다름 (10초 맞추기 0.037초 · 번쩍 반응 211ms · 폭탄 피하기 18.72초 · 나머지 점)
+            label:
+              window.TodayRankMeta && TodayRankMeta.formatScore
+                ? TodayRankMeta.formatScore(gameId, entry.score)
+                : `${Number(entry.score).toLocaleString("ko-KR")}점`,
           }));
         }
       }

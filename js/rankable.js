@@ -2,23 +2,28 @@
 (() => {
   "use strict";
 
-  /** 챌린지에서 제외 (매일 로테이션 대상 아님) */
-  const CHALLENGE_EXCLUDE = new Set([
-    "pinball",
-    "dual-pad",
-    "slide-beat",
-    "beat-tap",
-    "rhythm-battle",
-    "neon-runner",
-    "mirror-rhythm",
-    "minigolf",
-    "wordle",
-    "sokoban",
-    "wisdom-quiz",
-    // 기록 챌린지 3종은 홈의 '오늘의 챌린지' 카드로 따로 노출 (10초 맞추기는 낮을수록 좋은 기록)
+  /** 오늘의 챌린지 매일 로테이션 대상 — 기록형 게임만 (api/challenge.js POOL 과 같은 목록) */
+  const CHALLENGE_IDS = new Set([
     "10-second",
+    "flappy",
+    "number-hole",
+    "rhythm",
+    "tower",
+    "reaction",
     "color-reaction",
+    "cosmic-dodge",
+    "chick-defense",
+    "fish-rush",
+    "tetris",
+    "doodle",
     "bomb-dodge",
+    "ninja-dodge",
+    "stork-stride",
+    "fruit-catch",
+    "jump-run",
+    "slide-2048",
+    "crossy",
+    "brick",
   ]);
 
   /** 랭킹 등록 가능 게임 (점수제) — archive 제외 전 플레이어블 */
@@ -82,7 +87,9 @@
   ];
 
   /** 챌린지 로테이션 풀 (고정 순서) */
-  const CHALLENGE_POOL = RANKABLE.filter((g) => !CHALLENGE_EXCLUDE.has(g.id)).map((g) => ({
+  const CHALLENGE_EXCLUDE = new Set(RANKABLE.map((g) => g.id).filter((id) => !CHALLENGE_IDS.has(id)));
+
+  const CHALLENGE_POOL = RANKABLE.filter((g) => CHALLENGE_IDS.has(g.id)).map((g) => ({
     id: g.id,
     title: g.title,
     href: `/games/${g.id}/`,

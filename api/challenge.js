@@ -10,43 +10,34 @@ module.exports = async function handler(req, res) {
   }
 
   /**
-   * 매일 로테이션 챌린지 풀 (고정 순서)
-   * 제외: 핀볼·듀얼패드·슬라이드비트·펄스탭·홀인원골프·워들·상자야굴러가·고전
+   * 매일 로테이션 챌린지 풀 (고정 순서) — 기록형 게임만.
+   * 기록 챌린지 3종이 고르게 돌아오도록 사이사이에 섞었다.
+   * lower: 낮을수록 좋은 기록 (10초 맞추기 오차 ms, 번쩍 반응 ms)
+   * unit: 표시 단위 (ms·s3=초 소수 3자리·cs=초 소수 2자리·점)
    */
   const POOL = [
-    { id: "minesweeper", title: "지뢰찾기", href: "/games/minesweeper/", metric: "score" },
+    { id: "10-second", title: "10초 정확히 맞추기", href: "/games/10-second/", metric: "time", lower: true, unit: "s3" },
     { id: "flappy", title: "펄럭 병아리", href: "/games/flappy/", metric: "score" },
-    { id: "doodle", title: "폴짝 하늘", href: "/games/doodle/", metric: "score" },
+    { id: "number-hole", title: "넘버 홀", href: "/games/number-hole/", metric: "score" },
+    { id: "rhythm", title: "리듬 톡톡", href: "/games/rhythm/", metric: "score" },
+    { id: "tower", title: "흔들흔들 스카이", href: "/games/tower/", metric: "score" },
+    { id: "reaction", title: "번쩍 반응", href: "/games/reaction/", metric: "time", lower: true, unit: "ms" },
+    { id: "color-reaction", title: "색깔 반응 테스트", href: "/games/color-reaction/", metric: "score" },
+    { id: "cosmic-dodge", title: "우주 회피", href: "/games/cosmic-dodge/", metric: "score" },
+    { id: "chick-defense", title: "둥지 디펜스", href: "/games/chick-defense/", metric: "score" },
+    { id: "fish-rush", title: "황금 낚시", href: "/games/fish-rush/", metric: "score" },
     { id: "tetris", title: "블록 팡팡", href: "/games/tetris/", metric: "score" },
-    { id: "jump-run", title: "콩콩 점프", href: "/games/jump-run/", metric: "score" },
+    { id: "doodle", title: "폴짝 하늘", href: "/games/doodle/", metric: "score" },
+    { id: "bomb-dodge", title: "폭탄 피하기", href: "/games/bomb-dodge/", metric: "time", unit: "cs" },
     { id: "ninja-dodge", title: "닌자 표창 피하기", href: "/games/ninja-dodge/", metric: "score" },
     { id: "stork-stride", title: "서빙왕", href: "/games/stork-stride/", metric: "score" },
-    { id: "snake", title: "애플 스네이크", href: "/games/snake/", metric: "score" },
-    { id: "slide-2048", title: "두배두배", href: "/games/slide-2048/", metric: "score" },
-    { id: "memory", title: "짝짝 사천성", href: "/games/memory/", metric: "score" },
-    { id: "whack-mole", title: "두더지 팡팡", href: "/games/whack-mole/", metric: "score" },
-    { id: "brick", title: "별똥별 벽돌깨기", href: "/games/brick/", metric: "score" },
-    { id: "alggagi", title: "알까기", href: "/games/alggagi/", metric: "score" },
-    { id: "omok", title: "오목", href: "/games/omok/", metric: "score" },
-    { id: "rhythm", title: "리듬 톡톡", href: "/games/rhythm/", metric: "score" },
-    { id: "racing", title: "스피드 삐약이", href: "/games/racing/", metric: "score" },
-    { id: "drift-chick", title: "드리프트 삐약이", href: "/games/drift-chick/", metric: "score" },
-    { id: "crossy", title: "삐약이 건너기", href: "/games/crossy/", metric: "score" },
-    { id: "cute-shoot", title: "귀염뽀짝 쏘세요", href: "/games/cute-shoot/", metric: "score" },
-    { id: "puzzle-bubble", title: "팝샷 버블", href: "/games/puzzle-bubble/", metric: "score" },
-    { id: "ttamogi", title: "땅땅 차지", href: "/games/ttamogi/", metric: "score" },
-    { id: "diff", title: "다른 그림 찾기", href: "/games/diff/", metric: "score" },
-    { id: "suika", title: "수박 합치기", href: "/games/suika/", metric: "score" },
-    { id: "tower", title: "흔들흔들 스카이", href: "/games/tower/", metric: "score" },
-    { id: "fish-rush", title: "황금 낚시", href: "/games/fish-rush/", metric: "score" },
-    { id: "chick-defense", title: "둥지 디펜스", href: "/games/chick-defense/", metric: "score" },
-    { id: "jet-strike", title: "제트 스트라이크", href: "/games/jet-strike/", metric: "score" },
-    { id: "number-hole", title: "넘버 홀", href: "/games/number-hole/", metric: "score" },
-    { id: "penalty-kick", title: "승부차기 히어로", href: "/games/penalty-kick/", metric: "score" },
-    { id: "dino-hunt", title: "공룡 헌터", href: "/games/dino-hunt/", metric: "score" },
     { id: "fruit-catch", title: "과일 바스켓", href: "/games/fruit-catch/", metric: "score" },
-    { id: "bubble-pop", title: "팝팝 방울", href: "/games/bubble-pop/", metric: "score" },
+    { id: "jump-run", title: "콩콩 점프", href: "/games/jump-run/", metric: "score" },
+    { id: "slide-2048", title: "두배두배", href: "/games/slide-2048/", metric: "score" },
+    { id: "crossy", title: "삐약이 건너기", href: "/games/crossy/", metric: "score" },
+    { id: "brick", title: "별똥별 벽돌깨기", href: "/games/brick/", metric: "score" },
   ];
+  const POOL_BY_ID = new Map(POOL.map((g) => [g.id, g]));
 
   const ABACUS_NS = "todaygame-challenge";
   const MAX_TOP = 10;
@@ -68,6 +59,13 @@ module.exports = async function handler(req, res) {
   function pickGame(dayStr) {
     const idx = ((seoulDayNum(dayStr) % POOL.length) + POOL.length) % POOL.length;
     return { ...POOL[idx], index: idx };
+  }
+
+  /** 저장된 게임에 현재 풀의 설정(lower·unit·제목)을 덧입힌다. 풀에서 빠진 게임이면 null */
+  function withPoolInfo(game) {
+    const meta = game && POOL_BY_ID.get(game.id);
+    if (!meta) return null;
+    return { ...meta, index: POOL.indexOf(meta) };
   }
 
   function dailyGameKey(dayStr) {
@@ -98,14 +96,17 @@ module.exports = async function handler(req, res) {
 
     const key = dailyGameKey(dayStr);
     const stored = await redis(["GET", key]);
-    const existing = stored.ok ? parseStoredGame(stored.result) : null;
+    const existing = stored.ok ? withPoolInfo(parseStoredGame(stored.result)) : null;
     if (existing) return existing;
 
-    await redis(["SET", key, JSON.stringify(fallback), "NX", "EX", 60 * 60 * 24 * 3]);
+    // 저장된 게임이 없거나, 풀에서 빠진 게임(기록형이 아닌 게임)이면 오늘 게임을 새로 고정한다
+    const hadStale = stored.ok && stored.result != null && stored.result !== "";
+    if (hadStale) await redis(["SET", key, JSON.stringify(fallback), "EX", 60 * 60 * 24 * 3]);
+    else await redis(["SET", key, JSON.stringify(fallback), "NX", "EX", 60 * 60 * 24 * 3]);
 
     // 동시에 여러 지역에서 첫 요청이 와도 Redis에서 먼저 고정된 하나를 사용한다.
     const locked = await redis(["GET", key]);
-    return (locked.ok && parseStoredGame(locked.result)) || fallback;
+    return (locked.ok && withPoolInfo(parseStoredGame(locked.result))) || fallback;
   }
 
   function redisConfigured() {
@@ -163,11 +164,17 @@ module.exports = async function handler(req, res) {
     return name;
   }
 
-  function sortBoard(list) {
-    return list.slice().sort((a, b) => b.score - a.score);
+  function isLower(gameId) {
+    const g = POOL_BY_ID.get(gameId);
+    return Boolean(g && g.lower);
   }
 
-  function normalizeBoard(raw) {
+  function sortBoard(list, gameId) {
+    const lower = isLower(gameId);
+    return list.slice().sort((a, b) => (lower ? a.score - b.score : b.score - a.score));
+  }
+
+  function normalizeBoard(raw, gameId) {
     if (!Array.isArray(raw)) return [];
     const cleaned = raw
       .filter((e) => e && typeof e.name === "string" && Number.isFinite(Number(e.score)))
@@ -175,7 +182,7 @@ module.exports = async function handler(req, res) {
         name: String(e.name).slice(0, 8),
         score: Math.floor(Number(e.score)),
       }));
-    return sortBoard(cleaned).slice(0, MAX_TOP);
+    return sortBoard(cleaned, gameId).slice(0, MAX_TOP);
   }
 
   async function readBoard(day, gameId) {
@@ -196,7 +203,7 @@ module.exports = async function handler(req, res) {
       return [];
     }
     try {
-      return normalizeBoard(JSON.parse(String(r.result)));
+      return normalizeBoard(JSON.parse(String(r.result)), gameId);
     } catch {
       return [];
     }
@@ -208,9 +215,11 @@ module.exports = async function handler(req, res) {
     }
     const board = await readBoard(day, gameId);
     const idx = board.findIndex((e) => e.name === name);
+    const lower = isLower(gameId);
     let changed = false;
     if (idx >= 0) {
-      if (score > board[idx].score) {
+      // 같은 이름은 더 좋은 기록만 (낮을수록 좋은 게임은 더 낮은 값)
+      if (lower ? score < board[idx].score : score > board[idx].score) {
         board[idx].score = score;
         changed = true;
       }
@@ -218,7 +227,7 @@ module.exports = async function handler(req, res) {
       board.push({ name, score });
       changed = true;
     }
-    const next = sortBoard(board).slice(0, MAX_TOP);
+    const next = sortBoard(board, gameId).slice(0, MAX_TOP);
     if (changed) {
       await redis(["SET", boardKey(day, gameId), JSON.stringify(next), "EX", 60 * 60 * 24 * 4]);
       const top = next[0] || null;
@@ -242,17 +251,21 @@ module.exports = async function handler(req, res) {
     };
   }
 
-  function formatBest(value) {
+  function formatBest(value, gameId) {
     if (value == null || !Number.isFinite(value)) return null;
+    const unit = (POOL_BY_ID.get(gameId) || {}).unit;
+    if (unit === "s3") return `${(value / 1000).toFixed(3)}초`;
+    if (unit === "cs") return `${(value / 100).toFixed(2)}초`;
+    if (unit === "ms") return `${value.toLocaleString("ko-KR")}ms`;
     return `${value.toLocaleString("ko-KR")}점`;
   }
 
-  function formatScores(list) {
+  function formatScores(list, gameId) {
     return list.map((e, i) => ({
       rank: i + 1,
       name: e.name,
       score: e.score,
-      label: formatBest(e.score),
+      label: formatBest(e.score, gameId),
     }));
   }
 
@@ -284,8 +297,8 @@ module.exports = async function handler(req, res) {
       participants,
       best: top ? top.score : null,
       bestName: top ? top.name : null,
-      bestLabel: top ? formatBest(top.score) : null,
-      top10: formatScores(board),
+      bestLabel: top ? formatBest(top.score, game.id) : null,
+      top10: formatScores(board, game.id),
     });
     return;
   }
@@ -330,8 +343,8 @@ module.exports = async function handler(req, res) {
         game,
         best: result.best,
         bestName: result.name,
-        bestLabel: formatBest(result.best),
-        top10: formatScores(result.board),
+        bestLabel: formatBest(result.best, game.id),
+        top10: formatScores(result.board, game.id),
         rank,
         total,
         participants,
