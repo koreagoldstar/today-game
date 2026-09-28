@@ -1,4 +1,4 @@
-/* 관련 사이트 — 오늘의 게임 ↔ 오늘의 홈페이지를 오른쪽 아래에서 바로 오간다.
+/* 패밀리사이트 — 오늘의 게임 ↔ 오늘의 홈페이지를 오른쪽 아래에서 바로 오간다.
    바닥글(.foot)이 있으면 그 안에 붙고, 없으면 오른쪽 아래에 떠 있다. 게임 화면에는 넣지 않는다. */
 (function () {
   var SITES = [
@@ -30,7 +30,7 @@
   var box = document.createElement("details");
   box.className = "fam";
   box.innerHTML =
-    "<summary>관련 사이트</summary><div class=\"fam-list\">" +
+    "<summary>패밀리사이트</summary><div class=\"fam-list\">" +
     others.map(function (s) {
       return '<a href="' + s.url + '" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">' + s.icon +
         "</span><span><b>" + s.name + "</b><small>" + s.desc + "</small></span></a>";
