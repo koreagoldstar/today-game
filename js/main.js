@@ -1122,10 +1122,28 @@
     }
   }
 
+  /** 홈에서는 TOP 3 만 보이고, 버튼으로 TOP10 전체를 펼친다 (챌린지 상자를 작게) */
+  function syncTopMore(count) {
+    const btn = document.getElementById("challenge-top-more");
+    const box = btn && btn.closest(".challenge-top");
+    if (!btn || !box) return;
+    btn.hidden = count <= 3;
+    if (!btn.__bound) {
+      btn.__bound = true;
+      btn.addEventListener("click", () => {
+        const open = !box.classList.contains("is-open");
+        box.classList.toggle("is-open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.textContent = open ? "접기 ▴" : "TOP10 전체 보기 ▾";
+      });
+    }
+  }
+
   function renderChallengeTop10(listEl, rows, metric) {
     if (!listEl) return;
+    syncTopMore(rows ? Math.min(10, rows.length) : 0);
     if (!rows || !rows.length) {
-      listEl.innerHTML = `<li class="score-empty">아직 기록이 없어요<br />첫 챌린저가 되어 보세요!</li>`;
+      listEl.innerHTML = `<li class="score-empty">아직 기록이 없어요 · 첫 챌린저가 되어 보세요!</li>`;
       return;
     }
     listEl.innerHTML = rows
