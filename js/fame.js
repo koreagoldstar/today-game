@@ -79,7 +79,11 @@
           <span class="fame-card-crown" aria-hidden="true">👑</span>
           <p class="fame-card-game">${escapeHtml(row.title)}</p>
           <p class="fame-card-name">${escapeHtml(row.name)}</p>
-          <p class="fame-card-score">${row.score.toLocaleString("ko-KR")}${g.id === "reaction" ? "ms" : "점"}</p>
+          <p class="fame-card-score">${escapeHtml(
+            window.TodayRankMeta && TodayRankMeta.formatScore
+              ? TodayRankMeta.formatScore(row.id, row.score)
+              : `${row.score.toLocaleString("ko-KR")}점`
+          )}</p>
         </a>`;
       })
       .join("");

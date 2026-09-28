@@ -15,10 +15,17 @@
     "wordle",
     "sokoban",
     "wisdom-quiz",
+    // 기록 챌린지 3종은 홈의 '오늘의 챌린지' 카드로 따로 노출 (10초 맞추기는 낮을수록 좋은 기록)
+    "10-second",
+    "color-reaction",
+    "bomb-dodge",
   ]);
 
   /** 랭킹 등록 가능 게임 (점수제) — archive 제외 전 플레이어블 */
   const RANKABLE = [
+    { id: "10-second", title: "10초 정확히 맞추기" },
+    { id: "color-reaction", title: "색깔 반응 테스트" },
+    { id: "bomb-dodge", title: "폭탄 피하기" },
     { id: "flappy", title: "펄럭 병아리" },
     { id: "doodle", title: "폴짝 하늘" },
     { id: "tetris", title: "블록 팡팡" },
@@ -92,6 +99,15 @@
     titleOf(id) {
       const hit = RANKABLE.find((g) => g.id === id);
       return hit ? hit.title : id;
+    },
+    /** 게임마다 기록 단위가 달라서 (ms · 초 · m · 점) 한곳에서 표시 */
+    formatScore(id, score) {
+      const n = Number(score) || 0;
+      if (id === "10-second") return `${(n / 1000).toFixed(3)}초`;
+      if (id === "bomb-dodge") return `${(n / 100).toFixed(2)}초`;
+      if (id === "reaction") return `${n.toLocaleString("ko-KR")}ms`;
+      if (id === "neon-runner") return `${n.toLocaleString("ko-KR")}m`;
+      return `${n.toLocaleString("ko-KR")}점`;
     },
   };
 })();

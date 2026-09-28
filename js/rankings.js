@@ -79,11 +79,9 @@
       .map((entry, i) => {
         const row = window.TodayScores.formatScoreRow(entry, i);
         const pts =
-          game === "reaction"
-            ? `${row.score.toLocaleString("ko-KR")}ms`
-            : game === "neon-runner"
-              ? `${row.score.toLocaleString("ko-KR")}m`
-              : row.score.toLocaleString("ko-KR");
+          window.TodayRankMeta && TodayRankMeta.formatScore
+            ? TodayRankMeta.formatScore(game, row.score).replace(/점$/, "")
+            : row.score.toLocaleString("ko-KR");
         return `<li><span class="rank">${row.rank}</span><span class="name">${row.name}</span><span class="pts">${pts}</span></li>`;
       })
       .join("");

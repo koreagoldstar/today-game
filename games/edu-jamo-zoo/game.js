@@ -135,20 +135,24 @@
     });
   }
 
+  /** 다 읽으면 끝나는 Promise 를 돌려준다 */
   function speak(text) {
-    if (window.speakSoftly) {
-      speakSoftly(text);
-      return;
-    }
-    if (!window.speechSynthesis) return;
+    if (window.speakSoftly) return speakSoftly(text);
+    if (!window.speechSynthesis) return Promise.resolve(true);
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ko-KR";
     utter.rate = 0.85;
     utter.pitch = 1.15;
     utter.volume = 1.0;
-    speechSynthesis.speak(utter);
+    return new Promise((resolve) => {
+      utter.onend = () => resolve(true);
+      utter.onerror = () => resolve(false);
+      speechSynthesis.speak(utter);
+    });
   }
+
+  const wait = (ms) => new Promise((r) => window.setTimeout(r, ms));
 
   function showOverlay(name) {
     els.title.classList.toggle("hidden", name !== "title");
@@ -215,9 +219,18 @@
       locked = true;
       btn.classList.add("correct");
       ding();
-      speak(choice.word);
       if (window.TodayEdu) TodayEdu.recordResult("level1", current.jamo.id, true);
-      window.setTimeout(() => nextRound(), 900);
+      // 단어를 끝까지 들려주고, 잠깐 쉰 다음 다음 문제로 (예전엔 0.9초 만에 넘어가서 소리가 잘렸음)
+      const round = roundIndex;
+      const token = ++pickToken;
+      Promise.race([
+        Promise.all([wait(350).then(() => speak(choice.word)), wait(1200)]),
+        wait(6000), // 소리가 끝났다는 신호가 안 와도 멈추지 않게
+      ])
+        .then(() => wait(700))
+        .then(() => {
+          if (token === pickToken && round === roundIndex) nextRound();
+        });
       return;
     }
     btn.classList.remove("shake");
@@ -230,6 +243,7 @@
   }
 
   const usedIds = [];
+  let pickToken = 0; // 다시 시작하면 이전 문제의 '다음으로' 예약을 무시
 
   function nextRound() {
     roundIndex += 1;
@@ -256,6 +270,7 @@
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
     else ensureAudio();
+    pickToken += 1;
     roundIndex = 0;
     usedIds.length = 0;
     showOverlay(null);

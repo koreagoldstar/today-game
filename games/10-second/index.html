@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0e1f" />
+    <title>10초 정확히 맞추기 | Today Game</title>
+    <meta name="description" content="정확히 10초를 맞춰보세요. 10.000초에 얼마나 가까운지 기록하고 오늘의 TOP 10에 도전하세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/10-second/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="10초 정확히 맞추기 | Today Game" />
+    <meta property="og:description" content="정확히 10.000초에 멈출 수 있을까요? 오차를 줄여 오늘의 TOP 10에 도전하세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/10-second/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/record-challenge.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+  </head>
+  <body class="is-title">
+    <div class="stage">
+      <section class="screen title" id="title" aria-labelledby="title-h">
+        <p class="kicker">오늘의 기록 챌린지 · 정확도</p>
+        <h1 id="title-h"><span>10초</span>정확히 맞추기</h1>
+        <p class="sub">정확히 <b>10.000초</b>에 멈춰보세요</p>
+        <p class="hint">처음 3초만 보여요. 나머지는 머릿속으로!</p>
+        <button type="button" class="dial" id="start-btn" aria-label="시작">
+          <span class="dial-ring" aria-hidden="true"></span>
+          <span class="dial-label">START</span>
+        </button>
+        <p class="title-stat" id="title-stat">오늘 1위 기록을 불러오는 중…</p>
+      </section>
+
+      <section class="screen play hidden" id="play" aria-live="off">
+        <p class="play-top" id="play-top">10초를 머릿속으로 세세요</p>
+        <div class="clock" id="clock" aria-hidden="true">00.000</div>
+        <button type="button" class="dial stop" id="stop-btn" aria-label="멈추기">
+          <span class="dial-ring" aria-hidden="true"></span>
+          <span class="dial-label">STOP</span>
+        </button>
+        <p class="play-foot">화면 아무 곳이나 · 스페이스바도 OK</p>
+      </section>
+
+      <section class="screen result hidden" id="over" aria-labelledby="result-time">
+        <div class="grade" id="grade">GREAT</div>
+        <p class="result-time"><b id="result-time">10.000</b><span>초</span></p>
+        <p class="result-diff" id="result-diff">오차 0.000초</p>
+        <p class="result-line" id="result-line"></p>
+        <p class="newbest hidden" id="newbest">🎉 내 최고 기록 갱신!</p>
+        <div id="record-panel"></div>
+        <a class="home-link" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/retention.js?v=2"></script>
+    <script src="/js/game-rank.js?v=2"></script>
+    <script src="/js/record-challenge.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="10초 정확히 맞추기 소개">
+  <h2>10초 정확히 맞추기 소개</h2>
+  <p>시계를 보지 않고 머릿속으로 10초를 세어 정확히 10.000초에 멈추는 정확도 챌린지입니다. 10초와의 오차가 작을수록 높은 순위에 오릅니다.</p>
+  <h3>플레이 방법</h3>
+  <p>START를 누르면 시간이 흐르고, 처음 3초가 지나면 시계가 사라집니다. 10초라고 생각하는 순간 화면을 누르거나 스페이스바를 누르세요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>기록은 어떻게 정해지나요?</dt>
+    <dd>멈춘 시간과 10.000초의 차이(오차)가 기록이며, 오차가 작을수록 좋습니다. 0.010초 이내면 PERFECT입니다.</dd>
+    <dt>로그인이 필요한가요?</dt>
+    <dd>아니요. 바로 플레이할 수 있고, 내 최고 기록은 이 기기에 저장됩니다. 닉네임을 적으면 오늘의 TOP 10에 오릅니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

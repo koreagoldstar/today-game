@@ -1,0 +1,355 @@
+/* 10초 정확히 맞추기 — 어두운 스톱워치 느낌, 라임색 강조 */
+:root {
+  --bg: #0b0e1f;
+  --bg2: #151a3a;
+  --lime: #c6ff3d;
+  --lime-deep: #8fc41a;
+  --ink: #f4f6ff;
+  --sub: rgba(244, 246, 255, 0.62);
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Jua", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(198, 255, 61, 0.08), transparent 60%),
+    radial-gradient(90% 70% at 50% 110%, rgba(96, 110, 255, 0.22), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* 플레이 중에는 화면이 절대 움직이지 않게 */
+body.is-play {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.stage {
+  position: relative;
+  width: min(480px, 100%);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(64px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- 시작 ---------- */
+.title {
+  min-height: calc(100dvh - 110px);
+  justify-content: center;
+  gap: 6px;
+}
+
+.kicker {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--lime);
+  border: 1px solid rgba(198, 255, 61, 0.4);
+}
+
+.title h1 {
+  margin: 14px 0 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: clamp(34px, 10vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+.title h1 span {
+  display: block;
+  font-size: 1.9em;
+  color: var(--lime);
+  text-shadow: 0 0 36px rgba(198, 255, 61, 0.35);
+}
+
+.sub {
+  margin: 10px 0 0;
+  font-size: 20px;
+}
+
+.sub b {
+  font-family: var(--mono);
+  color: var(--lime);
+}
+
+.hint {
+  margin: 4px 0 22px;
+  font-size: 15px;
+  color: var(--sub);
+}
+
+.title-stat {
+  margin: 20px 0 0;
+  min-height: 1.3em;
+  font-size: 15px;
+  color: var(--sub);
+}
+
+.title-stat b {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+/* ---------- 큰 원형 버튼 (START / STOP) ---------- */
+.dial {
+  position: relative;
+  width: min(62vw, 250px);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #0b0e1f;
+  background: radial-gradient(circle at 35% 30%, #e6ff9a, var(--lime) 45%, var(--lime-deep));
+  box-shadow: 0 12px 0 #5d8410, 0 24px 60px rgba(198, 255, 61, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dial:active {
+  transform: translateY(6px);
+  box-shadow: 0 6px 0 #5d8410, 0 16px 40px rgba(198, 255, 61, 0.3);
+}
+
+.dial-label {
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: clamp(38px, 12vw, 54px);
+  letter-spacing: 1px;
+}
+
+.dial-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 2px solid rgba(198, 255, 61, 0.35);
+  animation: ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ring {
+  0% {
+    transform: scale(0.94);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+/* ---------- 플레이 ---------- */
+.play {
+  position: fixed;
+  inset: 0;
+  justify-content: center;
+  gap: 18px;
+  padding: max(70px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  cursor: pointer;
+}
+
+.play-top {
+  margin: 0;
+  font-size: 20px;
+  color: var(--sub);
+  transition: color 0.3s;
+}
+
+.play-top.blind {
+  color: var(--lime);
+}
+
+.clock {
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: clamp(64px, 21vw, 104px);
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: filter 0.45s ease, opacity 0.45s ease;
+}
+
+.clock.blind {
+  filter: blur(14px);
+  opacity: 0.28;
+}
+
+.dial.stop {
+  width: min(70vw, 280px);
+  background: radial-gradient(circle at 35% 30%, #ffb3b3, #ff5a5a 45%, #d42f3f);
+  box-shadow: 0 12px 0 #8e1826, 0 24px 60px rgba(255, 90, 90, 0.3);
+  color: #fff;
+}
+
+.dial.stop .dial-ring {
+  border-color: rgba(255, 90, 90, 0.35);
+  animation-duration: 3.1s; /* 1초 간격이 아니어서 박자 힌트가 되지 않음 */
+}
+
+.play-foot {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+/* ---------- 결과 ---------- */
+.result {
+  padding-top: 8px;
+  gap: 4px;
+}
+
+.grade {
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: #0b0e1f;
+  background: var(--lime);
+  animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.grade.g-perfect {
+  background: linear-gradient(90deg, #ffe45c, #c6ff3d, #5cf2ff);
+  box-shadow: 0 0 40px rgba(255, 228, 92, 0.5);
+}
+
+.grade.g-good {
+  background: #8fb3ff;
+}
+
+.grade.g-try {
+  color: #fff;
+  background: #ff5a5a;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.result-time {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.result-time b {
+  font-size: clamp(66px, 21vw, 100px);
+  letter-spacing: -3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-time span {
+  margin-left: 4px;
+  font-family: "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--sub);
+}
+
+.result-diff {
+  margin: 6px 0 0;
+  font-size: 24px;
+  color: var(--lime);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-line {
+  margin: 4px 0 0;
+  min-height: 1.3em;
+  font-size: 17px;
+  color: var(--sub);
+}
+
+.newbest {
+  margin: 8px 0 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #0b0e1f;
+  background: #ffe45c;
+}
+
+#record-panel {
+  width: 100%;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.rc {
+  --rc-accent: var(--lime);
+  --rc-accent-ink: #0b0e1f;
+  --rc-card: rgba(255, 255, 255, 0.06);
+  --rc-line: rgba(198, 255, 61, 0.18);
+}
+
+.rc .rc-s,
+.rc .rc-cell b {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.home-link {
+  margin: 22px 0 6px;
+  font-size: 15px;
+  color: var(--sub);
+  text-decoration: none;
+}
+
+.shake {
+  animation: shake 0.35s;
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dial-ring,
+  .grade {
+    animation: none;
+  }
+}

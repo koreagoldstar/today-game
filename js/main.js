@@ -30,6 +30,31 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "10-second",
+      title: "10초 정확히 맞추기",
+      tag: "정확도 · 기록 챌린지",
+      href: "/games/10-second/",
+      thumb: "/assets/thumbs/10-second.svg",
+      category: "arcade",
+    },
+    {
+      id: "color-reaction",
+      title: "색깔 반응 테스트",
+      tag: "반응속도 · 10문제",
+      href: "/games/color-reaction/",
+      thumb: "/assets/thumbs/color-reaction.svg",
+      category: "rhythm",
+    },
+    {
+      id: "bomb-dodge",
+      face: true,
+      title: "폭탄 피하기",
+      tag: "생존 · 기록 챌린지",
+      href: "/games/bomb-dodge/",
+      thumb: "/assets/thumbs/bomb-dodge.svg",
+      category: "action",
+    },
+    {
       id: "homerun-derby",
       face: true,
       title: "홈런왕",

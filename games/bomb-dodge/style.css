@@ -1,0 +1,343 @@
+/* 폭탄 피하기 — 밤하늘 + 주황 경고색, 긴장감 있는 생존 챌린지 */
+:root {
+  --bg: #140b2e;
+  --bg2: #2b1654;
+  --fire: #ff7a1a;
+  --fire2: #ffd23f;
+  --ink: #fff7ef;
+  --sub: rgba(255, 247, 239, 0.66);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--ink);
+  font-family: "Jua", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 70%, #4a1d4f 100%);
+  background-attachment: fixed;
+}
+
+body.is-play {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.stage {
+  position: relative;
+  width: min(480px, 100%);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(64px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- 시작 ---------- */
+.title {
+  min-height: calc(100dvh - 100px);
+  justify-content: center;
+}
+
+.bomb-art {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6b6b7e, #26262f 55%, #0c0c12);
+  box-shadow: 0 16px 40px rgba(255, 122, 26, 0.3);
+  animation: wobble 1.2s ease-in-out infinite;
+}
+
+.bomb-art::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 26px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: #3a3a48;
+}
+
+.bomb-art .spark {
+  position: absolute;
+  top: -38px;
+  left: 62%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 20%, var(--fire2) 35%, var(--fire) 60%, transparent 70%);
+  animation: spark 0.25s steps(2) infinite;
+}
+
+@keyframes wobble {
+  50% {
+    transform: rotate(-6deg) translateY(-4px);
+  }
+}
+
+@keyframes spark {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+.kicker {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #2b1300;
+  background: var(--fire2);
+}
+
+.title h1 {
+  margin: 12px 0 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: clamp(44px, 13vw, 60px);
+  line-height: 1.05;
+  color: var(--fire);
+  text-shadow: 0 5px 0 #7a2b00, 0 0 40px rgba(255, 122, 26, 0.45);
+}
+
+.sub {
+  margin: 12px 0 0;
+  font-size: 20px;
+}
+
+.sub b {
+  color: var(--fire2);
+}
+
+.hint {
+  margin: 4px 0 26px;
+  font-size: 15px;
+  color: var(--sub);
+}
+
+.only-key {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .only-key {
+    display: inline;
+  }
+  .only-touch {
+    display: none;
+  }
+}
+
+.go {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  width: min(78vw, 300px);
+  min-height: 84px;
+  border-radius: 999px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 40px;
+  color: #2b1300;
+  background: linear-gradient(180deg, var(--fire2), var(--fire));
+  box-shadow: 0 8px 0 #a33d00, 0 20px 50px rgba(255, 122, 26, 0.35);
+  touch-action: manipulation;
+}
+
+.go:active {
+  transform: translateY(5px);
+  box-shadow: 0 3px 0 #a33d00;
+}
+
+.title-stat {
+  margin: 20px 0 0;
+  min-height: 1.3em;
+  font-size: 15px;
+  color: var(--sub);
+}
+
+.title-stat b {
+  color: var(--fire2);
+}
+
+/* ---------- 플레이 ---------- */
+.play {
+  position: fixed;
+  inset: 0;
+  justify-content: center;
+}
+
+#game {
+  display: block;
+  width: min(100vw, calc(100dvh * 390 / 700));
+  height: auto;
+  max-height: 100dvh;
+  aspect-ratio: 390 / 700;
+  touch-action: none;
+}
+
+.hud {
+  position: absolute;
+  top: max(56px, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.hud-time {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 46px;
+  line-height: 1;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-time span {
+  margin-left: 2px;
+  font-family: "Jua", sans-serif;
+  font-size: 20px;
+  opacity: 0.8;
+}
+
+.hud-best {
+  margin: 4px 0 0;
+  min-height: 1.2em;
+  font-size: 14px;
+  color: var(--sub);
+}
+
+.count {
+  position: absolute;
+  top: 40%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 96px;
+  color: var(--fire2);
+  text-shadow: 0 6px 0 #7a2b00;
+  pointer-events: none;
+}
+
+.count.pop {
+  animation: countpop 0.3s ease-out;
+}
+
+@keyframes countpop {
+  0% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------- 결과 ---------- */
+.result {
+  padding-top: 6px;
+}
+
+.boom-badge {
+  margin: 0;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 22px;
+  color: #2b1300;
+  background: var(--fire);
+  transform: rotate(-4deg);
+}
+
+.result-time {
+  margin: 10px 0 0;
+  line-height: 1;
+}
+
+.result-time b {
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: clamp(80px, 25vw, 116px);
+  color: var(--fire2);
+  text-shadow: 0 6px 0 #7a2b00;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-time span {
+  font-size: 30px;
+  color: var(--sub);
+}
+
+.result-q {
+  margin: 10px 0 0;
+  font-size: 19px;
+}
+
+.newbest {
+  margin: 8px 0 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #2b1300;
+  background: var(--fire2);
+}
+
+#record-panel {
+  width: 100%;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.rc {
+  --rc-accent: var(--fire);
+  --rc-accent-ink: #2b1300;
+  --rc-card: rgba(255, 255, 255, 0.07);
+  --rc-line: rgba(255, 210, 63, 0.2);
+}
+
+.rc .rc-retry {
+  background: linear-gradient(180deg, var(--fire2), var(--fire));
+  box-shadow: 0 6px 0 #a33d00;
+}
+
+.home-link {
+  margin: 22px 0 6px;
+  font-size: 15px;
+  color: var(--sub);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bomb-art,
+  .bomb-art .spark {
+    animation: none;
+  }
+}

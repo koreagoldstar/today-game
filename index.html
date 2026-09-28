@@ -51,7 +51,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=19" />
+    <link rel="stylesheet" href="css/style.css?v=20" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -141,6 +141,40 @@
             </div>
           </div>
         </section>
+
+        <section class="rec-challenges" aria-labelledby="rec-title">
+          <div class="rec-head">
+            <h2 class="rec-title" id="rec-title">🔥 오늘의 기록 챌린지</h2>
+            <p class="rec-desc">오늘은 어떤 기록에 도전할까요? 10~60초면 끝!</p>
+          </div>
+          <a class="rec-card rec-10s" href="/games/10-second/" data-rec="10-second">
+            <img class="rec-icon" src="/assets/thumbs/10-second.svg" alt="" width="64" height="64" />
+            <span class="rec-body">
+              <b class="rec-name">10초 정확히 맞추기</b>
+              <span class="rec-line">정확히 10.000초에 멈출 수 있을까?</span>
+              <span class="rec-top" data-rec-top>오늘 1위 —</span>
+            </span>
+            <span class="rec-go">도전하기</span>
+          </a>
+          <a class="rec-card rec-color" href="/games/color-reaction/" data-rec="color-reaction">
+            <img class="rec-icon" src="/assets/thumbs/color-reaction.svg" alt="" width="64" height="64" />
+            <span class="rec-body">
+              <b class="rec-name">색깔 반응 테스트</b>
+              <span class="rec-line">같은 색을 가장 빨리! 글자에 속지 마세요</span>
+              <span class="rec-top" data-rec-top>오늘 1위 —</span>
+            </span>
+            <span class="rec-go">도전하기</span>
+          </a>
+          <a class="rec-card rec-bomb" href="/games/bomb-dodge/" data-rec="bomb-dodge">
+            <img class="rec-icon" src="/assets/thumbs/bomb-dodge.svg" alt="" width="64" height="64" />
+            <span class="rec-body">
+              <b class="rec-name">폭탄 피하기</b>
+              <span class="rec-line">점점 빨라지는 폭탄 비, 몇 초 버틸까?</span>
+              <span class="rec-top" data-rec-top>오늘 1위 —</span>
+            </span>
+            <span class="rec-go">도전하기</span>
+          </a>
+        </section>
       </header>
 
       <section class="shelf" aria-label="게임 목록">
@@ -153,9 +187,16 @@
               <h3 class="cat-title" id="cat-title-rhythm">리듬 · 음악</h3>
               <p class="cat-desc">비트에 맞춰 톡톡</p>
             </div>
-            <span class="cat-count">8개</span>
+            <span class="cat-count">9개</span>
           </div>
           <div class="game-grid">
+            <a class="slot has-photo" href="/games/color-reaction/" aria-label="색깔 반응 테스트 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/color-reaction.svg" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">색깔 반응 테스트</p>
+                <p class="slot-tag">반응속도 · 10문제</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
             <a class="slot has-photo" href="/games/rhythm-battle/" aria-label="리듬 배틀 플레이">
               <div class="slot-art"><img src="/assets/thumbs/rhythm-battle.png" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
@@ -225,14 +266,14 @@
           </div>
           <div class="game-grid">
             <a class="slot has-photo" href="/games/homerun-derby/" aria-label="홈런왕 플레이">
-              <div class="slot-art"><img src="/assets/thumbs/homerun-derby.png" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-art"><img src="/assets/thumbs/homerun-derby.png?v=2" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
                 <p class="slot-name">홈런왕</p>
                 <p class="slot-tag">야구 · 10구 더비</p><span class="slot-play">플레이</span>
               </div>
             </a>
             <a class="slot has-photo" href="/games/basketball-shootout/" aria-label="농구 슛아웃 플레이">
-              <div class="slot-art"><img src="/assets/thumbs/basketball-shootout.png" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-art"><img src="/assets/thumbs/basketball-shootout.png?v=2" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
                 <p class="slot-name">농구 슛아웃</p>
                 <p class="slot-tag">농구 · 60초</p><span class="slot-play">플레이</span>
@@ -282,9 +323,16 @@
               <h3 class="cat-title" id="cat-title-action">액션 · 슈팅</h3>
               <p class="cat-desc">손맛 있게 쏘고 피하는 게임</p>
             </div>
-            <span class="cat-count">14개</span>
+            <span class="cat-count">15개</span>
           </div>
           <div class="game-grid">
+            <a class="slot has-photo" href="/games/bomb-dodge/" aria-label="폭탄 피하기 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/bomb-dodge.svg" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">폭탄 피하기</p>
+                <p class="slot-tag">생존 · 기록 챌린지</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
             <a class="slot has-photo" href="/games/zombie-run/" aria-label="좀비런 (지혁 제작) 플레이">
               <div class="slot-art"><img src="/assets/thumbs/zombie-run.png" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
@@ -481,9 +529,16 @@
               <h3 class="cat-title" id="cat-title-arcade">아케이드 · 캐치</h3>
               <p class="cat-desc">짧게 중독되는 캐주얼</p>
             </div>
-            <span class="cat-count">13개</span>
+            <span class="cat-count">14개</span>
           </div>
           <div class="game-grid">
+            <a class="slot has-photo" href="/games/10-second/" aria-label="10초 정확히 맞추기 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/10-second.svg" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">10초 정확히 맞추기</p>
+                <p class="slot-tag">정확도 · 기록 챌린지</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
             <a class="slot has-photo" href="/games/fortune-draw/" aria-label="오늘의 운세 뽑기 플레이">
               <div class="slot-art"><img src="/assets/thumbs/fortune-draw.png" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
@@ -759,13 +814,14 @@
     <script src="js/game-chrome.js?v=2"></script>
     <script src="js/bgm.js?v=6"></script>
     <script src="js/scores.js?v=7"></script>
-    <script src="js/rankable.js?v=8"></script>
-    <script src="js/retention.js"></script>
+    <script src="js/rankable.js?v=9"></script>
+    <script src="js/retention.js?v=2"></script>
     <script src="js/edu-progress.js?v=5"></script>
     <script src="js/edu-speech.js?v=10"></script>
     <script src="js/game-rank.js?v=2"></script>
     <script src="js/my-face.js?v=3"></script>
-    <script src="js/main.js?v=26"></script>
+    <script src="js/main.js?v=27"></script>
+    <script src="js/record-cards.js?v=1"></script>
     <script src="js/pwa.js?v=2"></script>
     <script src="/js/family-sites.js?v=1" defer></script>
 </body>

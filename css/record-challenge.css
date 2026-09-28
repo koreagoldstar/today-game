@@ -1,0 +1,212 @@
+/* 기록 챌린지 결과 패널. 게임마다 --rc-* 변수로 분위기를 바꾼다. */
+.rc {
+  --rc-accent: #ff4f8b;
+  --rc-accent-ink: #fff;
+  --rc-card: rgba(255, 255, 255, 0.1);
+  --rc-line: rgba(255, 255, 255, 0.18);
+  --rc-ink: #fff;
+  --rc-sub: rgba(255, 255, 255, 0.7);
+  width: min(360px, 100%);
+  margin: 0 auto;
+  color: var(--rc-ink);
+  font-family: "Jua", system-ui, sans-serif;
+}
+
+.rc-mine {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.rc-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 4px;
+  border-radius: 16px;
+  background: var(--rc-card);
+  border: 1px solid var(--rc-line);
+}
+
+.rc-cell span {
+  font-size: 12px;
+  color: var(--rc-sub);
+}
+
+.rc-cell b {
+  font-size: 17px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rc-push {
+  min-height: 1.3em;
+  margin: 12px 0 10px;
+  font-size: 15px;
+  text-align: center;
+  color: var(--rc-accent);
+}
+
+.rc-push:empty {
+  margin: 6px 0;
+}
+
+.rc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rc-btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  min-height: 52px;
+  padding: 0 12px;
+  border-radius: 18px;
+  font: inherit;
+  font-size: 17px;
+  color: var(--rc-ink);
+  background: var(--rc-card);
+  border: 1px solid var(--rc-line);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.rc-btn:active {
+  transform: translateY(2px);
+}
+
+.rc-retry {
+  grid-column: 1 / -1;
+  min-height: 60px;
+  font-size: 22px;
+  color: var(--rc-accent-ink);
+  background: var(--rc-accent);
+  border-color: transparent;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+.rc-retry:active {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.rc-msg {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--rc-sub);
+  word-break: break-all;
+}
+
+.rc-rank .today-rank-form {
+  width: 100%;
+  margin: 6px 0 0;
+}
+
+.rc-rank .today-rank-form label {
+  color: var(--rc-sub);
+  opacity: 1;
+}
+
+/* 공용 랭킹 폼(game-rank.js)은 페이지의 .btn 스타일을 빌려 쓰므로 여기서 정해 준다 */
+.rc-rank .btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  min-height: 50px;
+  padding: 0 14px;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 17px;
+  color: var(--rc-accent-ink);
+  background: var(--rc-accent);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
+  touch-action: manipulation;
+}
+
+.rc-rank .btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.rc-rank .btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rc-rank .today-rank-share-row {
+  width: 100%;
+}
+
+.rc-rank .today-rank-share-row .btn {
+  min-height: 46px;
+  font-size: 15px;
+}
+
+.rc-rank .challenge-done {
+  width: 100%;
+}
+
+.rc-board {
+  margin-top: 14px;
+  padding: 14px 14px 10px;
+  border-radius: 20px;
+  background: var(--rc-card);
+  border: 1px solid var(--rc-line);
+  scroll-margin-top: 16px;
+}
+
+.rc-board h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.rc-board ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rc-board li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 4px;
+  border-top: 1px solid var(--rc-line);
+  font-size: 15px;
+}
+
+.rc-board li:first-child {
+  border-top: 0;
+}
+
+.rc-r {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-n {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-s {
+  font-variant-numeric: tabular-nums;
+  color: var(--rc-accent);
+}
+
+.rc-board li.rc-empty {
+  display: block;
+  padding: 12px 4px;
+  text-align: center;
+  color: var(--rc-sub);
+  line-height: 1.5;
+}

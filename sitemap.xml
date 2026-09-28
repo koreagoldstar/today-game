@@ -6,6 +6,9 @@
   <url><loc>https://www.todaygame.co.kr/privacy/</loc><priority>0.3</priority></url>
   <url><loc>https://www.todaygame.co.kr/terms/</loc><priority>0.3</priority></url>
 
+  <url><loc>https://www.todaygame.co.kr/games/10-second/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/color-reaction/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/bomb-dodge/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/homerun-derby/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/basketball-shootout/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/rhythm-battle/</loc><priority>0.7</priority></url>

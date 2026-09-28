@@ -1738,3 +1738,142 @@ body {
   box-shadow: 0 0 0 2px #ffd23f;
   pointer-events: none;
 }
+
+/* 🔥 오늘의 기록 챌린지 (10초 맞추기 · 색깔 반응 · 폭탄 피하기) — 카드마다 게임 분위기 색 */
+.rec-challenges {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  text-align: left;
+  animation: rise-in 0.75s ease-out 0.12s both;
+}
+
+.rec-head {
+  padding: 0 4px;
+}
+
+.rec-title {
+  margin: 0;
+  font-size: 22px;
+  color: var(--ink);
+}
+
+.rec-desc {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.rec-card {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 92px;
+  padding: 12px 12px 12px 12px;
+  border-radius: 22px;
+  text-decoration: none;
+  color: #fff;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18), 0 14px 28px rgba(61, 42, 54, 0.14);
+  transition: transform 0.12s ease;
+}
+
+.rec-card:active {
+  transform: translateY(3px);
+}
+
+.rec-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+}
+
+.rec-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rec-name {
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.rec-line {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.rec-top {
+  margin-top: 2px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rec-go {
+  display: grid;
+  place-items: center;
+  min-width: 76px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-size: 16px;
+}
+
+/* 정확도: 어두운 스톱워치 + 라임 */
+.rec-10s {
+  background: radial-gradient(120% 140% at 0% 0%, #26306a, #0b0e1f 70%);
+}
+.rec-10s .rec-top {
+  color: #c6ff3d;
+}
+.rec-10s .rec-go {
+  color: #0b0e1f;
+  background: #c6ff3d;
+}
+
+/* 순간 반응: 크림 + 캔디 색 */
+.rec-color {
+  color: #2b1d33;
+  background:
+    linear-gradient(90deg, rgba(255, 77, 94, 0.18), rgba(255, 194, 58, 0.18), rgba(34, 194, 106, 0.18), rgba(61, 123, 255, 0.18)),
+    #fff6ea;
+  border: 2px solid #fff;
+}
+.rec-color .rec-top {
+  color: #3d7bff;
+}
+.rec-color .rec-go {
+  color: #fff;
+  background: #2b1d33;
+}
+
+/* 생존: 밤하늘 + 주황 */
+.rec-bomb {
+  background: linear-gradient(135deg, #2c1656, #140b2e 70%);
+}
+.rec-bomb .rec-top {
+  color: #ffd23f;
+}
+.rec-bomb .rec-go {
+  color: #2b1300;
+  background: linear-gradient(180deg, #ffd23f, #ff7a1a);
+}
+
+@media (max-width: 360px) {
+  .rec-card {
+    grid-template-columns: 52px 1fr;
+  }
+  .rec-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .rec-go {
+    grid-column: 1 / -1;
+  }
+}

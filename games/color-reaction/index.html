@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff6ea" />
+    <title>색깔 반응 테스트 | Today Game</title>
+    <meta name="description" content="색깔을 보고 얼마나 빠르게 반응할 수 있을까요? 평균 반응속도를 측정하고 오늘의 TOP 10에 도전하세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/color-reaction/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="색깔 반응 테스트 | Today Game" />
+    <meta property="og:description" content="10문제, 같은 색을 가장 빨리! 글자에 속지 말고 평균 반응속도로 오늘의 TOP 10에 도전하세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/color-reaction/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/record-challenge.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+  </head>
+  <body class="is-title">
+    <div class="stage">
+      <section class="screen title" id="title" aria-labelledby="title-h">
+        <div class="swatches" aria-hidden="true"><i class="c-red"></i><i class="c-blue"></i><i class="c-green"></i><i class="c-yellow"></i></div>
+        <p class="kicker">오늘의 기록 챌린지 · 순간 반응</p>
+        <h1 id="title-h">색깔 반응 테스트</h1>
+        <p class="sub">가운데 색과 <b>같은 색</b>을 최대한 빨리!</p>
+        <p class="hint">10문제 · 뒤로 갈수록 글자가 속이려 해요</p>
+        <button type="button" class="go" id="start-btn">START</button>
+        <p class="title-stat" id="title-stat">오늘 1위 기록을 불러오는 중…</p>
+      </section>
+
+      <section class="screen play hidden" id="play">
+        <div class="play-head">
+          <div class="dots" id="dots" aria-hidden="true"></div>
+          <p class="round-label"><b id="round-no">1</b> / 10</p>
+        </div>
+        <p class="rule" id="rule">같은 색을 누르세요</p>
+        <div class="blob-wrap">
+          <div class="blob wait" id="blob" aria-live="polite"><span class="blob-word" id="blob-word"></span></div>
+          <p class="float" id="float"></p>
+        </div>
+        <div class="pads" id="pads"></div>
+      </section>
+
+      <section class="screen result hidden" id="over" aria-labelledby="result-avg">
+        <p class="result-q">당신의 반응속도는?</p>
+        <p class="result-avg"><span class="bolt" aria-hidden="true">⚡</span><b id="result-avg">0.000</b><span class="unit">초</span></p>
+        <div class="result-stats">
+          <div><span>정답</span><b id="result-correct">0 / 10</b></div>
+          <div><span>오답</span><b id="result-wrong">0</b></div>
+          <div><span>총점</span><b id="result-score">0</b></div>
+        </div>
+        <p class="result-line" id="result-line"></p>
+        <p class="newbest hidden" id="newbest">🎉 내 최고 점수 갱신!</p>
+        <div id="record-panel"></div>
+        <a class="home-link" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/retention.js?v=2"></script>
+    <script src="/js/game-rank.js?v=2"></script>
+    <script src="/js/record-challenge.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="색깔 반응 테스트 소개">
+  <h2>색깔 반응 테스트 소개</h2>
+  <p>가운데에 뜬 색과 같은 색 버튼을 최대한 빨리 누르는 10문제 반응속도 챌린지입니다. 뒤로 갈수록 색이 사라지고, 다른 색 이름 글자와 가짜 색이 헷갈리게 만듭니다.</p>
+  <h3>플레이 방법</h3>
+  <p>색이 나타나면 같은 색 버튼을 누르세요. 글자가 아니라 칠해진 색을 봐야 합니다. 틀리거나 너무 빨리 누르면 0.5초가 더해집니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>점수는 어떻게 계산되나요?</dt>
+    <dd>문제마다 빠르게 맞힐수록 점수가 커지고, 한 번에 맞힌 문제는 보너스를 받습니다. 결과 화면에는 평균 반응속도와 정답 수가 함께 나옵니다.</dd>
+    <dt>컴퓨터에서도 할 수 있나요?</dt>
+    <dd>네, 마우스로 누르거나 키보드 1·2·3·4(또는 A·S·D·F)로 고를 수 있습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

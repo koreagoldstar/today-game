@@ -90,10 +90,16 @@ module.exports = async function handler(req, res) {
     "lode-runner",
     "goindol",
     "sinseokgi",
+    "10-second",
+    "color-reaction",
+    "bomb-dodge",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "10-second",
+    "color-reaction",
+    "bomb-dodge",
     "wisdom-quiz",
     "fortune-draw",
     "rhythm-battle",

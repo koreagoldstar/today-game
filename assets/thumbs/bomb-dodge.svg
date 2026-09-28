@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#140b2e"/>
+      <stop offset=".75" stop-color="#2c1656"/>
+      <stop offset="1" stop-color="#4d1f4f"/>
+    </linearGradient>
+    <radialGradient id="bomb" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#8a8aa0"/>
+      <stop offset=".55" stop-color="#26262f"/>
+      <stop offset="1" stop-color="#0b0b10"/>
+    </radialGradient>
+    <radialGradient id="spark">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".35" stop-color="#ffd23f"/>
+      <stop offset=".7" stop-color="#ff7a1a"/>
+      <stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="220" height="220" rx="36" fill="url(#sky)"/>
+  <g fill="#fff" opacity=".7">
+    <circle cx="30" cy="34" r="1.6"/><circle cx="180" cy="28" r="1.4"/><circle cx="196" cy="80" r="1.2"/>
+    <circle cx="22" cy="96" r="1.2"/><circle cx="160" cy="116" r="1.4"/>
+  </g>
+  <path d="M0 176 V150 h22 v-18 h20 v26 h18 v-34 h24 v40 h16 v-22 h20 v30 h18 v-44 h24 v36 h16 v-20 h22 v26 h20 V176 Z" fill="#1b0f33"/>
+  <rect y="176" width="220" height="44" fill="#2a1330"/>
+  <rect y="176" width="220" height="4" fill="#ff7a1a"/>
+  <ellipse cx="110" cy="182" rx="30" ry="6" fill="#ff5050" opacity=".6"/>
+  <g transform="rotate(-14 110 96)">
+    <rect x="99" y="44" width="22" height="14" rx="4" fill="#3a3a48"/>
+    <path d="M110 46 q14 -14 6 -26" stroke="#c9a26b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="110" cy="100" r="46" fill="url(#bomb)"/>
+    <ellipse cx="94" cy="84" rx="12" ry="7" fill="#fff" opacity=".22" transform="rotate(-30 94 84)"/>
+  </g>
+  <circle cx="126" cy="24" r="16" fill="url(#spark)"/>
+</svg>

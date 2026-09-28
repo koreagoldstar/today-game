@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1036" />
+    <title>폭탄 피하기 | Today Game</title>
+    <meta name="description" content="떨어지는 폭탄을 피하고 최대한 오래 살아남으세요. 오늘의 최고 기록에 도전하세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/bomb-dodge/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="폭탄 피하기 | Today Game" />
+    <meta property="og:description" content="점점 빨라지는 폭탄 비! 몇 초까지 버틸 수 있을까요? 오늘의 TOP 10에 도전하세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/bomb-dodge/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/record-challenge.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+  </head>
+  <body class="is-title" data-face="1">
+    <div class="stage">
+      <section class="screen title" id="title" aria-labelledby="title-h">
+        <div class="bomb-art" aria-hidden="true"><span class="spark"></span></div>
+        <p class="kicker">오늘의 기록 챌린지 · 생존</p>
+        <h1 id="title-h">폭탄 피하기</h1>
+        <p class="sub">떨어지는 폭탄을 피해 <b>최대한 오래</b> 버티세요</p>
+        <p class="hint"><span class="only-touch">손가락을 좌우로 움직여요</span><span class="only-key">← → 또는 A · D</span></p>
+        <button type="button" class="go" id="start-btn">START</button>
+        <p class="title-stat" id="title-stat">오늘 1위 기록을 불러오는 중…</p>
+      </section>
+
+      <section class="screen play hidden" id="play">
+        <canvas id="game" width="390" height="700" aria-label="폭탄 피하기 게임 화면"></canvas>
+        <div class="hud">
+          <p class="hud-time"><b id="hud-time">0.00</b><span>초</span></p>
+          <p class="hud-best" id="hud-best"></p>
+        </div>
+        <p class="count" id="count" aria-live="assertive"></p>
+      </section>
+
+      <section class="screen result hidden" id="over" aria-labelledby="result-time">
+        <p class="boom-badge" id="boom-badge">BOOM!</p>
+        <p class="result-time"><b id="result-time">0.00</b><span>초</span></p>
+        <p class="result-q" id="result-q">몇 초까지 버틸 수 있을까요?</p>
+        <p class="newbest hidden" id="newbest">🎉 내 최고 기록 갱신!</p>
+        <div id="record-panel"></div>
+        <a class="home-link" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/my-face.js?v=3"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/retention.js?v=2"></script>
+    <script src="/js/game-rank.js?v=2"></script>
+    <script src="/js/record-challenge.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="폭탄 피하기 소개">
+  <h2>폭탄 피하기 소개</h2>
+  <p>하늘에서 떨어지는 폭탄을 좌우로 피하며 최대한 오래 살아남는 생존 챌린지입니다. 시간이 지날수록 폭탄이 많아지고 빨라지며, 20초부터는 폭탄 벽과 연속 폭탄이 나옵니다.</p>
+  <h3>플레이 방법</h3>
+  <p>휴대폰은 손가락을 좌우로 움직이고, 컴퓨터는 ← → 또는 A·D 키로 움직이세요. 바닥의 빨간 표시가 폭탄이 떨어질 자리입니다.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>기록은 무엇인가요?</dt>
+    <dd>폭탄에 닿기 전까지 버틴 시간(초)이 기록입니다. 오래 버틸수록 높은 순위에 오릅니다.</dd>
+    <dt>피할 틈이 없는 패턴도 있나요?</dt>
+    <dd>아니요. 폭탄 벽에도 항상 빠져나갈 틈이 있습니다.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

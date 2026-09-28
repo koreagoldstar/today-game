@@ -64,9 +64,12 @@ module.exports = async function handler(req, res) {
     "neon-runner",
     "mirror-rhythm",
     "zombie-run",
+    "10-second",
+    "color-reaction",
+    "bomb-dodge",
   ]);
-  /** 점수가 낮을수록 좋은 게임 (반응속도 ms 등) */
-  const LOWER_BETTER = new Set(["reaction"]);
+  /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms 등) */
+  const LOWER_BETTER = new Set(["reaction", "10-second"]);
   const PERIODS = new Set(["day", "week"]);
   const MAX_KEEP = 50;
   const MAX_NAME = 8;

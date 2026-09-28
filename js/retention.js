@@ -6,8 +6,9 @@
   "use strict";
 
   const KEY = "todaygame_visit";
-  const SKIP_COMPARE = new Set(["omok"]);
-  const LOWER_IS_BETTER = new Set(["minesweeper", "wordle", "reaction"]);
+  // 기록 챌린지 3종은 자체 패널에서 최고·오늘 기록을 보여 줌 (점수 단위가 초·ms 라 'N점' 비교 문구가 어색함)
+  const SKIP_COMPARE = new Set(["omok", "10-second", "color-reaction", "bomb-dodge"]);
+  const LOWER_IS_BETTER = new Set(["minesweeper", "wordle", "reaction", "10-second"]);
 
   function localDayKey(date) {
     const d = date ? new Date(date) : new Date();
