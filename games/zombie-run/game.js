@@ -766,7 +766,7 @@
       scrollSpeed: 95 + stage * 0.45,
       zombieHpMul: 1 + stage * 0.11,
       mutantChance: Math.min(0.62, 0.18 + stage * 0.013),
-      bossHp: Math.floor(300 + stage * 115),
+      bossHp: Math.floor(900 + stage * 260),
       bossSpeed: 2.0 + stage * 0.055,
       bossPattern: Math.max(0.55, 1.25 - stage * 0.011),
       minionHp: Math.floor(28 + stage * 4),
@@ -867,6 +867,294 @@
     }
   }
 
+  /* ================= 보스 AI =================
+   * 체력에 따라 3페이즈 (60% · 30%). 공격은 모두 예고 후 발사 → 피할 수 있게.
+   *  1페이즈: 산성 침(부채꼴) · 졸개 소환
+   *  2페이즈: + 돌진 내려찍기(예고 빨간 줄) · 산성 비(예고 원)
+   *  3페이즈(광폭): 더 빠르고 자주, + 회전 탄막
+   * 보스 공격에 맞으면 0.6초 동안은 보스 공격에 다시 맞지 않음 (겹쳐 맞아 즉사 방지)
+   */
+  let bossShots = [];
+  let bossMarks = [];
+  let bossHurtCd = 0;
+
+  function bossPhaseOf(b) {
+    const r = b.hp / b.maxHp;
+    return r > 0.6 ? 1 : r > 0.3 ? 2 : 3;
+  }
+
+  function bossHit(dmg) {
+    if (bossHurtCd > 0) return;
+    bossHurtCd = 0.6;
+    playerHit(dmg);
+  }
+
+  function bossPickSpot(b) {
+    const margin = b.r + 24;
+    b.tx = margin + Math.random() * Math.max(10, W - margin * 2);
+    b.ty = 95 + Math.random() * Math.min(150, H * 0.22);
+    b.moveT = 1.6 + Math.random() * 1.0;
+  }
+
+  function bossAttackList(phase) {
+    if (phase === 1) return ["spit", "summon", "spit"];
+    if (phase === 2) return ["spit", "slam", "rain", "summon"];
+    return ["spiral", "slam", "rain", "spit", "spiral", "summon"];
+  }
+
+  function bossStartAttack(b) {
+    const list = bossAttackList(b.phase);
+    b.attack = list[b.atkIdx % list.length];
+    b.atkIdx += 1;
+    b.mode = "windup";
+    b.modeT = b.attack === "slam" ? 0.85 : b.attack === "rain" ? 0.2 : 0.45;
+    if (b.attack === "slam") {
+      // 내려찍을 자리 예고 (지금 플레이어 x)
+      b.slamX = Math.max(b.r, Math.min(W - b.r, player.x));
+      bossMarks.push({ kind: "lane", x: b.slamX, w: b.r * 1.6, t: 0, life: b.modeT });
+    }
+    if (b.attack === "rain") {
+      const n = b.phase === 3 ? 6 : 4;
+      for (let i = 0; i < n; i++) {
+        const x = i === 0 ? player.x : 30 + Math.random() * (W - 60);
+        const y = i === 0 ? player.y : H * 0.45 + Math.random() * (H * 0.45);
+        bossMarks.push({ kind: "rain", x, y, r: 46, t: 0, life: 0.95 + i * 0.12 });
+      }
+    }
+  }
+
+  function bossFire(b) {
+    const diff = getStageDifficulty();
+    const fast = b.phase === 3 ? 1.25 : 1;
+    if (b.attack === "spit") {
+      const n = b.phase === 1 ? 3 : b.phase === 2 ? 5 : 7;
+      const base = Math.atan2(player.y - b.y, player.x - b.x);
+      const spd = (210 + stage * 3) * fast;
+      for (let i = 0; i < n; i++) {
+        const a = base + (i - (n - 1) / 2) * 0.17;
+        bossShots.push({ x: b.x, y: b.y + b.r * 0.5, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 11, dmg: 10 + stage * 0.4, kind: "acid" });
+      }
+      playSound("missile_launch");
+    } else if (b.attack === "summon") {
+      const mh = diff.minionHp;
+      for (let i = -1; i <= 1; i++) {
+        zombies.push({ x: Math.max(30, Math.min(W - 30, b.x + i * 46)), y: b.y + 40, r: 20, hp: mh, maxHp: mh, vy: 3.2 + stage * 0.02, isMutant: stage >= 8 || b.phase === 3, walkCycle: 0, hitFlash: 0 });
+      }
+      addFloat(b.x, b.y - b.r, "졸개 소환!", "#ffd166");
+    } else if (b.attack === "slam") {
+      b.mode = "dive";
+      b.modeT = 0;
+      b.homeY = b.y;
+      return;
+    } else if (b.attack === "spiral") {
+      const waves = 2;
+      for (let w = 0; w < waves; w++) {
+        const n = 14;
+        const off = w * (Math.PI / n) + b.spin;
+        for (let i = 0; i < n; i++) {
+          const a = off + (i / n) * Math.PI * 2;
+          const spd = 150 + w * 40;
+          bossShots.push({ x: b.x, y: b.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 8, dmg: 8 + stage * 0.3, kind: "spiral", delay: w * 0.35 });
+        }
+      }
+      b.spin += 0.6;
+      playSound("cannon");
+    }
+    // rain: 예고 원이 끝나면 터짐 (bossMarks 에서 처리)
+    b.mode = "move";
+    b.atkCd = b.cdBase * (b.phase === 3 ? 0.7 : b.phase === 2 ? 0.85 : 1);
+  }
+
+  function updateBoss(dt) {
+    const b = boss;
+    if (b.y < b.targetY && b.mode === "enter") {
+      b.y += 160 * dt;
+      if (b.y >= b.targetY) {
+        b.mode = "move";
+        bossPickSpot(b);
+      }
+      return;
+    }
+    // 페이즈 전환
+    const ph = bossPhaseOf(b);
+    if (ph > b.phase) {
+      b.phase = ph;
+      b.atkIdx = 0;
+      screenShake = 18;
+      addFloat(W / 2, 150, ph === 2 ? "⚠️ 보스가 화났다!" : "🔥 광폭화!", ph === 2 ? "#ff9e00" : "#ff0055");
+      addExplosion(b.x, b.y, ph === 2 ? "#ff9e00" : "#ff0055", 30);
+      b.name = `👑 STAGE ${stage} 킹 좀비 · ${ph === 2 ? "분노" : "광폭"}`;
+      playSound("vehicle");
+    }
+    const speedMul = b.phase === 3 ? 1.45 : b.phase === 2 ? 1.2 : 1;
+    b.walkCycle = (b.walkCycle || 0) + dt * 6 * speedMul;
+    b.bob = (b.bob || 0) + dt * 3;
+
+    if (b.mode === "move") {
+      b.moveT -= dt;
+      if (b.moveT <= 0) bossPickSpot(b);
+      const k = Math.min(1, dt * 1.8 * speedMul);
+      b.x += (b.tx - b.x) * k;
+      b.y += (b.ty - b.y) * k + Math.sin(b.bob) * 0.4;
+      b.atkCd -= dt;
+      if (b.atkCd <= 0) bossStartAttack(b);
+    } else if (b.mode === "windup") {
+      // 공격 직전: 살짝 떨면서 멈칫 (예고)
+      b.modeT -= dt;
+      b.x += (Math.random() - 0.5) * 3;
+      if (b.attack === "slam") b.x += (b.slamX - b.x) * Math.min(1, dt * 6);
+      if (b.modeT <= 0) bossFire(b);
+    } else if (b.mode === "dive") {
+      // 돌진 내려찍기: 빠르게 내려왔다가 충격파 후 복귀
+      b.modeT += dt;
+      const bottom = H - 210;
+      if (!b.slammed) {
+        b.y += (520 + stage * 6) * speedMul * dt;
+        if (b.y >= bottom) {
+          b.y = bottom;
+          b.slammed = true;
+          screenShake = 20;
+          playSound("explosion");
+          addExplosion(b.x, b.y + b.r, "#ff9e00", 26);
+          bossMarks.push({ kind: "wave", x: b.x, y: b.y + b.r * 0.6, r: 20, t: 0, life: 0.6, hit: false });
+        }
+      } else {
+        b.y += (b.homeY - b.y) * Math.min(1, dt * 2.6);
+        if (Math.abs(b.y - b.homeY) < 4 || b.modeT > 2.4) {
+          b.slammed = false;
+          b.mode = "move";
+          b.atkCd = b.cdBase * (b.phase === 3 ? 0.7 : 0.85);
+          bossPickSpot(b);
+        }
+      }
+    }
+    if (b.hitFlash > 0) b.hitFlash -= dt;
+
+    // 몸통 박치기 (돌진 중엔 더 아픔)
+    if (Math.hypot(b.x - player.x, b.y - player.y) < b.r + player.r - 10) {
+      bossHit(b.mode === "dive" ? 24 + stage * 0.6 : 14 + stage * 0.5);
+    }
+  }
+
+  function updateBossShots(dt) {
+    if (bossHurtCd > 0) bossHurtCd -= dt;
+    for (let i = bossShots.length - 1; i >= 0; i--) {
+      const s = bossShots[i];
+      if (s.delay > 0) {
+        s.delay -= dt;
+        continue;
+      }
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      if (Math.hypot(s.x - player.x, s.y - player.y) < s.r + player.r * 0.6) {
+        bossHit(s.dmg);
+        addExplosion(s.x, s.y, s.kind === "acid" ? "#7dff4d" : "#c86bff", 8);
+        bossShots.splice(i, 1);
+      } else if (s.x < -30 || s.x > W + 30 || s.y < -30 || s.y > H + 30) {
+        bossShots.splice(i, 1);
+      }
+    }
+    for (let i = bossMarks.length - 1; i >= 0; i--) {
+      const m = bossMarks[i];
+      m.t += dt;
+      if (m.kind === "rain" && m.t >= m.life && !m.done) {
+        m.done = true;
+        addExplosion(m.x, m.y, "#7dff4d", 14);
+        if (Math.hypot(m.x - player.x, m.y - player.y) < m.r + player.r * 0.4) bossHit(14 + stage * 0.4);
+      }
+      if (m.kind === "wave") {
+        m.r += 420 * dt;
+        // 충격파 고리에 닿으면 피해 (고리 두께 안에 있을 때만)
+        const d = Math.hypot(m.x - player.x, m.y - player.y);
+        if (!m.hit && Math.abs(d - m.r) < 18) {
+          m.hit = true;
+          bossHit(12 + stage * 0.4);
+        }
+      }
+      if (m.t >= m.life + (m.kind === "rain" ? 0.25 : 0)) bossMarks.splice(i, 1);
+    }
+  }
+
+  function drawBossMarks() {
+    bossMarks.forEach((m) => {
+      ctx.save();
+      const p = Math.min(1, m.t / m.life);
+      if (m.kind === "lane") {
+        ctx.fillStyle = `rgba(255, 0, 85, ${0.12 + 0.18 * Math.abs(Math.sin(m.t * 14))})`;
+        ctx.fillRect(m.x - m.w / 2, 0, m.w, H);
+        ctx.strokeStyle = "rgba(255, 0, 85, .7)";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 8]);
+        ctx.strokeRect(m.x - m.w / 2, -4, m.w, H + 8);
+      } else if (m.kind === "rain") {
+        if (!m.done) {
+          ctx.fillStyle = `rgba(255, 40, 80, ${0.15 + p * 0.25})`;
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 60, 100, .9)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r * (1 - p) + 4, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "rgba(125, 255, 77, .45)";
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r * 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (m.kind === "wave") {
+        ctx.strokeStyle = `rgba(255, 158, 0, ${1 - p})`;
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.ellipse(m.x, m.y, m.r, m.r * 0.45, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawBossShots() {
+    bossShots.forEach((s) => {
+      if (s.delay > 0) return;
+      ctx.save();
+      const glow = s.kind === "acid" ? "125, 255, 77" : "200, 107, 255";
+      ctx.fillStyle = `rgba(${glow}, .35)`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * 1.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgb(${glow})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      ctx.beginPath();
+      ctx.arc(s.x - s.r * 0.3, s.y - s.r * 0.3, s.r * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  /* 보스 몸 주변 연출: 공격 예고 깜빡임, 페이즈 오라 */
+  function drawBossAura(b) {
+    ctx.save();
+    if (b.phase >= 2) {
+      const pulse = 0.5 + 0.5 * Math.sin(animTime * (b.phase === 3 ? 10 : 5));
+      ctx.fillStyle = b.phase === 3 ? `rgba(255, 0, 85, ${0.18 + pulse * 0.18})` : `rgba(255, 158, 0, ${0.1 + pulse * 0.1})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (b.mode === "windup") {
+      ctx.strokeStyle = `rgba(255, 230, 80, ${0.5 + 0.5 * Math.sin(animTime * 30)})`;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r * 1.25, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function spawnBoss() {
     const diff = getStageDifficulty();
     screenShake = 16;
@@ -884,7 +1172,18 @@
       walkCycle: 0,
       hitFlash: 0,
       name: `👑 STAGE ${stage} 킹 좀비`,
+      phase: 1,
+      mode: "enter",
+      atkIdx: 0,
+      atkCd: 1.4,
+      cdBase: Math.max(1.15, 2.3 - stage * 0.02),
+      spin: 0,
+      tx: W / 2,
+      ty: 130,
+      moveT: 2,
     };
+    bossShots = [];
+    bossMarks = [];
     addFloat(W / 2, 120, "보스 등장!", "#ff0055");
     playSound("vehicle");
     updateHUD();
@@ -922,6 +1221,9 @@
     floats = [];
     boss = null;
     bossArming = false;
+    bossShots = [];
+    bossMarks = [];
+    bossHurtCd = 0;
     updateHUD();
   }
 
@@ -1150,20 +1452,7 @@
 
     // Zombie Spawning & Behavior
     if (boss) {
-      if (boss.y < boss.targetY) boss.y += 2.8;
-      boss.x += boss.vx;
-      if (boss.x < boss.r + 20 || boss.x > W - boss.r - 20) boss.vx *= -1;
-      boss.walkCycle = (boss.walkCycle || 0) + dt * 6;
-      if (boss.hitFlash > 0) boss.hitFlash -= dt;
-
-      boss.patternTimer += dt;
-      const diff = getStageDifficulty();
-      if (boss.patternTimer > boss.patternCd) {
-        boss.patternTimer = 0;
-        const mh = diff.minionHp;
-        zombies.push({ x: boss.x - 24, y: boss.y + 38, r: 20, hp: mh, maxHp: mh, vy: 3.2 + stage * 0.02, isMutant: stage >= 8, walkCycle: 0, hitFlash: 0 });
-        zombies.push({ x: boss.x + 24, y: boss.y + 38, r: 20, hp: mh, maxHp: mh, vy: 3.2 + stage * 0.02, isMutant: stage >= 8, walkCycle: 0, hitFlash: 0 });
-      }
+      updateBoss(dt);
     } else {
       const diff = getStageDifficulty();
       if (spawnTimer > diff.spawnInterval) {
@@ -1203,12 +1492,8 @@
       }
     }
 
-    if (boss) {
-      if (Math.hypot(boss.x - player.x, boss.y - player.y) < boss.r + player.r - 10) {
-        playerHit(16 + stage * 0.8);
-      }
-      updateHUD();
-    }
+    updateBossShots(dt);
+    if (boss) updateHUD();
 
     // Particles Update
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -1257,6 +1542,8 @@
     addExplosion(boss.x + 30, boss.y, "#00f0ff", 30);
     score += 3000 + stage * 500;
     coins += 50;
+    bossShots = [];
+    bossMarks = [];
     boss = null;
     bossArming = false;
     updateHUD();
@@ -1530,6 +1817,7 @@
     });
 
     // 2. Zombies & Boss — sprite-sheet walk animation
+    drawBossMarks();
     zombies.forEach((z) => {
       ctx.save();
       ctx.translate(z.x, z.y);
@@ -1558,6 +1846,7 @@
       ctx.translate(boss.x, boss.y);
       const bsz = boss.r * 5.2;
       drawGroundShadow(bsz, bsz * 0.42);
+      drawBossAura(boss);
 
       const bFrame = getAnimFrame(boss.walkCycle);
       if (!drawSpriteWithFlash(sprites.boss, bFrame, SPRITE_FRAMES, -bsz / 2, -bsz / 2, bsz, bsz, boss.hitFlash || 0)) {
@@ -1573,6 +1862,8 @@
 
       ctx.restore();
     }
+
+    drawBossShots();
 
     // 3. Laser Bullets & Homing Missiles
     bullets.forEach((b) => {
