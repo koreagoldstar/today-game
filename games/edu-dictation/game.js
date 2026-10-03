@@ -5,6 +5,11 @@
   const { ASSET, DICTATION, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -74,16 +79,14 @@
       els.picture.hidden = false;
       els.picture.classList.add("bounce");
       ding();
-      speak(current.word);
       if (window.TodayEdu) TodayEdu.recordResult("level3", current.word, true);
-      window.setTimeout(nextRound, 1000);
+      sayThen(current.word, nextRound, { min: 1200, pause: 700 });
       return;
     }
     btn.classList.remove("shake");
     void btn.offsetWidth;
     btn.classList.add("shake");
-    speak("다시 들어볼까?");
-    window.setTimeout(speakWord, 700);
+    sayThen("다시 들어볼까?", speakWord, { min: 0, pause: 250 });
   }
 
   function nextRound() {
@@ -106,6 +109,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     roundIndex = 0;
     used.length = 0;
     showOverlay(null);

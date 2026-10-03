@@ -79,6 +79,7 @@
     let lastScore = null;
     let lastLabel = "";
     let board = [];
+    let lockTimer = 0;
 
     function paintMine() {
       const d = load();
@@ -196,6 +197,12 @@
        * @returns {{ newBest: boolean, newToday: boolean, prevBest: number|null }}
        */
       finish(score, opts = {}) {
+        // 휴대폰에서 STOP 같은 마지막 탭의 뒤늦은 클릭(또는 두 번 탭)이 결과 화면의
+        // '다시 도전' 에 그대로 꽂혀 결과를 보기도 전에 다음 판이 시작되던 문제 방지:
+        // 결과 화면은 처음 0.7초 동안 터치를 받지 않는다.
+        document.body.classList.add("rc-lock");
+        window.clearTimeout(lockTimer);
+        lockTimer = window.setTimeout(() => document.body.classList.remove("rc-lock"), 700);
         lastScore = score;
         lastLabel = opts.label || cfg.format(score);
         const d = load();

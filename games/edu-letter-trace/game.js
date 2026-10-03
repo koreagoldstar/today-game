@@ -9,6 +9,11 @@
 
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -200,16 +205,16 @@
       if (window.TodayEdu) TodayEdu.recordResult("level1", ch, true);
     }
     ding();
-    speak(letterName(ch));
     popStar();
     roundIndex += 1;
+    // 글자 이름을 끝까지 들려준 뒤 다음 글자로 (예전엔 0.7초 만에 다음 글자 안내가 끊었음)
     if (roundIndex >= ROUNDS) {
       els.progress.textContent = `${ROUNDS} / ${ROUNDS}`;
-      window.setTimeout(finish, 800);
+      sayThen(letterName(ch), finish, { min: 900, pause: 500 });
       return;
     }
     els.progress.textContent = `${roundIndex + 1} / ${ROUNDS}`;
-    window.setTimeout(nextLetter, 700);
+    sayThen(letterName(ch), nextLetter, { min: 900, pause: 500 });
   }
 
   function finish() {
@@ -223,6 +228,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     roundIndex = 0;
     practiced.length = 0;
     letterIndex = Math.floor(Math.random() * LETTERS.length);

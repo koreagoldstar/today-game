@@ -5,6 +5,11 @@
   const { JAMOS, SYLLABLES, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -94,17 +99,15 @@
       els.speaker.classList.remove("hint");
       btn.classList.add("correct");
       ding();
-      speak(current.kind === "syl" ? current.name : current.name);
       if (window.TodayEdu) TodayEdu.recordResult("level1", current.id, true);
-      window.setTimeout(nextRound, 900);
+      sayThen(current.name, nextRound, { min: 1100, pause: 700 });
       return;
     }
     btn.classList.remove("shake");
     void btn.offsetWidth;
     btn.classList.add("shake");
     els.speaker.classList.add("hint");
-    speak("다시 들어볼까?");
-    window.setTimeout(speakTarget, 700);
+    sayThen("다시 들어볼까?", speakTarget, { min: 0, pause: 250 });
   }
 
   function nextRound() {
@@ -127,6 +130,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     roundIndex = 0;
     used.length = 0;
     showOverlay(null);

@@ -5,6 +5,11 @@
   const { ASSET, VOWELS, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -85,9 +90,9 @@
       locked = true;
       btn.classList.add("correct");
       ding();
-      speak(choice.word);
       if (window.TodayEdu) TodayEdu.recordResult("level1", current.vowel.id, true);
-      window.setTimeout(nextRound, 1100);
+      // 단어를 끝까지 들려준 뒤 다음 문제 (예전엔 1.1초 만에 넘어가 잘리곤 했음)
+      sayThen(choice.word, nextRound, { min: 1200, pause: 700 });
       return;
     }
     btn.classList.remove("shake");
@@ -95,8 +100,7 @@
     btn.classList.add("shake");
     misses += 1;
     if (window.TodayEdu) TodayEdu.recordResult("level1", current.vowel.id, false);
-    speak("다시 들어볼까?");
-    window.setTimeout(speakPrompt, 700);
+    sayThen("다시 들어볼까?", speakPrompt, { min: 0, pause: 250 });
     if (misses >= 3) hintCorrect();
   }
 
@@ -120,6 +124,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     roundIndex = 0;
     usedIds.length = 0;
     showOverlay(null);

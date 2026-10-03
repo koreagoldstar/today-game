@@ -5,6 +5,11 @@
   const { ASSET, SYLLABLES, BATCHIM, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -75,9 +80,8 @@
     els.assocWord.textContent = current.word;
     els.assoc.classList.add("show");
     ding();
-    speak(`${current.text}. ${current.word}`);
     if (window.TodayEdu) TodayEdu.recordResult("level2", current.text, true);
-    window.setTimeout(nextRound, 1200);
+    sayThen(`${current.text}. ${current.word}`, nextRound, { min: 1400, pause: 700 });
   }
 
   function place(role, glyph, el) {
@@ -189,6 +193,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     roundIndex = 0;
     used.length = 0;
     showOverlay(null);

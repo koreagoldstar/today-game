@@ -1,4 +1,9 @@
 /* 기록 챌린지 결과 패널. 게임마다 --rc-* 변수로 분위기를 바꾼다. */
+
+/* 결과가 막 뜬 0.7초 동안은 터치 무시 (마지막 탭이 '다시 도전'으로 새어 들어가지 않게) */
+body.rc-lock #over {
+  pointer-events: none;
+}
 .rc {
   --rc-accent: #ff4f8b;
   --rc-accent-ink: #fff;

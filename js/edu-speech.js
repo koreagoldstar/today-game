@@ -316,9 +316,40 @@
     });
   }
 
+  /*
+   * 말하고 → 끝까지 다 들려준 뒤 → 잠깐 쉬고 → 다음 동작.
+   * 예전처럼 setTimeout(다음문제, 1000) 으로 넘기면, 서버 음성이 늦게 오는 날엔
+   * 다음 문제 안내가 앞 단어를 끊어 버렸다 (어떤 때는 들리고 어떤 때는 잘림).
+   * - min: 최소 기다림 (소리가 아주 짧거나 꺼져 있어도 화면을 볼 시간)
+   * - pause: 다 읽은 뒤 쉬는 시간
+   * - max: 끝났다는 신호가 안 와도 이 시간이 지나면 진행 (멈춤 방지)
+   * 게임을 처음부터 다시 시작하면 newFlow() 로 이전 예약을 무효로 만든다.
+   */
+  let flow = 0;
+  let lastStep = 0; // 가장 최근에 시작한 '말하고 다음' 만 진행 (오답을 여러 번 빨리 눌러도 겹치지 않게)
+  const wait = (ms) => new Promise((r) => window.setTimeout(r, ms));
+  function newFlow() {
+    flow += 1;
+    return flow;
+  }
+  function speakThen(text, next, opts = {}) {
+    const { min = 900, pause = 600, max = 7000 } = opts;
+    const mine = flow;
+    const step = ++lastStep;
+    const say = typeof window.speakSoftly === "function" ? window.speakSoftly : speakSoftly;
+    const spoken = Promise.resolve(text ? say(text) : true);
+    return Promise.race([Promise.all([spoken, wait(min)]), wait(max)])
+      .then(() => wait(pause))
+      .then(() => {
+        if (mine === flow && step === lastStep && typeof next === "function") next();
+      });
+  }
+
   window.speakSoftly = speakSoftly;
   window.TodayEduSpeak = {
     speakSoftly,
+    then: speakThen,
+    newFlow,
     ding,
     ensureAudio,
     unlock,

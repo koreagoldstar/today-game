@@ -5,6 +5,11 @@
   const { ASSET, OPPOSITES, shuffle } = window.TodayEduWords;
   const speak = (t) => window.speakSoftly && speakSoftly(t);
   const ding = () => window.TodayEduSpeak && TodayEduSpeak.ding();
+  /** 끝까지 말한 뒤 다음 동작 (edu-speech.js 공용) */
+  const sayThen = (t, next, opts = {}) =>
+    window.TodayEduSpeak && TodayEduSpeak.then
+      ? TodayEduSpeak.then(t, next, opts)
+      : (speak(t), window.setTimeout(next, (opts.min || 900) + (opts.pause || 600) + 1200));
 
   const els = {
     title: document.getElementById("title"),
@@ -58,12 +63,12 @@
       matched += 1;
       lastPhrase = `${a.card.speakA}! ${a.card.speakB}!`;
       ding();
-      speak(lastPhrase);
       if (window.TodayEdu) TodayEdu.recordResult("level4", a.card.pairId, true);
       els.progress.textContent = `${matched} / ${PAIR_COUNT}`;
       open = [];
       locked = false;
-      if (matched >= PAIR_COUNT) window.setTimeout(finish, 800);
+      if (matched >= PAIR_COUNT) sayThen(lastPhrase, finish, { min: 1200, pause: 500 });
+      else speak(lastPhrase);
       return;
     }
     a.btn.classList.add("shake");
@@ -88,6 +93,7 @@
 
   function startGame() {
     if (window.TodayEduSpeak) TodayEduSpeak.unlock();
+    if (window.TodayEduSpeak && TodayEduSpeak.newFlow) TodayEduSpeak.newFlow();
     cards = shuffle(
       OPPOSITES.flatMap((pair) => [
         {
