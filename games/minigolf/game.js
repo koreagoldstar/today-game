@@ -515,7 +515,12 @@
       if (surf === "green") friction = clubId === "putter" ? 0.968 : 0.975;
       if (surf === "rough") friction = 0.945;
       if (surf === "sand") friction = 0.9;
-      if (surf === "water" || surf === "oob") friction = 0.88;
+      // 물 위는 '날아서 넘어가는' 중으로 보고 페어웨이처럼 굴러가게 한다.
+      // (예전엔 0.88 로 거의 바로 멈춰서, 드라이버로 쳐도 물이 넓은 홀(아일랜드 그린 등)은
+      //  절대 건널 수 없어 워터해저드에서 끝없이 되돌아가기만 했다)
+      // 물 위에서 속도가 떨어지면 아래 검사에서 워터해저드 처리된다.
+      if (surf === "water") friction = 0.982;
+      if (surf === "oob") friction = 0.88;
       friction *= CLUBS[clubId].friction;
       ball.vx *= Math.pow(friction, stepDt);
       ball.vy *= Math.pow(friction, stepDt);
