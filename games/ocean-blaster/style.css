@@ -1,0 +1,20 @@
+/* 🌊 바다 물총 대작전 — 테마 색 (레이아웃은 /js/blaster/blaster.css) */
+.bl.ocean {
+  --bl-deep: #0b4f7c;
+  --bl-sea: #1aa0d8;
+  --bl-aqua: #3fd0ff;
+  --bl-sun: #ffd23f;
+  --bl-coral: #ff6b6b;
+  --bl-pink: #ff5fa2;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.18) 0 6px, transparent 7px),
+    radial-gradient(circle at 86% 30%, rgba(255, 255, 255, 0.14) 0 9px, transparent 10px),
+    radial-gradient(circle at 20% 74%, rgba(255, 255, 255, 0.12) 0 12px, transparent 13px),
+    radial-gradient(circle at 78% 86%, rgba(255, 255, 255, 0.16) 0 7px, transparent 8px),
+    radial-gradient(120% 80% at 50% 0%, #4fc8f0 0%, #0e6aa8 55%, #072f52 100%);
+}
+
+.bl.ocean .stage-card .sc-emoji,
+.bl.ocean .bonus-card .bc-emoji {
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.12));
+}

@@ -93,10 +93,12 @@ module.exports = async function handler(req, res) {
     "10-second",
     "color-reaction",
     "bomb-dodge",
+    "ocean-blaster",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "ocean-blaster",
     "10-second",
     "color-reaction",
     "bomb-dodge",

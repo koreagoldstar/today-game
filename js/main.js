@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "ocean-blaster",
+      face: true,
+      title: "바다 물총 대작전",
+      tag: "물총 슈팅 · 12해역 · 보스 5",
+      href: "/games/ocean-blaster/",
+      thumb: "/assets/thumbs/ocean-blaster.png",
+      category: "action",
+    },
+    {
       id: "10-second",
       title: "10초 정확히 맞추기",
       tag: "정확도 · 기록 챌린지",
