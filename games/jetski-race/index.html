@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a3f78" />
+    <title>제트스키 썬더 레이스 | Today Game</title>
+    <meta name="description" content="파도를 가르고 기록을 깨라! 지혁과 함께 12개 바다 코스를 달리는 제트스키 레이싱. 부스터 · 점프 · 지름길 · 추월, 코스마다 골드 기록에 도전하고 오늘의 랭킹에 이름을 올리세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/jetski-race/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="제트스키 썬더 레이스 | Today Game" />
+    <meta property="og:description" content="파도를 가르고 기록을 깨라! 부스터 · 점프 · 지름길로 0.01초를 줄이는 바다 제트스키 레이싱." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/jetski-race/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/jetski-race.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+      <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="jr is-menu" data-face="1">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="제트스키 썬더 레이스 게임 화면"></canvas>
+
+        <!-- 레이스 HUD -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-pos" id="hud-pos" aria-label="현재 순위">
+            <b id="pos-n">5</b><span class="pos-of">/<i id="pos-t">5</i></span>
+            <small>POS</small>
+          </div>
+          <div class="hud-mid">
+            <div class="hud-track" id="hud-track">
+              <i class="trk-fill" id="trk-fill"></i>
+              <span class="trk-flag" data-icon="flag"></span>
+            </div>
+            <p class="hud-time"><span data-icon="watch"></span><b id="hud-time">00:00.00</b></p>
+          </div>
+          <div class="hud-speed" aria-label="현재 속도">
+            <svg viewBox="0 0 100 60" class="spd-dial" aria-hidden="true">
+              <path d="M10 54a40 40 0 0 1 80 0" class="spd-bg" />
+              <path d="M10 54a40 40 0 0 1 80 0" class="spd-arc" id="spd-arc" pathLength="100" />
+            </svg>
+            <b id="spd-n">0</b>
+            <small>km/h</small>
+          </div>
+        </header>
+        <div class="hud-tools" id="hud-tools" hidden>
+          <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><span data-icon="pause"></span></button>
+          <button type="button" class="round-btn" id="sound-btn" aria-label="소리"><span data-icon="sound"></span></button>
+        </div>
+        <div class="hud-bonus" id="hud-bonus" hidden><span data-icon="star"></span><b id="bonus-n">0</b></div>
+        <button type="button" class="boost-btn" id="boost-btn" hidden aria-label="부스트">
+          <svg viewBox="0 0 120 120" class="boost-ring" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" class="br-bg" />
+            <path id="bseg0" class="br-seg" d="" />
+            <path id="bseg1" class="br-seg" d="" />
+            <path id="bseg2" class="br-seg" d="" />
+          </svg>
+          <span class="boost-core"><span data-icon="bolt"></span><b>BOOST</b></span>
+          <i class="boost-count" id="boost-count">0</i>
+        </button>
+        <div class="steer-hint" id="steer-hint" hidden>
+          <span class="sh-l"><span data-icon="back"></span></span>
+          <p>누른 쪽으로 방향 전환!</p>
+          <span class="sh-r"><span data-icon="next"></span></span>
+        </div>
+        <p class="start-hint" id="start-hint" hidden><span data-icon="finger"></span>GO! 에 맞춰 화면을 톡! <b>퍼펙트 스타트</b></p>
+
+        <!-- 시작 화면 -->
+        <section class="screen menu" id="title" aria-labelledby="title-h">
+          <div class="logo">
+            <p class="logo-kr">제트스키 썬더 레이스</p>
+            <h1 id="title-h" aria-label="JETSKI THUNDER RACE">
+              <span class="l1">JETSKI</span>
+              <span class="l2"><span class="bolt" data-icon="bolt"></span>THUNDER RACE</span>
+            </h1>
+            <p class="logo-sub">파도를 가르고 기록을 깨라!</p>
+          </div>
+          <div class="menu-bottom">
+            <button type="button" class="btn-race" id="start-btn">
+              <span class="race-ic" data-icon="flag"></span>
+              <span class="race-txt"><b>RACE START</b><small id="start-label">COURSE 01 · TROPICAL BAY</small></span>
+              <span class="race-shine" aria-hidden="true"></span>
+            </button>
+            <div class="menu-row">
+              <button type="button" class="btn-tile" id="menu-courses"><span class="ic" data-icon="grid"></span><b>COURSE<br />SELECT</b></button>
+              <button type="button" class="btn-tile" id="menu-records"><span class="ic" data-icon="trophy"></span><b>TODAY<br />RECORD</b></button>
+              <button type="button" class="btn-tile" id="menu-howto"><span class="ic" data-icon="help"></span><b>HOW TO<br />PLAY</b></button>
+            </div>
+            <p class="menu-progress" id="menu-progress"></p>
+          </div>
+        </section>
+
+        <!-- 코스 선택 -->
+        <section class="screen panel" id="courses" hidden aria-labelledby="courses-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="courses-h">COURSE SELECT</h2>
+            <p class="panel-medals" id="courses-medals"></p>
+          </header>
+          <div class="panel-body">
+            <div class="course-grid" id="course-grid"></div>
+          </div>
+        </section>
+
+        <!-- 오늘의 기록 -->
+        <section class="screen panel" id="records" hidden aria-labelledby="records-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="records-h">TODAY RECORD</h2>
+          </header>
+          <div class="rec-tabs" id="rec-tabs" role="tablist"></div>
+          <div class="panel-body">
+            <div class="rec-board" id="rec-board"></div>
+          </div>
+        </section>
+
+        <!-- 하는 법 -->
+        <section class="screen panel" id="howto" hidden aria-labelledby="howto-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="howto-h">HOW TO PLAY</h2>
+          </header>
+          <div class="panel-body">
+            <div class="how-list" id="how-list"></div>
+          </div>
+        </section>
+
+        <!-- 출발 전 코스 소개 -->
+        <section class="screen brief" id="brief" hidden aria-labelledby="brief-h">
+          <div class="brief-card">
+            <p class="brief-no" id="brief-no">COURSE 01</p>
+            <h2 id="brief-h">TROPICAL BAY</h2>
+            <p class="brief-kr" id="brief-kr">트로피컬 베이</p>
+            <p class="brief-stars" id="brief-stars"></p>
+            <div class="brief-medals" id="brief-medals"></div>
+            <p class="brief-tip" id="brief-tip"></p>
+            <p class="brief-best" id="brief-best"></p>
+            <div class="brief-btns">
+              <button type="button" class="btn-res" id="brief-back"><span data-icon="back"></span>코스</button>
+              <button type="button" class="btn-res primary" id="brief-go"><span data-icon="flag"></span>출발!</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 결과 -->
+        <section class="screen result" id="result" hidden>
+          <div class="result-card" id="result-card">
+            <div id="result-body"></div>
+            <div class="res-btns">
+              <button type="button" class="btn-res primary big" id="res-retry"><span data-icon="retry"></span>다시 달리기</button>
+              <div class="res-row">
+                <button type="button" class="btn-res" id="res-courses"><span data-icon="grid"></span>코스 선택</button>
+                <button type="button" class="btn-res" id="res-next"><span data-icon="next"></span>다음 코스</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section class="screen pause" id="pause" hidden>
+          <div class="pause-card">
+            <p class="pause-kicker">PAUSED</p>
+            <h2>잠깐 숨 고르기</h2>
+            <button type="button" class="btn-res primary" id="pause-resume"><span data-icon="play"></span>계속 달리기</button>
+            <button type="button" class="btn-res" id="pause-retry"><span data-icon="retry"></span>처음부터</button>
+            <button type="button" class="btn-res" id="pause-quit"><span data-icon="grid"></span>코스 선택</button>
+            <div class="pause-toggles" id="pause-toggles"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/my-face.js?v=3"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="제트스키 썬더 레이스 소개">
+  <h2>제트스키 썬더 레이스 소개</h2>
+  <p>지혁과 함께 제트스키를 타고 12개 바다 코스를 달리는 레이싱 게임입니다. 트로피컬 베이에서 시작해 산호초 통로, 해적선 사이 해협, 큰 파도, 번개 치는 폭풍 해안, 증기를 뿜는 화산섬, 달빛 바다, 빙산의 얼음 바다, 거대 촉수가 솟는 심해 채널을 지나 최종 그랜드 오션 GP까지 코스마다 환경과 장애물, 지름길이 모두 다릅니다.</p>
+  <h3>플레이 방법</h3>
+  <p>화면을 누른 쪽으로 제트스키가 꺾입니다. 가운데에서 멀리 누를수록 세게 꺾여요. 번개 구슬로 부스트 게이지를 모아 오른쪽 아래 BOOST 버튼을 누르고, 노란 부스터 판은 밟기만 하면 됩니다. 점프대는 노란 화살표 가운데로 타면 한 바퀴 돌고 PERFECT LANDING 부스트를 받아요. GO! 에 맞춰 화면을 톡 하면 퍼펙트 스타트. 컴퓨터에서는 방향키와 스페이스바로 플레이하세요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>기록과 메달은 어떻게 정해지나요?</dt>
+    <dd>코스마다 브론즈 · 실버 · 골드 목표 시간이 있어요. 완주 기록이 목표보다 빠르면 메달을 받고, 12개 코스를 모두 골드로 깨면 GRAND MASTER 배지를 받아요.</dd>
+    <dt>랭킹은 어떻게 등록하나요?</dt>
+    <dd>결과 화면에서 랭킹 이름을 넣고 '기록 등록'을 누르면 오늘의 코스별 랭킹에 올라가요. 서버로는 닉네임과 기록 숫자만 보내고, 얼굴 사진은 이 기기 밖으로 나가지 않아요.</dd>
+    <dt>다음 코스는 언제 열리나요?</dt>
+    <dd>지금 코스를 완주하면(순위와 상관없이) 다음 코스가 열려요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

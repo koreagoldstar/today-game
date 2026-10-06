@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "jetski-race",
+      face: true,
+      title: "제트스키 썬더 레이스",
+      tag: "레이싱 · 12코스 · 기록 경쟁",
+      href: "/games/jetski-race/",
+      thumb: "/assets/thumbs/jetski-race.png",
+      category: "sports",
+    },
+    {
       id: "ocean-blaster",
       face: true,
       title: "바다 물총 대작전",
