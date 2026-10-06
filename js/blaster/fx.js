@@ -3,7 +3,7 @@
  * 파티클 · 떠오르는 글자 · 화면 흔들림 · 번쩍임 · 큰 배너.
  * 전부 미리 만든 풀(pool)을 돌려 써서 판이 길어져도 쓰레기가 쌓이지 않는다.
  */
-import { W, H, rand, ease } from "./view.js?v=2";
+import { W, H, rand, ease } from "./view.js?v=3";
 
 const MAX_PARTS = 520;
 const MAX_TEXTS = 36;
@@ -14,6 +14,8 @@ export class EffectSystem {
     this.texts = Array.from({ length: MAX_TEXTS }, () => ({ on: false }));
     this.cursor = 0;
     this.tcursor = 0;
+    this.serial = 0;
+    this.order = [];
     this.shakeAmp = 0;
     this.shakeX = 0;
     this.shakeY = 0;
@@ -92,14 +94,33 @@ export class EffectSystem {
     }
   }
 
-  /** PERFECT! — 사방으로 뻗는 빛줄기 + 반짝 */
+  /** PERFECT! — 짧은 빛줄기 + 사방으로 터지는 물방울 + 반짝 (작고 빠르게) */
   perfectBurst(x, y, s = 1) {
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2 + rand(-0.1, 0.1);
-      this.spawn({ kind: "line", x, y, ang: a, r: 18 * s, len: rand(40, 80) * s, life: 0.32, w: rand(3, 6) * s, color: i % 2 ? "#fff6b0" : "#ffffff" });
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 + rand(-0.12, 0.12);
+      this.spawn({ kind: "line", x, y, ang: a, r: 16 * s, len: rand(34, 62) * s, life: 0.26, w: rand(3, 5) * s, color: i % 2 ? "#fff6b0" : "#ffffff" });
     }
-    this.spawn({ kind: "glow", x, y, r: 70 * s, life: 0.28, color: "255,240,170" });
-    this.sparkle(x, y, 1.4 * s, 12, "#fff2a8");
+    const n = Math.round(12 * this.quality);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand(-0.2, 0.2);
+      const sp = rand(200, 340) * s;
+      this.spawn({ kind: "drop", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40 * s, g: 700 * s, r: rand(2.5, 4.5) * s, life: rand(0.3, 0.5), color: i % 3 ? "#bfeeff" : "#ffffff" });
+    }
+    this.spawn({ kind: "ring", x, y, r: 12 * s, grow: 260 * s, life: 0.28, color: "#ffffff", w: 5 * s, flat: 1 });
+    this.spawn({ kind: "glow", x, y, r: 64 * s, life: 0.24, color: "255,240,170" });
+    this.sparkle(x, y, 1.1 * s, 6, "#fff2a8");
+  }
+
+  /** 총구: 짧은 빛 + 앞으로 튀는 물방울 + 발사 방향 빛줄기 */
+  muzzle(x, y, ang) {
+    this.spawn({ kind: "glow", x, y, r: 22, life: 0.1, color: "215,245,255" });
+    const n = 2 + Math.round(2 * this.quality);
+    for (let i = 0; i < n; i++) {
+      const a = ang + rand(-0.42, 0.42);
+      const sp = rand(220, 420);
+      this.spawn({ kind: "drop", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 900, r: rand(1.8, 3.2), life: rand(0.18, 0.3), color: Math.random() < 0.5 ? "#ffffff" : "#bdeaff" });
+    }
+    this.spawn({ kind: "line", x, y, ang: ang + rand(-0.05, 0.05), r: 8, len: 50, life: 0.13, w: 3.2, color: "#ffffff" });
   }
 
   mist(x, y, s = 1, color = "rgba(255,255,255,0.8)") {
@@ -173,10 +194,20 @@ export class EffectSystem {
     }
   }
 
-  text(str, x, y, { color = "#fff", size = 26, life = 0.9, rise = 70, stroke = "#1b4b72", pop = true, font = "Bagel Fat One" } = {}) {
+  /**
+   * 떠오르는 글자. delay: 조금 늦게 (명중 → 점수 → 콤보 순서) · slot: 같은 칸은 하나만 (새 것이 오면 옛 것은 얼른 사라짐)
+   * punch: 크게 나타났다가 제자리로 (PERFECT)
+   */
+  text(str, x, y, { color = "#fff", size = 26, life = 0.9, rise = 70, stroke = "#1b4b72", pop = true, font = "Bagel Fat One", delay = 0, slot = "", punch = false } = {}) {
+    if (slot) {
+      for (const o of this.texts) if (o.on && o.slot === slot) o.life = Math.min(o.life, o.age + 0.08);
+    }
+    // 화면 가장자리에서 글자가 잘리지 않게 안쪽으로
+    const half = Math.min(W / 2 - 8, String(str).length * size * 0.32 + 8);
+    x = Math.max(half, Math.min(W - half, x));
     const t = this.texts[this.tcursor];
     this.tcursor = (this.tcursor + 1) % MAX_TEXTS;
-    Object.assign(t, { on: true, str, x, y, color, size, life, rise, stroke, pop, font, age: 0 });
+    Object.assign(t, { on: true, str, x, y, color, size, life, rise, stroke, pop, font, age: 0, delay, slot, punch, born: ++this.serial, ny: 0 });
     return t;
   }
 
@@ -216,9 +247,14 @@ export class EffectSystem {
     }
     for (const t of this.texts) {
       if (!t.on) continue;
+      if (t.delay > 0) {
+        t.delay -= dt;
+        continue;
+      }
       t.age += dt;
       if (t.age >= t.life) t.on = false;
     }
+    this.layoutTexts();
     if (this.shakeAmp > 0.1) {
       this.shakeX = (Math.random() * 2 - 1) * this.shakeAmp;
       this.shakeY = (Math.random() * 2 - 1) * this.shakeAmp;
@@ -242,6 +278,33 @@ export class EffectSystem {
       const k = this.inks[i];
       k.age += dt;
       if (k.age > k.life) this.inks.splice(i, 1);
+    }
+  }
+
+  /** 겹친 글자는 나중에 뜬 것을 위로 비켜 세운다 (매 프레임 · 부드럽게) */
+  layoutTexts() {
+    const list = this.order;
+    list.length = 0;
+    for (const t of this.texts) if (t.on && t.delay <= 0) list.push(t);
+    if (list.length < 2) return;
+    list.sort((a, b) => a.born - b.born);
+    for (let j = 0; j < list.length; j++) {
+      const t = list[j];
+      const base = t.y - ease.out(t.age / t.life) * t.rise;
+      const w = String(t.str).length * t.size * 0.6;
+      let y = base + t.ny;
+      for (let pass = 0; pass < 2; pass++) {
+        for (let i = 0; i < j; i++) {
+          const o = list[i];
+          const ow = String(o.str).length * o.size * 0.6;
+          const gap = (t.size + o.size) * 0.46;
+          if (Math.abs(o.x - t.x) < (w + ow) / 2 && Math.abs(o.dy - y) < gap) y = o.dy - gap;
+        }
+      }
+      // 위로는 빠르게 비키고 아래로는 천천히 돌아온다
+      const want = Math.min(0, y - base);
+      t.ny += (want - t.ny) * (want < t.ny ? 0.45 : 0.15);
+      t.dy = base + t.ny;
     }
   }
 
@@ -415,10 +478,11 @@ export class EffectSystem {
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
     for (const t of this.texts) {
-      if (!t.on) continue;
+      if (!t.on || t.delay > 0) continue;
       const k = t.age / t.life;
-      const sc = t.pop ? (k < 0.18 ? ease.back(k / 0.18) : 1) : 1;
-      const y = t.y - ease.out(k) * t.rise;
+      let sc = t.pop ? (k < 0.18 ? ease.back(k / 0.18) : 1) : 1;
+      if (t.punch) sc = t.age < 0.14 ? 1.75 - 0.75 * ease.out(t.age / 0.14) : 1;
+      const y = t.y - ease.out(k) * t.rise + (t.ny || 0);
       ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
       ctx.save();
       ctx.translate(t.x, y);

@@ -3,10 +3,10 @@
  * 엔진(js/blaster) + 바다 콘텐츠(data · art · scenes)를 꽂아서 게임을 만든다.
  * 🚀우주 · 🦖공룡 · 🤖로봇 물총 대작전도 이 파일처럼 콘텐츠만 바꿔 끼우면 된다.
  */
-import { BlasterGame } from "../../js/blaster/game.js?v=2";
-import { ENEMIES, BOSSES, STAGES, BONUS, PROJECTILES, ITEMS, BOATS, BOOK, TEXTS, MENU_MUSIC } from "./data.js?v=2";
-import { makeArt } from "./art/index.js?v=2";
-import { createScenes } from "./sea.js?v=2";
+import { BlasterGame } from "../../js/blaster/game.js?v=3";
+import { ENEMIES, BOSSES, STAGES, BONUS, PROJECTILES, ITEMS, BOATS, BOOK, TEXTS, MENU_MUSIC } from "./data.js?v=3";
+import { makeArt } from "./art/index.js?v=3";
+import { createScenes } from "./sea.js?v=3";
 
 const content = {
   id: "ocean-blaster",

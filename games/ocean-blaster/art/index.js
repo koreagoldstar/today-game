@@ -2,15 +2,15 @@
  * 🌊 바다 물총 대작전 — 아트 진입점 (엔진이 부르는 그리기 API)
  *  enemy · boss · shot · item · player · nozzle · portrait · boatPortrait · heroPortrait · menuActors
  */
-import { W, H, project, clamp } from "../../../js/blaster/view.js?v=2";
-import { ENEMY_ART } from "./enemies.js?v=2";
-import "./enemies2.js?v=2";
-import "./enemies3.js?v=2";
-import { drawShot, drawItem } from "./props.js?v=2";
-import { BOSS_ART, seaCoil } from "./bosses.js?v=2";
-import { drawHeroBack, drawHeroFront, drawHeroPortrait, GUN_PIVOT } from "./hero.js?v=2";
-import { boatSprite, drawBoatWater, drawBoatLive, drawBoatFoam, drawBoatStatic } from "./boat.js?v=2";
-import { ell, circ, shadow, stroke, linear, radial } from "./kit.js?v=2";
+import { W, H, project, clamp } from "../../../js/blaster/view.js?v=3";
+import { ENEMY_ART } from "./enemies.js?v=3";
+import "./enemies2.js?v=3";
+import "./enemies3.js?v=3";
+import { drawShot, drawItem } from "./props.js?v=3";
+import { BOSS_ART, seaCoil } from "./bosses.js?v=3";
+import { drawHeroBack, drawHeroFront, drawHeroPortrait, GUN_PIVOT, gunReach, gunAim } from "./hero.js?v=3";
+import { boatSprite, drawBoatWater, drawBoatLive, drawBoatFoam, drawBoatStatic } from "./boat.js?v=3";
+import { ell, circ, shadow, stroke, linear, radial } from "./kit.js?v=3";
 
 ENEMY_ART["sea-coil"] = seaCoil;
 
@@ -33,8 +33,8 @@ function boatGeom(st) {
 function updateFacing(st) {
   const g = boatGeom(st);
   const before = facing;
-  if (st.aimX < g.x - 30) facing = -1;
-  else if (st.aimX > g.x + 30) facing = 1;
+  if (st.aimX < g.x - 16) facing = -1;
+  else if (st.aimX > g.x + 16) facing = 1;
   if (before !== facing) turnT = 0.14;
 }
 
@@ -44,12 +44,21 @@ function pivot(st) {
   return { x: g.x + facing * GUN_PIVOT.x * HERO_S, y: g.y + HERO_Y + (GUN_PIVOT.y + breath) * HERO_S };
 }
 
+/** 물총 각도: 오른쪽을 보는 기준(local)과 화면 기준(world) — 그림과 총구가 같은 값을 쓴다 */
+function gunAngles(st, tilt = 0) {
+  const pv = pivot(st);
+  const raw = Math.atan2(st.aimY - pv.y, st.aimX - pv.x) - tilt;
+  let local = facing > 0 ? raw : Math.PI - raw;
+  if (local > Math.PI) local -= Math.PI * 2;
+  local = gunAim(local, st.recoil);
+  return { pv, local, world: (facing > 0 ? local : Math.PI - local) + tilt };
+}
+
 function nozzle(st) {
   updateFacing(st);
-  const pv = pivot(st);
-  const a = Math.atan2(st.aimY - pv.y, st.aimX - pv.x);
-  const len = (106 - (st.recoil || 0) * 7) * HERO_S;
-  return { x: pv.x + Math.cos(a) * len, y: pv.y + Math.sin(a) * len, a };
+  const { pv, world } = gunAngles(st);
+  const len = gunReach(st.recoil) * HERO_S;
+  return { x: pv.x + Math.cos(world) * len, y: pv.y + Math.sin(world) * len, a: world };
 }
 
 function spritePx(game) {
@@ -77,10 +86,8 @@ function drawPlayer(ctx, st, game) {
   const front = (st.cheer || 0) > 0.5 || ((st.hurt || 0) > 0.3 && !st.firing);
   if (front) drawHeroFront(ctx, 0, 0, 1, { t: st.t }, st.cheer > 0.5 ? "cheer" : "wet");
   else {
-    const pv = pivot(st);
-    const a = Math.atan2(st.aimY - pv.y, st.aimX - pv.x) - g.tilt;
-    const local = facing > 0 ? a : Math.PI - a;
-    drawHeroBack(ctx, { t: st.t, aim: local, recoil: st.recoil, firing: st.firing, hurt: st.hurt });
+    const { local } = gunAngles(st, g.tilt);
+    drawHeroBack(ctx, { t: st.t, aim: local, recoil: st.recoil, firing: st.firing, hurt: st.hurt, mirror: facing < 0 });
   }
   ctx.restore();
   drawBoatFoam(ctx, st.t);
@@ -248,7 +255,7 @@ export function makeArt(content) {
         drawBoatStatic(c, id);
         c.translate(0, HERO_Y);
         c.scale(HERO_S, HERO_S);
-        drawHeroBack(c, { t: 0.5, aim: -1.2, recoil: 0, firing: false });
+        drawHeroBack(c, { t: 0.5, aim: -1.5, recoil: 0, firing: false });
         c.restore();
       }, 10);
       if (!have) {

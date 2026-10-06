@@ -3,7 +3,7 @@
  * 좌표: (0,0) = 배 뒤(선미) 가운데 물높이, 앞(선수)은 -y
  * 움직이지 않는 부분은 한 번 그려 스프라이트로 보관하고, 깃발 · 물보라 · 항적만 매 프레임 그린다.
  */
-import { TAU, INK, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, dot, shadow, star } from "./kit.js?v=2";
+import { TAU, INK, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, dot, shadow, star } from "./kit.js?v=3";
 
 export const BOAT_STYLE = {
   "blue-shark": { hull: "#2f7fd8", belly: "#f2f8ff", rim: "#5fb0ff", deck: "#e9c995", plank: "#c99a5b", trim: "#ffffff", name: "BLUE SHARK", plate: "#1d3a6b", letter: "#ffd75e" },

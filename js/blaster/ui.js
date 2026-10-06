@@ -3,7 +3,7 @@
  * 시작 화면 · 항해 지도 · 도감 · 설정 · 결과 · 일시정지 · HUD (DOM + SVG 아이콘)
  * 글자 · 이름은 content(texts · 데이터)에서 가져오므로 테마가 바뀌어도 그대로 쓴다.
  */
-import { ICONS, paintIcons } from "./icons.js?v=2";
+import { ICONS, paintIcons } from "./icons.js?v=3";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

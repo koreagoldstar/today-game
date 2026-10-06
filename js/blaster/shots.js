@@ -2,7 +2,7 @@
  * 물총 대작전 엔진 · 적이 던지는 것(EnemyShot)과 아이템 방울(ItemBubble)
  * 둘 다 물총으로 맞혀 터뜨릴 수 있다.
  */
-import { project, lerp, rand } from "./view.js?v=2";
+import { project, lerp, rand } from "./view.js?v=3";
 
 export const BOAT_Z = 1.0;
 

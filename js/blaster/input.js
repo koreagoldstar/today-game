@@ -5,7 +5,7 @@
  *  - 터치: 누른 자리로 조준 + 발사, 끌면 따라감
  *  - 키보드: 방향키/WASD 로 조준점 이동, Space/Enter/J 로 발사
  */
-import { W, H, clamp } from "./view.js?v=2";
+import { W, H, clamp } from "./view.js?v=3";
 
 export class AimSystem {
   constructor(canvas, view) {

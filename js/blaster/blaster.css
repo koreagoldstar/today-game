@@ -461,7 +461,7 @@ body.bl:not(.is-play) canvas#game {
   left: 0;
   right: 0;
   z-index: 10;
-  padding: calc(var(--k) * 12px) calc(var(--k) * 12px) 0;
+  padding: calc(var(--k) * 9px) calc(var(--k) * 10px) 0;
   pointer-events: none;
 }
 
@@ -479,15 +479,15 @@ body.bl:not(.is-play) canvas#game {
 .bl .hud-hero {
   display: flex;
   align-items: center;
-  gap: calc(var(--k) * 8px);
-  padding: calc(var(--k) * 5px) calc(var(--k) * 14px) calc(var(--k) * 5px) calc(var(--k) * 5px);
+  gap: calc(var(--k) * 7px);
+  padding: calc(var(--k) * 4px) calc(var(--k) * 12px) calc(var(--k) * 4px) calc(var(--k) * 4px);
   border-radius: 999px;
 }
 
 .bl .porthole {
   position: relative;
-  width: calc(var(--k) * 60px);
-  height: calc(var(--k) * 60px);
+  width: calc(var(--k) * 53px);
+  height: calc(var(--k) * 53px);
   border-radius: 50%;
   overflow: hidden;
   flex: 0 0 auto;
@@ -511,7 +511,7 @@ body.bl:not(.is-play) canvas#game {
 
 .bl .hud-name {
   font-weight: 400;
-  font-size: calc(var(--k) * 16px);
+  font-size: calc(var(--k) * 15px);
   color: #ffe9a8;
   text-shadow: 0 calc(var(--k) * 1.5px) 0 rgba(0, 0, 0, 0.4);
   line-height: 1;
@@ -523,8 +523,8 @@ body.bl:not(.is-play) canvas#game {
 }
 
 .bl .buoy {
-  width: calc(var(--k) * 30px);
-  height: calc(var(--k) * 30px);
+  width: calc(var(--k) * 27px);
+  height: calc(var(--k) * 27px);
   display: block;
   font-style: normal;
   transition: transform 0.25s, opacity 0.25s, filter 0.25s;
@@ -566,23 +566,23 @@ body.bl:not(.is-play) canvas#game {
 .bl .hud-right {
   display: flex;
   align-items: center;
-  gap: calc(var(--k) * 12px);
+  gap: calc(var(--k) * 10px);
 }
 
 .bl .hud-score {
   display: flex;
   align-items: center;
   gap: calc(var(--k) * 6px);
-  padding: calc(var(--k) * 6px) calc(var(--k) * 14px) calc(var(--k) * 6px) calc(var(--k) * 8px);
-  min-width: calc(var(--k) * 124px);
-  height: calc(var(--k) * 48px);
+  padding: calc(var(--k) * 5px) calc(var(--k) * 13px) calc(var(--k) * 5px) calc(var(--k) * 7px);
+  min-width: calc(var(--k) * 112px);
+  height: calc(var(--k) * 43px);
   box-sizing: border-box;
   border-radius: 999px;
 }
 
 .bl .hud-score .pearl {
-  width: calc(var(--k) * 32px);
-  height: calc(var(--k) * 32px);
+  width: calc(var(--k) * 28px);
+  height: calc(var(--k) * 28px);
 }
 
 .bl .hud-score b {
@@ -590,7 +590,7 @@ body.bl:not(.is-play) canvas#game {
   text-align: right;
   font-family: var(--bl-title);
   font-weight: 400;
-  font-size: calc(var(--k) * 24px);
+  font-size: calc(var(--k) * 22px);
   background: linear-gradient(180deg, #fffbe0, #ffd23f 60%, #ffae2b);
   -webkit-background-clip: text;
   background-clip: text;
@@ -621,15 +621,15 @@ body.bl:not(.is-play) canvas#game {
 }
 
 .bl .hud .porthole-btn {
-  width: calc(var(--k) * 48px);
-  height: calc(var(--k) * 48px);
-  font-size: calc(var(--k) * 21px);
+  width: calc(var(--k) * 43px);
+  height: calc(var(--k) * 43px);
+  font-size: calc(var(--k) * 19px);
 }
 
 .bl .hud-stagecard {
   position: relative;
-  margin: calc(var(--k) * 12px) auto 0;
-  width: calc(var(--k) * 300px);
+  margin: calc(var(--k) * 5px) auto 0;
+  width: calc(var(--k) * 276px);
   text-align: center;
   pointer-events: none;
 }
@@ -637,9 +637,9 @@ body.bl:not(.is-play) canvas#game {
 .bl .hud-stage-no {
   display: inline-block;
   margin: 0;
-  padding: calc(var(--k) * 3px) calc(var(--k) * 14px);
+  padding: calc(var(--k) * 2.5px) calc(var(--k) * 13px);
   border-radius: calc(var(--k) * 6px);
-  font-size: calc(var(--k) * 13px);
+  font-size: calc(var(--k) * 12px);
   letter-spacing: 0.02em;
   color: #6b3a00;
   background: linear-gradient(180deg, #fff3c4, #ffcf4d);
@@ -647,9 +647,9 @@ body.bl:not(.is-play) canvas#game {
 }
 
 .bl .hud-stage-en {
-  margin: calc(var(--k) * 4px) 0 0;
+  margin: calc(var(--k) * 3px) 0 0;
   font-family: var(--bl-title);
-  font-size: calc(var(--k) * 24px);
+  font-size: calc(var(--k) * 21px);
   line-height: 1;
   letter-spacing: 0.03em;
   color: #fff;
@@ -660,8 +660,8 @@ body.bl:not(.is-play) canvas#game {
 
 .bl .hud-route {
   position: relative;
-  margin: calc(var(--k) * 10px) calc(var(--k) * 22px) 0 calc(var(--k) * 10px);
-  height: calc(var(--k) * 10px);
+  margin: calc(var(--k) * 8px) calc(var(--k) * 22px) 0 calc(var(--k) * 10px);
+  height: calc(var(--k) * 9px);
   border-radius: 999px;
   background: rgba(6, 32, 61, 0.55);
   box-shadow: inset 0 0 0 calc(var(--k) * 1.5px) rgba(255, 255, 255, 0.55);
@@ -734,7 +734,7 @@ body.bl:not(.is-play) canvas#game {
 .bl .bossbar {
   position: absolute;
   z-index: 10;
-  top: calc(var(--k) * 112px);
+  top: calc(var(--k) * 100px);
   left: calc(var(--k) * 26px);
   right: calc(var(--k) * 26px);
   pointer-events: none;
@@ -840,7 +840,7 @@ body.bl:not(.is-play) canvas#game {
   position: absolute;
   z-index: 12;
   left: 50%;
-  top: calc(var(--k) * 196px);
+  top: calc(var(--k) * 178px);
   transform: translate(-50%, -20px);
   margin: 0;
   display: flex;

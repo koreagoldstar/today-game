@@ -9,7 +9,7 @@
  *
  * 좌표: x 좌우(-1~1), z 깊이(0 수평선 ~ 1 보트 앞), h 물 위 높이(px), sub 잠김 정도(0 물 위 ~ 1 완전히 잠김)
  */
-import { project, rand, pick, clamp, lerp } from "./view.js?v=2";
+import { project, rand, pick, clamp, lerp } from "./view.js?v=3";
 
 let UID = 1;
 export const ENEMY_SCALE = 1.25;
@@ -79,8 +79,11 @@ export class EnemyBase {
     this.sy = p.sy;
     this.s = p.s;
     const size = this.d.size || 46;
-    // 모바일에서 친구들이 또렷하게 보이도록 기본 1.25배
-    this.k = (size / 50) * p.s * (this.opts.scale || 1) * ENEMY_SCALE;
+    // 모바일에서 친구들이 또렷하게 보이도록 기본 1.25배 · 멀리 있을수록 조금 더 (먼 쪽 +28% ~ 가까운 쪽 +12%)
+    // 보스에 붙은 조각(촉수 등)은 보스 그림에 맞춰져 있어서 그대로 둔다
+    const far = this.opts.part ? 0 : 1 - clamp((p.s - 0.4) / 0.82, 0, 1);
+    const boost = this.opts.part ? 1 : 1.12 + 0.16 * far;
+    this.k = (size / 50) * p.s * (this.opts.scale || 1) * ENEMY_SCALE * boost;
     const cy = this.d.cy == null ? -34 : this.d.cy;
     this.hx = this.sx;
     this.hy = this.sy + (cy + this.sub * 60) * this.k;
@@ -770,9 +773,10 @@ export const Reactions = {
 export function groupOffsets(kind, n) {
   const out = [];
   for (let i = 0; i < n; i++) {
-    if (kind === "school") out.push({ dx: -i * 0.12, dz: Math.sin(i * 1.7) * 0.05 });
-    else if (kind === "formation") out.push({ dx: -Math.floor((i + 1) / 2) * 0.13, dz: (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.06 });
-    else out.push({ dx: -i * 0.18, dz: 0 });
+    // 친구들이 커진 만큼 간격도 넓혀서 서로 겹치지 않게
+    if (kind === "school") out.push({ dx: -i * 0.145, dz: Math.sin(i * 1.7) * 0.055 });
+    else if (kind === "formation") out.push({ dx: -Math.floor((i + 1) / 2) * 0.155, dz: (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.065 });
+    else out.push({ dx: -i * 0.21, dz: 0 });
   }
   return out;
 }

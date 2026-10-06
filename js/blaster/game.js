@@ -5,17 +5,17 @@
  *   content = { id, enemies, bosses, stages, bonus, items, projectiles, boats, art, scenes, menuScene, texts }
  * 엔진은 바다를 모른다. 적 이름 · 그림 · 배경 · 음악 분위기는 전부 content 에 있다.
  */
-import { W, H, HORIZON, project, depthAt, setupCanvas, clamp, lerp, rand, pick, ease } from "./view.js?v=2";
-import { AudioSystem } from "./audio.js?v=2";
-import { EffectSystem, drawStar } from "./fx.js?v=2";
-import { AimSystem } from "./input.js?v=2";
-import { WaterSystem } from "./water.js?v=2";
-import { ScoreSystem, POINTS } from "./score.js?v=2";
-import { SaveSystem } from "./save.js?v=2";
-import { EnemyBase, Spawn, groupOffsets } from "./enemy.js?v=2";
-import { EnemyShot, ItemBubble } from "./shots.js?v=2";
-import { BossBase } from "./boss.js?v=2";
-import { BlasterUI } from "./ui.js?v=2";
+import { W, H, HORIZON, project, depthAt, setupCanvas, clamp, lerp, rand, pick, ease } from "./view.js?v=3";
+import { AudioSystem } from "./audio.js?v=3";
+import { EffectSystem, drawStar } from "./fx.js?v=3";
+import { AimSystem } from "./input.js?v=3";
+import { WaterSystem } from "./water.js?v=3";
+import { ScoreSystem, POINTS } from "./score.js?v=3";
+import { SaveSystem } from "./save.js?v=3";
+import { EnemyBase, Spawn, groupOffsets } from "./enemy.js?v=3";
+import { EnemyShot, ItemBubble } from "./shots.js?v=3";
+import { BossBase } from "./boss.js?v=3";
+import { BlasterUI } from "./ui.js?v=3";
 
 const MAX_HEARTS = 3;
 
@@ -214,6 +214,10 @@ export class BlasterGame {
     this.score.reset();
     this.hudCache = {};
     this.hover = null;
+    this.zoom = null;
+    this.comboFlash = 0;
+    this.comboShown = 0;
+    this.lockRef = null;
   }
 
   /* ================================================================
@@ -447,6 +451,11 @@ export class BlasterGame {
     const broke = this.score.update(dt);
     if (broke) this.ui.comboBroke();
     this.fx.update(dt);
+    if (this.zoom) {
+      this.zoom.t -= dt;
+      if (this.zoom.t <= 0) this.zoom = null;
+    }
+    if (this.comboFlash > 0) this.comboFlash = Math.max(0, this.comboFlash - dt * 2.5);
     if (this.tut) this.updateTutorial(dt);
     this.ui.hud(this.hudState());
   }
@@ -505,7 +514,8 @@ export class BlasterGame {
       const rr = r * mult + extra;
       if (d > rr) return;
       // 가까운(앞쪽) 것과 원 중심에 가까운 것을 먼저 · 약점과 날아오는 것은 우선
-      const sc = d / rr - z * 0.6 - (weak ? 0.5 : 0) - (kind === "shot" ? 0.35 : 0);
+      // 보트로 날아오는 것은 커다란 친구 뒤에 겹쳐 있어도 먼저 맞도록 더 우선
+      const sc = d / rr - z * 0.6 - (weak ? 0.5 : 0) - (kind === "shot" ? (ref.danger ? 0.7 : 0.35) : 0);
       if (sc < bestScore) {
         bestScore = sc;
         best = { kind, ref, x: cx, y: cy, r, weak: Boolean(weak) };
@@ -571,6 +581,8 @@ export class BlasterGame {
       shootAt(raw.x - 46, raw.y + 8);
       shootAt(raw.x + 46, raw.y + 8);
     } else shootAt(raw.x, raw.y);
+    // 총구: 짧은 빛 · 물방울 · 발사 방향 빛줄기 + 물총 반동
+    this.fx.muzzle(noz.x, noz.y, noz.a);
     this.player.recoil = 1;
     this.audio.play("fire");
   }
@@ -617,10 +629,10 @@ export class BlasterGame {
         const dx = px - n.x;
         const dy = py - n.y;
         const d = Math.hypot(dx, dy) || 1;
-        const f = res === "shield" ? 3 : 9;
+        const f = res === "shield" ? 3 : res === "soak" ? 12 : 9;
         e.kbx += (dx / d) * f * Math.max(0.6, e.s);
         e.kby += (dy / d) * f * 0.6 * Math.max(0.6, e.s);
-        e.shakeT = 0.18;
+        e.shakeT = res === "soak" ? 0.22 : 0.18;
       }
       if (res === "shield") {
         fx.sparkle(px, py, 0.8, 5, "#ffffff");
@@ -630,7 +642,8 @@ export class BlasterGame {
       } else if (res === "chip") {
         fx.impact(px, py, Math.max(0.6, e.s), { onWater: false });
         const { got } = this.score.add(POINTS.chip, { combo: false });
-        fx.text(`+${got}`, px, py - 30 * e.s, { size: 18, color: "#d6f4ff", life: 0.6 });
+        // 같은 친구를 연달아 맞히면 작은 점수는 쌓이지 않고 바뀌어 뜬다
+        fx.text(`+${got}`, px, py - 30 * e.s, { size: 18, color: "#d6f4ff", life: 0.6, slot: `chip${e.uid}` });
         this.audio.play("hit");
       } else if (res === "soak") {
         this.onSoak(e, { perfect: b ? b.perfect : false, weak: hit.weak, x: px, y: py });
@@ -712,22 +725,42 @@ export class BlasterGame {
     }
     const multUp = this.score.combo.add();
     const { got, mult } = this.score.add(base);
+    const count = this.score.combo.count;
     const x = e.hx;
     const y = e.hy;
-    fx.impact(x, y, Math.max(0.8, e.s * 1.2), { onWater: false, power: 1.2 });
-    fx.splash(x, y, Math.max(0.7, e.s * 1.1), { count: 12, power: 1.1, ring: false });
-    fx.stars(x, y - 10, e.s, 4);
-    fx.text(`+${got}`, x, y - 36 * e.s, { size: 28 + Math.min(10, mult * 2), color: mult > 1 ? "#ffe066" : "#ffffff", life: 0.9 });
+    const perfect = label.startsWith("PERFECT");
+    const s = Math.max(0.8, e.s);
+    // ① 명중: 물방울 · 작은 물보라 (흔들림 · 밀림은 applyHit 에서)
+    fx.impact(x, y, Math.max(0.8, e.s * 1.15), { onWater: false, power: 1.1 });
+    fx.splash(x, y, Math.max(0.7, e.s * 1.05), { count: 7, power: 1.05, ring: false });
+    if (e.bonus) fx.stars(x, y - 10, e.s, 4);
+    // ② 점수 (살짝 뒤에) → ③ 콤보 (조금 더 뒤에) — 한꺼번에 터지지 않게
+    const popY = y - 40 * e.s;
+    fx.text(`+${got}`, x, popY, { size: 30 + Math.min(10, mult * 2), color: mult > 1 ? "#ffe066" : "#ffffff", life: 0.8, delay: 0.05 });
+    if (count >= 2) {
+      fx.text(`COMBO ×${count}`, x, popY + 28, { size: 17, color: comboColor(count), stroke: "#0b3f66", life: 0.7, rise: 56, delay: 0.11 });
+    }
+    this.comboPopAt = this.time + 0.11;
     if (label) {
-      const perfect = label.startsWith("PERFECT");
-      fx.text(label, x, y - 80 * e.s - 10, { size: perfect ? 40 : 24, color: perfect ? "#ff9ad1" : e.bonus ? "#ffd84a" : "#9ff3ff", stroke: perfect ? "#6a1050" : "#0d4b6e", life: 1 });
-      if (perfect) {
-        fx.perfectBurst(x, y, Math.max(0.8, e.s));
-        fx.flash(0.16, "#ffffff");
-        fx.shake(5);
-        this.hitStop = 0.07;
-        this.audio.play("perfect");
-      }
+      fx.text(label, x, popY - 38, {
+        size: perfect ? 36 : 24,
+        color: perfect ? "#ff9ad1" : e.bonus ? "#ffd84a" : "#9ff3ff",
+        stroke: perfect ? "#6a1050" : "#0d4b6e",
+        life: perfect ? 0.75 : 0.8,
+        slot: perfect ? "perfect" : "",
+        punch: perfect,
+        delay: perfect ? 0 : 0.05,
+      });
+    }
+    if (perfect) {
+      // PERFECT: 작은 물방울 폭발 + 짧은 확대 + 콤보 강조 (흔들림은 아주 살짝)
+      fx.perfectBurst(x, y, s);
+      fx.flash(0.1, "#ffffff");
+      fx.shake(3);
+      this.hitStop = 0.06;
+      this.zoom = { x, y, t: 0.2, dur: 0.2 };
+      this.comboFlash = 1;
+      this.audio.play("perfect");
     }
     if (e.bonus) {
       fx.coins(x, y, 8);
@@ -736,9 +769,12 @@ export class BlasterGame {
     this.audio.play("splash");
     this.audio.play(d.sound || "boing");
     if (multUp) {
-      fx.showBanner(`x${this.score.combo.mult} 콤보!`, { color: "#ffe066", stroke: "#b33a00", life: 0.9, size: 48 });
+      // 배수가 오르면 가운데를 가리지 않고 콤보 계기판 옆에서 축하
+      fx.text(`점수 x${this.score.combo.mult}!`, W - 70, 262 + 68, { size: 26, color: "#ffe066", stroke: "#b33a00", life: 0.9, rise: 30, punch: true, slot: "mult" });
+      fx.sparkle(W - 64, 262, 1.3, 10, "#ffe066");
+      this.comboFlash = 1;
       this.audio.play("multiplier");
-    } else if (this.score.combo.count >= 3) this.audio.play("combo", { n: this.score.combo.count });
+    } else if (count >= 3) this.audio.play("combo", { n: count });
     this.haptic(12);
     // 도감
     if (d.book !== false && this.save.discover(d.bookId || d.id)) {
@@ -1143,6 +1179,16 @@ export class BlasterGame {
     const fx = this.fx;
     ctx.save();
     ctx.translate(fx.shakeX, fx.shakeY);
+    if (this.zoom) {
+      // PERFECT: 맞힌 곳을 향해 아주 짧게 '쑥' 다가갔다가 돌아온다
+      const p = 1 - this.zoom.t / this.zoom.dur;
+      const z = 1 + 0.035 * Math.sin(Math.PI * p);
+      const cx = lerp(W / 2, this.zoom.x, 0.6);
+      const cy = lerp(H / 2, this.zoom.y, 0.6);
+      ctx.translate(cx, cy);
+      ctx.scale(z, z);
+      ctx.translate(-cx, -cy);
+    }
     const sc = this.scene;
     sc.drawBack(ctx, t, this);
     sc.drawWater(ctx, t, this);
@@ -1188,7 +1234,7 @@ export class BlasterGame {
     const k = e.k;
     const pose = e.pose(this.time);
     // 맞았을 때 밀림 + 부르르
-    const jit = e.shakeT > 0 ? Math.sin(this.time * 90) * 2.4 * (e.shakeT / 0.18) : 0;
+    const jit = e.shakeT > 0 ? Math.sin(this.time * 90) * 3.2 * Math.min(1, e.shakeT / 0.18) : 0;
     const ox = e.kbx + jit;
     const oy = e.kby;
     // 하늘을 나는 친구는 물 위에 그림자
@@ -1413,31 +1459,58 @@ export class BlasterGame {
     ctx.globalAlpha = 1;
   }
 
-  /** 조준점: 반투명 원 + 중심점 + 회전하는 바깥 링 · 대상 위에서는 락온 브래킷 */
+  /** 조준점: 반투명 원 + 중심점 + 회전하는 바깥 링 · 대상을 잡으면 '톡' 커지고 대상 둘레에 표적 틀 */
   drawCrosshair(ctx) {
     const x = this.aim.x;
     const y = this.aim.y;
     const hov = this.hover;
     const on = Boolean(hov);
     const weak = on && hov.weak;
-    const want = on ? clamp(hov.r * 0.95, 22, 70) : 24;
-    this.crossR = lerp(this.crossR || 24, want, 0.25);
-    this.crossLock = lerp(this.crossLock || 0, on ? 1 : 0, 0.22);
+    // 새 대상을 잡은 순간을 기억 (조준점 톡 · 표적 틀이 조여 드는 애니메이션)
+    const ref = on ? hov.ref : null;
+    if (ref !== this.lockRef) {
+      this.lockRef = ref;
+      if (ref) this.lockAt = this.time;
+    }
+    const since = ref ? this.time - (this.lockAt || 0) : 9;
+    // 대상 위에서는 살짝만 커진다 (대상을 가리지 않게)
+    this.crossR = lerp(this.crossR || 25, on ? 31 : 25, 0.3);
+    this.crossLock = lerp(this.crossLock || 0, on ? 1 : 0, 0.25);
     const firing = this.aim.shooting;
-    const R = this.crossR * (firing ? 0.92 + Math.sin(this.time * 40) * 0.03 : 1);
+    const pop = since < 0.22 ? 1 + 0.26 * Math.pow(1 - since / 0.22, 2) : 1;
+    const R = this.crossR * pop * (firing ? 0.92 + Math.sin(this.time * 40) * 0.03 : 1);
     const col = weak ? "255,95,176" : on ? "255,216,74" : "255,255,255";
-    // 대상의 맞는 범위를 은은하게
+    // 대상 둘레: 은은한 빛 + 네 귀퉁이 표적 틀 (멀리서 조여 들어온다)
     if (on && hov.kind !== "shot") {
+      const close = ease.out(Math.min(1, since / 0.16));
+      const rr = Math.max(16, hov.r) * (1.55 - 0.4 * close) * (1 + Math.sin(this.time * 6) * 0.025);
       ctx.save();
-      ctx.globalAlpha = 0.5 * this.crossLock;
-      ctx.strokeStyle = `rgba(${col},0.9)`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 8]);
-      ctx.lineDashOffset = -this.time * 40;
+      ctx.translate(hov.x, hov.y);
+      ctx.globalAlpha = this.crossLock;
+      const g = ctx.createRadialGradient(0, 0, rr * 0.55, 0, 0, rr);
+      g.addColorStop(0, `rgba(${col},0)`);
+      g.addColorStop(1, `rgba(${col},0.2)`);
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(hov.x, hov.y, hov.r * 1.05, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.arc(0, 0, rr, 0, Math.PI * 2);
+      ctx.fill();
+      const c = rr * 0.74;
+      const L = Math.max(7, rr * 0.26);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.strokeStyle = pass === 0 ? "rgba(6,40,80,0.45)" : `rgba(${col},0.95)`;
+        ctx.lineWidth = pass === 0 ? 6 : 3;
+        ctx.beginPath();
+        for (const sx of [-1, 1]) {
+          for (const sy of [-1, 1]) {
+            ctx.moveTo(sx * c, sy * c - sy * L);
+            ctx.lineTo(sx * c, sy * c);
+            ctx.lineTo(sx * c - sx * L, sy * c);
+          }
+        }
+        ctx.stroke();
+      }
       ctx.restore();
     }
     ctx.save();
@@ -1450,7 +1523,7 @@ export class BlasterGame {
     ctx.beginPath();
     ctx.arc(0, 0, R, 0, Math.PI * 2);
     ctx.fill();
-    // 바깥 링 (4조각, 천천히 회전)
+    // 바깥 링 (4조각, 천천히 회전 · 잡으면 빨리)
     const spin = this.time * (on ? 2.4 : 0.8);
     ctx.rotate(spin);
     ctx.lineCap = "round";
@@ -1471,27 +1544,19 @@ export class BlasterGame {
     ctx.beginPath();
     ctx.arc(0, 0, R * 0.52, 0, Math.PI * 2);
     ctx.stroke();
-    // 락온 브래킷
+    // 잡았을 때 십자 눈금
     if (this.crossLock > 0.05) {
-      const b = R + 10 - this.crossLock * 4 + Math.sin(this.time * 9) * 2;
-      const L = 9;
       ctx.globalAlpha = this.crossLock;
-      for (let i = 0; i < 4; i++) {
-        ctx.save();
-        ctx.rotate((i * Math.PI) / 2 + Math.PI / 4);
-        for (let pass = 0; pass < 2; pass++) {
-          ctx.strokeStyle = pass === 0 ? "rgba(6,40,80,0.5)" : `rgba(${col},1)`;
-          ctx.lineWidth = pass === 0 ? 6 : 3;
-          ctx.beginPath();
-          ctx.moveTo(b - L * 0.2, -L);
-          ctx.lineTo(b, -L);
-          ctx.lineTo(b, -L * 0.1);
-          ctx.moveTo(b - L * 0.2, L);
-          ctx.lineTo(b, L);
-          ctx.lineTo(b, L * 0.1);
-          ctx.stroke();
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.strokeStyle = pass === 0 ? "rgba(6,40,80,0.5)" : `rgba(${col},1)`;
+        ctx.lineWidth = pass === 0 ? 5.5 : 2.6;
+        ctx.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const a = (i * Math.PI) / 2;
+          ctx.moveTo(Math.cos(a) * (R + 3), Math.sin(a) * (R + 3));
+          ctx.lineTo(Math.cos(a) * (R + 10), Math.sin(a) * (R + 10));
         }
-        ctx.restore();
+        ctx.stroke();
       }
       ctx.globalAlpha = 1;
     }
@@ -1519,13 +1584,37 @@ export class BlasterGame {
 
   drawCombo(ctx) {
     const c = this.score.combo;
-    if (c.count < 2) return;
+    // 화면의 숫자는 점수가 뜬 다음 '톡' 하고 바뀐다 (명중 → 점수 → 콤보)
+    const since = this.time - (this.comboPopAt == null ? -9 : this.comboPopAt);
+    if (since >= 0 || c.count < (this.comboShown || 0)) this.comboShown = c.count;
+    const n = this.comboShown || 0;
+    if (n < 2) return;
     const x = W - 64;
     const y = 262;
-    const pulse = 1 + Math.max(0, c.timer - c.window + 0.25) * 1.2;
+    // 숫자가 오를 때 스프링처럼 커졌다가 제자리
+    const pop = since >= 0 && since < 0.34 ? 1 + 0.42 * Math.exp(-since * 9) * Math.cos(since * 13) : 1;
+    const color = comboColor(n);
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(pulse, pulse);
+    // 강조 (PERFECT · 배수 오름): 금빛 고리가 퍼진다
+    if (this.comboFlash > 0) {
+      const f = this.comboFlash;
+      ctx.globalAlpha = f;
+      ctx.strokeStyle = "#fff3a8";
+      ctx.lineWidth = 5 * f + 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, 44 + (1 - f) * 26, 0, Math.PI * 2);
+      ctx.stroke();
+      const gl = ctx.createRadialGradient(0, 0, 10, 0, 0, 58);
+      gl.addColorStop(0, `rgba(255,230,120,${0.45 * f})`);
+      gl.addColorStop(1, "rgba(255,230,120,0)");
+      ctx.fillStyle = gl;
+      ctx.beginPath();
+      ctx.arc(0, 0, 58, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.scale(pop, pop);
     // 타이머 고리
     ctx.lineWidth = 6;
     ctx.strokeStyle = "rgba(0,40,70,0.35)";
@@ -1539,15 +1628,17 @@ export class BlasterGame {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
-    ctx.font = '34px "Bagel Fat One", sans-serif';
+    const fs = 34 + Math.min(6, Math.floor(n / 10) * 2);
+    ctx.font = `${fs}px "Bagel Fat One", sans-serif`;
     ctx.lineWidth = 7;
     ctx.strokeStyle = "#0b3f66";
-    ctx.strokeText(String(c.count), 0, -4);
-    ctx.fillStyle = "#fff";
-    ctx.fillText(String(c.count), 0, -4);
+    ctx.strokeText(String(n), 0, -4);
+    ctx.fillStyle = n >= 5 ? color : "#fff";
+    ctx.fillText(String(n), 0, -4);
     ctx.font = '13px "Bagel Fat One", sans-serif';
     ctx.lineWidth = 4;
     ctx.strokeText("COMBO", 0, 22);
+    ctx.fillStyle = "#fff";
     ctx.fillText("COMBO", 0, 22);
     if (c.mult > 1) {
       ctx.translate(30, -34);
@@ -1556,6 +1647,9 @@ export class BlasterGame {
       ctx.beginPath();
       ctx.arc(0, 0, 17, 0, Math.PI * 2);
       ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#fff";
+      ctx.stroke();
       ctx.font = '17px "Bagel Fat One", sans-serif';
       ctx.fillStyle = "#fff";
       ctx.fillText(`x${c.mult}`, 0, 1);
@@ -1596,6 +1690,11 @@ export class BlasterGame {
       ctx.fillText(tut.msg, W / 2, 259);
     }
   }
+}
+
+/** 콤보가 쌓일수록 글자색이 달아오른다 */
+function comboColor(n) {
+  return n >= 20 ? "#ff7ab8" : n >= 10 ? "#ffb347" : n >= 5 ? "#ffe066" : "#bff4ff";
 }
 
 function hitZ(hit) {

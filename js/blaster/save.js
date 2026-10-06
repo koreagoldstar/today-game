@@ -2,7 +2,7 @@
  * 물총 대작전 엔진 · SaveSystem
  * 기기 안(localStorage)에만 저장한다. 서버로 보내는 것은 없다.
  */
-import { betterGrade } from "./score.js?v=2";
+import { betterGrade } from "./score.js?v=3";
 
 const DEFAULTS = {
   v: 1,

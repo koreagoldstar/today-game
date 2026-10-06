@@ -4,7 +4,7 @@
  *  - 앞모습: 메뉴 · 환호 · 흠뻑 젖었을 때 · 결과 화면 (내 얼굴 사진을 쓸 수 있다)
  * 좌표: (0,0) = 두 발 사이 바닥, 위가 -y
  */
-import { TAU, INK, mix, lighten, darken, alpha, lineOf, lit, vlit, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, bounce, dot, shadow, eye, brow, mouth, blush, limb, drop, star } from "./kit.js?v=2";
+import { TAU, INK, mix, lighten, darken, alpha, lineOf, lit, vlit, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, bounce, dot, shadow, eye, brow, mouth, blush, limb, drop, star } from "./kit.js?v=3";
 
 export const KID = {
   skin: "#ffd5b3",
@@ -24,11 +24,13 @@ export const KID = {
 /* ================================================================
  * AQUA BLASTER — 총구는 +x 방향, (0,0) = 손잡이 위 피벗
  * ============================================================== */
-export function drawBlaster(ctx, st, scale = 1) {
+export function drawBlaster(ctx, st, scale = 1, opts = {}) {
   const t = st.t || 0;
   const firing = Boolean(st.firing);
   ctx.save();
   ctx.scale(scale, scale);
+  // 바다 위에서도 물총 모양이 또렷하게: 진한 테두리 실루엣을 먼저 깐다
+  if (opts.outline) blasterOutline(ctx);
   // 손잡이
   ctx.beginPath();
   ctx.moveTo(-4, 6);
@@ -70,7 +72,14 @@ export function drawBlaster(ctx, st, scale = 1) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#1a7fd6";
-  ctx.fillText("AQUA", 29, 0);
+  if (opts.flip) {
+    // 물총을 뒤집어 들었을 때도 글자는 바로 읽히게
+    ctx.save();
+    ctx.translate(29, 0);
+    ctx.scale(1, -1);
+    ctx.fillText("AQUA", 0, 0);
+    ctx.restore();
+  } else ctx.fillText("AQUA", 29, 0);
   // 펌프 손잡이(앞)
   rrect(ctx, 44, 7, 26, 10, 4);
   fill(ctx, "#20b8ab", 57, 12, 14, 6, 2.2);
@@ -148,6 +157,42 @@ export function drawBlaster(ctx, st, scale = 1) {
   ctx.restore();
 }
 
+/** 물총 외곽 실루엣 (몸통 · 총열 · 손잡이 · 탱크를 한 덩어리로) */
+function blasterOutline(ctx) {
+  ctx.fillStyle = "rgba(8,34,66,0.55)";
+  ctx.strokeStyle = "rgba(8,34,66,0.55)";
+  ctx.lineWidth = 6;
+  ctx.lineJoin = "round";
+  const shapes = [
+    () => {
+      ctx.moveTo(-4, 6);
+      ctx.quadraticCurveTo(-10, 26, -6, 34);
+      ctx.lineTo(8, 34);
+      ctx.quadraticCurveTo(12, 22, 10, 6);
+      ctx.closePath();
+    },
+    () => {
+      ctx.moveTo(-18, -10);
+      ctx.quadraticCurveTo(-22, 0, -16, 10);
+      ctx.lineTo(70, 10);
+      ctx.quadraticCurveTo(78, 0, 70, -10);
+      ctx.closePath();
+    },
+    () => rrect(ctx, 44, 7, 26, 10, 4),
+    () => rrect(ctx, 68, -5.5, 26, 11, 4),
+    () => rrect(ctx, 88, -8, 8, 16, 3),
+    () => rrect(ctx, 95, -5, 9, 10, 3),
+    () => ctx.ellipse(22, -20, 24, 13, 0, 0, TAU),
+    () => rrect(ctx, 16, -37, 12, 6, 2.5),
+  ];
+  for (const s of shapes) {
+    ctx.beginPath();
+    s();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 /** 쏠 때 총구에서 터지는 물보라 (총구 좌표계) */
 export function drawMuzzle(ctx, st, scale = 1) {
   if (!st.firing && !(st.recoil > 0.3)) return;
@@ -179,13 +224,23 @@ export function drawMuzzle(ctx, st, scale = 1) {
  * st: { t, aim(라디안), recoil, firing, hurt, breath }
  * 그린 뒤 노즐 끝 좌표(이 그림 좌표계)를 돌려준다
  * ============================================================== */
-export const GUN_PIVOT = { x: 24, y: -146 };
+// 물총은 얼굴 오른쪽 · 어깨 높이에서 든다 (머리 · 모자와 겹치지 않게)
+export const GUN_PIVOT = { x: 72, y: -160 };
+export const GUN_SCALE = 1.1;
+const GUN_KICK = 12;
+const GUN_LEN = 106;
+/** 피벗에서 총구 끝까지 (반동만큼 짧아진다) */
+export const gunReach = (recoil) => GUN_LEN * GUN_SCALE - (recoil || 0) * GUN_KICK;
+/** 조준 각도(오른쪽을 보는 기준)를 머리를 가로지르지 않는 범위로 + 반동에 총구가 살짝 들림 */
+export function gunAim(local, recoil) {
+  return Math.max(-1.98, Math.min(0.25, local)) + (recoil || 0) * 0.07;
+}
 
 export function drawHeroBack(ctx, st) {
   const t = st.t || 0;
   const breath = Math.sin(t * 2.2) * 1.4;
   const hurt = st.hurt || 0;
-  const rec = (st.recoil || 0) * 7;
+  const rec = (st.recoil || 0) * GUN_KICK;
   const a = st.aim == null ? -1.3 : st.aim;
   shadow(ctx, 0, 2, 46, 10, 0.32, "40,25,10");
   // ---- 다리 · 신발 ----
@@ -351,6 +406,18 @@ export function drawHeroBack(ctx, st) {
   ctx.restore();
   ctx.restore();
 
+  // ---- 물총 자리 (오른쪽 어깨 위, 얼굴 옆) ----
+  const px = GUN_PIVOT.x;
+  const py = GUN_PIVOT.y + breath;
+  const ca = Math.cos(a);
+  const sa = Math.sin(a);
+  // d: 총열 방향 거리 · side: 옆 방향 (- 가 머리 쪽)
+  const along = (d, side) => ({ x: px + ca * (d - rec) - sa * side, y: py + sa * (d - rec) + ca * side });
+  const grip = along(4, -21);
+  const support = along(36, -13);
+  // 왼팔: 몸 앞으로 돌아 물총 앞쪽을 받친다 — 팔뚝 끝만 머리 옆으로 보인다 (머리보다 먼저)
+  limb(ctx, [14, -176, 34, -186, support.x - 4, support.y + 5], 11, KID.skin, { line: 4 });
+
   // ---- 머리 ----
   const hx = 6 + Math.sin(t * 1.1) * 0.6;
   const hy = -198 + breath * 1.1;
@@ -450,38 +517,42 @@ export function drawHeroBack(ctx, st) {
     for (let i = 0; i < 5; i++) drop(ctx, hx - 30 + i * 15, hy - 20 + ((t * 120 + i * 20) % 70), 3.6);
   }
 
-  // ---- 팔 + 물총 (어깨 너머로 보이게 몸 다음에) ----
-  const px = GUN_PIVOT.x;
-  const py = GUN_PIVOT.y + breath;
-  const ca = Math.cos(a);
-  const sa = Math.sin(a);
-  const along = (d, side) => ({ x: px + ca * (d - rec) - sa * side, y: py + sa * (d - rec) + ca * side });
-  const grip = along(4, 20);
-  const pump = along(56, 10);
-  // 호스 (배낭 → 물총)
-  const hose = along(-14, 0);
-  ctx.beginPath();
-  ctx.moveTo(-14, -118);
-  ctx.bezierCurveTo(10, -96, hose.x - 20, hose.y + 24, hose.x, hose.y);
-  stroke(ctx, "#1a9e93", 6);
-  ctx.beginPath();
-  ctx.moveTo(-14, -118);
-  ctx.bezierCurveTo(10, -96, hose.x - 20, hose.y + 24, hose.x, hose.y);
-  stroke(ctx, "#5fe0d4", 2.4);
-  // 오른팔 (손잡이)
-  limb(ctx, [30, -156, 46, -136, grip.x + 4, grip.y + 6], 12, KID.skin, { line: 4 });
+  // ---- 팔 + 물총 (머리 오른쪽으로 또렷하게, 몸 다음에) ----
+  // 호스 (배낭 → 물총 뒤꽁무니)
+  const hose = along(-16, 0);
+  for (const [c, w] of [
+    ["#1a9e93", 6],
+    ["#5fe0d4", 2.4],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(-14, -118);
+    ctx.bezierCurveTo(16, -100, hose.x - 6, hose.y + 30, hose.x, hose.y);
+    stroke(ctx, c, w);
+  }
+  // 왼쪽 어깨: 팔이 몸 앞으로 돌아간 모양
+  limb(ctx, [-32, -158, -30, -146, -20, -140], 11, KID.skin, { line: 4 });
+  // 오른팔: 팔꿈치를 바깥으로 들고 손잡이를 꽉
+  const elbow = { x: px + 6 - rec * 0.3, y: py + 26 };
+  limb(ctx, [32, -158, 50, -152, elbow.x, elbow.y], 12, KID.skin, { line: 4 });
+  limb(ctx, [elbow.x, elbow.y, elbow.x - 4, elbow.y - 14, grip.x + 2, grip.y + 6], 11, KID.skin, { line: 4 });
+  // 물총: 뒤집어 들어 탱크가 바깥쪽, 손잡이가 안쪽 (얼굴과 안 겹치게)
   ctx.save();
   ctx.translate(px, py);
   ctx.rotate(a);
   ctx.translate(-rec, 0);
-  drawBlaster(ctx, st, 1);
-  drawMuzzle(ctx, st, 1);
+  ctx.scale(1, -1);
+  // 왼쪽을 볼 때는 그림 전체가 거울이라 글자를 한 번 더 뒤집지 않는다
+  drawBlaster(ctx, st, GUN_SCALE, { outline: true, flip: !st.mirror });
   ctx.restore();
-  // 왼팔은 몸 앞으로 돌아가 있어서 뒤에서는 어깨와 손만 보인다
-  limb(ctx, [-30, -156, -36, -140, -30, -126], 11, KID.skin, { line: 4 });
-  glove(ctx, grip.x, grip.y, a, 1);
-  glove(ctx, pump.x, pump.y, a, -1);
-  return along(106, 0);
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(a);
+  ctx.translate(-rec, 0);
+  drawMuzzle(ctx, st, GUN_SCALE);
+  ctx.restore();
+  glove(ctx, grip.x, grip.y, a, -1);
+  glove(ctx, support.x, support.y, a, 1);
+  return along(GUN_LEN * GUN_SCALE, 0);
 }
 
 function glove(ctx, x, y, a, side) {

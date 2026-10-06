@@ -5,8 +5,8 @@ import {
   TAU, INK, mix, lighten, darken, alpha, lineOf, lit, vlit, linear, radial,
   ell, circ, rrect, smooth, fill, flat, stroke, gloss, bounce, dot, shadow,
   eye, brow, mouth, blush, star, sparkle, dizzyStars, wetDrops, drop, limb,
-} from "./kit.js?v=2";
-import { ENEMY_ART } from "./enemies.js?v=2";
+} from "./kit.js?v=3";
+import { ENEMY_ART } from "./enemies.js?v=3";
 
 const def = (id, fn) => (ENEMY_ART[id] = fn);
 

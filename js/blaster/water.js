@@ -3,7 +3,7 @@
  * 물방울 덩어리(blob)가 노즐에서 조준점까지 포물선으로 날아가 '도착한 순간' 맞았는지 판정한다.
  * 누르고 있는 동안은 노즐과 조준점 사이에 출렁이는 물줄기를 그린다.
  */
-import { clamp, lerp, rand } from "./view.js?v=2";
+import { clamp, lerp, rand } from "./view.js?v=3";
 
 const MAX_BLOBS = 64;
 
@@ -76,7 +76,8 @@ export class WaterSystem {
   /** resolve(blob) 는 도착한 물방울마다 한 번 불린다 */
   update(dt, firing, aim, nozzle, resolve, homingPoint) {
     this.wob += dt;
-    this.streamA = clamp(this.streamA + (firing ? dt * 10 : -dt * 7), 0, 1);
+    // 누르는 순간 '쭉' 뻗어 나가고 (0.06초), 떼면 천천히 끊긴다
+    this.streamA = clamp(this.streamA + (firing ? dt * 16 : -dt * 7), 0, 1);
     // 물줄기 끝은 조준점을 살짝 늦게 따라온다 (물의 무게감)
     const k = Math.min(1, dt * 22);
     this.endX = lerp(this.endX || aim.x, aim.x, k);
@@ -216,6 +217,18 @@ export class WaterSystem {
         ctx.beginPath();
         ctx.arc(q.x + Math.sin(k * 9 + t * 7) * 9, q.y + fall * fall * 40 + 6, r, 0, Math.PI * 2);
         ctx.fill();
+      }
+      // 6) 뻗어 나가는 중에는 물줄기 머리가 하얗게 반짝 (방향이 한눈에)
+      if (a < 0.97) {
+        const hd = P[N];
+        const r = width(N) * 0.9 + 3;
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(hd.x, hd.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(120,215,255,0.8)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
       }
       if (this.kind === "thunder") {
         ctx.strokeStyle = "#fffbd0";

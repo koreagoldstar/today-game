@@ -7,7 +7,7 @@ import {
   TAU, INK, mix, lighten, darken, alpha, lineOf, lit, vlit, linear, radial,
   ell, circ, rrect, smooth, fill, flat, stroke, gloss, bounce, dot, shadow,
   eye, brow, mouth, blush, star, sparkle, dizzyStars, wetDrops, drop, pirateHat, eyepatch, limb, fin,
-} from "./kit.js?v=2";
+} from "./kit.js?v=3";
 
 export const ENEMY_ART = {};
 const def = (id, fn) => (ENEMY_ART[id] = fn);

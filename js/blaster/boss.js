@@ -7,7 +7,7 @@
  *   slam(물결 굴리기) · ink(먹물) · dive(잠수 이동) · charge(돌진 — 약점 열림)
  *   parts(촉수 · 대포 같은 부품 — 다 적시면 기절) · spout(물기둥 — 숨구멍 열림)
  */
-import { project, rand, pick, lerp, clamp, ease } from "./view.js?v=2";
+import { project, rand, pick, lerp, clamp, ease } from "./view.js?v=3";
 
 export class BossBase {
   constructor(data, env) {

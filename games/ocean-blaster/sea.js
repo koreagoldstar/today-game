@@ -9,8 +9,8 @@
  *  Layer 6 앞쪽     : 가까운 파도 · 날씨 · 비네팅
  * 움직이지 않는 것은 캐시 캔버스에 한 번만 그린다.
  */
-import { W, H, HORIZON, NEAR_Y, project, seeded, clamp, lerp } from "../../js/blaster/view.js?v=2";
-import { TAU, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, dot, shadow, sparkle, star } from "./art/kit.js?v=2";
+import { W, H, HORIZON, NEAR_Y, project, seeded, clamp, lerp } from "../../js/blaster/view.js?v=3";
+import { TAU, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, dot, shadow, sparkle, star } from "./art/kit.js?v=3";
 
 const seaTop = () => HORIZON + 18;
 
