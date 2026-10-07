@@ -1,7 +1,7 @@
 /*
  * 🏁 제트스키 썬더 레이스 — 시작 파일
  */
-import { Game } from "./js/game.js?v=1";
+import { Game } from "./js/game.js?v=2";
 
 const stage = document.getElementById("stage");
 const field = document.getElementById("field");

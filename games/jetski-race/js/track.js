@@ -7,7 +7,7 @@
  *  - hw   : 코스 절반 폭(m) → 부표 줄 밖은 거친 물 (느려짐)
  * 물건(부표 · 바위 · 부스터 · 점프대 …)은 z(출발선에서 m) 와 x(가운데에서 m) 로 놓는다.
  */
-import { clamp, lerp, seeded } from "./view.js?v=1";
+import { clamp, lerp, seeded } from "./view.js?v=2";
 
 export const SEG = 5;
 export const RUNOUT = 420; // 결승선 뒤로 더 그려 주는 물길

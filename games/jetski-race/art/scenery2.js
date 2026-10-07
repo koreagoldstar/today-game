@@ -6,8 +6,8 @@
  * 그림 좌표: 1 = 10cm (dm), (0,0) = 물 표면 가운데. 소품(cm) 은 따로 표시.
  */
 import { TAU, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, shadow, dot, pirateHat } from "../../ocean-blaster/art/kit.js?v=3";
-import { seeded } from "../js/view.js?v=1";
-import { palm } from "./scenery.js?v=1";
+import { seeded } from "../js/view.js?v=2";
+import { palm } from "./scenery.js?v=2";
 
 /* ================= 코랄 러시 ================= */
 

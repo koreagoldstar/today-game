@@ -2,16 +2,16 @@
  * 제트스키 썬더 레이스 · 게임 (흐름 · 루프 · 이벤트 연출)
  *  menu(배경에서 데모 레이스가 달린다) → brief(코스 소개) → race → result
  */
-import { setupCanvas, W, H, HZ, PY, clamp, lerp, rand } from "./view.js?v=1";
-import { Track } from "./track.js?v=1";
-import { Renderer, PSCALE } from "./render.js?v=1";
-import { Effects } from "./fx.js?v=1";
-import { Race } from "./race.js?v=1";
-import { Input } from "./input.js?v=1";
-import { RaceAudio } from "./audio.js?v=1";
-import { Save } from "./save.js?v=1";
-import { UI } from "./ui.js?v=1";
-import { COURSES, THEMES, RACERS } from "./data.js?v=1";
+import { setupCanvas, W, H, HZ, PY, clamp, lerp, rand } from "./view.js?v=2";
+import { Track } from "./track.js?v=2";
+import { Renderer, PSCALE } from "./render.js?v=2";
+import { Effects } from "./fx.js?v=2";
+import { Race } from "./race.js?v=2";
+import { Input } from "./input.js?v=2";
+import { RaceAudio } from "./audio.js?v=2";
+import { Save } from "./save.js?v=2";
+import { UI } from "./ui.js?v=2";
+import { COURSES, THEMES, RACERS } from "./data.js?v=2";
 
 export class Game {
   constructor({ canvas, host }) {

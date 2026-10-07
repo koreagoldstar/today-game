@@ -4,12 +4,12 @@
  *  랭킹은 사이트 공용 /api/scores (TodayScores) 를 쓴다 — 코스마다 'jetski-01' ~ 'jetski-12' 보드, 기록(ms)이 낮을수록 위.
  *  얼굴 사진은 결과 초상에만 그리고, 서버로 보내는 것은 닉네임과 기록(숫자)뿐이다.
  */
-import { W, clamp, fmtTime } from "./view.js?v=1";
-import { ICONS, paintIcons } from "./icons.js?v=1";
-import { COURSES, RACERS, RIVAL_ORDER, BONUS, THEMES } from "./data.js?v=1";
-import { Save } from "./save.js?v=1";
-import { drawPortrait, drawRacer } from "../art/jetski.js?v=1";
-import * as P from "../art/props.js?v=1";
+import { W, clamp, fmtTime } from "./view.js?v=2";
+import { ICONS, paintIcons } from "./icons.js?v=2";
+import { COURSES, RACERS, RIVAL_ORDER, BONUS, THEMES } from "./data.js?v=2";
+import { Save } from "./save.js?v=2";
+import { drawPortrait, drawRacer } from "../art/jetski.js?v=2";
+import * as P from "../art/props.js?v=2";
 
 const NAME_KEY = "today-game-name";
 const $ = (id) => document.getElementById(id);

@@ -4,10 +4,11 @@
  * 그림 좌표: 1 = 1cm. (0,0) = 선체 아래 물 표면, 위가 -y.
  * 바다 물총 대작전과 같은 빛 규칙: 왼쪽 위 햇빛 + 아래 청록 반사광, 외곽선은 그 색의 진한 색.
  *
- * pose = { t, yaw(-1~1: + 오른쪽으로 꺾음 → 왼쪽 옆면이 보임), roll(라디안), lean, crouch(0~1),
- *          boost(0~1), spin(공중 회전), speed(0~1), crash(0~1), wave(손 흔들기 0~1) }
+ * pose = { t, yaw(-1~1: + 오른쪽으로 꺾음 → 왼쪽 옆면이 보임), roll(라디안), lean, boost(0~1), spin(공중 회전), speed(0~1) }
+ *   레이서 몸동작에 쓰는 값은 rider.js 머리말 참고.
  */
 import { TAU, INK, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, bounce, dot, shadow, limb, blush, eye, mouth, brow, pirateHat } from "../../ocean-blaster/art/kit.js?v=3";
+import { drawRider } from "./rider.js?v=2";
 
 /* 선체 모양 (뒤에서 본 폭 · 높이) */
 const HULLS = {
@@ -91,11 +92,8 @@ export function drawRacer(ctx, R, pose) {
 
   // ---- 레이서 ----
   ctx.save();
-  const lean = pose.lean || 0;
-  const cr = pose.crouch || 0;
   ctx.translate(sk * 0.25, -hb.h - 14);
-  ctx.rotate(lean);
-  ctx.scale(1, 1 - cr * 0.1);
+  ctx.rotate(pose.lean || 0);
   drawRider(ctx, R, hb, pose, sk);
   ctx.restore();
   ctx.restore();
@@ -304,374 +302,6 @@ function starShape(ctx, x, y, r, c) {
 }
 
 /* ================================================================
- * 레이서 (뒷모습) — 좌표 원점: 갑판 높이 · 안장 가운데
- * ============================================================== */
-function drawRider(ctx, R, hb, pose, sk) {
-  const t = pose.t || 0;
-  const k = R.rider.kind;
-  const stand = R.hull === "stand";
-  const bob = Math.sin(t * 9) * 1.2 * (pose.speed || 0);
-  // 안장 끝 (스탠드업은 없음)
-  if (!stand) {
-    rrect(ctx, -hb.seat / 2, -18, hb.seat, 20, 9);
-    fill(ctx, "#2a3142", -6, -12, hb.seat * 0.5, 12, 2.4);
-    ctx.beginPath();
-    ctx.moveTo(-hb.seat / 2 + 6, -14);
-    ctx.quadraticCurveTo(0, -20, hb.seat / 2 - 6, -14);
-    stroke(ctx, alpha("#ffffff", 0.25), 2);
-  }
-  // 핸들바 (몸보다 멀리 있어서 먼저)
-  const hy = stand ? -112 : -58;
-  const gx = stand ? 34 : 45;
-  ctx.save();
-  ctx.translate(sk * 0.45, 0);
-  if (stand) {
-    // 기둥 + 핸들
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, hy + 6);
-    stroke(ctx, "#454c63", 7);
-  }
-  ctx.beginPath();
-  ctx.moveTo(-gx, hy);
-  ctx.quadraticCurveTo(0, hy + 7, gx, hy);
-  stroke(ctx, "#2a2f40", 6);
-  ctx.beginPath();
-  ctx.moveTo(-gx, hy - 1);
-  ctx.quadraticCurveTo(0, hy + 5, gx, hy - 1);
-  stroke(ctx, "#6b7590", 2);
-  // 백미러
-  if (!stand) {
-    for (const s of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(s * (gx - 6), hy - 2);
-      ctx.lineTo(s * (gx + 4), hy - 14);
-      stroke(ctx, "#2a2f40", 2.6);
-      ell(ctx, s * (gx + 7), hy - 17, 6.5, 4.5, s * 0.25);
-      ctx.fillStyle = "#1f2533";
-      ctx.fill();
-      ell(ctx, s * (gx + 7), hy - 17, 4.6, 3, s * 0.25);
-      ctx.fillStyle = "#b9e6ff";
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-
-  switch (k) {
-    case "shark":
-      riderShark(ctx, R, pose, bob, gx, hy, sk);
-      break;
-    case "crab":
-      riderCrab(ctx, R, pose, bob, gx, hy, sk);
-      break;
-    case "mohawk":
-      riderStand(ctx, R, pose, bob, gx, hy, sk);
-      break;
-    default:
-      riderKid(ctx, R, pose, bob, gx, hy, sk);
-  }
-}
-
-/** 사람 레이서 (지혁 · 루비): 앉은 자세, 앞으로 숙여 핸들을 잡는다 */
-function riderKid(ctx, R, pose, bob, gx, hy, sk) {
-  const rd = R.rider;
-  const t = pose.t || 0;
-  const s4 = sk * 0.4;
-  // 다리 (무릎이 안장 양옆으로)
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 14, -10, s * 34, -18 + bob * 0.3, s * 38 + s4 * 0.2, -34], 15, rd.suit, { line: 4 });
-    limb(ctx, [s * 38 + s4 * 0.2, -34, s * 46, -18, s * 44, 0], 12, rd.suit, { line: 4 });
-    // 신발
-    ell(ctx, s * 45, 0, 10, 6);
-    fill(ctx, "#ffffff", s * 45, 0, 10, 6, 2);
-    ctx.beginPath();
-    ctx.moveTo(s * 36, 3);
-    ctx.lineTo(s * 54, 3);
-    stroke(ctx, "#ff6a3d", 2.4);
-  }
-  // 몸통 (구명조끼) — 앞으로 숙여서 어깨가 낮다
-  const sy = -76 + bob;
-  ctx.beginPath();
-  ctx.moveTo(-24, -14);
-  ctx.bezierCurveTo(-30, -36, -36, sy + 18, -30 + s4, sy + 2);
-  ctx.quadraticCurveTo(s4, sy - 10, 30 + s4, sy + 2);
-  ctx.bezierCurveTo(36, sy + 18, 30, -36, 24, -14);
-  ctx.quadraticCurveTo(0, -8, -24, -14);
-  ctx.closePath();
-  fill(ctx, rd.vest, -8, sy + 22, 34, 34, 3);
-  // 조끼 반사띠 · 이름
-  ctx.save();
-  ctx.clip();
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.fillRect(-40, sy + 30, 80, 6);
-  ctx.fillStyle = alpha(darken(rd.vest, 0.4), 0.9);
-  ctx.font = '11px "Bagel Fat One", sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(R.en, s4 * 0.5, sy + 18);
-  ctx.restore();
-  // 등 가운데 지퍼 줄 · 옆 버클
-  for (const s of [-1, 1]) {
-    rrect(ctx, s * 28 - 4 + s4 * 0.3, sy + 34, 8, 12, 2);
-    flat(ctx, "#22283a", 1.2, "#0e1220");
-  }
-  // 팔 (어깨 → 핸들) + 장갑
-  for (const s of [-1, 1]) {
-    const sx = s * 26 + s4;
-    limb(ctx, [sx, sy + 8, s * 40 + s4 * 1.2, sy + 26, s * gx + sk * 0.45, hy + 3], 11, rd.suit, { line: 4 });
-    ell(ctx, s * gx + sk * 0.45, hy, 8, 7);
-    fill(ctx, R.id === "ruby" ? R.accent : "#13b5a8", s * gx + sk * 0.45, hy, 8, 7, 2);
-  }
-  // 목 + 헬멧
-  const hx = s4 * 1.3;
-  const hcy = sy - 18 + bob * 0.4;
-  rrect(ctx, hx - 8, hcy + 8, 16, 12, 5);
-  ctx.fillStyle = darken(rd.skin || "#ffd5b3", 0.12);
-  ctx.fill();
-  // 루비: 헬멧 밖으로 나온 양 갈래 머리 (속도에 펄럭)
-  if (R.id === "ruby") {
-    for (const s of [-1, 1]) {
-      const flap = Math.sin(t * 14 + s) * 5 * (0.4 + (pose.speed || 0));
-      ctx.beginPath();
-      ctx.moveTo(hx + s * 14, hcy + 6);
-      ctx.bezierCurveTo(hx + s * 30, hcy + 10, hx + s * 34 + flap, hcy + 30, hx + s * 26 + flap * 1.4, hcy + 44);
-      stroke(ctx, lineOf(rd.hair), 13);
-      ctx.beginPath();
-      ctx.moveTo(hx + s * 14, hcy + 6);
-      ctx.bezierCurveTo(hx + s * 30, hcy + 10, hx + s * 34 + flap, hcy + 30, hx + s * 26 + flap * 1.4, hcy + 44);
-      stroke(ctx, rd.hair, 9);
-      circ(ctx, hx + s * 17, hcy + 8, 4.5);
-      ctx.fillStyle = R.accent;
-      ctx.fill();
-    }
-  }
-  helmet(ctx, hx, hcy, 22, rd, R, pose);
-}
-
-/** 헬멧 (뒤에서): 줄무늬 · 고글 끈 · 통풍구 */
-function helmet(ctx, x, y, r, rd, R, pose) {
-  circ(ctx, x, y, r);
-  fill(ctx, rd.helmet, x, y, r, r, 3);
-  ctx.save();
-  circ(ctx, x, y, r);
-  ctx.clip();
-  // 가운데 줄무늬
-  ctx.fillStyle = rd.stripe;
-  ctx.fillRect(x - 5, y - r, 10, r * 2);
-  // 아래 테 (목 보호대)
-  ctx.fillStyle = darken(rd.helmet, 0.35);
-  ctx.fillRect(x - r, y + r * 0.62, r * 2, r);
-  ctx.restore();
-  // 고글 끈
-  ctx.beginPath();
-  ctx.moveTo(x - r * 0.98, y + 2);
-  ctx.quadraticCurveTo(x, y + 8, x + r * 0.98, y + 2);
-  stroke(ctx, "#1d2233", 5);
-  rrect(ctx, x - 6, y + 2, 12, 7, 2);
-  ctx.fillStyle = "#c9d3e6";
-  ctx.fill();
-  // 통풍구
-  for (const s of [-1, 1]) {
-    rrect(ctx, x + s * 11 - 3, y - r * 0.55, 6, 9, 2);
-    ctx.fillStyle = alpha("#0d1424", 0.6);
-    ctx.fill();
-  }
-  gloss(ctx, x - r * 0.38, y - r * 0.45, r * 0.42, r * 0.22, 0.7);
-  if (R.no && R.id === "jihyeok") {
-    ctx.font = '9px "Bagel Fat One", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = darken(rd.helmet, 0.45);
-    ctx.fillText(R.no, x, y + r * 0.42);
-  }
-}
-
-/** 샤키: 아기 상어 — 등지느러미 · 꼬리 · 지느러미 손 */
-function riderShark(ctx, R, pose, bob, gx, hy, sk) {
-  const rd = R.rider;
-  const t = pose.t || 0;
-  const s4 = sk * 0.4;
-  const sy = -78 + bob;
-  // 꼬리 (안장 뒤로 늘어져 살랑살랑)
-  const wag = Math.sin(t * 8) * 6;
-  ctx.save();
-  ctx.translate(0, -6);
-  ctx.beginPath();
-  ctx.moveTo(-8, -4);
-  ctx.quadraticCurveTo(-4 + wag * 0.3, 12, -2 + wag, 22);
-  ctx.lineTo(-20 + wag, 34);
-  ctx.quadraticCurveTo(0 + wag, 30, 18 + wag, 36);
-  ctx.lineTo(6 + wag, 22);
-  ctx.quadraticCurveTo(8, 10, 8, -4);
-  ctx.closePath();
-  fill(ctx, rd.skin, wag, 18, 18, 18, 2.6);
-  ctx.restore();
-  // 다리
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 14, -10, s * 34, -20, s * 40, -2], 14, rd.skin, { line: 4 });
-  }
-  // 몸 (둥근 상어 몸통 + 조끼)
-  ctx.beginPath();
-  ctx.moveTo(-26, -12);
-  ctx.bezierCurveTo(-36, -40, -34, sy + 6, s4, sy - 8);
-  ctx.bezierCurveTo(34, sy + 6, 36, -40, 26, -12);
-  ctx.quadraticCurveTo(0, -4, -26, -12);
-  ctx.closePath();
-  fill(ctx, rd.skin, -6, sy + 20, 34, 36, 3);
-  // 조끼 (노란 구명조끼, 어깨끈)
-  ctx.beginPath();
-  ctx.moveTo(-24, -16);
-  ctx.bezierCurveTo(-30, -34, -28, sy + 30, -18 + s4, sy + 22);
-  ctx.lineTo(18 + s4, sy + 22);
-  ctx.bezierCurveTo(28, sy + 30, 30, -34, 24, -16);
-  ctx.quadraticCurveTo(0, -10, -24, -16);
-  ctx.closePath();
-  fill(ctx, rd.vest, 0, -30, 30, 22, 2.6);
-  // 등지느러미
-  ctx.beginPath();
-  ctx.moveTo(-9 + s4, sy + 10);
-  ctx.quadraticCurveTo(-2 + s4, sy - 18, 8 + s4 * 1.2, sy - 30);
-  ctx.quadraticCurveTo(8 + s4, sy - 6, 10 + s4, sy + 10);
-  ctx.closePath();
-  fill(ctx, darken(rd.skin, 0.08), s4, sy - 6, 12, 20, 2.6);
-  // 팔 (지느러미 손)
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 24 + s4, sy + 10, s * 44 + s4, sy + 14, s * gx + sk * 0.45, hy + 2], 11, rd.skin, { line: 4 });
-    ell(ctx, s * gx + sk * 0.45, hy, 9, 7, s * 0.4);
-    fill(ctx, rd.skin, s * gx + sk * 0.45, hy, 9, 7, 2);
-  }
-  // 머리 + 헬멧 (지느러미 볏)
-  const hx = s4 * 1.3;
-  const hcy = sy - 16 + bob * 0.4;
-  helmet(ctx, hx, hcy, 21, rd, R, pose);
-  ctx.beginPath();
-  ctx.moveTo(hx - 4, hcy - 18);
-  ctx.quadraticCurveTo(hx + 2, hcy - 40, hx + 14, hcy - 44);
-  ctx.quadraticCurveTo(hx + 8, hcy - 30, hx + 8, hcy - 16);
-  ctx.closePath();
-  fill(ctx, R.body, hx + 4, hcy - 28, 10, 14, 2.4);
-}
-
-/** 캡틴 크랩: 둥근 등딱지 · 해적 모자 · 집게로 핸들을 잡는다 */
-function riderCrab(ctx, R, pose, bob, gx, hy, sk) {
-  const rd = R.rider;
-  const t = pose.t || 0;
-  const s4 = sk * 0.4;
-  // 다리 (가는 게 다리 여러 개)
-  for (const s of [-1, 1]) {
-    for (let i = 0; i < 3; i++) {
-      limb(ctx, [s * (18 + i * 4), -12 - i * 6, s * (40 + i * 5), -22 - i * 4, s * (44 + i * 4), -4 - i * 3], 6, rd.shell, { line: 3, hi: false });
-    }
-  }
-  // 등딱지 (몸)
-  const sy = -60 + bob;
-  ell(ctx, s4 * 0.6, sy, 38, 32);
-  fill(ctx, rd.shell, s4 * 0.6 - 10, sy - 10, 38, 32, 3);
-  // 등딱지 무늬
-  for (const [x, y, r] of [
-    [-14, -8, 5],
-    [12, -12, 4],
-    [0, 10, 6],
-    [-20, 12, 3.4],
-    [20, 8, 3.4],
-  ]) {
-    circ(ctx, s4 * 0.6 + x, sy + y, r);
-    ctx.fillStyle = alpha(lighten(rd.shell, 0.4), 0.6);
-    ctx.fill();
-  }
-  // 조끼 끈 (X 자)
-  ctx.beginPath();
-  ctx.moveTo(-30 + s4 * 0.6, sy - 14);
-  ctx.lineTo(26 + s4 * 0.6, sy + 22);
-  ctx.moveTo(30 + s4 * 0.6, sy - 14);
-  ctx.lineTo(-26 + s4 * 0.6, sy + 22);
-  stroke(ctx, rd.vest, 6);
-  // 팔 + 큰 집게 (핸들 끝)
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 30 + s4 * 0.6, sy - 6, s * 46 + s4, sy - 14, s * gx + sk * 0.45, hy + 4], 9, rd.shell, { line: 3 });
-    const cx = s * (gx + 4) + sk * 0.45;
-    const cy = hy - 4;
-    const snap = Math.max(0, Math.sin(t * 3 + s)) * 0.2;
-    ell(ctx, cx, cy, 15, 11, s * 0.3);
-    fill(ctx, rd.shell, cx, cy, 15, 11, 2.6);
-    ctx.beginPath();
-    ctx.moveTo(cx + s * 4, cy - 6);
-    ctx.lineTo(cx + s * 18, cy - 14 - snap * 20);
-    ctx.lineTo(cx + s * 10, cy - 2);
-    ctx.closePath();
-    fill(ctx, rd.shell, cx + s * 10, cy - 8, 8, 6, 2);
-  }
-  // 눈자루 + 해적 모자
-  const hx = s4 * 1.1;
-  for (const s of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(hx + s * 9, sy - 28);
-    ctx.lineTo(hx + s * 12, sy - 46);
-    stroke(ctx, lineOf(rd.shell), 6);
-    ctx.beginPath();
-    ctx.moveTo(hx + s * 9, sy - 28);
-    ctx.lineTo(hx + s * 12, sy - 46);
-    stroke(ctx, rd.shell, 3.5);
-    circ(ctx, hx + s * 12, sy - 50, 6.5);
-    fill(ctx, "#ffffff", hx + s * 12, sy - 50, 6.5, 6.5, 1.8);
-  }
-  pirateHat(ctx, hx, sy - 30, 0.9, rd.hat, 0, "#ffcf4d");
-}
-
-/** 블리츠: 서서 타는 자세 · 모히칸 헬멧 */
-function riderStand(ctx, R, pose, bob, gx, hy, sk) {
-  const rd = R.rider;
-  const s4 = sk * 0.5;
-  const kneeBend = 6 + (pose.crouch || 0) * 18 + bob;
-  // 다리 (서서 무릎을 살짝 굽힘)
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 20, -2, s * 26 + kneeBend * 0.3 * s, -36 + kneeBend * 0.4, s * 16 + s4 * 0.3, -70 + kneeBend], 15, rd.suit, { line: 4 });
-    ell(ctx, s * 21, 0, 12, 6);
-    fill(ctx, "#ffffff", s * 21, 0, 12, 6, 2);
-    // 다리 옆 형광 줄
-    ctx.beginPath();
-    ctx.moveTo(s * 25, -10);
-    ctx.lineTo(s * 27, -34);
-    stroke(ctx, rd.vest, 3);
-  }
-  // 몸통
-  const sy = -140 + kneeBend + bob;
-  ctx.beginPath();
-  ctx.moveTo(-22 + s4 * 0.3, -66 + kneeBend);
-  ctx.bezierCurveTo(-30, -90 + kneeBend, -32 + s4, sy + 16, -26 + s4, sy);
-  ctx.quadraticCurveTo(s4, sy - 10, 26 + s4, sy);
-  ctx.bezierCurveTo(32 + s4, sy + 16, 30, -90 + kneeBend, 22 + s4 * 0.3, -66 + kneeBend);
-  ctx.closePath();
-  fill(ctx, rd.suit, s4 - 6, sy + 24, 30, 40, 3);
-  // 번개 무늬 조끼 줄
-  ctx.beginPath();
-  ctx.moveTo(-14 + s4, sy + 8);
-  ctx.lineTo(4 + s4, sy + 24);
-  ctx.lineTo(-6 + s4, sy + 28);
-  ctx.lineTo(14 + s4, sy + 48);
-  stroke(ctx, rd.vest, 5);
-  // 팔 (가슴 높이 핸들)
-  for (const s of [-1, 1]) {
-    limb(ctx, [s * 24 + s4, sy + 6, s * 38 + s4, sy + 22, s * gx + sk * 0.45, hy + 2], 11, rd.suit, { line: 4 });
-    ell(ctx, s * gx + sk * 0.45, hy, 8, 7);
-    fill(ctx, rd.vest, s * gx + sk * 0.45, hy, 8, 7, 2);
-  }
-  // 헬멧 + 모히칸 볏
-  const hx = s4 * 1.2;
-  const hcy = sy - 18;
-  helmet(ctx, hx, hcy, 21, rd, R, pose);
-  ctx.beginPath();
-  for (let i = 0; i <= 6; i++) {
-    const a = -Math.PI * 0.95 + (i / 6) * Math.PI * 0.6;
-    const rr = i % 2 ? 24 : 34;
-    ctx.lineTo(hx + Math.cos(a) * rr * 0.55, hcy - 12 + Math.sin(a) * rr);
-  }
-  ctx.lineTo(hx + 2, hcy - 14);
-  ctx.closePath();
-  fill(ctx, rd.stripe, hx - 6, hcy - 30, 12, 18, 2.4);
-}
-
-/* ================================================================
  * 앞모습 초상 (메뉴 · 결과 · 출발 소개) — 원점: 가슴 아래 가운데, 높이 약 240
  * ============================================================== */
 export function drawPortrait(ctx, R, opts = {}) {
@@ -741,6 +371,30 @@ function portraitKid(ctx, R, t, mood, opts) {
   rrect(ctx, -14, hy + 34, 28, 24, 8);
   ctx.fillStyle = darken(rd.skin, 0.1);
   ctx.fill();
+  // 지혁: 노란 스카프 (게임 속 뒷모습과 같은 차림)
+  if (R.id === "jihyeok") {
+    for (const [a, w] of [
+      [0.28, 22],
+      [-0.12, 18],
+    ]) {
+      ctx.save();
+      ctx.translate(16, hy + 60);
+      ctx.rotate(a);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(10, 14, 6, w + 10);
+      stroke(ctx, lineOf("#ffd23f"), 12);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(10, 14, 6, w + 10);
+      stroke(ctx, "#ffd23f", 8);
+      ctx.restore();
+    }
+    rrect(ctx, -24, hy + 50, 48, 15, 7);
+    fill(ctx, "#ffd23f", -6, hy + 54, 26, 9, 2.6);
+    circ(ctx, 16, hy + 59, 8);
+    fill(ctx, "#ffd23f", 14, hy + 56, 8, 8, 2.4);
+  }
   // 헬멧 뒷부분 (얼굴 뒤로 보이는 테)
   circ(ctx, 0, hy - 4, r + 12);
   fill(ctx, rd.helmet, -12, hy - 24, r + 12, r + 12, 3);
@@ -749,6 +403,11 @@ function portraitKid(ctx, R, t, mood, opts) {
   ctx.clip();
   ctx.fillStyle = rd.stripe;
   ctx.fillRect(-9, hy - 80, 18, 50);
+  if (R.id === "jihyeok") {
+    ctx.fillStyle = "#13b5a8";
+    ctx.fillRect(-14, hy - 80, 3, 50);
+    ctx.fillRect(11, hy - 80, 3, 50);
+  }
   ctx.restore();
   if (R.id === "ruby") {
     for (const s of [-1, 1]) {

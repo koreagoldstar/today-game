@@ -3,7 +3,7 @@
  * 그림 좌표: 1 = 10cm (풍경은 커서 dm 단위), (0,0) = 물 표면 가운데.
  */
 import { TAU, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, shadow, dot } from "../../ocean-blaster/art/kit.js?v=3";
-import { seeded } from "../js/view.js?v=1";
+import { seeded } from "../js/view.js?v=2";
 
 /** 야자수: 휘어진 줄기 + 잎 7장 + 코코넛 (h: 줄기 높이 dm) */
 export function palm(ctx, x, y, h, lean = 0.2, seed = 1, scale = 1) {

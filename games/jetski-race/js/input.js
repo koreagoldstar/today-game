@@ -5,7 +5,7 @@
  *  부스트: 오른쪽 아래 BOOST 버튼 (다른 손가락으로 동시에 눌러도 된다)
  *  컴퓨터: ← → (A D) 조향 · Space / ↑ 부스트 · P / Esc 일시정지
  */
-import { W, clamp } from "./view.js?v=1";
+import { W, clamp } from "./view.js?v=2";
 
 export class Input {
   constructor(canvas, view) {

@@ -6,7 +6,7 @@
  * 그림 좌표: 풍경 dm(1=10cm) · 장애물 cm, (0,0) = 물 표면 가운데.
  */
 import { TAU, mix, lighten, darken, alpha, lineOf, linear, radial, ell, circ, rrect, smooth, fill, flat, stroke, gloss, dot } from "../../ocean-blaster/art/kit.js?v=3";
-import { seeded } from "../js/view.js?v=1";
+import { seeded } from "../js/view.js?v=2";
 
 /* ================= 아이스 오션 ================= */
 

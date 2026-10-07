@@ -3,11 +3,11 @@
  * 벡터 그림을 한 번만 오프스크린 캔버스에 그려 두고(물 반사 포함) 크기만 바꿔 찍는다.
  * 그림 단위: units = 1m 당 단위 수 (소품 100 = cm, 풍경 10 = dm)
  */
-import * as P from "./props.js?v=1";
-import * as S from "./scenery.js?v=1";
-import * as S2 from "./scenery2.js?v=1";
-import * as S3 from "./scenery3.js?v=1";
-import * as S4 from "./scenery4.js?v=1";
+import * as P from "./props.js?v=2";
+import * as S from "./scenery.js?v=2";
+import * as S2 from "./scenery2.js?v=2";
+import * as S3 from "./scenery3.js?v=2";
+import * as S4 from "./scenery4.js?v=2";
 
 /** box: [x0, y0, x1, y1] (그림 단위, y0 위쪽 음수) · ppm: 캐시 해상도(px/m) · refl: 물 반사 높이 비율 */
 const DEFS = {

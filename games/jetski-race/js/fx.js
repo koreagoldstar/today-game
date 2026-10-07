@@ -4,7 +4,7 @@
  *  - 화면 효과: 떠오르는 글자 · 큰 배너(3D 숫자) · 속도선 · 부스트 테두리 · 번쩍 · 화면 물방울 · 꽃가루
  * 모두 미리 만든 풀을 돌려 써서 판이 길어져도 쓰레기가 쌓이지 않는다.
  */
-import { W, H, HZ, clamp, lerp, rand, ease } from "./view.js?v=1";
+import { W, H, HZ, clamp, lerp, rand, ease } from "./view.js?v=2";
 
 const MAX_PARTS = 700;
 const MAX_TEXTS = 24;

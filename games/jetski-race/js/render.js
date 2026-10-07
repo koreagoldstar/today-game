@@ -6,13 +6,13 @@
  *  - 물은 5m 구간 띠를 가까운 것부터 그리며 앞 파도에 가려진 부분을 잘라낸다 (너울 · 큰 파도).
  *  - 물 위 무늬(차선 · 부스터 판 · 섬 바닥 · 물결 · 반짝임) → 스프라이트 · 레이서 · 물보라를 먼 것부터.
  */
-import { W, H, HZ, PY, clamp, lerp, hash2 } from "./view.js?v=1";
-import { SEG } from "./track.js?v=1";
-import { buildSky, buildFar, gull } from "../art/sky.js?v=1";
-import { getSprite, drawSprite, setSpriteBoost, setSpriteTint } from "../art/sprites.js?v=1";
-import { drawRacer, drawHullFoam, hullInfo } from "../art/jetski.js?v=1";
-import { dolphin } from "../art/scenery.js?v=1";
-import { blimp } from "../art/scenery4.js?v=1";
+import { W, H, HZ, PY, clamp, lerp, hash2 } from "./view.js?v=2";
+import { SEG } from "./track.js?v=2";
+import { buildSky, buildFar, gull } from "../art/sky.js?v=2";
+import { getSprite, drawSprite, setSpriteBoost, setSpriteTint } from "../art/sprites.js?v=2";
+import { drawRacer, drawHullFoam, hullInfo } from "../art/jetski.js?v=2";
+import { dolphin } from "../art/scenery.js?v=2";
+import { blimp } from "../art/scenery4.js?v=2";
 
 export const PSCALE = 112; // 내 제트스키가 그려지는 크기 (px/m) — 시야가 바뀌어도 그대로
 const DRAW = 130; // 앞으로 그리는 구간 수 (650m)
@@ -1184,6 +1184,7 @@ export class Renderer {
         sprayWings(ctx, r, time);
         drawHullFoam(ctx, r.def, r.pose);
       }
+      r.pose.k = k;
       drawRacer(ctx, r.def, r.pose);
       // 부스트: 노즐 뒤로 빛나는 물 분사
       if (r.boostT > 0) {

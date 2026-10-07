@@ -27,7 +27,7 @@ export const RACERS = {
     body: "#2f86ea",
     trim: "#ffffff",
     accent: "#0b2f6e",
-    rider: { kind: "shark", skin: "#7fa9d6", belly: "#eef6ff", helmet: "#ffffff", stripe: "#2f86ea", visor: "#0b2f6e", vest: "#ffd23f" },
+    rider: { kind: "shark", skin: "#7fa9d6", belly: "#eef6ff", helmet: "#ffffff", stripe: "#2f86ea", visor: "#0b4f8e", suit: "#2a7de1", vest: "#f2fbff", panel: "#2fd3ff", band: "rgba(47,134,234,0.9)", no: "#1d63c9" },
     intro: "코너에서 물러서지 않는 아기 상어 레이서.",
   },
   ruby: {
@@ -39,7 +39,7 @@ export const RACERS = {
     body: "#ff5fa8",
     trim: "#8a5bff",
     accent: "#ffe066",
-    rider: { kind: "girl", helmet: "#ff8cc6", stripe: "#8a5bff", visor: "#3a1d5c", suit: "#8a5bff", vest: "#ffe066", skin: "#ffd9c0", hair: "#7a3b1f" },
+    rider: { kind: "girl", helmet: "#ff8cc6", stripe: "#8a5bff", visor: "#7a3bc0", suit: "#8a5bff", vest: "#ffe3f2", band: "rgba(138,91,255,0.85)", badge: "#ffd23f", skin: "#ffd9c0", hair: "#7a3b1f" },
     intro: "부스터를 아껴 두었다가 마지막에 터뜨리는 작전가.",
   },
   crab: {
@@ -51,7 +51,7 @@ export const RACERS = {
     body: "#e8452f",
     trim: "#ffcf4d",
     accent: "#2b2d4a",
-    rider: { kind: "crab", shell: "#ff5a3c", hat: "#2b2d4a", vest: "#2b2d4a" },
+    rider: { kind: "crab", shell: "#ff5a3c", helmet: "#e0321f", stripe: "#1a1b2e", hat: "#2b2d4a", vest: "#2b2d4a", visor: "#3a2a10" },
     intro: "해적 바다에서 온 힘센 선장. 몸으로 밀어붙인다!",
   },
   blitz: {
@@ -63,7 +63,7 @@ export const RACERS = {
     body: "#22283d",
     trim: "#b8ff3a",
     accent: "#6ff7ff",
-    rider: { kind: "mohawk", helmet: "#2e3550", stripe: "#b8ff3a", visor: "#6ff7ff", suit: "#22283d", vest: "#b8ff3a", skin: "#f2c39b" },
+    rider: { kind: "mohawk", helmet: "#2e3550", stripe: "#b8ff3a", visor: "#2fd9ff", suit: "#22283d", vest: "#b8ff3a", skin: "#f2c39b" },
     intro: "서서 타는 스탠드업 제트스키의 번개 같은 고수.",
   },
 };

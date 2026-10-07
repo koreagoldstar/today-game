@@ -3,7 +3,7 @@
  * 하늘 그림은 화면 너비의 2배로 만들어 코너를 돌 때 옆으로 흐르게 한다 (패럴랙스).
  */
 import { TAU, lighten, darken, alpha, mix } from "../../ocean-blaster/art/kit.js?v=3";
-import { seeded } from "../js/view.js?v=1";
+import { seeded } from "../js/view.js?v=2";
 
 /**
  * 하늘 캔버스: w(논리) × hz(논리) 를 px 배율로

@@ -5,10 +5,10 @@
  *  레이서는 모두 같은 물리로 달린다. 경쟁자는 레이싱 라인을 따라가며 장애물을 피하고
  *  부스터를 노리고, 성격(지름길 · 욕심 · 실수)이 서로 다르다.
  */
-import { clamp, lerp, rand, sign } from "./view.js?v=1";
-import { SEG } from "./track.js?v=1";
-import { Ring } from "./fx.js?v=1";
-import { RACERS, RIVAL_ORDER, BONUS } from "./data.js?v=1";
+import { clamp, lerp, rand, sign } from "./view.js?v=2";
+import { SEG } from "./track.js?v=2";
+import { Ring } from "./fx.js?v=2";
+import { RACERS, RIVAL_ORDER, BONUS } from "./data.js?v=2";
 
 const G = 24; // 오락실 중력 (빨리 떨어져 경쾌하게)
 const CF = 1.0; // 원심력
@@ -76,7 +76,8 @@ export class Race {
     this.vmax = course.vmax || 33;
     this.vboost = this.vmax * 1.33;
     this.clock = 0;
-    this.t = 0; // 출발 후 시간
+    this.t = 0; // 출발 후 시간 (내가 결승하면 멈춘다 — 화면 기록)
+    this.tRun = 0; // 내가 결승한 뒤에도 계속 흐르는 시간 (경쟁자 결승 기록용)
     this.state = demo ? "race" : "intro";
     this.stateT = 0;
     this.countN = 3;
@@ -162,6 +163,8 @@ export class Race {
       if (input && input.tapped && this.clock - this.goAt < 0.3 && !this.earlyTap && !this.stats.perfectStart) this.tryPerfectStart(p);
       if (this.state === "finish" && this.stateT > 2.6) this.setState("done");
     }
+    if (this.state === "race" || this.demo) this.tRun = this.t;
+    else if (this.state === "finish" || this.state === "done") this.tRun += dt;
     this.track.time = this.clock;
     const racing = this.state === "race" || this.state === "finish" || this.state === "done";
     if (!this.demo) this.watchHazards();
@@ -325,7 +328,9 @@ export class Race {
     // ---- 결승 ----
     if (!r.finished && r.z >= tr.length && (this.state === "race" || this.state === "finish" || this.state === "done" || this.demo)) {
       r.finished = true;
-      r.finishTime = this.t - ((r.z - tr.length) / Math.max(1, r.v));
+      r.finClock = this.clock;
+      r.finPlace = this.racers.filter((q) => q.finished).length;
+      r.finishTime = this.tRun - ((r.z - tr.length) / Math.max(1, r.v));
       if (r.isPlayer) this.playerFinished();
     }
     // ---- 항적 · 물보라 · 자세 ----
@@ -488,6 +493,8 @@ export class Race {
 
   bump(r, o, dx) {
     r.invT = 0.5;
+    r.bumpT = 0.4;
+    r.hitDir = sign(dx || 1);
     r.v *= 0.82;
     r.vx = sign(dx || 1) * 7;
     r.x += sign(dx || 1) * 0.4;
@@ -498,6 +505,7 @@ export class Race {
   crash(r, o, dx) {
     r.invT = 1.3;
     r.crashT = 0.75;
+    r.hitDir = sign(dx || 1);
     r.v *= 0.5;
     r.vx = sign(dx || 1) * 6;
     r.boostT = 0;
@@ -644,7 +652,7 @@ export class Race {
   results() {
     const L = this.track.length;
     for (const r of this.racers) {
-      if (!r.finished) r.finishTime = this.t + (L - r.z) / Math.max(10, r.v || this.vmax * 0.8);
+      if (!r.finished) r.finishTime = this.tRun + (L - r.z) / Math.max(10, r.v || this.vmax * 0.8);
     }
     const arr = this.racers.slice().sort((a, b) => a.finishTime - b.finishTime);
     return arr.map((r, i) => ({ id: r.id, def: r.def, time: r.finishTime, place: i + 1, isPlayer: r.isPlayer }));
@@ -715,5 +723,22 @@ export class Race {
     ps.spin = r.spin || 0;
     ps.speed = clamp(r.v / this.vmax, 0, 1.3);
     ps.air = r.air;
+    // 레이서 몸동작 (그림에만 쓰는 값 — art/rider.js)
+    ps.steer = r.yawS;
+    const bOn = r.boostT > 0;
+    if (bOn && !r.boostWas) r.kickT = 1;
+    r.boostWas = bOn;
+    r.kickT = Math.max(0, (r.kickT || 0) - dt * 3.2);
+    ps.kick = r.kickT;
+    ps.boostK = lerp(ps.boostK || 0, bOn ? 1 : 0, Math.min(1, dt * (bOn ? 9 : 3.5)));
+    ps.airS = lerp(ps.airS || 0, r.air ? 1 : 0, Math.min(1, dt * 12));
+    ps.airK = r.air ? clamp(r.airT / (r.airPlan || 0.6), 0, 1) : 1;
+    ps.land = r.landT > 0 ? r.landT / 0.35 : 0;
+    ps.hit = r.crashT > 0 ? r.crashT / 0.75 : 0;
+    if (r.bumpT > 0) r.bumpT -= dt;
+    ps.bump = r.bumpT > 0 ? r.bumpT / 0.4 : 0;
+    ps.hitDir = r.hitDir || 1;
+    ps.fin = r.finished ? this.clock - r.finClock : -1;
+    ps.place = r.finPlace || 0;
   }
 }
