@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "sea-monster",
+      face: true,
+      title: "바다괴물 탐험대",
+      tag: "수중 탐험 · 12바다 · 도감 34",
+      href: "/games/sea-monster/",
+      thumb: "/assets/thumbs/sea-monster.png",
+      category: "action",
+    },
+    {
       id: "jetski-race",
       face: true,
       title: "제트스키 썬더 레이스",

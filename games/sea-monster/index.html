@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a3f78" />
+    <title>바다괴물 탐험대 | Today Game</title>
+    <meta name="description" content="바닷속에 무언가 숨어 있다! 산호 · 해초 · 바위 · 난파선에 숨은 바다괴물을 레이더로 찾아내고 물총으로 물리치는 수중 탐험 액션. 도감을 채우고 장비를 키워 보세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/sea-monster/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="바다괴물 탐험대 | Today Game" />
+    <meta property="og:description" content="바닷속에 무언가 숨어 있다! 숨은 바다괴물을 찾아 물총으로 물리치는 수중 탐험 게임." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/sea-monster/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/sea-monster.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+      <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="sm is-menu" data-face="1">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="바다괴물 탐험대 게임 화면"></canvas>
+
+        <!-- 탐험 HUD -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-left">
+            <p class="hud-stage" id="hud-stage">01 · 산호초 입구</p>
+            <div class="o2" id="o2">
+              <span class="o2-ic" data-icon="tank"></span>
+              <i class="o2-bar"><b id="o2-fill"></b></i>
+              <span class="o2-t" id="o2-t">1:30</span>
+            </div>
+          </div>
+          <div class="hud-mid">
+            <p class="hud-score"><span data-icon="star"></span><b id="score">0</b></p>
+            <div class="hunt" id="hunt"></div>
+          </div>
+          <div class="hud-tools">
+            <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><span data-icon="pause"></span></button>
+            <button type="button" class="round-btn" id="sound-btn" aria-label="소리"><span data-icon="sound"></span></button>
+          </div>
+        </header>
+        <div class="radar" id="radar" hidden aria-label="탐지 레이더">
+          <div class="radar-face">
+            <i class="radar-ring r1"></i><i class="radar-ring r2"></i><i class="radar-sweep"></i>
+            <i class="radar-pulse" id="radar-pulse"></i>
+          </div>
+          <div class="radar-dots" id="radar-dots"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="combo" id="combo" hidden><b id="combo-n">2</b><small>COMBO</small><i class="combo-bar"><b id="combo-fill"></b></i></div>
+        <button type="button" class="sonar-btn" id="sonar-btn" hidden aria-label="소나 탐지">
+          <svg viewBox="0 0 100 100" class="sonar-ring" aria-hidden="true"><circle cx="50" cy="50" r="44" class="sr-bg" /><circle cx="50" cy="50" r="44" class="sr-fg" id="sonar-arc" pathLength="100" /></svg>
+          <span class="sonar-core"><span data-icon="sonar"></span><b>탐지</b></span>
+        </button>
+        <div class="bossbar" id="bossbar" hidden>
+          <p><span data-icon="boss"></span><b id="boss-name">BOSS</b><small id="boss-rage" hidden>분노!</small></p>
+          <i class="bb-bar"><b id="boss-fill"></b></i>
+        </div>
+        <p class="hint" id="hint" hidden></p>
+        <div class="toast" id="toast" hidden></div>
+
+        <!-- 시작 화면 -->
+        <section class="screen menu" id="title" aria-labelledby="title-h">
+          <div class="menu-top">
+            <p class="chip-lv" id="chip-lv"><b>Lv.1</b><i class="xp-bar"><b id="xp-fill"></b></i></p>
+            <p class="chip-coin"><span data-icon="coin"></span><b id="coin-n">0</b></p>
+          </div>
+          <div class="menu-main">
+          <div class="logo">
+            <p class="logo-kicker">바닷속에 무언가 숨어 있다</p>
+            <h1 id="title-h" aria-label="바다괴물 탐험대 SEA MONSTER HUNTERS">
+              <span class="l1">바다괴물</span>
+              <span class="l2">탐험대</span>
+              <span class="l3">SEA MONSTER HUNTERS</span>
+            </h1>
+          </div>
+          <div class="menu-bottom">
+            <button type="button" class="btn-main" id="start-btn"><span class="ic" data-icon="dive"></span><span class="txt"><b>탐험 시작</b><small id="start-label">01 · 산호초 입구</small></span></button>
+            <div class="menu-grid">
+              <button type="button" class="btn-tile" id="menu-codex"><span class="ic" data-icon="book"></span><b>바다괴물 도감</b><i class="badge" id="codex-badge" hidden>NEW</i></button>
+              <button type="button" class="btn-tile" id="menu-gear"><span class="ic" data-icon="gear"></span><b>장비</b></button>
+              <button type="button" class="btn-tile" id="menu-daily"><span class="ic" data-icon="gift"></span><b>오늘의 도전</b><i class="badge" id="daily-badge" hidden>!</i></button>
+              <button type="button" class="btn-tile" id="menu-settings"><span class="ic" data-icon="settings"></span><b>설정</b></button>
+            </div>
+          </div>
+          </div>
+        </section>
+
+        <!-- 탐험 지도 -->
+        <section class="screen panel" id="map" hidden aria-labelledby="map-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="map-h">탐험 지도</h2>
+            <p class="panel-stars" id="map-stars"></p>
+          </header>
+          <div class="panel-body"><div class="map-list" id="map-list"></div></div>
+        </section>
+
+        <!-- 도감 -->
+        <section class="screen panel" id="codex" hidden aria-labelledby="codex-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="codex-h">바다괴물 도감</h2>
+            <p class="panel-stars" id="codex-count"></p>
+          </header>
+          <div class="panel-body"><div class="codex-grid" id="codex-grid"></div></div>
+          <div class="codex-detail" id="codex-detail" hidden></div>
+        </section>
+
+        <!-- 장비 -->
+        <section class="screen panel" id="gear" hidden aria-labelledby="gear-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="gear-h">탐험 장비</h2>
+            <p class="panel-stars"><span data-icon="coin"></span><b id="gear-coins">0</b></p>
+          </header>
+          <div class="panel-body"><div class="gear-list" id="gear-list"></div></div>
+        </section>
+
+        <!-- 오늘의 도전 -->
+        <section class="screen panel" id="daily" hidden aria-labelledby="daily-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="daily-h">오늘의 도전</h2>
+          </header>
+          <div class="panel-body"><div class="daily-card" id="daily-card"></div></div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel" id="settings" hidden aria-labelledby="settings-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="settings-h">설정</h2>
+          </header>
+          <div class="panel-body"><div class="set-list" id="set-list"></div></div>
+        </section>
+
+        <!-- 출발 전 소개 -->
+        <section class="screen brief" id="brief" hidden aria-labelledby="brief-h">
+          <div class="brief-card">
+            <p class="brief-no" id="brief-no">STAGE 01</p>
+            <h2 id="brief-h">산호초 입구</h2>
+            <p class="brief-en" id="brief-en">CORAL GATE</p>
+            <p class="brief-label">이 바다에 숨어 있는 괴물</p>
+            <div class="brief-mons" id="brief-mons"></div>
+            <div class="brief-info" id="brief-info"></div>
+            <div class="brief-btns">
+              <button type="button" class="btn-res" id="brief-back"><span data-icon="back"></span>지도</button>
+              <button type="button" class="btn-res primary" id="brief-go"><span data-icon="dive"></span>잠수!</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 결과 -->
+        <section class="screen result" id="result" hidden>
+          <div class="result-card" id="result-card">
+            <div id="result-body"></div>
+            <div class="res-btns">
+              <button type="button" class="btn-res primary big" id="res-retry"><span data-icon="retry"></span>다시 탐험</button>
+              <div class="res-row">
+                <button type="button" class="btn-res" id="res-map"><span data-icon="map"></span>지도</button>
+                <button type="button" class="btn-res" id="res-next"><span data-icon="next"></span>다음 지역</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section class="screen pause" id="pause" hidden>
+          <div class="pause-card">
+            <p class="pause-kicker">PAUSED</p>
+            <h2>잠깐 숨 고르기</h2>
+            <button type="button" class="btn-res primary" id="pause-resume"><span data-icon="play"></span>계속 탐험</button>
+            <button type="button" class="btn-res" id="pause-retry"><span data-icon="retry"></span>처음부터</button>
+            <button type="button" class="btn-res" id="pause-quit"><span data-icon="map"></span>나가기</button>
+          </div>
+        </section>
+
+        <!-- 처음 하는 사람 안내 -->
+        <section class="screen tutor" id="tutor" hidden>
+          <div class="tutor-card">
+            <h2>탐험 방법</h2>
+            <ul class="tutor-list">
+              <li><span class="t-ic" data-icon="move"></span><p><b>이동</b>왼쪽 아래를 누르고 끌어요 · 키보드 WASD</p></li>
+              <li><span class="t-ic" data-icon="aim"></span><p><b>조준 · 발사</b>쏘고 싶은 곳을 누르고 있어요 · 마우스</p></li>
+              <li><span class="t-ic" data-icon="radar"></span><p><b>레이더</b>점이 많을수록 괴물이 가까워요. 꼼지락거리는 곳을 찾아요!</p></li>
+              <li><span class="t-ic" data-icon="sonar"></span><p><b>탐지</b>숨은 괴물이 잠깐 빛나요 · Space</p></li>
+            </ul>
+            <button type="button" class="btn-res primary" id="tutor-ok"><span data-icon="check"></span>알겠어요!</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/my-face.js?v=3"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="바다괴물 탐험대 소개">
+  <h2>바다괴물 탐험대 소개</h2>
+  <p>지혁 탐험대장과 함께 바닷속에 숨어 있는 바다괴물을 찾아내는 수중 탐험 액션 게임입니다. 산호초 입구, 해초 숲, 침몰한 보물선, 해저 동굴, 해파리 계곡, 화산 해저, 얼음 바다, 심해 협곡, 잃어버린 도시, 괴물의 둥지, 심해 폭풍, 그리고 가장 깊은 어비스까지 12개 바다에 34종의 바다괴물과 7마리 보스가 숨어 있어요. 산호처럼 위장한 문어, 보물상자인 척하는 괴물, 빛으로 유인하는 심해아귀처럼 괴물마다 숨는 곳과 들키는 몸짓이 모두 다르고, 마지막 어비스에서는 거대한 눈부터 천천히 모습을 드러내는 THE ABYSSAL 이 기다립니다.</p>
+  <h3>플레이 방법</h3>
+  <p>왼쪽 아래를 누르고 끌면 헤엄치고, 쏘고 싶은 곳을 누르고 있으면 물총이 나갑니다. 레이더 점이 많을수록 괴물이 가까워요. 꼼지락거리는 산호, 흔들리는 알, 빛 속에서 깜빡이는 눈처럼 이상한 곳을 찾아 물을 쏘면 괴물이 모습을 드러냅니다. 괴물이 빨갛게 공격을 준비할 때 맞히면 PERFECT! 탐지 버튼은 숨은 괴물을 잠깐 빛나게 해 줍니다. 컴퓨터에서는 WASD로 헤엄치고 마우스로 조준하세요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>무섭지는 않나요?</dt>
+    <dd>괴물들은 모두 귀엽게 그려져 있고, 물총에 맞아 잡히면 물방울에 갇혀 둥실 떠오르며 도감에 등록돼요. 다치는 장면 없이 산소 시간만 조금 줄어들어요.</dd>
+    <dt>도감과 장비는 어디에 저장되나요?</dt>
+    <dd>도감, 코인, 장비, 오늘의 도전 기록은 이 기기에만 저장되고 서버로 보내지 않아요. 얼굴 캐릭터 사진도 기기 밖으로 나가지 않아요.</dd>
+    <dt>오늘의 도전은 무엇인가요?</dt>
+    <dd>매일 바다괴물 한 마리가 '오늘의 바다괴물'로 정해져요. 그 괴물을 찾아 맞히고 PERFECT 를 내면 보너스 코인을 받아요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
