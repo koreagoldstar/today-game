@@ -86,9 +86,12 @@ export class Renderer {
     this.camY = water + camH + lift + this.dip;
     this.track = track;
     this.computeOffsets(track);
-    const target = p.x + this.offAt(p.z) + (p.vx || 0) * 0.06;
-    this.camX = lerp(this.camX, target, Math.min(1, dt * 7));
+    // 카메라는 조금 늦게 따라온다 → 꺾을 때 제트스키가 화면에서 옆으로 쭉 움직이는 게 보인다 (화면 밖으로는 안 나가게)
+    const px = p.x + this.offAt(p.z);
+    const target = px + (p.vx || 0) * 0.02;
+    this.camX = lerp(this.camX, target, Math.min(1, dt * 6));
     if (Math.abs(this.camX - target) > 6) this.camX = target;
+    this.camX = clamp(this.camX, px - 1.7, px + 1.7);
     // 코너를 돌면 하늘이 옆으로 흐른다
     this.skyShift += track.curveAt(p.z) * p.v * dt * 260;
   }

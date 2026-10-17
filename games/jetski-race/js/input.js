@@ -89,13 +89,14 @@ export class Input {
       const x = this.pointers.get(this.lastId);
       this.touching = true;
       this.touchX = x;
-      const d = (x - W / 2) / (W * 0.3);
-      const dead = 0.07;
-      s = Math.abs(d) < dead ? 0 : clamp((Math.abs(d) - dead) / (1 - dead), 0, 1) * Math.sign(d);
+      // 가운데에서 화면 너비의 22% 만 옮겨도 끝까지 꺾인다 · 조금만 옮겨도 잘 듣게 (큰 태블릿 화면에서도)
+      const d = (x - W / 2) / (W * 0.22);
+      const dead = 0.05;
+      s = Math.abs(d) < dead ? 0 : Math.pow(clamp((Math.abs(d) - dead) / (1 - dead), 0, 1), 0.75) * Math.sign(d);
     } else this.touching = false;
     // 키보드는 부드럽게 차오른다
     const kt = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
-    this.keySteer += (kt - this.keySteer) * Math.min(1, dt * (kt ? 7 : 12));
+    this.keySteer += (kt - this.keySteer) * Math.min(1, dt * (kt ? 11 : 14));
     if (Math.abs(this.keySteer) > Math.abs(s)) s = this.keySteer;
     this.steer = s;
   }

@@ -12,6 +12,8 @@ import { RACERS, RIVAL_ORDER, BONUS } from "./data.js?v=2";
 
 const G = 24; // 오락실 중력 (빨리 떨어져 경쾌하게)
 const CF = 1.0; // 원심력
+/** 옆으로 가는 최고 속도 (내 제트스키 · 라이벌 똑같이) */
+const latMaxAt = (sp01) => 7.5 + 5 * clamp(sp01, 0, 1);
 const COUNT_STEP = 0.9;
 
 /** 경쟁자 성격 */
@@ -273,12 +275,12 @@ export class Race {
     }
     r.v = Math.max(0, r.v);
     // ---- 옆으로 ----
-    const latMax = 6.5 + 4.5 * clamp(sp01, 0, 1);
+    const latMax = latMaxAt(sp01);
     let steer = r.crashT > 0.45 ? 0 : r.steer;
     if (r.air) steer *= 0.35;
     const vxT = steer * latMax;
     const grip = tr.slips.length ? tr.gripAt(r.z) : 1;
-    r.vx += (vxT - r.vx) * Math.min(1, dt * (r.air ? 2 : 7 * grip));
+    r.vx += (vxT - r.vx) * Math.min(1, dt * (r.air ? 2 : 9 * grip));
     // 옆바람: 공중에서는 더 많이 밀린다
     if (tr.winds.length) r.x += tr.windAt(r.z) * dt * (r.air ? 1.5 : 1);
     // 원심력 (물 위에서만 강하게)
@@ -543,7 +545,7 @@ export class Race {
       ai.tx = this.plan(r);
     }
     // 조향: 목표 x 로 + 원심력 미리 상쇄
-    const latMax = 6.5 + 4.5 * clamp(r.v / this.vmax, 0, 1);
+    const latMax = latMaxAt(r.v / this.vmax);
     const seg = tr.segAt(r.z);
     const ff = seg.curve * r.v * r.v * CF;
     ai.wobble += dt;

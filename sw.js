@@ -1,8 +1,8 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v48`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v48`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v49`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v49`;
 const APP_SHELL = [
   "/",
   "/index.html",

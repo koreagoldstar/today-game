@@ -299,8 +299,11 @@ export class BlasterGame {
    * 메인 루프
    * ============================================================== */
   frame(now) {
-    const dt = Math.min(1 / 30, Math.max(0, (now - this.last) / 1000));
+    const raw = Math.max(0, (now - this.last) / 1000);
+    // 한 프레임이 늦어도 1/20초까지는 그대로 따라잡는다 (예전 1/30 상한은 느린 기기에서 게임 전체가 슬로 모션처럼 됐다)
+    const dt = Math.min(1 / 20, raw);
     this.last = now;
+    this.watchSpeed(raw);
     this.time += dt;
     try {
       this.update(dt);
@@ -310,6 +313,28 @@ export class BlasterGame {
       console.error(err);
     }
     requestAnimationFrame(this.frame);
+  }
+
+  /**
+   * 기기가 계속 버거워하면 (플레이 중 평균 45fps 미만이 1.5초 이상) 효과를 가볍게 → 그래도 느리면 해상도를 낮춘다.
+   * 사용자가 고른 '효과 낮게' 설정보다 높아지지는 않는다.
+   */
+  watchSpeed(raw) {
+    const pf = this.perf || (this.perf = { ema: 1 / 60, slowT: 0, level: 0 });
+    if (raw > 0.25) return; // 탭 전환 등 긴 멈춤은 빼고
+    pf.ema += (raw - pf.ema) * 0.08;
+    if (this.state !== "play") return;
+    if (pf.ema > 1 / 45) pf.slowT += raw;
+    else pf.slowT = Math.max(0, pf.slowT - raw * 0.5);
+    if (pf.slowT > 1.5 && pf.level < 2) {
+      pf.level++;
+      pf.slowT = 0;
+      if (pf.level === 1) this.fx.quality = Math.min(this.fx.quality, 0.6);
+      else if (this.view.setBudget) {
+        this.view.setBudget(1.4e6);
+        if (this.scene && this.scene.rebuild) this.scene.rebuild();
+      }
+    }
   }
 
   update(dt) {

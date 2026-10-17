@@ -39,13 +39,17 @@ export function setupCanvas(canvas, host, onResize) {
   const ctx = canvas.getContext("2d");
   let scale = 1;
   let dpr = 1;
+  // 캔버스 실제 픽셀 상한: 태블릿처럼 큰 화면에서 픽셀이 너무 많아 보스전에서 느려지지 않게
+  // (휴대폰 1.3백만 픽셀은 그대로, 태블릿 3.1백만 → 2.2백만). 기기가 계속 느리면 game.js 가 더 낮춘다.
+  let budget = 2.2e6;
   function resize() {
     const box = host.getBoundingClientRect();
     const before = H;
     if (box.width > 0 && box.height > 0) setLogicalHeight((W * box.height) / box.width);
     const fit = Math.min(box.width / W, box.height / H);
     scale = fit;
-    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cssPx = Math.max(1, W * fit * H * fit);
+    dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1, Math.sqrt(budget / cssPx)));
     canvas.style.width = `${Math.round(W * fit)}px`;
     canvas.style.height = `${Math.round(H * fit)}px`;
     canvas.width = Math.round(W * fit * dpr);
@@ -66,6 +70,12 @@ export function setupCanvas(canvas, host, onResize) {
     },
     get scale() {
       return scale;
+    },
+    /** 픽셀 상한 바꾸기 (느린 기기에서 자동으로 낮춘다) */
+    setBudget(px) {
+      if (px >= budget) return;
+      budget = px;
+      resize();
     },
     resetTransform() {
       ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
