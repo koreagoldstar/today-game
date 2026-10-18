@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "lava-surfers",
+      title: "용암 서핑",
+      tag: "3D 서핑 · 용암 추격 · 스턴트",
+      href: "/games/lava-surfers/",
+      thumb: "/assets/thumbs/lava-surfers.png",
+      category: "arcade",
+    },
+    {
       id: "sky-island",
       title: "하늘섬 대탈출",
       tag: "3D 탈출 · 6스테이지 · 보스전",
