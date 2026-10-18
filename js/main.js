@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "sky-island",
+      title: "하늘섬 대탈출",
+      tag: "3D 탈출 · 6스테이지 · 보스전",
+      href: "/games/sky-island/",
+      thumb: "/assets/thumbs/sky-island.png",
+      category: "arcade",
+    },
+    {
       id: "dragon-statue",
       title: "드래곤 석상 대작전",
       tag: "3D 모험 · 6지역 · 보스전",

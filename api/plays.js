@@ -97,10 +97,12 @@ module.exports = async function handler(req, res) {
     "jetski-race",
     "sea-monster",
     "dragon-statue",
+    "sky-island",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "sky-island",
     "dragon-statue",
     "sea-monster",
     "jetski-race",

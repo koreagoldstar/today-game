@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#8a7ad8" />
+    <title>하늘섬 대탈출 | Today Game</title>
+    <meta name="description" content="꼬마 모험가 토리를 직접 조종해 6개의 하늘섬을 탈출하는 3D 아케이드 게임. 구름 마을 · 바람 협곡 · 공중 항구 · 수정 구름 동굴 · 폭풍의 하늘성을 지나 고대 용의 성에서 거대한 기계 용과 최종 보스전!" />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/sky-island/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="하늘섬 대탈출 | Today Game" />
+    <meta property="og:description" content="6개의 하늘섬을 달리고 점프하고 대시해 탈출! 마지막엔 고대 기계 용과 최종 보스전 · 3D 아케이드 게임" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/sky-island/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/sky-island.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="sk is-title">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="하늘섬 대탈출 게임 화면"></canvas>
+
+        <!-- 불러오기 -->
+        <div class="loading" id="loading" role="status">
+          <div class="load-card">
+            <p class="load-k">SKY ISLAND ESCAPE</p>
+            <p class="load-h">하늘섬 대탈출</p>
+            <div class="load-bar"><b id="load-bar"></b></div>
+            <p class="load-t" id="load-t">하늘섬으로 날아가는 중…</p>
+          </div>
+        </div>
+
+        <!-- HUD -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-l">
+            <div class="hearts" id="hearts" role="img" aria-label="하트 3개"></div>
+            <p class="hud-orbs"><i class="orb-ic" aria-hidden="true"></i><b id="hud-orbs">0</b><small id="hud-orbs-total">/ 0</small></p>
+          </div>
+          <div class="hud-c">
+            <p class="hud-stage" id="hud-stage">1 · 구름 마을</p>
+            <div class="prog" id="prog-wrap" role="img" aria-label="진행"><i class="prog-bar"><b id="prog"></b></i><span class="prog-pin" id="prog-pin"></span><span class="prog-ship" aria-hidden="true"></span></div>
+            <p class="hud-time" id="hud-time">0:00.0</p>
+          </div>
+          <div class="hud-r">
+            <p class="hud-score"><small>점수</small><b id="hud-score">0</b></p>
+            <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.6" fill="#fff" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" fill="#fff" /></svg></button>
+          </div>
+        </header>
+        <div class="boss-bar" id="boss-bar" hidden><b id="boss-name">고대 기계 용</b><i class="boss-hp" id="boss-hp"></i></div>
+        <p class="dash-pc" id="dash-pc" aria-hidden="true"><b>Shift</b> 대시</p>
+        <div class="combo" id="combo" hidden><b id="combo-n">x3</b><small id="combo-t">콤보</small></div>
+        <p class="prompt" id="prompt" hidden></p>
+        <div class="banner" id="banner" hidden><small id="banner-k"></small><b id="banner-h"></b><span id="banner-t"></span></div>
+        <p class="toast" id="toast" hidden></p>
+        <div class="floaters" id="floaters" aria-hidden="true"></div>
+        <div class="flash" id="flash" aria-hidden="true"></div>
+
+        <!-- 모바일 조작 -->
+        <div class="touch-ui" id="touch-ui" aria-hidden="true">
+          <div class="joy-zone" id="joy-zone"><div class="joy-base" id="joy-base"><i class="joy-knob" id="joy-knob"></i></div><p class="joy-hint">여기를 누르고 밀어요</p></div>
+          <button type="button" class="tbtn t-dash" id="btn-dash" aria-label="대시"><span>대시</span></button>
+          <button type="button" class="tbtn t-jump" id="btn-jump" aria-label="점프"><span>점프</span></button>
+        </div>
+        <div class="fade" id="fade"></div>
+
+        <!-- 타이틀 -->
+        <section class="screen title" id="title" hidden aria-labelledby="title-h">
+          <div class="logo">
+            <p class="logo-k">SKY ISLAND ESCAPE</p>
+            <h1 id="title-h"><span class="l1">하늘섬</span><span class="l2">대탈출</span></h1>
+            <p class="logo-s">무너지는 섬을 달려 비행선까지!</p>
+          </div>
+          <div class="title-btns">
+            <button type="button" class="btn-main" id="start-btn">게임 시작</button>
+            <div class="title-row three">
+              <button type="button" class="btn-sub" id="stages-btn">스테이지 선택</button>
+              <button type="button" class="btn-sub" id="howto-btn">조작 방법</button>
+              <button type="button" class="btn-sub" id="sound-btn">사운드 설정</button>
+            </div>
+            <p class="title-best" id="title-best"></p>
+          </div>
+        </section>
+
+        <!-- 스테이지 선택 -->
+        <section class="screen panel" id="stages" hidden aria-labelledby="stages-h">
+          <div class="card stage-card">
+            <h2 id="stages-h">스테이지 선택</h2>
+            <p class="stages-sum" id="stages-sum"></p>
+            <div class="stage-grid" id="stage-grid"></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 조작 방법 -->
+        <section class="screen panel" id="howto" hidden aria-labelledby="howto-h">
+          <div class="card">
+            <h2 id="howto-h">조작 방법</h2>
+            <div class="howto-grid">
+              <div class="how-pc">
+                <h3>컴퓨터</h3>
+                <ul>
+                  <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · <kbd>←↑↓→</kbd><span>달리기</span></li>
+                  <li><kbd class="wide">Space</kbd><span>점프 (길게 누르면 더 높이)</span></li>
+                  <li><kbd class="wide">Shift</kbd><span>대시 (공중에서도 한 번)</span></li>
+                  <li><kbd>Esc</kbd><span>일시정지</span></li>
+                </ul>
+              </div>
+              <div class="how-touch">
+                <h3>휴대폰 · 패드</h3>
+                <ul>
+                  <li><i class="ic joy"></i><span>왼쪽 화면을 누르고 밀면 달려요</span></li>
+                  <li><i class="ic jump">점프</i><span>오른쪽 큰 버튼</span></li>
+                  <li><i class="ic dash">대시</i><span>점프 버튼 위</span></li>
+                </ul>
+              </div>
+            </div>
+            <ul class="tips">
+              <li>떨어지거나 위험한 것에 맞으면 하트가 하나 줄고, 마지막 <b>체크포인트</b>(깃발)에서 다시 시작해요.</li>
+              <li><b>에너지 구슬</b>을 이어서 모으면 콤보! 점수가 늘어나요. 스테이지마다 별 3개에 도전!</li>
+              <li>분홍 버섯 = 점프대 · 빛나는 고리 = 바람 부스터 · 바람 기둥 = 위로 휭!</li>
+              <li>미리 알려 줘요: 바닥 <b>빨간 줄</b> = 포탄 · <b>노란 원</b> = 번개 · <b>그림자 원</b> = 떨어지는 바위 · <b>깜빡이는 수정</b> = 곧 사라짐</li>
+              <li>최종 보스: 이마의 <b>수정이 빛나면</b> 대시로 머리에 부딪히거나 위에서 밟아요. 대시하는 동안은 다치지 않아요.</li>
+            </ul>
+            <button type="button" class="btn-main small" data-back>알겠어요</button>
+          </div>
+        </section>
+
+        <!-- 사운드 설정 -->
+        <section class="screen panel" id="sound" hidden aria-labelledby="sound-h">
+          <div class="card">
+            <h2 id="sound-h">사운드 설정</h2>
+            <label class="set-row"><span><b>배경 음악</b><small id="vol-musicVol-v">75</small></span><input type="range" min="0" max="100" step="5" id="vol-musicVol" aria-label="배경 음악 크기" /></label>
+            <label class="set-row"><span><b>효과음</b><small id="vol-sfxVol-v">90</small></span><input type="range" min="0" max="100" step="5" id="vol-sfxVol" aria-label="효과음 크기" /></label>
+            <label class="set-row chk"><span><b>모든 소리 끄기</b><small>사이트 전체 음소거</small></span><input type="checkbox" id="mute-all" /></label>
+            <div class="set-row"><span><b>그래픽</b><small>느리면 '가볍게'</small></span>
+              <div class="seg" role="radiogroup" aria-label="그래픽">
+                <button type="button" role="radio" data-q="auto">자동</button><button type="button" role="radio" data-q="high">좋게</button><button type="button" role="radio" data-q="low">가볍게</button>
+              </div>
+            </div>
+            <button type="button" class="btn-main small" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section class="screen panel" id="pause" hidden aria-labelledby="pause-h">
+          <div class="card">
+            <h2 id="pause-h">잠깐 쉬어요</h2>
+            <button type="button" class="btn-main" id="pause-resume">계속하기</button>
+            <button type="button" class="btn-sub wide" id="pause-cp">체크포인트에서 다시</button>
+            <button type="button" class="btn-sub wide" id="pause-restart">처음부터 다시</button>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="pause-howto">조작 방법</button>
+              <button type="button" class="btn-sub" id="pause-sound">사운드 설정</button>
+            </div>
+            <div class="title-row three">
+              <button type="button" class="btn-sub" id="pause-select">스테이지 선택</button>
+              <button type="button" class="btn-sub" id="pause-title">타이틀로</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 탈출 성공 -->
+        <section class="screen panel result" id="result" hidden aria-labelledby="res-h">
+          <div class="card result-card">
+            <p class="res-k" id="res-k">STAGE 1 · 구름 마을</p>
+            <h2 id="res-h">탈출 성공!</h2>
+            <div class="res-stars" id="res-stars"></div>
+            <ul class="star-rules" id="star-rules"></ul>
+            <p class="res-score"><small>총점</small><b id="res-score">0</b></p>
+            <ul class="res-rows" id="res-rows"></ul>
+            <p class="res-falls" id="res-falls"></p>
+            <div class="res-records" id="res-records"></div>
+            <p class="res-unlock" id="res-unlock" hidden></p>
+            <button type="button" class="btn-main" id="res-next">다음 스테이지</button>
+            <div class="title-row three">
+              <button type="button" class="btn-sub" id="res-again">다시 하기</button>
+              <button type="button" class="btn-sub" id="res-select">스테이지 선택</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 게임 오버 -->
+        <section class="screen panel" id="over" hidden aria-labelledby="over-h">
+          <div class="card">
+            <p class="res-k">GAME OVER</p>
+            <h2 id="over-h">하트를 모두 잃었어요</h2>
+            <div class="over-stats" id="over-stats"></div>
+            <button type="button" class="btn-main" id="over-cp">체크포인트에서 이어하기</button>
+            <button type="button" class="btn-sub wide" id="over-again">이 스테이지 처음부터</button>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="over-select">스테이지 선택</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 엔딩 -->
+        <section class="screen panel ending" id="ending" hidden aria-labelledby="end-h">
+          <div class="card result-card end-card">
+            <p class="res-k">THE END · 하늘섬 대탈출</p>
+            <h2 id="end-h">모든 하늘섬을 탈출했어요!</h2>
+            <p class="end-t">고대 기계 용을 쓰러뜨리고, 토리와 비행선은 무너지는 용의 성을 빠져나왔어요. 구름 너머로 새로운 하늘이 밝아 와요.</p>
+            <p class="res-score"><small>모든 스테이지 최고 점수 합</small><b id="end-total">0</b></p>
+            <ul class="end-list" id="end-list"></ul>
+            <div class="res-records" id="end-records"></div>
+            <div class="rank-slot" id="end-rank"></div>
+            <div class="title-row three">
+              <button type="button" class="btn-sub" id="end-select">스테이지 선택</button>
+              <button type="button" class="btn-sub" id="end-title">타이틀로</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3D 를 못 쓰는 기기 -->
+        <section class="screen panel" id="fallback" hidden>
+          <div class="card">
+            <h2>3D 그래픽을 켤 수 없어요</h2>
+            <p>이 기기나 브라우저에서는 하늘섬을 그릴 수 없어요. 크롬 · 사파리 최신 버전에서 다시 열거나, 다른 게임을 즐겨 보세요!</p>
+            <a class="btn-main" href="/">다른 게임 보러 가기</a>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+    <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="하늘섬 대탈출 소개">
+  <h2>하늘섬 대탈출 소개</h2>
+  <p>꼬마 모험가 토리를 직접 조종해 구름 바다 위 여섯 개의 하늘섬을 차례로 탈출하는 3D 3인칭 아케이드 게임입니다. 노을 진 구름 마을에서 무너지는 섬을 빠져나가고, 붉은 바위 절벽 사이로 바람이 부는 바람 협곡, 짐 나르는 띠와 대포와 크레인이 있는 공중 항구, 나타났다 사라지는 수정 발판과 떨어지는 고드름 수정의 수정 구름 동굴, 번개와 가시와 톱니바퀴가 기다리는 폭풍의 하늘성을 지나요. 마지막 고대 용의 성에서는 거대한 고대 기계 용이 다리 위를 쫓아오고, 아레나에서 불 뿜기 · 꼬리 휩쓸기 · 발톱 내려찍기 · 불덩이 비를 피해 약점을 공격하는 최종 보스전이 펼쳐져요. 용을 쓰러뜨리고 무너지는 성에서 비행선으로 탈출하면 엔딩! 스테이지마다 별 3개를 모으고, 여섯 스테이지 최고 점수 합으로 랭킹에 도전해 보세요.</p>
+  <h3>플레이 방법</h3>
+  <p>컴퓨터에서는 WASD 또는 방향키로 달리고, Space 로 점프(길게 누를수록 높이), Shift 로 대시(공중에서도 한 번)를 써요. Esc 는 일시정지예요. 휴대폰과 패드에서는 왼쪽 화면을 누르고 밀면 조이스틱이 생기고, 오른쪽의 점프 · 대시 버튼을 누르면 돼요. 위험한 것은 미리 알려 줘요: 바닥의 빨간 줄은 포탄, 차오르는 노란 원은 번개, 그림자 원은 떨어지는 바위, 깜빡이는 수정 발판은 곧 사라져요. 떨어지거나 세 번 맞으면 하트가 줄고, 체크포인트 깃발에서 다시 시작해요. 보스의 이마 수정이 빛나면 대시로 머리에 부딪히거나 위에서 밟아요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>스테이지는 몇 개인가요?</dt>
+    <dd>구름 마을, 바람 협곡, 공중 항구, 수정 구름 동굴, 폭풍의 하늘성, 고대 용의 성(최종 보스)까지 6개예요. 앞 스테이지를 깨면 다음 스테이지가 열리고, 깬 스테이지는 언제든 다시 할 수 있어요.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>클리어하면 별 1개, 에너지 구슬을 70% 이상 모으면 1개, 떨어지거나 맞은 횟수가 1번 이하이면 1개를 더 받아요.</dd>
+    <dt>보스전에서 지면 처음부터 하나요?</dt>
+    <dd>아니요. 보스전 직전 체크포인트에서 다시 시작하고, 보스 체력은 지금 단계의 처음부터 이어져요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>스테이지별 최고 점수 · 시간 · 별과 설정은 이 기기에만 저장돼요. 엔딩에서 랭킹에 이름을 올릴 때만 닉네임과 점수를 보내요. 결제나 뽑기는 없어요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+
+
+  </body>
+</html>

@@ -83,6 +83,8 @@ module.exports = async function handler(req, res) {
     // 드래곤 석상 대작전: 일반 모험 점수 · 오늘의 도전(날짜별 같은 문제) 점수를 따로
     "dragon-statue",
     "dragon-daily",
+    // 하늘섬 대탈출: 엔딩에서 6스테이지 최고 점수 합
+    "sky-island",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms, 제트스키 완주 기록 ms 등) */
   const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12"]);
