@@ -35,7 +35,7 @@
       tag: "3D 모험 · 6지역 · 보스전",
       href: "/games/dragon-statue/",
       thumb: "/assets/thumbs/dragon-statue.png",
-      category: "action",
+      category: "arcade",
     },
     {
       id: "sea-monster",
