@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2f6a3a" />
+    <title>꼬마 동물단: 드래곤 석상 대작전! | Today Game</title>
+    <meta name="description" content="병아리 · 새끼곰 · 새끼토끼 · 새끼수달과 함께 드래곤 석상의 봉인을 풀고 3D 모험을 떠나요! 달리고 점프하고 방망이로 쾅! 정글 · 폭포 계곡 · 수정 동굴 · 화산 · 얼음 성 · 고대 용의 성을 지나 거대한 드래곤 보스와 겨뤄 보세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/dragon-statue/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="꼬마 동물단: 드래곤 석상 대작전! | Today Game" />
+    <meta property="og:description" content="드래곤 석상의 봉인을 풀고 떠나는 3인칭 3D 모험! 점프 · 대시 · 방망이로 6개 지역과 드래곤 보스를 넘어 보세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/dragon-statue/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/dragon-statue.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="ds is-title">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="드래곤 석상 대작전 게임 화면"></canvas>
+        <div class="loading" id="loading" role="status"><i class="spin"></i><p>드래곤 석상을 깨우는 중…</p></div>
+
+        <!-- 석상 퍼즐 HUD -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-row">
+            <div class="hud-stage"><b id="hud-stage">STAGE 1</b><small id="hud-area">햇살 숲</small></div>
+            <div class="hearts" id="hearts" role="img" aria-label="하트 3개"></div>
+            <div class="hud-score"><span data-icon="star"></span><b id="hud-score">0</b></div>
+            <div class="hud-tools">
+              <button type="button" class="round-btn hint-btn" id="hint-btn" aria-label="힌트 쓰기"><span data-icon="hint"></span><i id="hint-n">3</i></button>
+              <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><span data-icon="pause"></span></button>
+              <button type="button" class="round-btn" id="sound-btn" data-sound aria-label="소리 끄기"></button>
+            </div>
+          </div>
+          <div class="timer" id="timer"><span class="timer-ic" data-icon="timer"></span><i class="timer-bar"><b id="timer-fill"></b></i><span class="timer-t" id="timer-t">30</span></div>
+          <p class="hud-goal" id="hud-goal">크기가 다른 석상 1개를 찾아요!</p>
+        </header>
+
+        <!-- 모험 HUD -->
+        <header class="adv-hud" id="adv-hud" hidden>
+          <div class="adv-row">
+            <p class="adv-region" id="adv-region">1 · 초록 정글</p>
+            <div class="hearts" id="adv-hearts" role="img" aria-label="하트 3개"></div>
+            <p class="adv-gems"><span class="gem-ic" aria-hidden="true"></span><b id="adv-gems">0</b><small id="adv-gem-total">/ 0</small></p>
+            <div class="hud-tools">
+              <button type="button" class="round-btn" id="adv-pause" aria-label="일시정지"><span data-icon="pause"></span></button>
+              <button type="button" class="round-btn" data-sound aria-label="소리 끄기"></button>
+            </div>
+          </div>
+          <div class="adv-prog" id="adv-prog-wrap" role="img" aria-label="진행 0%"><i class="adv-prog-bar"><b id="adv-prog"></b></i><span class="adv-flag" aria-hidden="true"></span></div>
+          <div class="boss-bar" id="boss-bar" hidden><b id="boss-name">고대 숲 드래곤</b><i class="boss-hp" id="boss-hp"></i></div>
+        </header>
+        <p class="adv-prompt" id="adv-prompt" hidden><span class="pr-ic" id="prompt-ic"></span><span id="prompt-t"></span></p>
+
+        <!-- 모바일 조작 -->
+        <div class="touch-ui" id="touch-ui" aria-hidden="true">
+          <div class="joy-zone" id="joy-zone"><div class="joy-base" id="joy-base"><i class="joy-knob" id="joy-knob"></i></div><p class="joy-hint">여기를 누르고 밀어요</p></div>
+          <button type="button" class="tbtn t-dash" id="btn-dash" aria-label="대시"><span>대시</span></button>
+          <button type="button" class="tbtn t-attack" id="btn-attack" aria-label="방망이 공격"><span>방망이</span></button>
+          <button type="button" class="tbtn t-jump" id="btn-jump" aria-label="점프"><span>점프</span></button>
+        </div>
+
+        <div class="seals" id="seals" hidden aria-label="보스 봉인"><i></i><i></i><i></i></div>
+        <div class="combo" id="combo" hidden><b id="combo-n">2</b><small>COMBO</small><p id="combo-msg"></p></div>
+        <div class="floaters" id="floaters" aria-hidden="true"></div>
+        <p class="toast" id="toast" hidden role="status"></p>
+        <div class="banner" id="banner" hidden><p class="banner-k" id="banner-k"></p><h2 id="banner-h"></h2><p class="banner-s" id="banner-s"></p></div>
+        <div class="count" id="count" hidden aria-live="assertive"></div>
+        <div class="pointer" id="pointer" hidden aria-hidden="true"><i></i></div>
+        <div class="fade" id="fade"></div>
+
+        <!-- 타이틀 -->
+        <section class="screen title" id="title" aria-labelledby="title-h">
+          <div class="title-top">
+            <p class="chip" id="chip-best"><span data-icon="trophy"></span><b id="best-label">첫 모험!</b></p>
+            <p class="chip"><span class="gem-ic" aria-hidden="true"></span><b id="gem-label">0</b></p>
+            <button type="button" class="chip chip-btn" data-sound aria-label="소리 끄기"></button>
+          </div>
+          <div class="logo">
+            <p class="logo-k">꼬마 동물단</p>
+            <h1 id="title-h" aria-label="꼬마 동물단 드래곤 석상 대작전">
+              <span class="l1">드래곤 석상</span>
+              <span class="l2">대작전!</span>
+            </h1>
+            <p class="logo-s">봉인을 풀고 3D 모험을 떠나요!</p>
+          </div>
+          <div class="title-btns">
+            <button type="button" class="btn-main" id="start-btn"><span class="ic" data-icon="bat"></span><span class="txt"><b>모험 시작</b><small id="start-sub">캐릭터를 고르고 출발</small></span></button>
+            <div class="title-grid">
+              <button type="button" class="btn-tile" id="regions-btn"><span class="ic" data-icon="map"></span><b>지역 선택</b></button>
+              <button type="button" class="btn-tile" id="char-btn"><span class="ic" data-icon="paw"></span><b>캐릭터</b></button>
+              <button type="button" class="btn-tile" id="collection-btn"><span class="ic" data-icon="book"></span><b>수집 도감</b><i class="badge" id="col-badge" hidden>!</i></button>
+              <button type="button" class="btn-tile" id="challenge-btn"><span class="ic" data-icon="dragon"></span><b>석상 챌린지</b><i class="badge" id="daily-badge" hidden>NEW</i></button>
+              <button type="button" class="btn-tile" id="settings-btn"><span class="ic" data-icon="settings"></span><b>설정</b></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 캐릭터 선택 -->
+        <section class="screen select" id="select" hidden aria-labelledby="select-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="select-h">누구랑 갈까요?</h2>
+            <p class="panel-r" id="select-mode">모험</p>
+          </header>
+          <div class="select-bottom">
+            <div class="select-info" id="select-info"><b id="sel-name">병아리</b><small id="sel-tag">밝고 용감해요</small><p class="same">네 친구 모두 실력은 똑같아요! (꾸미기도 모양만 바뀌어요)</p></div>
+            <div class="char-row" id="char-row" role="radiogroup" aria-label="캐릭터"></div>
+            <div class="bat-row-wrap">
+              <div class="ward-tabs" role="tablist" aria-label="꾸미기">
+                <button type="button" role="tab" class="on" data-ward="bat"><span data-icon="bat"></span>방망이</button>
+                <button type="button" role="tab" data-ward="hat"><span data-icon="crown"></span>모자</button>
+                <button type="button" role="tab" data-ward="deco"><span data-icon="star"></span>장식</button>
+              </div>
+              <div class="bat-row" id="bat-row" role="radiogroup" aria-label="꾸미기 고르기"></div>
+            </div>
+            <button type="button" class="btn-main go" id="go-btn"><span class="ic" data-icon="play"></span><span class="txt"><b>출발!</b></span></button>
+          </div>
+        </section>
+
+        <!-- 지역 선택 -->
+        <section class="screen panel" id="regions" hidden aria-labelledby="regions-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="regions-h">지역 선택</h2>
+            <p class="panel-r" id="regions-stars">★ 0 / 18</p>
+          </header>
+          <div class="panel-body"><div class="region-grid" id="region-grid"></div></div>
+        </section>
+
+        <!-- 석상 챌린지 -->
+        <section class="screen panel" id="challenge" hidden aria-labelledby="ch-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="ch-h">석상 챌린지</h2>
+            <p class="panel-r" id="ch-stars">★ 0</p>
+          </header>
+          <div class="panel-body"><div class="challenge-card" id="challenge-card"></div></div>
+        </section>
+
+        <!-- 수집 도감 -->
+        <section class="screen panel" id="collection" hidden aria-labelledby="col-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="col-h">수집 도감</h2>
+            <p class="panel-r" id="col-count">0 / 6</p>
+          </header>
+          <div class="panel-body">
+            <h3 class="sec-h"><span data-icon="dragon"></span>드래곤 알 <small>지역 보스를 이기면</small></h3>
+            <div class="fairy-grid" id="egg-grid"></div>
+            <h3 class="sec-h"><span data-icon="trophy"></span>지역 배지</h3>
+            <div class="badge-grid" id="badge-grid"></div>
+            <h3 class="sec-h"><span data-icon="crown"></span>꾸미기</h3>
+            <div class="bat-list" id="ward-list"></div>
+            <h3 class="sec-h"><span data-icon="star"></span>꼬마 드래곤 요정 <small>석상 챌린지</small></h3>
+            <div class="fairy-grid" id="fairy-grid"></div>
+            <h3 class="sec-h"><span data-icon="trophy"></span>내 기록</h3>
+            <div class="stats" id="stats"></div>
+          </div>
+        </section>
+
+        <!-- 오늘의 도전 -->
+        <section class="screen panel" id="daily" hidden aria-labelledby="daily-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="daily-h">오늘의 도전</h2>
+            <p class="panel-r" id="daily-date"></p>
+          </header>
+          <div class="panel-body"><div class="daily-card" id="daily-card"></div></div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel" id="settings" hidden aria-labelledby="set-h">
+          <header class="panel-head">
+            <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
+            <h2 id="set-h">설정</h2>
+          </header>
+          <div class="panel-body"><div class="set-list" id="set-list"></div></div>
+        </section>
+
+        <!-- 지역 시작 카드 (별 기준) -->
+        <section class="screen intro" id="stage-intro" hidden aria-labelledby="si-h">
+          <div class="intro-card" id="intro-card">
+            <p class="rule-k" id="si-k">지역 1</p>
+            <h2 id="si-h">초록 정글</h2>
+            <p class="si-en" id="si-en">GREEN JUNGLE</p>
+            <p class="si-t" id="si-t"></p>
+            <ul class="si-goals" id="si-goals"></ul>
+            <p class="si-boss" id="si-boss"></p>
+            <p class="si-tap">화면을 누르면 바로 출발!</p>
+          </div>
+        </section>
+
+        <!-- 규칙 카드 -->
+        <section class="screen rule" id="rule" hidden aria-labelledby="rule-h">
+          <div class="rule-card">
+            <p class="rule-k" id="rule-k">STAGE 1</p>
+            <h2 id="rule-h">크기가 다른 석상 찾기</h2>
+            <div class="rule-pic" id="rule-pic" aria-hidden="true"></div>
+            <p class="rule-t" id="rule-t">크기가 다른 석상 1개를 찾아 방망이로 쾅!</p>
+            <ul class="rule-notes" id="rule-notes"></ul>
+            <button type="button" class="btn-res primary" id="rule-ok"><span data-icon="check"></span>알겠어요!</button>
+          </div>
+        </section>
+
+        <!-- 튜토리얼 말풍선 (석상 챌린지) -->
+        <div class="tutor" id="tutor" hidden><p id="tutor-t">크기가 다른 석상을 찾아서 눌러 봐요!</p><button type="button" class="btn-skip" id="tutor-skip">건너뛰기</button></div>
+
+        <!-- 보상 -->
+        <section class="screen reward" id="reward" hidden aria-labelledby="reward-h">
+          <div class="reward-card">
+            <p class="reward-k" id="reward-k">새 친구!</p>
+            <div class="reward-pic" id="reward-pic"></div>
+            <h2 id="reward-h">숲 드래곤</h2>
+            <p class="reward-t" id="reward-t">친구 도감에 들어왔어요</p>
+            <button type="button" class="btn-res primary" id="reward-ok"><span data-icon="check"></span>좋아요!</button>
+          </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section class="screen pause" id="pause" hidden aria-labelledby="pause-h">
+          <div class="pause-card">
+            <p class="pause-k">PAUSE</p>
+            <h2 id="pause-h">잠깐 쉬어요</h2>
+            <p class="pause-keys" id="pause-keys">이동 WASD · 점프 Space · 대시 Shift · 방망이 J / 클릭</p>
+            <button type="button" class="btn-res primary" id="pause-resume"><span data-icon="play"></span>계속하기</button>
+            <button type="button" class="btn-res" id="pause-retry"><span data-icon="retry"></span>처음부터</button>
+            <button type="button" class="btn-res" id="pause-quit"><span data-icon="home"></span>그만하기</button>
+          </div>
+        </section>
+
+        <!-- 결과 (석상 챌린지) -->
+        <section class="screen result" id="result" hidden>
+          <div class="result-card" id="result-card">
+            <div class="res-top"><img class="res-char" id="res-char" alt="" /><div><p class="res-k" id="res-k">GAME OVER</p><h2 id="res-h">멋진 모험이었어요!</h2></div></div>
+            <div class="res-stars" id="res-stars"></div>
+            <dl class="res-stats" id="res-stats"></dl>
+            <div class="res-unlocks" id="res-unlocks"></div>
+            <div class="rank-slot" id="rank-slot"></div>
+            <div class="res-btns">
+              <button type="button" class="btn-res primary big" id="res-retry"><span data-icon="retry"></span>다시 하기</button>
+              <button type="button" class="btn-res primary big" id="res-continue" hidden><span data-icon="next"></span>계속 도전</button>
+              <div class="res-row">
+                <button type="button" class="btn-res" id="res-char-btn"><span data-icon="paw"></span>캐릭터</button>
+                <button type="button" class="btn-res" id="res-title"><span data-icon="home"></span>처음으로</button>
+                <a class="btn-res" href="/" id="res-site"><span data-icon="back"></span>사이트로</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 결과 (모험: 지역 완료 · 게임 오버 · 승리) -->
+        <section class="screen result" id="adv-result" hidden>
+          <div class="result-card" id="adv-card">
+            <div class="res-top"><img class="res-char" id="ar-char" alt="" /><div><p class="res-k" id="ar-k">지역 완료</p><h2 id="ar-h">초록 정글 완주!</h2></div></div>
+            <div class="res-stars" id="ar-stars"></div>
+            <ul class="ar-crit" id="ar-crit"></ul>
+            <dl class="res-stats" id="ar-stats"></dl>
+            <div class="res-unlocks" id="ar-unlocks"></div>
+            <div class="rank-slot" id="ar-rank"></div>
+            <div class="res-btns">
+              <button type="button" class="btn-res primary big" id="ar-main"><span data-icon="next"></span>다음 지역</button>
+              <div class="res-row">
+                <button type="button" class="btn-res" id="ar-b1"><span data-icon="retry"></span>다시 하기</button>
+                <button type="button" class="btn-res" id="ar-b2"><span data-icon="map"></span>지도</button>
+                <a class="btn-res" href="/" id="ar-site"><span data-icon="back"></span>사이트로</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3D 를 못 쓰는 기기 -->
+        <section class="screen fallback" id="fallback" hidden>
+          <div class="pause-card">
+            <h2>3D 그래픽을 켤 수 없어요</h2>
+            <p>이 기기나 브라우저에서는 3D 모험을 그릴 수 없어요. 크롬 · 사파리 최신 버전에서 다시 열거나, 다른 게임을 즐겨 보세요!</p>
+            <a class="btn-res primary" href="/"><span data-icon="home"></span>다른 게임 보러 가기</a>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+    <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="꼬마 동물단: 드래곤 석상 대작전! 소개">
+  <h2>꼬마 동물단: 드래곤 석상 대작전! 소개</h2>
+  <p>병아리 · 새끼곰 · 새끼토끼 · 새끼수달 꼬마 동물단이 나무 방망이를 들고 드래곤 왕국을 누비는 3D 3인칭 어린이 액션 모험 게임입니다. 지역 입구마다 크기가 다른 드래곤 석상 하나를 찾아 방망이로 쾅! 봉인을 풀면, 문 너머로 달리고 뛰고 대시하며 수정을 모으는 모험 길이 열려요. 초록 정글, 폭포 계곡, 수정 동굴, 화산 왕국, 얼음 드래곤 성, 고대 용의 성까지 6개 지역마다 통나무, 흔들다리, 움직이는 발판, 무너지는 바닥, 불기둥, 구르는 바위, 고드름, 바람이 다르게 나오고, 귀여운 도마뱀, 꼬마 드래곤, 박쥐, 불꽃 정령, 얼음 슬라임, 석상 수호자가 길을 막아요. 지역 끝에서는 꼬리 휘두르기, 돌진, 바닥 충격파, 떨어지는 바위를 쓰는 거대 드래곤 보스가 기다립니다. 석상 찾기만 즐기는 석상 챌린지 30단계와 날짜마다 바뀌는 오늘의 도전도 함께 들어 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>컴퓨터에서는 WASD 또는 방향키로 달리고, Space 로 점프(길게 누를수록 높이), Shift 로 대시(대시 중에는 안 아파요), J 키나 마우스 클릭으로 방망이를 휘둘러요. Esc 는 일시정지예요. 휴대폰과 패드에서는 왼쪽 화면을 누르고 밀면 그 자리에 조이스틱이 생기고, 오른쪽의 점프 · 방망이 · 대시 버튼을 누르면 돼요. 적이 빨간 표시를 보이면 피했다가 어질어질할 때 콩! 보스는 지치거나 벽에 부딪혀 이마의 수정이 빛날 때만 맞힐 수 있어요. 떨어지거나 맞으면 하트가 하나 줄고, 마지막으로 지난 체크포인트에서 다시 시작해요. 하트 3개를 모두 잃으면 다시 도전할 수 있어요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>네 캐릭터는 실력이 다른가요?</dt>
+    <dd>아니요. 병아리, 새끼곰, 새끼토끼, 새끼수달 모두 속도, 점프, 공격이 똑같고 모양과 몸짓만 달라요. 방망이 · 모자 · 장식 꾸미기도 모양만 바뀌어요.</dd>
+    <dt>별과 보상은 어떻게 받나요?</dt>
+    <dd>지역을 완주하면 별 1개, 수정을 목표만큼 모으면 1개, 맞거나 떨어진 횟수가 기준 이하이면 1개를 더 받아요. 보스를 이기면 드래곤 알과 배지를 얻고, 진행에 따라 꾸미기가 열려요.</dd>
+    <dt>석상 찾기만 하고 싶어요.</dt>
+    <dd>타이틀의 '석상 챌린지'에서 크기가 다른 석상을 찾는 30단계 모드와, 날짜마다 같은 10판이 나오는 오늘의 도전을 할 수 있어요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>지역 기록, 별, 드래곤 알, 배지, 꾸미기, 설정은 이 기기에만 저장돼요. 랭킹에 이름을 올릴 때만 닉네임과 점수를 보내요. 결제나 뽑기는 없어요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>

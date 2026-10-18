@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "dragon-statue",
+      title: "드래곤 석상 대작전",
+      tag: "3D 모험 · 6지역 · 보스전",
+      href: "/games/dragon-statue/",
+      thumb: "/assets/thumbs/dragon-statue.png",
+      category: "action",
+    },
+    {
       id: "sea-monster",
       face: true,
       title: "바다괴물 탐험대",
