@@ -12,8 +12,8 @@
  *  모양: 길을 가로지르는 거대한 용암 파도(앞이 말려 올라감 · 출렁) + 그 뒤로 길을 덮은 용암 + 연기 · 불티 · 빛
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { lavaTex, dotTex, puffTex } from "./tex.js?v=1";
-import { PH } from "./player.js?v=1";
+import { lavaTex, dotTex, puffTex } from "./tex.js?v=2";
+import { PH } from "./player.js?v=2";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -25,11 +25,14 @@ function keyed(list, s) {
 }
 
 export class LavaChase {
-  constructor(track, scene, course, { quality = 1 } = {}) {
+  constructor(track, scene, course, { quality = 1, scale = 1 } = {}) {
     this.T = track;
     this.scene = scene;
     this.course = course;
     this.q = quality;
+    this.scale = scale; // 파도 크기 (추격전 스테이지는 더 크게)
+    this.off = !!course.noLava; // 보스전: 용암 추격 없음
+    this.boost = 0; // 연출용 일시 가속 (m/s)
     this.root = new THREE.Group();
     scene.add(this.root);
     this.lavaS = 0;
@@ -51,13 +54,18 @@ export class LavaChase {
   update(dt, player, playing) {
     this.t += dt;
     const c = this.course;
+    this.root.visible = !this.off;
+    if (this.off) {
+      this.d = 999;
+      return { d: 999, danger: 0, caught: false };
+    }
     if (playing) {
       const ps = player.s;
       const L = keyed(c.lava, ps);
       const d = ps - this.lavaS;
       const ref = this.refSpeed(ps) * L.k;
       let v = d > L.gap ? ref + 0.15 * Math.min(40, d - L.gap) : ref - 0.06 * (L.gap - d);
-      v = Math.max(8, v);
+      v = Math.max(8, v) + this.boost;
       this.v += (v - this.v) * Math.min(1, dt * 2);
       this.lavaS = Math.min(c.lavaStop, this.lavaS + this.v * dt);
     }
@@ -243,7 +251,7 @@ export class LavaChase {
         T.frame(Math.max(0, s), f);
         const surf = T.surfaceY(s, clamp(u, -T.halfWidth(s), T.halfWidth(s)));
         const base = surf == null ? T.lavaY(s) : surf;
-        const y = base + h * swell + e * 1.2 + (k > 0.3 ? wob * 0.15 : 0);
+        const y = base + h * swell * this.scale + e * 1.2 + (k > 0.3 ? wob * 0.15 : 0);
         p.setXYZ(j * (R + 1) + i, f.x + f.rx * u, y, f.z + f.rz * u);
         if (i === this.TIP) {
           cp.setXYZ(j * 2, f.x + f.rx * u + f.tx * 0.15, y + 0.12, f.z + f.rz * u + f.tz * 0.15);

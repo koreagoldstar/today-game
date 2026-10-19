@@ -83,14 +83,24 @@ function pixels(ctx, w, h, fn) {
 const mix = (a, b, t) => a + (b - a) * t;
 const mixC = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
 
-/** 경사면: 검은 화산암 + 회색 화산재 얼룩 + 가늘게 빛나는 틈 (glow=true 면 빛나는 부분만) */
-function slopePixels(glowOnly) {
+/* ---------------- 바닥 (테마별) ----------------
+ *  map 은 색, glow 는 스스로 빛나는 부분(빛나는 틈 · 이음매)만. 둘 다 이음매 없이 타일링.
+ */
+const GROUND = {
+  basalt: { dark: [44, 38, 42], ash: [128, 118, 116], ashAmt: 2.6, hotMod: 5, glow: [255, 120, 44], cells: 26 },
+  redrock: { dark: [92, 46, 34], ash: [168, 104, 72], ashAmt: 2.2, hotMod: 9, glow: [255, 140, 60], cells: 22 },
+  ashfield: { dark: [64, 60, 62], ash: [156, 150, 144], ashAmt: 3.2, hotMod: 6, glow: [255, 110, 40], cells: 30 },
+  obsidian: { dark: [28, 22, 34], ash: [86, 74, 92], ashAmt: 1.6, hotMod: 4, glow: [255, 96, 70], cells: 24 },
+  scorched: { dark: [40, 26, 26], ash: [110, 70, 60], ashAmt: 2.0, hotMod: 3, glow: [255, 100, 36], cells: 28 },
+  storm: { dark: [50, 50, 58], ash: [120, 122, 132], ashAmt: 2.4, hotMod: 7, glow: [255, 130, 70], cells: 26 },
+};
+function voronoiGround(P, glowOnly) {
   return (ctx, w, h) => {
     const n1 = makeNoise(301);
     const n2 = makeNoise(307);
     const rnd = seeded(311);
     const cells = [];
-    for (let i = 0; i < 26; i++) cells.push([rnd() * w, rnd() * h]);
+    for (let i = 0; i < P.cells; i++) cells.push([rnd() * w, rnd() * h]);
     pixels(ctx, w, h, (x, y) => {
       let d1 = 1e9;
       let d2 = 1e9;
@@ -113,27 +123,193 @@ function slopePixels(glowOnly) {
         }
       }
       const edge = Math.sqrt(d2) - Math.sqrt(d1);
-      const hot = (Math.min(i1, i2) * 5 + Math.max(i1, i2) * 11) % 5 === 0;
+      const hot = (Math.min(i1, i2) * 5 + Math.max(i1, i2) * 11) % P.hotMod === 0;
       const a = fbm(n1, (x / w) * 5, (y / h) * 5, 4, 5);
       const g = fbm(n2, (x / w) * 16, (y / h) * 16, 2, 16);
-      // 화산재 (밝은 회색) 얼룩
-      let c = mixC([44, 38, 42], [128, 118, 116], Math.max(0, (a - 0.48) * 2.6));
+      // 화산재 (밝은) 얼룩
+      let c = mixC(P.dark, P.ash, Math.max(0, (a - 0.48) * P.ashAmt));
       c = c.map((v) => v * (0.85 + g * 0.3));
       // 틈: 가운데는 밝고 바깥으로 부드럽게 (계단처럼 보이지 않게)
       let glow = 0;
       if (hot && edge < 3.2) glow = Math.pow(1 - edge / 3.2, 1.6);
       else if (edge < 1.4) c = c.map((v) => v * (0.55 + edge * 0.2));
-      if (glowOnly) return glow ? [255 * glow, 110 * glow, 40 * glow] : [0, 0, 0];
-      if (glow) c = mixC(c, [255, 120, 44], glow);
+      const gc = P.glow;
+      if (glowOnly) return glow ? [gc[0] * glow, gc[1] * glow * 0.9, gc[2] * glow * 0.9] : [0, 0, 0];
+      if (glow) c = mixC(c, gc, glow);
       return c;
     });
   };
 }
+/** 돌다리: 엇갈린 돌판 + 이음매 틈으로 아래 용암 빛 */
+function slabGround(glowOnly) {
+  return (ctx, w, h) => {
+    const n1 = makeNoise(341);
+    const n2 = makeNoise(343);
+    const rows = 4;
+    const rh = h / rows;
+    pixels(ctx, w, h, (x, y) => {
+      const r = Math.floor(y / rh);
+      const cw = w / 2;
+      const off = r % 2 ? cw / 2 : 0;
+      const cx = (((x + off) % cw) + cw) % cw;
+      const cy = y - r * rh;
+      const e = Math.min(cx, cw - cx, cy, rh - cy);
+      const id = r * 7 + Math.floor((x + off) / cw);
+      const tone = 0.82 + ((id * 37) % 11) / 40;
+      const a = fbm(n1, (x / w) * 6, (y / h) * 6, 4, 6);
+      const g = fbm(n2, (x / w) * 20, (y / h) * 20, 2, 20);
+      const c = mixC([78, 70, 70], [126, 116, 110], a).map((v) => v * tone * (0.88 + g * 0.24));
+      let glow = 0;
+      let cc = c;
+      if (e < 3) {
+        const k = 1 - e / 3;
+        cc = c.map((v) => v * (1 - k * 0.65));
+        glow = k * k * 0.55;
+      }
+      if (glowOnly) return [255 * glow, 100 * glow, 34 * glow];
+      return mixC(cc, [255, 120, 50], glow * 0.6);
+    });
+  };
+}
+/** 마그마 발전소 바닥: 쇠판 + 리벳 + 빛나는 이음매 */
+function plateGround(glowOnly) {
+  return (ctx, w, h) => {
+    const n1 = makeNoise(351);
+    const n2 = makeNoise(353);
+    const pw = w / 2;
+    pixels(ctx, w, h, (x, y) => {
+      const cx = x % pw;
+      const cy = y % pw;
+      const e = Math.min(cx, pw - cx, cy, pw - cy);
+      const a = fbm(n1, (x / w) * 4, (y / h) * 4, 4, 4);
+      const g = fbm(n2, (x / w) * 24, (y / h) * 24, 2, 24);
+      let c = mixC([60, 58, 62], [104, 98, 96], a).map((v) => v * (0.9 + g * 0.18));
+      // 미끄럼 방지 줄무늬
+      if (Math.floor((cx + cy) / 6) % 2 === 0 && e > 10) c = c.map((v) => v * 1.06);
+      // 리벳
+      for (const [rx, ry] of [
+        [8, 8],
+        [pw - 8, 8],
+        [8, pw - 8],
+        [pw - 8, pw - 8],
+      ]) {
+        const d = Math.hypot(cx - rx, cy - ry);
+        if (d < 3.2) c = c.map((v) => v * (1.35 - d * 0.1));
+      }
+      let glow = 0;
+      if (e < 2.4) {
+        const k = 1 - e / 2.4;
+        c = c.map((v) => v * (1 - k * 0.7));
+        glow = k;
+      }
+      if (glowOnly) return [255 * glow, 150 * glow, 40 * glow];
+      return mixC(c, [255, 160, 60], glow * 0.7);
+    });
+  };
+}
+/** 현무암 기둥 머리 (육각형) */
+function hexGround(glowOnly) {
+  return (ctx, w, h) => {
+    const n1 = makeNoise(361);
+    const R = w / 8;
+    const hx = R * Math.sqrt(3) * 0.5; // 가로 간격의 반
+    const gy = h / 8; // 세로 간격 (타일 8줄)
+    const cols = Math.round(w / (hx * 2));
+    const hx2 = w / cols / 2;
+    pixels(ctx, w, h, (x, y) => {
+      let best = 1e9;
+      let second = 1e9;
+      let bid = 0;
+      const j0 = Math.round(y / gy);
+      for (let dj = -1; dj <= 1; dj++) {
+        const j = j0 + dj;
+        const ox = j % 2 ? hx2 : 0;
+        const i0 = Math.round((x - ox) / (hx2 * 2));
+        for (let di = -1; di <= 1; di++) {
+          const i = i0 + di;
+          const cx = ox + i * hx2 * 2;
+          const cy = j * gy;
+          const d = Math.hypot(x - cx, (y - cy) * 1.1);
+          if (d < best) {
+            second = best;
+            best = d;
+            const ii = ((i % cols) + cols) % cols;
+            const jj = ((j % 8) + 8) % 8;
+            bid = ii * 13 + jj * 7;
+          } else if (d < second) second = d;
+        }
+      }
+      const e = second - best;
+      const tone = 0.75 + ((bid * 31) % 17) / 40;
+      const a = fbm(n1, (x / w) * 8, (y / h) * 8, 3, 8);
+      let c = [56, 54, 64].map((v) => v * tone * (0.85 + a * 0.35));
+      let glow = 0;
+      if (e < 4) {
+        c = c.map((v) => v * (0.45 + e * 0.13));
+        if (bid % 7 === 0) glow = Math.pow(1 - e / 4, 2);
+      }
+      if (glowOnly) return [255 * glow, 110 * glow, 50 * glow];
+      return mixC(c, [255, 120, 50], glow * 0.8);
+    });
+  };
+}
+/** 용의 둥지: 검붉은 바위 + 흩어진 뼛조각 + 반짝이는 보석 */
+function boneGround(glowOnly) {
+  return (ctx, w, h) => {
+    const n1 = makeNoise(371);
+    const n2 = makeNoise(373);
+    const rnd = seeded(379);
+    const bones = [];
+    for (let i = 0; i < 9; i++) bones.push([rnd() * w, rnd() * h, rnd() * Math.PI, 10 + rnd() * 18]);
+    const gems = [];
+    for (let i = 0; i < 12; i++) gems.push([rnd() * w, rnd() * h, rnd()]);
+    pixels(ctx, w, h, (x, y) => {
+      const a = fbm(n1, (x / w) * 5, (y / h) * 5, 4, 5);
+      const g = fbm(n2, (x / w) * 18, (y / h) * 18, 2, 18);
+      let c = mixC([36, 20, 24], [78, 44, 42], a).map((v) => v * (0.85 + g * 0.3));
+      let glow = 0;
+      for (const [bx, by, ang, L] of bones) {
+        let dx = x - bx;
+        let dy = y - by;
+        if (dx > w / 2) dx -= w;
+        if (dx < -w / 2) dx += w;
+        if (dy > h / 2) dy -= h;
+        if (dy < -h / 2) dy += h;
+        const ca = Math.cos(ang);
+        const sa = Math.sin(ang);
+        const along = dx * ca + dy * sa;
+        const across = -dx * sa + dy * ca;
+        if (Math.abs(along) < L && Math.abs(across) < 2.4 + (Math.abs(along) > L - 3 ? 1.8 : 0)) c = mixC(c, [196, 182, 160], 0.55);
+      }
+      for (const [gx, gy, k] of gems) {
+        let dx = Math.abs(x - gx);
+        let dy = Math.abs(y - gy);
+        dx = Math.min(dx, w - dx);
+        dy = Math.min(dy, h - dy);
+        if (dx + dy < 3.2) {
+          const col = k < 0.5 ? [120, 230, 255] : [220, 120, 255];
+          c = mixC(c, col, 0.9);
+          glow = Math.max(glow, 1 - (dx + dy) / 3.2);
+        }
+      }
+      if (glowOnly) return [150 * glow, 200 * glow, 255 * glow];
+      return c;
+    });
+  };
+}
+const GROUND_FN = { slabs: slabGround, plates: plateGround, hex: hexGround, bone: boneGround };
+/** 바닥 텍스처 한 벌 {map, glow} */
+export function groundTex(kind = "basalt") {
+  const fn = GROUND_FN[kind];
+  const P = GROUND[kind] || GROUND.basalt;
+  const mk = (glowOnly) => (fn ? fn(glowOnly) : voronoiGround(P, glowOnly));
+  return { map: canvasTex("ground-" + kind, 256, 256, mk(false)), glow: canvasTex("ground-glow-" + kind, 256, 256, mk(true)) };
+}
 export function slopeTex() {
-  return canvasTex("slope", 256, 256, slopePixels(false));
+  return groundTex("basalt").map;
 }
 export function slopeGlowTex() {
-  return canvasTex("slope-glow", 256, 256, slopePixels(true));
+  return groundTex("basalt").glow;
 }
 /** 절벽: 층층 화산암 (어두운 띠 + 세로 풍화) */
 export function cliffTex() {
@@ -262,6 +438,141 @@ export function ringTex() {
       g.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+    },
+    { wrap: false }
+  );
+}
+
+/** 표지판 (길 고르기 · 위험 알림): stop 막다른 길 · go 안전한 길 · short 지름길 · warn 주의 · jump 점프 · wind 돌풍 · drop 낭떠러지 */
+export function signTex(kind) {
+  return canvasTex(
+    "sign-" + kind,
+    128,
+    128,
+    (ctx, w, h) => {
+      const C = {
+        stop: ["#ff3a3a", "#7a0a10"],
+        go: ["#4ae07a", "#0a4a20"],
+        short: ["#ffd23a", "#7a4a00"],
+        warn: ["#ffb02a", "#6a3000"],
+        jump: ["#ff8a2a", "#6a2000"],
+        wind: ["#7ad0ff", "#0a3a6a"],
+        drop: ["#ff5a3a", "#5a0a00"],
+      }[kind] || ["#ffffff", "#333333"];
+      ctx.clearRect(0, 0, w, h);
+      // 둥근 판 + 테두리
+      ctx.beginPath();
+      if (kind === "warn" || kind === "drop") {
+        ctx.moveTo(w / 2, 8);
+        ctx.lineTo(w - 8, h - 14);
+        ctx.lineTo(8, h - 14);
+        ctx.closePath();
+      } else ctx.arc(w / 2, h / 2, w / 2 - 6, 0, Math.PI * 2);
+      ctx.fillStyle = C[1];
+      ctx.fill();
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = C[0];
+      ctx.stroke();
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 14;
+      const cx = w / 2;
+      const cy = h / 2;
+      if (kind === "stop") {
+        ctx.beginPath();
+        ctx.moveTo(cx - 26, cy - 26);
+        ctx.lineTo(cx + 26, cy + 26);
+        ctx.moveTo(cx + 26, cy - 26);
+        ctx.lineTo(cx - 26, cy + 26);
+        ctx.stroke();
+      } else if (kind === "go" || kind === "jump") {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 30);
+        ctx.lineTo(cx, cy - 22);
+        ctx.moveTo(cx - 24, cy - 2);
+        ctx.lineTo(cx, cy - 28);
+        ctx.lineTo(cx + 24, cy - 2);
+        ctx.stroke();
+        if (kind === "jump") {
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(cx - 34, cy + 34);
+          ctx.lineTo(cx + 34, cy + 34);
+          ctx.stroke();
+        }
+      } else if (kind === "short") {
+        // 별 + 화살표 (구슬이 많은 지름길)
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const a = -Math.PI / 2 + (i * Math.PI) / 5;
+          const r = i % 2 ? 13 : 30;
+          ctx.lineTo(cx + Math.cos(a) * r, cy - 6 + Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(cx - 22, cy + 34);
+        ctx.lineTo(cx + 22, cy + 34);
+        ctx.stroke();
+      } else if (kind === "warn" || kind === "drop") {
+        ctx.fillRect(cx - 7, cy - 26, 14, 40);
+        ctx.beginPath();
+        ctx.arc(cx, cy + 28, 8, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (kind === "wind") {
+        ctx.lineWidth = 9;
+        for (const [y, l] of [
+          [cy - 20, 40],
+          [cy, 52],
+          [cy + 20, 34],
+        ]) {
+          ctx.beginPath();
+          ctx.moveTo(cx - l / 2 - 6, y);
+          ctx.lineTo(cx + l / 2, y);
+          ctx.arc(cx + l / 2, y - 8, 8, Math.PI / 2, -Math.PI, true);
+          ctx.stroke();
+        }
+      }
+    },
+    { wrap: false }
+  );
+}
+/** 노랑 · 검정 경고 줄무늬 */
+export function stripeTex() {
+  return canvasTex("stripe", 64, 64, (ctx, w, h) => {
+    ctx.fillStyle = "#1a1416";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#ffc23a";
+    for (let i = -2; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * 32, 0);
+      ctx.lineTo(i * 32 + 16, 0);
+      ctx.lineTo(i * 32 + 16 + 64, h);
+      ctx.lineTo(i * 32 + 64, h);
+      ctx.fill();
+    }
+  });
+}
+
+/** 체크포인트 깃발 (글자) */
+export function bannerTex() {
+  return canvasTex(
+    "cp-banner",
+    256,
+    64,
+    (ctx, w, h) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#3a1a22";
+      ctx.font = "bold 34px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("체크포인트", w / 2, h / 2 + 2);
+      ctx.fillRect(6, 6, w - 12, 4);
+      ctx.fillRect(6, h - 10, w - 12, 4);
     },
     { wrap: false }
   );

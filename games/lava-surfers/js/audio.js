@@ -86,7 +86,7 @@ export class LavaAudio extends AudioSystem {
   play(name, opt = {}) {
     if (!this.ctx || !this.sfxOn || this.sfxVol <= 0) return;
     const now = performance.now();
-    const gap = { orb: 25, warn: 380, rumble: 600, fireWarn: 250, scrape: 200, crack: 150 }[name] || 30;
+    const gap = { orb: 25, warn: 380, rumble: 600, fireWarn: 250, scrape: 200, crack: 150, whistle: 220, boom: 120, laserOn: 300, gateOpen: 250, gateClose: 250, fallOn: 400, charge: 200, thunder: 300, roar: 900, stomp: 150, flap: 300 }[name] || 30;
     if (now - (this.lastPlay["_" + name] || 0) < gap) return;
     this.lastPlay["_" + name] = now;
     const r = 1 + (Math.random() - 0.5) * 0.1;
@@ -195,6 +195,83 @@ export class LavaAudio extends AudioSystem {
       case "tap":
         this.tone(NOTE(84), 0.06, { type: "sine", vol: 0.07 });
         break;
+      case "whistle": // 날아오는 것 (떨어지는 바위 · 용암 덩어리 · 불덩이)
+        this.tone(1400 * r, 0.7, { type: "sine", vol: 0.05, slide: 0.45 });
+        break;
+      case "boom":
+        this.noise(0.6, { vol: 0.3, type: "lowpass", freq: 700, to: 80 });
+        this.tone(70, 0.4, { type: "sine", vol: 0.2, slide: 0.5 });
+        break;
+      case "charge": // 번개 모임
+        this.noise(0.6, { vol: 0.07, type: "highpass", freq: 3000, attack: 0.3 });
+        this.tone(NOTE(84), 0.5, { type: "square", vol: 0.025, slide: 1.4 });
+        break;
+      case "thunder":
+        this.noise(0.12, { vol: 0.35, type: "highpass", freq: 2000 });
+        this.noise(1.8, { vol: 0.3, type: "lowpass", freq: 500, to: 60, at: 0.05 });
+        break;
+      case "zap":
+        this.tone(880 * r, 0.25, { type: "sawtooth", vol: 0.08, slide: 0.4 });
+        this.noise(0.25, { vol: 0.15, type: "bandpass", freq: 3200, q: 3 });
+        break;
+      case "laserOn":
+        this.tone(NOTE(81), 0.18, { type: "square", vol: 0.04, slide: 1.2 });
+        break;
+      case "gateOpen":
+        this.noise(0.4, { vol: 0.14, type: "bandpass", freq: 500, to: 1400, q: 1.2 });
+        this.tone(NOTE(76), 0.12, { type: "triangle", vol: 0.06, at: 0.3 });
+        break;
+      case "gateClose":
+        this.noise(0.35, { vol: 0.16, type: "bandpass", freq: 1200, to: 300, q: 1.2 });
+        this.tone(90, 0.2, { type: "square", vol: 0.06, at: 0.3, slide: 0.7 });
+        break;
+      case "switch":
+        [0, 7, 12].forEach((d, i) => this.tone(NOTE(79 + d), 0.12, { type: "square", vol: 0.05, at: i * 0.06 }));
+        break;
+      case "sinkStart":
+        this.noise(0.9, { vol: 0.16, type: "lowpass", freq: 500, to: 120 });
+        this.tone(NOTE(55), 0.6, { type: "sine", vol: 0.07, slide: 0.6 });
+        break;
+      case "fallOn":
+        this.noise(1.0, { vol: 0.14, type: "bandpass", freq: 300, to: 900, q: 0.8, attack: 0.1 });
+        break;
+      case "roar": // 보스 울부짖음
+        this.noise(1.6, { vol: 0.3, type: "bandpass", freq: 260, to: 120, q: 1.2, attack: 0.08 });
+        this.tone(78, 1.4, { type: "sawtooth", vol: 0.12, slide: 0.7 });
+        this.tone(104, 1.2, { type: "square", vol: 0.05, slide: 0.6, at: 0.1 });
+        break;
+      case "stomp":
+        this.noise(0.4, { vol: 0.3, type: "lowpass", freq: 300, to: 50 });
+        this.tone(48, 0.35, { type: "sine", vol: 0.25, slide: 0.6 });
+        break;
+      case "throw":
+        this.noise(0.35, { vol: 0.14, type: "bandpass", freq: 400, to: 1600, q: 1 });
+        break;
+      case "flap":
+        this.noise(0.3, { vol: 0.12, type: "lowpass", freq: 600, to: 200 });
+        break;
+      case "flame":
+        this.noise(1.0, { vol: 0.2, type: "bandpass", freq: 700, to: 2000, q: 0.6, attack: 0.05 });
+        break;
+      case "crystal":
+        [0, 7, 12, 19].forEach((d, i) => this.tone(NOTE(84 + d), 0.3, { type: "sine", vol: 0.08, at: i * 0.04 }));
+        break;
+      case "iceShot":
+        this.tone(NOTE(96), 0.4, { type: "sine", vol: 0.08, slide: 0.5 });
+        this.noise(0.4, { vol: 0.08, type: "highpass", freq: 4000 });
+        break;
+      case "bossHit":
+        this.noise(0.5, { vol: 0.32, type: "lowpass", freq: 1600, to: 120 });
+        [0, 4, 7].forEach((d, i) => this.tone(NOTE(72 + d), 0.2, { type: "square", vol: 0.06, at: 0.05 + i * 0.05 }));
+        break;
+      case "bossDown":
+        this.noise(2.4, { vol: 0.35, type: "lowpass", freq: 900, to: 40 });
+        this.tone(40, 1.8, { type: "sine", vol: 0.25, slide: 0.5 });
+        [0, 4, 7, 12, 16, 19, 24].forEach((d, i) => this.tone(NOTE(67 + d), 0.4, { type: "triangle", vol: 0.08, at: 0.9 + i * 0.08 }));
+        break;
+      case "expose": // 약점 드러남
+        [0, 3, 7, 10].forEach((d, i) => this.tone(NOTE(76 + d), 0.18, { type: "triangle", vol: 0.08, at: i * 0.06 }));
+        break;
       default:
         super.play(name, opt);
     }
@@ -213,6 +290,14 @@ export class LavaAudio extends AudioSystem {
 }
 
 export const MUSIC = {
+  w1: { bpm: 140, root: 57, scale: "dorian", prog: "minor", lead: "pluck", drums: "storm", pad: true, seed: 33, density: 0.62 },
+  w2: { bpm: 146, root: 55, scale: "minor", prog: "minor", lead: "pluck", drums: "storm", pad: true, seed: 61, density: 0.64 },
+  w3: { bpm: 138, root: 52, scale: "dorian", prog: "calm", lead: "bell", drums: "storm", pad: true, seed: 77, density: 0.58 },
+  w4: { bpm: 150, root: 50, scale: "minor", prog: "boss", lead: "pluck", drums: "storm", pad: true, seed: 91, density: 0.66 },
+  w5: { bpm: 152, root: 53, scale: "minor", prog: "minor", lead: "steel", drums: "boss", pad: true, seed: 103, density: 0.66 },
+  boss: { bpm: 160, root: 52, scale: "minor", prog: "boss", lead: "pluck", drums: "boss", pad: true, seed: 117, density: 0.72 },
+  endless: { bpm: 144, root: 57, scale: "dorian", prog: "bright", lead: "pluck", drums: "storm", pad: true, seed: 131, density: 0.6 },
+  ending: { bpm: 96, root: 60, scale: "major", prog: "bright", lead: "bell", drums: "island", pad: true, seed: 149, density: 0.5 },
   title: { bpm: 84, root: 57, scale: "minor", prog: "calm", lead: "bell", drums: "none", pad: true, seed: 21, density: 0.4 },
   play: { bpm: 140, root: 57, scale: "dorian", prog: "minor", lead: "pluck", drums: "storm", pad: true, seed: 33, density: 0.62 },
   surge: { bpm: 156, root: 57, scale: "minor", prog: "boss", lead: "pluck", drums: "boss", pad: true, seed: 44, density: 0.7 },

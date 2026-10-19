@@ -32,7 +32,7 @@
     {
       id: "lava-surfers",
       title: "용암 서핑",
-      tag: "3D 서핑 · 용암 추격 · 스턴트",
+      tag: "3D 서핑 · 15스테이지 · 보스 3",
       href: "/games/lava-surfers/",
       thumb: "/assets/thumbs/lava-surfers.png",
       category: "arcade",

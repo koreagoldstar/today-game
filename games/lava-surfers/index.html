@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#3a1a22" />
     <title>용암 서핑 | Today Game</title>
-    <meta name="description" content="뒤에서 거대한 용암 파도가 쫓아와요! 보드를 타고 검은 화산 경사면을 내려가며 바위와 불기둥을 피하고, 점프대로 용암 강을 넘어 안전지대까지 탈출하는 3D 서바이벌 레이싱 게임." />
+    <meta name="description" content="뒤에서 거대한 용암 파도가 쫓아와요! 보드를 타고 화산을 내려가는 3D 서핑 게임 — 5개 월드 15 스테이지, 화산 골렘 · 불꽃 와이번 · 고대 용 보스전, 끝없는 무한 도전까지." />
     <link rel="canonical" href="https://www.todaygame.co.kr/games/lava-surfers/" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="용암 서핑 | Today Game" />
-    <meta property="og:description" content="용암 파도에 따라잡히기 전에 화산을 내려가라! 보드 · 점프 · 부스터로 탈출하는 3D 아케이드 게임" />
+    <meta property="og:description" content="15 스테이지 · 보스 3 · 무한 도전! 용암 파도에 따라잡히기 전에 보드로 화산을 내려가는 3D 아케이드 서핑" />
     <meta property="og:url" content="https://www.todaygame.co.kr/games/lava-surfers/" />
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/lava-surfers.png" />
     <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=2" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
     <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
-    <link rel="modulepreload" href="js/game.js?v=1" />
+    <link rel="modulepreload" href="js/game.js?v=2" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
   <body class="ls is-title">
@@ -47,15 +47,20 @@
             <p class="hud-orbs"><i class="orb-ic" aria-hidden="true"></i><b id="hud-orbs">0</b></p>
           </div>
           <div class="hud-c">
+            <p class="hud-stage" id="hud-stage">STAGE 01 · 검은 화산 경사면</p>
             <div class="chase" id="chase" role="img" aria-label="용암과의 거리">
               <i class="chase-bar"><b id="chase-fill"></b></i>
               <span class="chase-lava" aria-hidden="true"></span>
               <span class="chase-me" id="chase-me" aria-hidden="true"></span>
             </div>
             <p class="chase-t" id="chase-t">용암까지 60m</p>
+            <div class="boss-bar" id="boss-bar" hidden>
+              <p class="boss-name" id="boss-name">화산 골렘</p>
+              <i class="boss-hp"><b id="boss-fill"></b><span class="boss-pips" id="boss-pips"></span></i>
+            </div>
           </div>
           <div class="hud-r">
-            <p class="hud-score"><small>점수</small><b id="hud-score">0</b></p>
+            <p class="hud-score"><small>점수</small><b id="hud-score">0</b><span class="hud-dist" id="hud-dist" hidden>0m</span></p>
             <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.6" fill="#fff" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" fill="#fff" /></svg></button>
           </div>
         </header>
@@ -86,15 +91,29 @@
           <div class="logo">
             <p class="logo-k">LAVA SURFERS</p>
             <h1 id="title-h"><span class="l1">용암</span><span class="l2">서핑</span></h1>
-            <p class="logo-s">용암 파도에 따라잡히기 전에 화산을 내려가요!</p>
+            <p class="logo-s">15 스테이지 · 보스 3 · 무한 도전 — 용암보다 빨리 화산을 내려가요!</p>
           </div>
           <div class="title-btns">
             <button type="button" class="btn-main" id="start-btn">게임 시작</button>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="stages-btn">스테이지 선택</button>
+              <button type="button" class="btn-sub" id="endless-btn">무한 도전</button>
+            </div>
             <div class="title-row">
               <button type="button" class="btn-sub" id="howto-btn">조작 방법</button>
               <button type="button" class="btn-sub" id="sound-btn">사운드 설정</button>
             </div>
             <p class="title-best" id="title-best"></p>
+          </div>
+        </section>
+
+        <!-- 스테이지 선택 -->
+        <section class="screen panel" id="stages" hidden aria-labelledby="stages-h">
+          <div class="card stage-card">
+            <h2 id="stages-h">스테이지 선택</h2>
+            <p class="stages-sum" id="stages-sum"></p>
+            <div class="worlds" id="worlds"></div>
+            <button type="button" class="btn-main small" data-back>닫기</button>
           </div>
         </section>
 
@@ -122,11 +141,11 @@
               </div>
             </div>
             <ul class="tips">
-              <li>보드는 저절로 내려가요. <b>가파를수록 빨라져요.</b></li>
-              <li>뒤에서 <b>용암 파도</b>가 따라와요. 장애물에 부딪히면 느려져서 용암이 가까워지고, 따라잡히면 게임 오버!</li>
-              <li>미리 알려 줘요: <b>바닥 붉은 줄</b> = 굴러오는 바위 · <b>붉게 빛나는 땅</b> = 불기둥 · <b>빛나는 금</b> = 무너지는 땅</li>
-              <li>점프대 끝에서 점프하면 더 멀리! 회전은 착지 전에 끝내야 성공이에요.</li>
-              <li>용암에 빠지면 하트가 하나 줄고 체크포인트에서 다시 시작해요.</li>
+              <li>보드는 저절로 내려가요. <b>가파를수록 빨라져요.</b> 뒤에서 <b>용암 파도</b>가 따라와요 — 부딪히면 느려져서 가까워지고, 따라잡히면 게임 오버!</li>
+              <li>미리 알려 줘요: <b>붉은 줄</b> = 굴러오는 바위 · <b>붉게 빛나는 땅</b> = 불기둥 · <b>붉은 원</b> = 떨어지는 것 · <b>빛나는 금</b> = 무너지는 땅</li>
+              <li><b>낮은 것</b>(꼬리 · 통나무 · 레이저 · 충격파)은 점프로 넘고, <b>높은 것</b>(기둥 · 문 · 폭포 · 날개)은 빈틈으로 피해요.</li>
+              <li>문은 <b>초록불</b>일 때, 스위치 문은 <b>초록 발판</b>을 밟으면 열려요. 미로에서는 <b>빨간 X</b> 길이 막다른 길!</li>
+              <li>보스전: 공격 뒤 드러나는 <b>약점</b>을 노려요 (골렘은 부스터 돌진 · 와이번은 얼음 수정 · 고대 용은 점프대).</li>
             </ul>
             <button type="button" class="btn-main small" data-back>알겠어요</button>
           </div>
@@ -154,7 +173,10 @@
             <h2 id="pause-h">잠깐 쉬어요</h2>
             <button type="button" class="btn-main" id="pause-resume">계속하기</button>
             <button type="button" class="btn-sub wide" id="pause-cp">체크포인트에서 다시</button>
-            <button type="button" class="btn-sub wide" id="pause-restart">처음부터 다시</button>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="pause-restart">처음부터 다시</button>
+              <button type="button" class="btn-sub" id="pause-select">스테이지 선택</button>
+            </div>
             <div class="title-row">
               <button type="button" class="btn-sub" id="pause-howto">조작 방법</button>
               <button type="button" class="btn-sub" id="pause-sound">사운드 설정</button>
@@ -169,14 +191,51 @@
         <!-- 탈출 성공 -->
         <section class="screen panel result" id="result" hidden aria-labelledby="res-h">
           <div class="card result-card">
-            <p class="res-k">COURSE 1 · 검은 화산 경사면</p>
+            <p class="res-k" id="res-k">STAGE 01 · 검은 화산 경사면</p>
             <h2 id="res-h">탈출 성공!</h2>
+            <p class="res-stars" id="res-stars" role="img" aria-label="별"></p>
             <p class="res-score"><small>최종 점수</small><b id="res-score">0</b></p>
             <ul class="res-rows" id="res-rows"></ul>
             <div class="res-records" id="res-records"></div>
-            <div class="rank-slot" id="res-rank"></div>
+            <p class="res-unlock" id="res-unlock" hidden></p>
+            <button type="button" class="btn-main" id="res-next">다음 스테이지</button>
             <div class="title-row">
-              <button type="button" class="btn-main" id="res-again">다시 도전</button>
+              <button type="button" class="btn-sub" id="res-again">다시 도전</button>
+              <button type="button" class="btn-sub" id="res-select">스테이지 선택</button>
+            </div>
+            <a class="btn-sub wide" href="/">사이트로</a>
+          </div>
+        </section>
+
+        <!-- 최종 클리어 -->
+        <section class="screen panel result" id="ending" hidden aria-labelledby="ending-h">
+          <div class="card result-card ending-card">
+            <p class="res-k">FINAL CLEAR</p>
+            <h2 id="ending-h">용의 영역 탈출!</h2>
+            <p class="end-msg">피코가 고대 용을 쓰러뜨리고 불타는 화산을 빠져나왔어요. 모두 고마워요!</p>
+            <p class="res-score"><small>18 스테이지 최고 점수 합계</small><b id="end-total">0</b></p>
+            <p class="res-stars small" id="end-stars"></p>
+            <ul class="end-list" id="end-list"></ul>
+            <div class="rank-slot" id="end-rank"></div>
+            <div class="title-row">
+              <button type="button" class="btn-main" id="end-endless">무한 도전</button>
+              <button type="button" class="btn-sub" id="end-select">스테이지 선택</button>
+            </div>
+            <a class="btn-sub wide" href="/">사이트로</a>
+          </div>
+        </section>
+
+        <!-- 무한 도전 결과 -->
+        <section class="screen panel result" id="endless" hidden aria-labelledby="eres-h">
+          <div class="card result-card">
+            <p class="res-k">무한 도전</p>
+            <h2 id="eres-h">용암에 따라잡혔어요</h2>
+            <p class="res-score"><small>점수</small><b id="eres-score">0</b></p>
+            <div class="res-records" id="eres-records"></div>
+            <div class="rank-slot" id="eres-rank"></div>
+            <button type="button" class="btn-main" id="eres-again">다시 도전</button>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="eres-select">스테이지 선택</button>
               <a class="btn-sub" href="/">사이트로</a>
             </div>
           </div>
@@ -185,13 +244,16 @@
         <!-- 게임 오버 -->
         <section class="screen panel" id="over" hidden aria-labelledby="over-h">
           <div class="card">
-            <p class="res-k">GAME OVER</p>
+            <p class="res-k" id="over-k">GAME OVER</p>
             <h2 id="over-h">용암에 따라잡혔어요</h2>
             <div class="over-stats" id="over-stats"></div>
             <p class="over-best" id="over-best"></p>
             <button type="button" class="btn-main" id="over-cp">체크포인트에서 다시</button>
             <button type="button" class="btn-sub wide" id="over-again">처음부터 다시</button>
-            <a class="btn-sub wide" href="/">사이트로</a>
+            <div class="title-row">
+              <button type="button" class="btn-sub" id="over-select">스테이지 선택</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
           </div>
         </section>
 
@@ -211,26 +273,27 @@
     <script src="/js/game-chrome.js?v=2"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script type="module" src="main.js?v=1"></script>
+    <script type="module" src="main.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="용암 서핑 소개">
   <h2>용암 서핑 소개</h2>
-  <p>분화구에서 넘쳐흐르는 용암 파도를 피해 검은 화산 경사면을 보드로 내려가는 3D 3인칭 아케이드 서핑 게임입니다. 불꽃 머리 꼬마 서퍼 피코가 흑요석 보드를 타고 비탈을 따라 점점 빨라져요. 바위 기둥 사이 지그재그, 낮은 바위, 첫 점프대와 용암 틈, 구슬이 많은 위험한 지름길, 옆 절벽에서 굴러오는 바위, 땅이 붉게 빛나면 솟는 불기둥, 부스터 발판으로 넘는 용암 강, 금 가서 무너지는 땅과 바위 발판, 빨라지는 용암 파도, 마지막 절벽 점프까지 12구간을 지나 안전지대로 탈출해요. 장애물에 부딪혀 느려질수록 뒤따라오는 용암이 가까워지고, 따라잡히면 게임 오버! 공중 회전 스턴트와 완벽한 착지, 콤보로 점수를 올려 보세요.</p>
+  <p>분화구에서 넘쳐흐르는 용암 파도를 피해 보드로 화산을 내려가는 3D 3인칭 아케이드 서핑 게임입니다. 불꽃 머리 꼬마 서퍼 피코와 함께 다섯 개의 월드, 15개의 스테이지를 달려요. 화산의 시작(검은 화산 경사면 · 불타는 바위 계곡 · 무너지는 용암 다리), 불꽃의 협곡(불기둥 협곡 · 용암 폭포 · 폭발하는 화산 분화구), 용암 바다(용암 호수 · 검은 현무암 미로 · 용암 파도 추격전), 화산의 심장(회전하는 화산 터널 · 화염 톱니 절벽 · 마그마 발전소), 용의 영역(화산 위의 폭풍 · 용의 둥지 · 용암 절벽 최종 질주)까지 스테이지마다 지형과 장치가 모두 달라요. 월드 사이에는 화산 골렘, 불꽃 와이번, 고대 용 보스전이 기다리고, 끝없이 이어지는 무한 도전도 있어요. 장애물에 부딪혀 느려질수록 뒤따라오는 용암이 가까워지고, 따라잡히면 게임 오버! 스턴트와 콤보로 점수를 올리고 스테이지마다 별 3개를 모아 보세요.</p>
   <h3>플레이 방법</h3>
-  <p>컴퓨터에서는 A · D 또는 ← → 로 좌우로 움직이고, Space(또는 W · ↑)로 점프, Shift(또는 K)로 부스터를 써요. 공중에서 Space 를 한 번 더 누르면 회전 스턴트를 하는데, 다 돌고 착지해야 점수가 들어오고 반쯤 돈 채로 착지하면 넘어져요. Esc 는 일시정지예요. 휴대폰과 패드에서는 왼쪽 아래 ◀ ▶ 버튼을 누르고 있으면 좌우로 움직이고(손가락을 미끄러뜨려 방향을 바꿀 수 있어요), 오른쪽의 점프 · 부스터 버튼을 눌러요. 화면 위 막대가 용암과의 거리예요. 용암 틈이나 길 밖으로 떨어지면 하트가 하나 줄고 체크포인트에서 다시 시작해요.</p>
+  <p>컴퓨터에서는 A · D 또는 ← → 로 좌우로 움직이고, Space(또는 W · ↑)로 점프, Shift(또는 K)로 부스터를 써요. 공중에서 Space 를 한 번 더 누르면 회전 스턴트를 하는데, 다 돌고 착지해야 점수가 들어와요. Esc 는 일시정지예요. 휴대폰과 패드에서는 왼쪽 아래 ◀ ▶ 버튼으로 좌우, 오른쪽의 점프 · 부스터 버튼을 눌러요. 위험한 것은 미리 알려 줘요: 붉은 줄은 굴러오는 바위나 꼬리, 붉은 원은 떨어지는 바위 · 불덩이 · 번개, 붉게 빛나는 땅은 불기둥, 빛나는 금은 무너지는 땅이에요. 낮은 것(통나무 · 레이저 · 충격파 · 꼬리)은 점프로 넘고, 높은 것(기둥 · 문 · 용암 폭포 · 도는 날개)은 빈틈으로 피해요. 보스전에서는 공격 뒤 드러나는 약점을 노려요: 골렘은 부스터 돌진, 와이번은 얼음 수정, 고대 용은 점프대로 날아올라 가슴의 보석을 쳐요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
+    <dt>스테이지는 몇 개인가요?</dt>
+    <dd>정규 스테이지 15개와 보스 스테이지 3개(화산 골렘 · 불꽃 와이번 · 고대 용)가 있어요. 앞 스테이지를 깨면 다음이 열리고, 깬 스테이지는 스테이지 선택에서 언제든 다시 할 수 있어요. STAGE 03 을 깨면 무한 도전이 열려요.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>탈출하면 별 1개, 구슬과 보석을 60% 넘게 모으면 1개, 부딪힘이 한 번 이하이고 용암에 빠지지 않으면 1개를 더 받아요. 보스전은 하트를 거의 잃지 않거나 빨리 이기면 별을 더 받아요.</dd>
     <dt>용암에 따라잡히면 어떻게 되나요?</dt>
-    <dd>용암과의 거리가 0 이 되면 게임 오버예요. 장애물에 부딪혀 느려질수록 거리가 줄고, 부스터 버튼과 부스터 발판, 점프대로 다시 벌릴 수 있어요. 가까워지면 화면 가장자리가 붉게 깜빡이고 경고음이 나요.</dd>
-    <dt>점수는 어떻게 계산되나요?</dt>
-    <dd>이동 거리, 생존 시간, 에너지 구슬, 성공한 스턴트와 완벽한 착지, 콤보, 부스터 · 지름길, 탈출 성공 보너스를 더해요. 실패한 스턴트는 점수가 되지 않아요.</dd>
-    <dt>코스는 몇 개인가요?</dt>
-    <dd>지금은 첫 코스 「검은 화산 경사면」 하나예요. 출발부터 마지막 절벽까지 12구간으로 이어져요.</dd>
+    <dd>용암과의 거리가 0 이 되면 게임 오버예요. 부스터와 점프대, 부스터 발판으로 거리를 다시 벌릴 수 있어요. 가까워지면 화면 가장자리가 붉게 깜빡이고 경고음이 나요. 보스전에서는 공격에 맞으면 하트가 줄고, 약점을 맞히면 하트가 하나 회복돼요.</dd>
     <dt>기록은 어디에 저장되나요?</dt>
-    <dd>최고 점수 · 가장 빠른 탈출 · 가장 멀리 간 거리와 설정은 이 기기에만 저장돼요. 탈출에 성공한 뒤 결과 화면에서 직접 랭킹에 이름을 올릴 때만 닉네임과 점수를 보내요. 결제나 뽑기는 없어요.</dd>
+    <dd>스테이지별 최고 점수 · 별 · 열린 스테이지와 무한 도전 최고 기록, 설정은 이 기기에만 저장돼요. 고대 용을 쓰러뜨린 엔딩(18 스테이지 최고 점수 합)이나 무한 도전 결과 화면에서 직접 랭킹에 이름을 올릴 때만 닉네임과 점수를 보내요. 결제나 뽑기는 없어요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
+
       <script src="/js/game-seo.js?v=1"></script>
   </body>
 </html>

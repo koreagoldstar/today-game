@@ -9,7 +9,7 @@
  *  자세 값은 매 프레임 목표를 계산해 부드럽게 따라간다.
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { roundedBox, taperTube } from "./geo.js?v=1";
+import { roundedBox, taperTube } from "./geo.js?v=2";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const TAU = Math.PI * 2;

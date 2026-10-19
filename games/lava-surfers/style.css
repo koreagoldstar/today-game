@@ -1245,3 +1245,276 @@ body {
 .ls .result-card {
   gap: calc(var(--k) * 7px);
 }
+
+/* ================= 스테이지 · 보스 · 엔딩 ================= */
+.ls .hud-stage {
+  margin: 0;
+  max-width: 100%;
+  padding: calc(var(--k) * 2px) calc(var(--k) * 12px);
+  border-radius: 999px;
+  background: rgba(58, 26, 34, 0.7);
+  color: #ffe0c8;
+  font-size: calc(var(--k) * 13px);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ls .hud-dist {
+  font-family: var(--title);
+  font-size: calc(var(--k) * 16px);
+  color: #ffe27a;
+  text-shadow: 0 2px 0 var(--ink);
+}
+.ls .boss-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--k) * 3px);
+  width: min(46vw, calc(var(--k) * 340px));
+}
+.ls .boss-bar[hidden] {
+  display: none;
+}
+.ls .boss-name {
+  margin: 0;
+  padding: calc(var(--k) * 1px) calc(var(--k) * 12px);
+  border-radius: 999px;
+  background: #4a1418;
+  color: #ffd2a8;
+  font-family: var(--title);
+  font-size: calc(var(--k) * 15px);
+}
+.ls .boss-hp {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(var(--k) * 16px);
+  border: 2px solid #ffd2a8;
+  border-radius: 999px;
+  background: rgba(30, 8, 12, 0.75);
+  overflow: hidden;
+  box-shadow: 0 2px 0 var(--ink);
+}
+.ls .boss-hp b {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff9a6a, #e0443a);
+  transition: width 0.35s ease-out;
+}
+.ls .boss-pips {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.ls .boss-pips i {
+  flex: 1;
+  border-right: 2px solid rgba(30, 8, 12, 0.6);
+}
+.ls .boss-pips i:last-child {
+  border-right: 0;
+}
+.ls .boss-bar.hit .boss-hp {
+  animation: ls-hit 0.35s ease-out;
+}
+@keyframes ls-hit {
+  0% {
+    transform: scale(1.12);
+    filter: brightness(2);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+.ls .btn-sub.locked {
+  opacity: 0.6;
+}
+
+/* 스테이지 선택 */
+.ls .stage-card {
+  width: min(100%, calc(var(--k) * 700px));
+}
+.ls .stages-sum {
+  text-align: center;
+  font-size: calc(var(--k) * 15px);
+}
+.ls .worlds {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--k) * 12px);
+}
+.ls .world-h {
+  margin: 0 0 calc(var(--k) * 6px);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--k) * 8px);
+  font-size: calc(var(--k) * 17px);
+}
+.ls .world-h span {
+  padding: calc(var(--k) * 2px) calc(var(--k) * 10px);
+  border-radius: 999px;
+  background: var(--ink);
+  color: #ffd27a;
+  font-family: var(--title);
+  font-weight: 400;
+  font-size: calc(var(--k) * 13px);
+}
+.ls .stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--k) * 148px), 1fr));
+  gap: calc(var(--k) * 8px);
+}
+.ls .stage-grid.one {
+  grid-template-columns: 1fr;
+}
+.ls .stage-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--k) * 2px);
+  min-height: calc(var(--k) * 96px);
+  padding: calc(var(--k) * 8px) calc(var(--k) * 10px) calc(var(--k) * 30px);
+  border: calc(var(--k) * 3px) solid var(--ink);
+  border-radius: calc(var(--k) * 16px);
+  background: linear-gradient(160deg, var(--c1), var(--c2));
+  color: #fff;
+  text-align: left;
+  text-shadow: 0 2px 0 rgba(30, 8, 12, 0.6);
+  box-shadow: 0 calc(var(--k) * 4px) 0 var(--ink);
+  cursor: pointer;
+}
+.ls .stage-tile:active {
+  transform: translateY(calc(var(--k) * 3px));
+  box-shadow: 0 calc(var(--k) * 1px) 0 var(--ink);
+}
+.ls .st-k {
+  font-family: var(--title);
+  font-size: calc(var(--k) * 15px);
+  color: #ffe9c8;
+}
+.ls .st-n {
+  font-size: calc(var(--k) * 16px);
+  line-height: 1.2;
+}
+.ls .st-stars {
+  color: #ffe27a;
+  font-size: calc(var(--k) * 16px);
+  letter-spacing: 1px;
+}
+.ls .st-rec {
+  position: absolute;
+  left: calc(var(--k) * 8px);
+  right: calc(var(--k) * 8px);
+  bottom: calc(var(--k) * 6px);
+  padding: calc(var(--k) * 1px) calc(var(--k) * 8px);
+  border-radius: 999px;
+  background: rgba(30, 8, 12, 0.55);
+  font-size: calc(var(--k) * 12px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: none;
+}
+.ls .stage-tile.boss {
+  border-color: #ffd27a;
+  box-shadow: 0 calc(var(--k) * 4px) 0 var(--ink), 0 0 calc(var(--k) * 14px) rgba(255, 150, 60, 0.6);
+}
+.ls .stage-tile.locked {
+  background: linear-gradient(160deg, #8a8088, #5a5058);
+  color: #e8e0e4;
+  cursor: default;
+}
+.ls .st-lock {
+  position: absolute;
+  top: calc(var(--k) * 6px);
+  right: calc(var(--k) * 8px);
+  font-style: normal;
+  font-size: calc(var(--k) * 18px);
+}
+.ls .stage-tile.endless {
+  min-height: calc(var(--k) * 70px);
+}
+
+/* 결과 · 엔딩 */
+.ls .res-stars {
+  margin: 0;
+  text-align: center;
+  font-size: calc(var(--k) * 40px);
+  line-height: 1;
+  color: #ffc23a;
+  -webkit-text-stroke: 2px var(--ink);
+  letter-spacing: calc(var(--k) * 4px);
+}
+.ls .res-stars.small {
+  font-size: calc(var(--k) * 22px);
+  -webkit-text-stroke: 1px var(--ink);
+}
+.ls .res-unlock {
+  padding: calc(var(--k) * 6px) calc(var(--k) * 10px);
+  border-radius: calc(var(--k) * 12px);
+  background: #2a7a52;
+  color: #e6fff2;
+  text-align: center;
+  font-weight: 700;
+}
+.ls .end-msg {
+  text-align: center;
+  line-height: 1.5;
+}
+.ls .end-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--k) * 4px) calc(var(--k) * 10px);
+  font-size: calc(var(--k) * 13px);
+}
+.ls .end-list li {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--k) * 6px);
+  padding: calc(var(--k) * 2px) 0;
+  border-bottom: 1px dashed rgba(58, 26, 34, 0.25);
+}
+.ls .end-list span {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ls .end-list i {
+  font-style: normal;
+  color: #e09a1a;
+}
+.ls .ending-card {
+  width: min(100%, calc(var(--k) * 600px));
+}
+.ls .ending-card h2 {
+  color: #ff7a2a;
+}
+.ls .end-list small {
+  flex: none;
+  min-width: calc(var(--k) * 22px);
+  padding: 0 calc(var(--k) * 4px);
+  border-radius: 6px;
+  background: var(--ink);
+  color: #ffd27a;
+  font-family: var(--title);
+  font-size: calc(var(--k) * 11px);
+  text-align: center;
+}
+.ls .end-list li.boss small {
+  background: #b8401e;
+  color: #fff;
+}
+@media (max-width: 520px) {
+  .ls .end-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

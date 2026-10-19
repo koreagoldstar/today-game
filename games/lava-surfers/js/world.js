@@ -4,8 +4,8 @@
  *  빛: 위에서 연기에 가린 해 + 아래에서 올라오는 용암 빛 (바위 아랫면이 주황으로)
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { shadeVerts, fbm3 } from "./geo.js?v=1";
-import { dotTex, puffTex, cliffTex, seeded } from "./tex.js?v=1";
+import { shadeVerts, fbm3 } from "./geo.js?v=2";
+import { dotTex, puffTex, cliffTex, seeded } from "./tex.js?v=2";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const TAU = Math.PI * 2;
@@ -60,6 +60,9 @@ export class World {
     this.q = quality;
     this.t = 0;
     this.anim = [];
+    this.stageAnim = [];
+    this.stageRoot = new THREE.Group();
+    scene.add(this.stageRoot);
     this.build();
   }
   build() {
@@ -116,6 +119,109 @@ export class World {
     this.ash = this.makePoints(this.q >= 0.95 ? 700 : 380, "#c8b8b0", 0.12, 0.7);
     this.embers = this.makePoints(this.q >= 0.95 ? 220 : 120, "#ffb05a", 0.16, 0.9, true);
     this.flash = 0;
+    this.bolt = 0;
+    this.hemiBase = 1.1;
+    // 번개 (폭풍 스테이지): 먼 하늘에 지그재그 빛줄기
+    this.boltLine = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: "#e8f0ff", transparent: true, opacity: 0, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+    this.boltLine.frustumCulled = false;
+    this.far.add(this.boltLine);
+  }
+  /** 스테이지 분위기 바꾸기 (하늘 · 안개 · 빛 · 재 · 불티) — 스테이지 꾸밈(화산 등)은 비움 */
+  applyTheme(th) {
+    this.th = th;
+    const u = this.sky.material.uniforms;
+    u.top.value.set(th.sky[0]);
+    u.mid.value.set(th.sky[1]);
+    u.low.value.set(th.sky[2]);
+    u.hor.value.set(th.sky[3]);
+    const fog = this.scene.fog;
+    fog.color.set(th.fog[0]);
+    fog.near = th.fog[1];
+    fog.far = th.fog[2];
+    this.fogBase = [th.fog[1], th.fog[2]];
+    this.hemi.color.set(th.hemi[0]);
+    this.hemi.groundColor.set(th.hemi[1]);
+    this.hemiBase = th.hemi[2];
+    this.sun.color.set(th.sun[0]);
+    this.sun.intensity = th.sun[1];
+    this.lavaLight.color.set(th.lavaLight[0]);
+    this.lavaLight.intensity = th.lavaLight[1];
+    this.ash.material.opacity = 0.7 * Math.min(1.4, th.ash);
+    this.ash.visible = th.ash > 0;
+    this.embers.material.opacity = 0.9 * Math.min(1.2, th.embers);
+    this.embers.visible = th.embers > 0;
+    this.storm = !!th.storm;
+    this.boltT = 2;
+    this.tintTo = null;
+    this.clearStage();
+  }
+  /** 하늘 · 안개 · 빛을 다른 분위기로 천천히 바꾸기 (보스 체력 단계 등) */
+  tint(th) {
+    if (!th) return;
+    this.tintTo = th;
+    this.tintK = 0;
+    const u = this.sky.material.uniforms;
+    this.tintFrom = {
+      sky: [u.top.value.clone(), u.mid.value.clone(), u.low.value.clone(), u.hor.value.clone()],
+      fog: this.scene.fog.color.clone(),
+      hemi: [this.hemi.color.clone(), this.hemi.groundColor.clone()],
+      lava: this.lavaLight.color.clone(),
+    };
+  }
+  updateTint(dt) {
+    if (!this.tintTo) return;
+    this.tintK = Math.min(1, this.tintK + dt / 2.5);
+    const k = this.tintK;
+    const th = this.tintTo;
+    const F = this.tintFrom;
+    const u = this.sky.material.uniforms;
+    const c = new THREE.Color();
+    ["top", "mid", "low", "hor"].forEach((key, i) => u[key].value.copy(F.sky[i]).lerp(c.set(th.sky[i]), k));
+    this.scene.fog.color.copy(F.fog).lerp(c.set(th.fog[0]), k);
+    this.hemi.color.copy(F.hemi[0]).lerp(c.set(th.hemi[0]), k);
+    this.hemi.groundColor.copy(F.hemi[1]).lerp(c.set(th.hemi[1]), k);
+    this.lavaLight.color.copy(F.lava).lerp(c.set(th.lavaLight[0]), k);
+    if (k >= 1) this.tintTo = null;
+  }
+  clearStage() {
+    this.scene.remove(this.stageRoot);
+    this.stageRoot.traverse((o) => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) o.material.dispose();
+    });
+    this.stageRoot = new THREE.Group();
+    this.scene.add(this.stageRoot);
+    this.stageAnim = [];
+  }
+  /** 번개 한 번 (폭풍): 먼 하늘 지그재그 + 화면 번쩍 */
+  strike() {
+    const a = Math.random() * Math.PI * 2;
+    const R = 300 + Math.random() * 120;
+    const x0 = Math.cos(a) * R;
+    const z0 = Math.sin(a) * R;
+    const pts = [];
+    let x = x0;
+    let z = z0;
+    for (let y = 260; y > -40; y -= 22) {
+      pts.push([x, y, z]);
+      x += (Math.random() - 0.5) * 30;
+      z += (Math.random() - 0.5) * 30;
+    }
+    const P = [];
+    const I = [];
+    pts.forEach(([px, py, pz], i) => {
+      const w = 2.2 - (i / pts.length) * 1.4;
+      // 가운데(카메라)를 바라보도록 폭 방향 = 반지름에 수직
+      const wx = (-z0 / R) * w;
+      const wz = (x0 / R) * w;
+      P.push(px - wx, py, pz - wz, px + wx, py, pz + wz);
+      if (i) I.push((i - 1) * 2, (i - 1) * 2 + 1, i * 2, (i - 1) * 2 + 1, i * 2 + 1, i * 2);
+    });
+    const g = this.boltLine.geometry;
+    g.setAttribute("position", new THREE.Float32BufferAttribute(P, 3));
+    g.setIndex(I);
+    this.bolt = 1;
+    this.thunder = true;
   }
   makePoints(n, color, size, op, additive = false) {
     const pos = new Float32Array(n * 3);
@@ -190,8 +296,8 @@ export class World {
       g.add(s);
       smoke.push(s);
     }
-    this.scene.add(g);
-    this.anim.push((dt, t) => {
+    this.stageRoot.add(g);
+    this.stageAnim.push((dt, t) => {
       glow.material.opacity = 0.75 + Math.sin(t * 1.7) * 0.15 + this.flash * 0.3;
       for (const s of smoke) {
         const k = (s.userData.k + t * 0.02) % 1;
@@ -209,6 +315,19 @@ export class World {
     this.far.position.set(cam.x, 0, cam.z);
     this.sky.material.uniforms.t.value = t;
     for (const f of this.anim) f(dt, t);
+    for (const f of this.stageAnim) f(dt, t);
+    this.updateTint(dt);
+    if (this.storm) {
+      this.boltT -= dt;
+      if (this.boltT <= 0) {
+        this.boltT = 3 + Math.random() * 5;
+        this.strike();
+      }
+    }
+    if (this.bolt > 0) {
+      this.bolt = Math.max(0, this.bolt - dt * 3);
+      this.boltLine.material.opacity = this.bolt > 0.6 || (this.bolt > 0.25 && this.bolt < 0.4) ? 1 : 0;
+    }
     if (focus) {
       this.sun.target.position.copy(focus);
       this.sun.position.copy(focus).addScaledVector(this.sunDir, 70);
@@ -234,7 +353,7 @@ export class World {
       }
     }
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 1.5);
-    this.hemi.intensity = 1.1 + this.flash * 0.6;
+    this.hemi.intensity = this.hemiBase + this.flash * 0.6 + (this.bolt > 0.5 ? 1.4 : 0);
   }
   dispose() {}
 }

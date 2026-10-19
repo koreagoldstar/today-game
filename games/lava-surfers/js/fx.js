@@ -5,7 +5,7 @@
  *  정해 둔 수(풀)에서 꺼내 쓴다 → 아무리 많이 터져도 성능이 일정
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { dotTex, puffTex } from "./tex.js?v=1";
+import { dotTex, puffTex } from "./tex.js?v=2";
 
 class PointSystem {
   constructor(scene, n, tex, additive) {

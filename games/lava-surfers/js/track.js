@@ -5,6 +5,7 @@
  *   s = 출발점부터 중심선을 따라 간 거리(m) · u = 중심선에서 오른쪽(+)/왼쪽(-)으로 떨어진 거리(m)
  *  표면 높이 = 중심선 높이 + 가장자리로 갈수록 살짝 올라가는 그릇 모양 + 점프대(경사로)
  *  틈(용암 강 · 절벽) 구간에는 땅이 없다 → 빠지면 용암.
+ *  용암 위 바위 발판(가라앉거나 오르내리는 것도) · 바닥 구멍 · 길을 나누는 벽 · 돌풍 구역도 여기서 판정한다.
  *  모든 장애물 · 수집물 · 체크포인트도 (s, u) 로 놓는다 → 충돌 판정과 보이는 모양이 같은 자리에 있게.
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
@@ -12,6 +13,7 @@ import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
+const BUCKET = 10;
 
 /** (s, 값) 키프레임 사이를 부드럽게 */
 function keyed(keys, s) {
@@ -29,12 +31,11 @@ function keyed(keys, s) {
 }
 
 export class Track {
-  /**
-   * @param def { points:[[x,y,z]...], width:[[s,hw]...], walls:[[s0,s1,side]], gaps:[[s0,s1]], ramps:[[s0,s1,h]], pads:[{s,u,r,h}] }
-   */
   constructor(def) {
     this.def = def;
     const curve = new THREE.CatmullRomCurve3(def.points.map(([x, y, z]) => V(x, y, z)), false, "centripetal");
+    // 점이 촘촘한 코스도 거리(s)가 정확하도록 길이표를 넉넉히
+    curve.arcLengthDivisions = Math.max(200, def.points.length * 8);
     this.curve = curve;
     this.len = curve.getLength();
     // 0.5m 마다 미리 계산 (위치 · 앞 방향 · 오른쪽)
@@ -47,9 +48,10 @@ export class Track {
     const up = V(0, 1, 0);
     const t = V();
     const r = V();
+    const p = V();
     for (let i = 0; i < n; i++) {
       const u = Math.min(1, (i * this.step) / this.len);
-      const p = curve.getPointAt(u);
+      curve.getPointAt(u, p);
       curve.getTangentAt(u, t);
       r.crossVectors(t, up).normalize();
       this.P.set([p.x, p.y, p.z], i * 3);
@@ -58,8 +60,28 @@ export class Track {
     }
     this.gaps = def.gaps || [];
     this.ramps = def.ramps || [];
-    this.pads = def.pads || [];
+    this.pads = (def.pads || []).map((p) => ({ l: p.r, h0: p.h || 0, ...p, h: p.h || 0 }));
+    this.staticHoles = def.holes || [];
+    this.dividers = def.dividers || [];
+    this.winds = def.winds || [];
+    this.styles = def.styles || [];
+    this.tunnels = def.tunnels || [];
     this.holes = []; // 무너진 땅 (실행 중에 생김): {s0,s1,u0,u1}
+    this.t = 0; // 돌풍 시계 (game 이 돌림)
+    // s 10m 칸마다 발판 · 구멍 목록 (빨리 찾기)
+    this.padB = this.bucket(this.pads, (p) => [p.s - p.l, p.s + p.l]);
+    this.holeB = this.bucket(this.staticHoles, (h) => [h.s0, h.s1]);
+  }
+  bucket(list, span) {
+    const B = new Map();
+    for (const it of list) {
+      const [a, b] = span(it);
+      for (let k = Math.floor(a / BUCKET); k <= Math.floor(b / BUCKET); k++) {
+        if (!B.has(k)) B.set(k, []);
+        B.get(k).push(it);
+      }
+    }
+    return B;
   }
   /** s 에서 중심선 정보 (선형 보간) */
   frame(s, out = {}) {
@@ -109,31 +131,89 @@ export class Track {
     for (const [s0, s1] of this.gaps) if (s > s0 && s < s1) return true;
     return false;
   }
+  styleAt(s) {
+    for (const [s0, s1, st] of this.styles) if (s >= s0 && s < s1) return st;
+    return null;
+  }
+  tunnelAt(s) {
+    for (const t of this.tunnels) if (s >= t[0] && s <= t[1]) return t;
+    return null;
+  }
   /** 가운데 그릇 모양 (가장자리로 갈수록 올라감) */
   bowl(s, u) {
     const hw = this.halfWidth(s);
     const k = clamp(Math.abs(u) / hw, 0, 1.4);
     return k > 0.7 ? (k - 0.7) * (k - 0.7) * hw * 0.45 : 0;
   }
+  /** (s,u) 에 놓인 발판 (없으면 null) */
+  padAt(s, u) {
+    const list = this.padB.get(Math.floor(s / BUCKET));
+    if (!list) return null;
+    for (const p of list) {
+      const a = (s - p.s) / p.l;
+      const b = (u - p.u) / p.r;
+      if (a * a + b * b < 1) return p;
+    }
+    return null;
+  }
+  padY(p) {
+    return this.frame(p.s, this._g || (this._g = {})).y + p.h;
+  }
+  holeAt(s, u) {
+    const list = this.holeB.get(Math.floor(s / BUCKET));
+    if (list) for (const h of list) if (s > h.s0 && s < h.s1 && u > h.u0 && u < h.u1) return true;
+    for (const h of this.holes) if (s > h.s0 && s < h.s1 && u > h.u0 && u < h.u1) return true;
+    return false;
+  }
   /**
-   * (s,u) 표면 높이 (없으면 null): 틈 · 무너진 땅 · 코스 밖(벽 없는 가장자리)
+   * (s,u) 표면 높이 (없으면 null): 틈 · 무너진 땅 · 바닥 구멍 · 코스 밖(벽 없는 가장자리)
    */
   surfaceY(s, u) {
     if (s < -20 || s > this.len) return null;
-    const hw = this.halfWidth(s);
-    // 용암 위 바위 발판
-    for (const p of this.pads) {
-      if (Math.abs(s - p.s) < p.r && Math.hypot(s - p.s, u - p.u) < p.r) return this.frame(p.s, this._g || (this._g = {})).y + (p.h || 0);
-    }
+    const p = this.padAt(s, u);
+    if (p) return this.padY(p);
     if (this.inGap(s)) return null;
+    const hw = this.halfWidth(s);
     if (Math.abs(u) > hw + 0.25) return null;
-    for (const h of this.holes) if (s > h.s0 && s < h.s1 && u > h.u0 && u < h.u1) return null;
+    if (this.holeAt(s, u)) return null;
     const f = this.frame(s, this._h || (this._h = {}));
     return f.y + this.bowl(s, u) + this.rampAdd(s);
   }
-  /** 용암 강 높이 (틈 아래 · 코스 옆 아래) */
+  /** 용암 높이 (틈 아래 · 코스 옆 아래) */
   lavaY(s) {
     return this.frame(s, this._l || (this._l = {})).y - (this.def.lavaDepth || 9);
+  }
+  /** 길을 나누는 벽: u0 → u1 로 옮길 때 막히면 멈출 u (안 막히면 null) */
+  blockU(s, u0, u1, rad = 0.45) {
+    for (const d of this.dividers) {
+      if (s < d.s0 || s > d.s1) continue;
+      const lo = d.u - 0.5 - rad;
+      const hi = d.u + 0.5 + rad;
+      if (u0 <= d.u && u1 > lo) return lo;
+      if (u0 >= d.u && u1 < hi) return hi;
+    }
+    return null;
+  }
+  /** 돌풍 세기 (m/s², + 오른쪽) · warn 은 곧 불 돌풍 (0~1) */
+  windAt(s, t = this.t) {
+    let f = 0;
+    for (const w of this.winds) {
+      if (s < w.s0 || s > w.s1) continue;
+      if (!w.period) {
+        f += w.force;
+        continue;
+      }
+      const k = ((((t / w.period + w.phase) % 1) + 1) % 1) * w.period;
+      if (k < w.on) f += w.force * Math.min(1, k / 0.3, (w.on - k) / 0.3);
+    }
+    return f;
+  }
+  windInfo(w, t = this.t) {
+    if (!w.period) return { on: 1, warn: 0 };
+    const k = ((((t / w.period + w.phase) % 1) + 1) % 1) * w.period;
+    if (k < w.on) return { on: 1, warn: 0 };
+    const until = w.period - k;
+    return { on: 0, warn: until < w.warn ? 1 - until / w.warn : 0 };
   }
   /** (s,u,y) → 세계 좌표 */
   toWorld(s, u, y, out = V()) {

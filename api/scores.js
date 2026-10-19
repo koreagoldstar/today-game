@@ -85,8 +85,9 @@ module.exports = async function handler(req, res) {
     "dragon-daily",
     // 하늘섬 대탈출: 엔딩에서 6스테이지 최고 점수 합
     "sky-island",
-    // 용암 서핑: 코스 1 탈출 점수 (탈출 성공 화면에서만 등록)
+    // 용암 서핑: 엔딩(보스 3 격파)에서 18 스테이지 최고 점수 합 · 무한 도전 점수는 따로
     "lava-surfers",
+    "lava-endless",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms, 제트스키 완주 기록 ms 등) */
   const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12"]);

@@ -145,7 +145,23 @@ export class Player {
     const dv = want - this.vu;
     this.vu += Math.abs(dv) <= acc ? dv : Math.sign(dv) * acc;
     this.s += this.speed * h;
+    const uPrev = this.u;
     this.u += this.vu * h;
+    // 돌풍: 옆으로 밀림 (공중에서 더 크게)
+    const wind = T.winds.length ? T.windAt(this.s) : 0;
+    if (wind) this.u += wind * (this.onGround ? 0.6 : 1) * h;
+    // 길을 나누는 벽
+    if (T.dividers.length) {
+      const bu = T.blockU(this.s, uPrev, this.u);
+      if (bu != null) {
+        this.u = bu;
+        if (Math.abs(this.vu) > 5) {
+          ev.wall = Math.abs(this.vu);
+          this.speed *= 0.95;
+        }
+        this.vu = -this.vu * 0.25;
+      }
+    }
     // 바위벽
     const hw = T.halfWidth(this.s);
     const side = Math.sign(this.u) || 1;
@@ -182,6 +198,11 @@ export class Player {
           this.y = hS;
           this.surfRate = rate;
           this.vy = rate;
+          // 가라앉는 발판이 용암에 잠김
+          if (this.y < T.lavaY(this.s) + 0.3) {
+            ev.lava = true;
+            this.inLava = true;
+          }
         }
       }
     }
@@ -212,7 +233,8 @@ export class Player {
         }
       }
       const g = T.surfaceY(this.s, this.u);
-      if (g != null && this.y <= g && this.vy <= 0.5) {
+      // 착지: 발이 표면 바로 위 · 아래일 때만 (표면이 한참 위면 절벽 면에 부딪혀 그대로 떨어짐)
+      if (g != null && this.y <= g && this.y > g - 1.3 && this.vy <= 0.5) {
         // 착지
         const impact = -this.vy;
         const midSpin = this.spinT >= 0;
