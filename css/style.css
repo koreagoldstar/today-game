@@ -1610,6 +1610,30 @@ body {
   margin: 0;
 }
 
+/* 누적 방문: 패밀리사이트 버튼 왼쪽 (같은 줄 · 같은 알약 모양) */
+.foot .visit-total {
+  display: inline-block;
+  margin: 4px 6px 0 0;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.foot .visit-total[hidden] {
+  display: none;
+}
+
+.foot .visit-total b {
+  color: var(--coral);
+  font-variant-numeric: tabular-nums;
+}
+
 .foot-legal {
   display: flex;
   gap: 8px;
@@ -1699,6 +1723,8 @@ body {
   .page {
     padding-left: 8px;
     padding-right: 8px;
+    /* 맨 아래까지 내리면 마지막 줄이 오른쪽 아래 바닥글(누적 방문 · 패밀리사이트)에 안 가리게 */
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
   }
 
   .catalog {

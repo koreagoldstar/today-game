@@ -750,6 +750,19 @@
     return new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
   }
 
+  /** 바닥글 '누적 방문' (서버가 숫자를 못 주면 숨김 — 이 기기 숫자로 대신하지 않음) */
+  function paintVisitTotal(total) {
+    const box = document.getElementById("visit-total");
+    if (!box) return;
+    const n = Number(total);
+    if (total == null || !Number.isFinite(n) || n <= 0) {
+      box.hidden = true;
+      return;
+    }
+    document.getElementById("visit-total-n").textContent = n.toLocaleString("ko-KR");
+    box.hidden = false;
+  }
+
   async function loadVisitors() {
     const day = todayKey();
     const flag = `today-game-visit-${day}`;
@@ -762,6 +775,7 @@
         cache: "no-store",
       });
       const data = await res.json();
+      paintVisitTotal(data && data.total);
       if (data && data.today != null) {
         visitCount.textContent = Number(data.today).toLocaleString("ko-KR");
         return;

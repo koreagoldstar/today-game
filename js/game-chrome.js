@@ -185,10 +185,25 @@
     }
   }
 
+  /** 게임 페이지로 바로 들어온 방문자도 센다 (홈과 같은 표시: 같은 브라우저는 하루 한 번) */
+  function countVisit() {
+    if (!isGamePage()) return; // 홈은 js/main.js 가 센다
+    try {
+      const day = new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+      const flag = `today-game-visit-${day}`;
+      if (localStorage.getItem(flag)) return;
+      localStorage.setItem(flag, "1");
+      fetch("/api/visits?count=1", { cache: "no-store", keepalive: true }).catch(() => {});
+    } catch (_) {
+      /* 저장소를 못 쓰는 환경 — 세지 않음 */
+    }
+  }
+
   window.TodayChrome = { mount, sync: paintMute };
 
   function boot() {
     mount();
+    countVisit();
   }
 
   if (document.readyState === "loading") {
