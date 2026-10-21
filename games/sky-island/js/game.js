@@ -7,7 +7,7 @@ import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
 import { World, Airship } from "./world.js?v=1";
 import { Course } from "./course.js?v=1";
 import { Hero } from "./hero.js?v=1";
-import { Player, PHYS } from "./player.js?v=1";
+import { Player, PHYS } from "./player.js?v=2";
 import { Input } from "./input.js?v=1";
 import { FX } from "./fx.js?v=1";
 import { SkyAudio, MUSIC } from "./audio.js?v=1";

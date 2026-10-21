@@ -1,7 +1,7 @@
 /*
  * ☁️ 하늘섬 대탈출 — 시작 파일
  */
-import { Game } from "./js/game.js?v=1";
+import { Game } from "./js/game.js?v=2";
 
 const field = document.getElementById("field");
 const canvas = document.getElementById("game");

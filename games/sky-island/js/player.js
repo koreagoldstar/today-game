@@ -14,8 +14,9 @@ export const PHYS = {
   airAccel: 22,
   gravity: 30,
   jumpV: 11.2,
-  jumpCut: 0.5,
-  coyote: 0.12,
+  jumpCut: 0.72, // 일찍 떼면 이만큼만 (낮은 점프도 작은 발판까지 닿게 · 그래도 꾹 누른 것보다 0.5m 넘게 낮음)
+  minJump: 0.08, // 뛰고 나서 이 시간까지는 떼도 안 줄어듦 (아주 짧게 톡 눌러도)
+  coyote: 0.2, // 발판 끝에서 미끄러져 나간 뒤에도 이 시간 안이면 점프됨
   buffer: 0.15,
   dashSpeed: 14.5,
   dashTime: 0.22,
@@ -164,7 +165,11 @@ export class Player {
         this.coyoteT = PHYS.coyote;
       }
     }
-    if (f.jump) this.bufferT = PHYS.buffer;
+    if (f.jump) {
+      this.bufferT = PHYS.buffer;
+      // 공중에서 미리 누른 점프(착지 직전 · 끝에서 미끄러진 직후)는 일찍 떼도 줄이지 않음
+      this.pressAir = !this.onGround;
+    }
     // 대시 (땅에서, 또는 공중에서 한 번 · 쿨다운)
     if (f.dash && this.dashCD <= 0 && this.stunT <= 0 && (this.onGround || !this.airDash)) {
       this.dashT = PHYS.dashTime;
@@ -244,12 +249,13 @@ export class Player {
       this.groundSolid = null;
       this.coyoteT = 0;
       this.bufferT = 0;
-      this.cut = false;
+      this.cut = !!this.pressAir;
+      this.pressAir = false;
       this.airT = 0;
       ev.jump = true;
     }
-    // 짧게 누르면 낮은 점프
-    if (!this.onGround && this.vel.y > 0 && !jumpHeld && !this.cut && this.stunT <= 0) {
+    // 짧게 누르면 낮은 점프 (뛰고 나서 minJump 초까지는 줄이지 않음)
+    if (!this.onGround && this.vel.y > 0 && !jumpHeld && !this.cut && this.stunT <= 0 && this.airT >= P.minJump) {
       this.vel.y *= P.jumpCut;
       this.cut = true;
     }
