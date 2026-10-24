@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "slime-lab",
+      title: "말랑팡! 슬라임 연구소",
+      tag: "젤리 합체 퍼즐 · 미션 · 도감",
+      href: "/games/slime-lab/",
+      thumb: "/assets/thumbs/slime-lab.png",
+      category: "puzzle",
+    },
+    {
       id: "lava-surfers",
       title: "용암 서핑",
       tag: "3D 서핑 · 15스테이지 · 보스 3",

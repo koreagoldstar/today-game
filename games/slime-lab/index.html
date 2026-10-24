@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6d9f0" />
+    <title>말랑팡! 슬라임 연구소 | Today Game</title>
+    <meta name="description" content="같은 슬라임 두 개가 닿으면 말랑~ 팡! 다음 단계로 진화해요. 물방울 슬라임부터 전설의 젤리 드래곤까지 8단계 진화, 콤보와 연쇄 합체로 최고 점수에 도전하고 미션과 도감을 채우는 물리 퍼즐 게임." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/slime-lab/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="말랑팡! 슬라임 연구소 | Today Game" />
+    <meta property="og:description" content="같은 슬라임끼리 합쳐 전설의 젤리 드래곤까지! 말랑말랑 물리 합체 퍼즐 · 클래식 · 미션 · 도감" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/slime-lab/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/slime-lab.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="sl is-title">
+    <main class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="슬라임 연구 용기"></canvas>
+
+        <!-- HUD -->
+        <header class="hud" id="hud" hidden>
+          <button type="button" class="round-btn" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.6" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" /></svg></button>
+          <div class="hud-box score"><small>점수</small><b id="hud-score">0</b></div>
+          <div class="hud-box best" id="hud-best-box"><small id="hud-best-k">최고</small><b id="hud-best">0</b></div>
+          <div class="hud-box next"><small>다음</small><canvas id="next" width="56" height="56" aria-label="다음 슬라임"></canvas></div>
+          <button type="button" class="round-btn" id="sound-btn" aria-label="소리 끄기"><span aria-hidden="true">🔊</span></button>
+        </header>
+        <div class="mission-bar" id="mission-bar" hidden>
+          <b id="mission-goal">목표</b>
+          <span id="mission-prog"></span>
+          <span class="drops" id="mission-drops">남은 슬라임 0</span>
+        </div>
+        <p class="combo" id="combo" hidden></p>
+        <p class="warn" id="warn" hidden>넘칠 것 같아요!</p>
+        <p class="toast" id="toast" hidden></p>
+        <footer class="hud-bottom" id="hud-bottom" hidden>
+          <p class="hint" id="hint">옮기고 놓으면 떨어져요</p>
+          <canvas id="evo" width="320" height="40" aria-label="진화 순서"></canvas>
+        </footer>
+
+        <!-- 타이틀 -->
+        <section class="screen title" id="title" hidden aria-labelledby="title-h">
+          <div class="title-main">
+          <div class="logo">
+            <p class="logo-k">MALLANG PANG · SLIME LAB</p>
+            <h1 id="title-h"><span class="l1">말랑팡!</span><span class="l2">슬라임 연구소</span></h1>
+            <p class="logo-s">같은 슬라임 두 개가 닿으면 말랑~ 팡! 진화해요</p>
+          </div>
+          <div class="menu">
+            <button type="button" class="btn-main" id="classic-btn">클래식</button>
+            <button type="button" class="btn-main mint" id="mission-btn">미션</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="dex-btn">도감</button>
+              <button type="button" class="btn-sub" id="howto-btn">조작 방법</button>
+              <button type="button" class="btn-sub" id="settings-btn">설정</button>
+            </div>
+            <p class="title-best" id="title-best"></p>
+          </div>
+          </div>
+        </section>
+
+        <!-- 미션 목록 -->
+        <section class="screen panel" id="missions" hidden aria-labelledby="missions-h">
+          <div class="card wide">
+            <h2 id="missions-h">미션</h2>
+            <p class="sub" id="missions-sum"></p>
+            <div class="tiers" id="tiers"></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 도감 -->
+        <section class="screen panel" id="dex" hidden aria-labelledby="dex-h">
+          <div class="card wide">
+            <h2 id="dex-h">슬라임 도감</h2>
+            <p class="sub" id="dex-sum"></p>
+            <ul class="dex-grid" id="dex-grid"></ul>
+            <div class="dex-detail" id="dex-detail" hidden></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 조작 방법 -->
+        <section class="screen panel" id="howto" hidden aria-labelledby="howto-h">
+          <div class="card">
+            <h2 id="howto-h">조작 방법</h2>
+            <ul class="how">
+              <li><b>컴퓨터</b> 마우스로 옮기고 <kbd>클릭</kbd> · 또는 <kbd>←</kbd><kbd>→</kbd> 로 옮기고 <kbd>Space</kbd></li>
+              <li><b>휴대폰</b> 손가락을 대고 좌우로 옮긴 뒤 <b>떼면</b> 떨어져요 (톡 치면 그 자리)</li>
+              <li><b>단축키</b> <kbd>P</kbd>·<kbd>Esc</kbd> 일시정지 · <kbd>R</kbd> 다시 하기 (멈췄을 때 · 끝났을 때)</li>
+            </ul>
+            <ul class="tips">
+              <li><b>같은 슬라임 두 개</b>가 닿으면 하나로 합쳐져 다음 단계로 진화해요.</li>
+              <li>합쳐진 슬라임이 곧바로 또 합쳐지면 <b>연쇄</b>! 빠르게 이어서 합치면 <b>콤보</b>로 점수가 더 커져요.</li>
+              <li>슬라임이 <b>빨간 점선</b> 위로 오래 넘쳐 있으면 끝나요. 잠깐 넘는 건 괜찮아요.</li>
+              <li>전설의 젤리 드래곤 둘이 만나면 하늘로 날아가며 큰 점수!</li>
+            </ul>
+            <button type="button" class="btn-main small" data-back>알겠어요</button>
+          </div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel" id="settings" hidden aria-labelledby="settings-h">
+          <div class="card">
+            <h2 id="settings-h">설정</h2>
+            <label class="set-row"><span><b>효과음</b><small>톡 · 말랑 · 팡</small></span><input type="checkbox" id="set-sound" /></label>
+            <label class="set-row"><span><b>움직임 줄이기</b><small>흔들림 · 반짝임 · 파티클을 줄여요</small></span><input type="checkbox" id="set-reduced" /></label>
+            <p class="note" id="save-note">기록은 이 기기의 브라우저에만 저장돼요.</p>
+            <button type="button" class="btn-main small" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section class="screen panel" id="pause" hidden aria-labelledby="pause-h">
+          <div class="card">
+            <h2 id="pause-h">잠깐 쉬어요</h2>
+            <button type="button" class="btn-main" id="pause-resume">계속하기</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="pause-restart">다시 하기</button>
+              <button type="button" class="btn-sub" id="pause-menu">메뉴로</button>
+            </div>
+            <div class="row">
+              <button type="button" class="btn-sub" id="pause-howto">조작 방법</button>
+              <button type="button" class="btn-sub" id="pause-settings">설정</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 클래식 끝 -->
+        <section class="screen panel" id="over" hidden aria-labelledby="over-h">
+          <div class="card result">
+            <p class="res-k">CLASSIC</p>
+            <h2 id="over-h">용기가 넘쳤어요!</h2>
+            <p class="new-best" id="over-new" hidden>🎉 최고 기록!</p>
+            <p class="res-score"><small>최종 점수</small><b id="over-score">0</b></p>
+            <div class="stats" id="over-stats"></div>
+            <div class="rank-slot" id="over-rank"></div>
+            <button type="button" class="btn-main" id="over-again">다시 하기</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="over-menu">메뉴로</button>
+              <a class="btn-sub" href="/">사이트로</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 미션 결과 -->
+        <section class="screen panel" id="mresult" hidden aria-labelledby="mres-h">
+          <div class="card result">
+            <p class="res-k" id="mres-k">MISSION</p>
+            <h2 id="mres-h">미션 성공!</h2>
+            <p class="stars" id="mres-stars" role="img" aria-label="별"></p>
+            <p class="mres-goal" id="mres-goal"></p>
+            <div class="stats" id="mres-stats"></div>
+            <p class="mres-unlock" id="mres-unlock" hidden></p>
+            <button type="button" class="btn-main" id="mres-next">다음 미션</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="mres-again">다시 하기</button>
+              <button type="button" class="btn-sub" id="mres-list">미션 목록</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 캔버스를 못 쓰는 아주 오래된 브라우저 -->
+        <div class="fallback" id="fallback" hidden><p>이 브라우저에서는 게임을 열 수 없어요. 최신 브라우저로 다시 와 주세요!</p><a class="btn-sub" href="/">사이트로</a></div>
+      </div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="말랑팡! 슬라임 연구소 소개">
+  <h2>말랑팡! 슬라임 연구소 소개</h2>
+  <p>투명한 연구 용기에 슬라임을 떨어뜨려 같은 슬라임 두 개를 맞닿게 하면 말랑~ 팡! 하나로 합쳐지며 다음 단계로 진화하는 물리 합체 퍼즐 게임입니다. 머리끝이 뾰족한 물방울 슬라임에서 시작해 레몬 슬라임, 복숭아 슬라임, 긴 귀의 토끼 슬라임, 몸속에 별자리가 반짝이는 별빛 슬라임, 무지개 슬라임, 황금 왕관 슬라임을 거쳐 전설의 젤리 드래곤까지 8단계로 자라요. 슬라임은 떨어질 때 늘어나고 바닥에 닿으면 납작해지고, 부딪히면 말랑하게 흔들리며 표정도 바뀌어요. 합쳐진 슬라임이 곧바로 또 합쳐지면 연쇄, 한 번 떨어뜨린 뒤 합체가 이어지면 콤보로 점수가 커져요. 클래식 모드에서는 용기가 넘치기 전까지 최고 점수에 도전하고, 미션 모드에서는 쉬움 · 보통 · 어려움 12개 미션을 정해진 슬라임 개수 안에 깨며 별을 모아요. 처음 만든 슬라임은 도감에 이름과 설명, 처음 발견한 날이 기록돼요.</p>
+  <h3>플레이 방법</h3>
+  <p>컴퓨터에서는 마우스로 떨어뜨릴 자리를 옮기고 클릭하면 떨어져요. 방향키(←→)나 A · D 로 옮기고 Space 로 떨어뜨려도 돼요. P 나 Esc 는 일시정지, 멈췄을 때와 끝났을 때 R 은 다시 하기예요. 휴대폰과 패드에서는 화면에 손가락을 대고 좌우로 옮긴 뒤 떼면 그 자리에 떨어져요. 위쪽의 '다음' 칸에서 다음 슬라임을 미리 보고, 아래 진화표에서 진화 순서를 확인해요. 슬라임이 용기 위쪽 빨간 점선 위로 오래 넘쳐 있으면 경고가 뜨고, 계속 넘쳐 있으면 끝나요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>어떻게 하면 점수를 많이 받나요?</dt>
+    <dd>큰 단계로 합칠수록 점수가 커요. 합쳐진 슬라임이 옆의 같은 슬라임과 곧바로 또 합쳐지는 연쇄와, 한 번 떨어뜨린 뒤 이어지는 콤보에 보너스가 붙어요. 작은 슬라임만 빨리 계속 떨어뜨려서는 콤보가 쌓이지 않아요.</dd>
+    <dt>미션은 어떻게 열리나요?</dt>
+    <dd>쉬움 미션 4개는 처음부터 할 수 있어요. 쉬움을 3개 깨면 보통, 보통을 3개 깨면 어려움 미션이 열려요. 슬라임을 적게 쓰고 성공할수록 별을 더 받아요(최대 3개).</dd>
+    <dt>전설의 젤리 드래곤 둘이 만나면 어떻게 되나요?</dt>
+    <dd>둘이 함께 하늘로 날아가며 사라지고 큰 보너스 점수를 받아요. 용기에 자리가 다시 생겨요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>클래식 최고 점수, 도감, 미션 별, 설정은 이 기기의 브라우저에만 저장돼요. 다른 기기와 연결되지 않아요. 게임이 끝난 뒤 랭킹에 직접 이름을 올릴 때만 닉네임과 점수를 보내요. 결제나 뽑기는 없어요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

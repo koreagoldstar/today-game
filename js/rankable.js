@@ -58,6 +58,7 @@
     { id: "memory", title: "짝짝 사천성" },
     { id: "diff", title: "다른 그림 찾기" },
     { id: "suika", title: "수박 합치기" },
+    { id: "slime-lab", title: "말랑팡! 슬라임 연구소" },
     { id: "slide-2048", title: "두배두배" },
     { id: "tower", title: "흔들흔들 스카이" },
     { id: "fish-rush", title: "황금 낚시" },
