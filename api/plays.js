@@ -100,10 +100,12 @@ module.exports = async function handler(req, res) {
     "sky-island",
     "lava-surfers",
     "slime-lab",
+    "jelly-factory",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "jelly-factory",
     "slime-lab",
     "lava-surfers",
     "sky-island",

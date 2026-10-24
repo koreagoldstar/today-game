@@ -90,6 +90,8 @@ module.exports = async function handler(req, res) {
     "lava-endless",
     // 말랑팡! 슬라임 연구소: 클래식 점수 (게임 오버 화면에서 직접 등록할 때만)
     "slime-lab",
+    // 말랑콩떡! 젤리 공장: 점수 도전 점수 (결과 화면에서 직접 등록할 때만 · 스테이지 · 오늘의 퍼즐은 순위 없음)
+    "jelly-factory",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms, 제트스키 완주 기록 ms 등) */
   const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12"]);

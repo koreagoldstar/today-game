@@ -6,6 +6,7 @@
   <url><loc>https://www.todaygame.co.kr/privacy/</loc><priority>0.3</priority></url>
   <url><loc>https://www.todaygame.co.kr/terms/</loc><priority>0.3</priority></url>
 
+  <url><loc>https://www.todaygame.co.kr/games/jelly-factory/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/slime-lab/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/lava-surfers/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/sky-island/</loc><priority>0.7</priority></url>

@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "jelly-factory",
+      title: "말랑콩떡! 젤리 공장",
+      tag: "미끄러지기 퍼즐 · 30스테이지",
+      href: "/games/jelly-factory/",
+      thumb: "/assets/thumbs/jelly-factory.png",
+      category: "puzzle",
+    },
+    {
       id: "slime-lab",
       title: "말랑팡! 슬라임 연구소",
       tag: "젤리 합체 퍼즐 · 미션 · 도감",
