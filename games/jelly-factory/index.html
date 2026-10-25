@@ -15,8 +15,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=1" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
     <link rel="modulepreload" href="js/game.js?v=1" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
@@ -69,7 +69,7 @@
         </section>
 
         <!-- 스테이지 목록 -->
-        <section class="screen panel" id="stages" hidden aria-labelledby="stages-h">
+        <section class="screen panel" id="stages" data-today-home hidden aria-labelledby="stages-h">
           <div class="card wide">
             <h2 id="stages-h">스테이지</h2>
             <p class="sub" id="stages-sum"></p>
@@ -94,7 +94,7 @@
         </section>
 
         <!-- 오늘의 퍼즐 안내 -->
-        <section class="screen panel" id="daily" hidden aria-labelledby="daily-date">
+        <section class="screen panel" id="daily" data-today-home hidden aria-labelledby="daily-date">
           <div class="card">
             <p class="res-k">오늘의 퍼즐</p>
             <h2 id="daily-date">오늘의 퍼즐</h2>
@@ -110,7 +110,7 @@
         </section>
 
         <!-- 도감 -->
-        <section class="screen panel" id="dex" hidden aria-labelledby="dex-h">
+        <section class="screen panel" id="dex" data-today-home hidden aria-labelledby="dex-h">
           <div class="card wide">
             <h2 id="dex-h">젤리 도감</h2>
             <p class="sub" id="dex-sum"></p>
@@ -192,7 +192,7 @@
     </main>
 
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/game-rank.js"></script>
     <script type="module" src="main.js?v=1"></script>

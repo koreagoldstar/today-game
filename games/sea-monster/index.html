@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=1" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
     <link rel="modulepreload" href="js/game.js?v=1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
@@ -92,7 +92,7 @@
         </section>
 
         <!-- 탐험 지도 -->
-        <section class="screen panel" id="map" hidden aria-labelledby="map-h">
+        <section class="screen panel" id="map" data-today-home hidden aria-labelledby="map-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="map-h">탐험 지도</h2>
@@ -102,7 +102,7 @@
         </section>
 
         <!-- 도감 -->
-        <section class="screen panel" id="codex" hidden aria-labelledby="codex-h">
+        <section class="screen panel" id="codex" data-today-home hidden aria-labelledby="codex-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="codex-h">바다괴물 도감</h2>
@@ -113,7 +113,7 @@
         </section>
 
         <!-- 장비 -->
-        <section class="screen panel" id="gear" hidden aria-labelledby="gear-h">
+        <section class="screen panel" id="gear" data-today-home hidden aria-labelledby="gear-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="gear-h">탐험 장비</h2>
@@ -123,7 +123,7 @@
         </section>
 
         <!-- 오늘의 도전 -->
-        <section class="screen panel" id="daily" hidden aria-labelledby="daily-h">
+        <section class="screen panel" id="daily" data-today-home hidden aria-labelledby="daily-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="daily-h">오늘의 도전</h2>
@@ -199,7 +199,7 @@
 
     <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
     <script src="/js/my-face.js?v=3"></script>
     <script type="module" src="main.js?v=1"></script>
       <!-- seo:game:start -->

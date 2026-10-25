@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=1" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=4" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
     <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
     <link rel="modulepreload" href="js/game.js?v=1" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
@@ -105,7 +105,7 @@
         </section>
 
         <!-- 캐릭터 선택 -->
-        <section class="screen select" id="select" hidden aria-labelledby="select-h">
+        <section class="screen select" id="select" data-today-home hidden aria-labelledby="select-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="select-h">누구랑 갈까요?</h2>
@@ -127,7 +127,7 @@
         </section>
 
         <!-- 지역 선택 -->
-        <section class="screen panel" id="regions" hidden aria-labelledby="regions-h">
+        <section class="screen panel" id="regions" data-today-home hidden aria-labelledby="regions-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="regions-h">지역 선택</h2>
@@ -137,7 +137,7 @@
         </section>
 
         <!-- 석상 챌린지 -->
-        <section class="screen panel" id="challenge" hidden aria-labelledby="ch-h">
+        <section class="screen panel" id="challenge" data-today-home hidden aria-labelledby="ch-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="ch-h">석상 챌린지</h2>
@@ -147,7 +147,7 @@
         </section>
 
         <!-- 수집 도감 -->
-        <section class="screen panel" id="collection" hidden aria-labelledby="col-h">
+        <section class="screen panel" id="collection" data-today-home hidden aria-labelledby="col-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="col-h">수집 도감</h2>
@@ -168,7 +168,7 @@
         </section>
 
         <!-- 오늘의 도전 -->
-        <section class="screen panel" id="daily" hidden aria-labelledby="daily-h">
+        <section class="screen panel" id="daily" data-today-home hidden aria-labelledby="daily-h">
           <header class="panel-head">
             <button type="button" class="btn-back" data-back aria-label="뒤로"><span data-icon="back"></span></button>
             <h2 id="daily-h">오늘의 도전</h2>
@@ -290,7 +290,7 @@
 
     <noscript><p class="noscript">이 게임은 자바스크립트를 켜야 플레이할 수 있어요.</p></noscript>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/game-rank.js"></script>
     <script type="module" src="main.js?v=1"></script>

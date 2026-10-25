@@ -976,3 +976,10 @@ body.sl {
     gap: 7px;
   }
 }
+
+/* 집 모양 홈 버튼(왼쪽 위)이 있는 목록 화면: 좁은 화면에서는 카드를 그만큼 아래로 */
+@media (max-width: 700px) {
+  .sl .panel[data-today-home] {
+    padding-top: calc(72px + env(safe-area-inset-top));
+  }
+}
