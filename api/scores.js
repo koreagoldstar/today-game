@@ -94,9 +94,11 @@ module.exports = async function handler(req, res) {
     "slime-lab",
     // 말랑콩떡! 젤리 공장: 점수 도전 점수 (결과 화면에서 직접 등록할 때만 · 스테이지 · 오늘의 퍼즐은 순위 없음)
     "jelly-factory",
+    // 자석 대소동: 오늘의 자석 실험 깬 시간 ms (결과 화면에서 직접 등록할 때만 · 날짜마다 같은 판)
+    "magnet-daily",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms, 제트스키 완주 기록 ms 등) */
-  const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12"]);
+  const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12", "magnet-daily"]);
   const PERIODS = new Set(["day", "week"]);
   const MAX_KEEP = 50;
   const MAX_NAME = 8;

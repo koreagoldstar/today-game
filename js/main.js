@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "magnet-mayhem",
+      title: "자석 대소동",
+      tag: "자석 물리 퍼즐 · 12스테이지",
+      href: "/games/magnet-mayhem/",
+      thumb: "/assets/thumbs/magnet-mayhem.png",
+      category: "puzzle",
+    },
+    {
       id: "jelly-factory",
       title: "말랑콩떡! 젤리 공장",
       tag: "미끄러지기 퍼즐 · 30스테이지",

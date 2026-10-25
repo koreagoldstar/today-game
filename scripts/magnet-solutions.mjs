@@ -1,0 +1,29 @@
+/**
+ * 자석 대소동 · 스테이지 풀이 (자동 점검이 이대로 두어 봄 · 명령은 scripts/magnet-bot.mjs 참고)
+ *  모든 풀이는 별 3개(시간 · 특별 목표)까지 받는 길로 적었다.
+ */
+export const SOLUTIONS = {
+  1: [["walk", 330], ["mag", true], ["wait", 0.6], ["walk", 692], ["until", "g1", 3], ["mag", false], ["walk", 520], ["air", 1, 0.45], ["walk", 610], ["walk", 900]],
+  2: [["walk", 222], ["pole", "N"], ["mag", true], ["wait", 1.4], ["mag", false], ["until", "s1", 3], ["air", 1, 0.4], ["walk", 560], ["walk", 620], ["wait", 0.5], ["pole", "S"], ["walk", 872], ["mag", true], ["until", "held:nball", 3], ["wait", 0.5], ["walk", 690], ["until", "g1", 3], ["mag", false], ["walk", 905]],
+  3: [["walk", 270], ["air", 1, 0.25], ["wait", 0.3], ["air", -1, 0.35], ["wait", 0.3], ["walk", 240], ["hold", -1, 0.4], ["walk", 200], ["walk", 440], ["walk", 520], ["mag", true], ["wait", 0.8], ["walk", 790], ["until", "g1", 3], ["mag", false], ["walk", 905]],
+  4: [["walk", 250], ["air", 1, 0.3], ["walk", 336], ["mag", true], ["until", "ball.y>330", 4], ["wait", 0.6], ["hold", 1, 0.4], ["walk", 510], ["until", "crate.y>420", 5], ["mag", false], ["walk", 500], ["wait", 0.4], ["air", 1, 0.35], ["wait", 0.3], ["walk", 540], ["jump", 0.35], ["wait", 0.7], ["walk", 900]],
+  5: [["walk", 430], ["air", 1, 0.3], ["wait", 0.3], ["jump", 0.35], ["wait", 0.6], ["hold", -1, 0.4], ["wait", 0.4], ["walk", 400], ["mag", true], ["wait", 0.5], ["walk", 230], ["mag", false], ["air", 1, 0.25], ["wait", 0.4], ["walk", 258], ["air", -1, 0.6], ["wait", 0.3], ["walk", 70]],
+  7: [["walk", 180], ["wait", 0.3], ["hold", 1, 0.4], ["wait", 0.5], ["walk", 300], ["jump", 0.35], ["wait", 0.6], ["walk", 350], ["until", "!ball.y<300", 4], ["until", "ball.y<250", 4], ["mag", true], ["until", "held:ball", 4], ["wait", 0.5], ["air", 1, 0.6], ["wait", 0.3], ["walk", 662], ["until", "g1", 3], ["mag", false], ["walk", 752]],
+  6: [["walk", 170], ["air", 1, 0.35], ["walk", 480], ["jump", 0.35], ["wait", 0.5], ["walk", 730], ["air", 1, 0.45], ["walk", 800], ["use"], ["until", "ball.x>700", 6], ["walk", 778], ["mag", true], ["until", "held:ball", 4], ["wait", 0.4], ["jump", 0.35], ["until", "ball.y<392", 2], ["wait", 0.4], ["walk", 902], ["until", "g1", 3], ["mag", false], ["walk", 800], ["use"], ["walk", 250], ["air", -1, 0.4], ["walk", 40]],
+  8: [["walk", 262], ["air", 1, 0.35], ["wait", 0.3], ["walk", 440], ["air", 1, 0.3], ["wait", 0.2], ["walk", 490], ["jump", 0.35], ["wait", 0.6], ["air", 1, 0.3], ["walk", 610], ["use"], ["walk", 545], ["air", -1, 0.45], ["wait", 0.3], ["walk", 320], ["hold", -1, 0.5], ["walk", 278], ["pole", "N"], ["mag", true], ["until", "nblock.x>540", 4], ["mag", false], ["air", 1, 0.35], ["walk", 445], ["air", 1, 0.4], ["walk", 690], ["air", 1, 0.5], ["walk", 800], ["use"], ["until", "g1", 5], ["walk", 905]],
+  9: [["walk", 140], ["air", 1, 0.45], ["wait", 0.3], ["walk", 250], ["mag", true], ["wait", 0.4], ["walk", 420], ["until", "s1", 4], ["wait", 0.3], ["mag", false], ["walk", 500], ["until", "p2.x<570", 6], ["air", 1, 0.3], ["wait", 0.2], ["walk", 565], ["jump", 0.35], ["until", "p2.x>650", 6], ["walk", 740], ["until", "p1.y>470", 9], ["air", 1, 0.4], ["walk", 845], ["wait", 1]],
+  10: [["walk", 100], ["mag", true], ["until", "ballB.x<185", 2], ["mag", false], ["until", "g2", 3], ["walk", 548], ["air", 1, 0.35], ["wait", 0.3], ["walk", 624], ["mag", true], ["until", "held:ballA", 2], ["wait", 0.3], ["jump", 0.35], ["until", "ballA.y<420", 2], ["wait", 0.2], ["walk", 868], ["until", "g1", 3], ["mag", false], ["walk", 690], ["jump", 0.35], ["wait", 0.6], ["walk", 905]],
+  11: [["walk", 140], ["use"], ["walk", 590], ["air", 1, 0.3], ["wait", 0.3], ["walk", 640], ["jump", 0.35], ["wait", 0.6], ["walk", 700], ["wait", 0.3], ["face", -1], ["mag", true], ["until", "held:heavy", 2], ["walk", 530], ["until", "s2", 3], ["mag", false], ["wait", 0.8], ["walk", 770], ["mag", true], ["until", "held:ball|g1", 2], ["wait", 0.3], ["walk", 852], ["until", "g1", 3], ["mag", false], ["walk", 905]],
+  12: [["pole", "S"], ["mag", true], ["walk", 330], ["until", "gB", 4], ["mag", false], ["air", 1, 0.3], ["walk", 440], ["jump", 0.35], ["wait", 0.6], ["walk", 518], ["wait", 0.3], ["mag", true], ["until", "held:ball", 2], ["wait", 0.4], ["walk", 700], ["until", "gA", 3], ["mag", false], ["walk", 775], ["wait", 0.3], ["face", -1], ["mag", true], ["until", "held:heavy", 2], ["walk", 845], ["until", "sC", 3], ["mag", false], ["air", 1, 0.3], ["walk", 905], ["until", "lift.y<190", 5], ["walk", 751]],
+};
+
+/** 오늘의 실험 풀이 (levels 의 DAILY id → 명령) */
+export const DAILY_SOLUTIONS = {
+  d1: [["walk", 250], ["mag", true], ["until", "held:ball", 2], ["wait", 0.3], ["walk", 390], ["air", 1, 0.45], ["walk", 560], ["jump", 0.35], ["wait", 0.5], ["walk", 672], ["until", "g1", 3], ["mag", false], ["walk", 891]],
+  d2: [["pole", "S"], ["mag", true], ["walk", 330], ["until", "s1", 4], ["mag", false], ["air", 1, 0.3], ["walk", 440], ["jump", 0.35], ["wait", 0.6], ["walk", 891]],
+  d3: [["walk", 440], ["until", "s1", 3], ["air", 1, 0.25], ["wait", 0.3], ["jump", 0.35], ["wait", 0.6], ["walk", 740], ["mag", true], ["until", "held:ball", 3], ["wait", 0.3], ["walk", 712], ["until", "g1", 3], ["mag", false], ["walk", 901]],
+  d4: [["walk", 130], ["use"], ["walk", 450], ["jump", 0.35], ["wait", 0.5], ["until", "g1", 6], ["walk", 911]],
+  d5: [["walk", 518], ["mag", true], ["until", "held:ball", 2], ["wait", 0.4], ["walk", 700], ["until", "g1", 3], ["mag", false], ["walk", 891]],
+  d6: [["walk", 200], ["mag", true], ["until", "held:ballA", 2], ["walk", 412], ["until", "gA", 3], ["mag", false], ["walk", 560], ["jump", 0.35], ["wait", 0.5], ["walk", 620], ["mag", true], ["until", "held:ballB", 2], ["walk", 812], ["until", "gB", 3], ["mag", false], ["walk", 911]],
+  d7: [["walk", 250], ["mag", true], ["until", "held:heavy", 2], ["walk", 520], ["until", "s1", 4], ["mag", false], ["air", 1, 0.3], ["wait", 0.3], ["jump", 0.35], ["wait", 0.6], ["walk", 891]],
+};

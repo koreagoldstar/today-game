@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f2a4d" />
+    <title>자석 대소동 | Today Game</title>
+    <meta name="description" content="작은 정비 로봇 마그가 등에 단 자석으로 공장 사고를 해결하는 물리 퍼즐 어드벤처. 자석을 켜고 끄고 N극 · S극을 바꿔 철 공과 상자를 끌어당기고 자석 블록을 밀어내며 스위치 · 문 · 컨베이어 · 스프링 · 리프트를 움직여요. 스테이지 12개 · 오늘의 자석 실험." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/magnet-mayhem/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="자석 대소동 | Today Game" />
+    <meta property="og:description" content="자석을 켜고 극을 바꿔 공장의 퍼즐을 풀어요! 물리 퍼즐 어드벤처 · 스테이지 12개 · 오늘의 자석 실험" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/magnet-mayhem/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/magnet-mayhem.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="modulepreload" href="js/game.js?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="mm is-title">
+    <main class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="자석 대소동 공장"></canvas>
+
+        <!-- 위: 스테이지 · 목표 · 자석 상태 · 극 · 에너지 · 시간 · 멈춤 -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-l">
+            <small id="hud-k">STAGE 1</small>
+            <b id="hud-name">이름</b>
+            <p class="hud-goal" id="hud-goal"></p>
+          </div>
+          <div class="hud-r">
+            <span class="chip mag" id="hud-mag"><i></i><b id="hud-mag-t">자석 꺼짐</b></span>
+            <span class="chip pole S" id="hud-pole" role="img" aria-label="지금 극">S</span>
+            <span class="chip time" id="hud-time">0.0초</span>
+            <button type="button" class="round" id="sound-btn" aria-label="효과음 끄기">🔊</button>
+            <button type="button" class="round" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.6" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" /></svg></button>
+          </div>
+          <div class="energy" id="hud-energy" hidden>
+            <span class="e-label">⚡ 에너지</span>
+            <span class="e-bar"><i id="hud-energy-fill"></i></span>
+            <b id="hud-energy-n">100%</b>
+          </div>
+        </header>
+
+        <div class="tip" id="tip" role="status" hidden><span id="tip-t"></span><button type="button" id="tip-close" aria-label="안내 닫기">✕</button></div>
+        <p class="toast" id="toast" role="status" hidden></p>
+        <button type="button" class="view-btn" id="view-btn" hidden>🗺️ 전체 보기</button>
+
+        <!-- 키보드 안내 (컴퓨터) -->
+        <p class="keys" id="keys" hidden><kbd>←</kbd><kbd>→</kbd> 이동 · <kbd>↑</kbd> 점프 · <kbd>K</kbd> 자석 · <kbd>L</kbd> 극 바꾸기 · <kbd>E</kbd> 조작 · <kbd>P</kbd> 멈춤 · <kbd>R</kbd> 다시</p>
+
+        <!-- 화면 버튼 (휴대폰 · 패드) -->
+        <div class="pad" id="pad" hidden>
+          <div class="pad-l">
+            <button type="button" data-act="left" aria-label="왼쪽으로"><span class="ic">◀</span><small>왼쪽</small></button>
+            <button type="button" data-act="right" aria-label="오른쪽으로"><span class="ic">▶</span><small>오른쪽</small></button>
+          </div>
+          <div class="pad-r">
+            <button type="button" data-act="use" id="hud-use" aria-label="레버 조작"><span class="ic">✋</span><small>조작</small></button>
+            <button type="button" data-act="pole" data-pole="S" aria-label="극 바꾸기"><span class="ic"><b>S</b></span><small>극 바꾸기</small></button>
+            <button type="button" data-act="mag" aria-label="자석 켜기 끄기"><span class="ic">🧲</span><small>자석</small></button>
+            <button type="button" data-act="jump" class="big" aria-label="점프"><span class="ic">⤒</span><small>점프</small></button>
+          </div>
+        </div>
+
+        <!-- 첫 화면 -->
+        <section class="screen title" id="title" hidden aria-labelledby="title-h">
+          <div class="title-main">
+            <div class="logo">
+              <p class="logo-k">MAGNET MAYHEM</p>
+              <h1 id="title-h"><span class="l1">자석</span><span class="l2">대소동</span></h1>
+              <p class="logo-s">정비 로봇 마그와 자석으로 공장 사고를 해결해요</p>
+            </div>
+            <div class="menu">
+              <button type="button" class="btn-main" id="play-btn">플레이</button>
+              <div class="row">
+                <button type="button" class="btn-main teal" id="stages-btn">스테이지 선택</button>
+                <button type="button" class="btn-main lemon" id="daily-btn">오늘의 자석 실험</button>
+              </div>
+              <div class="row">
+                <button type="button" class="btn-sub" id="skins-btn">마그 꾸미기</button>
+                <button type="button" class="btn-sub" id="help-btn">도움말</button>
+                <button type="button" class="btn-sub" id="settings-btn">설정</button>
+              </div>
+              <p class="title-best" id="title-best"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 스테이지 선택 -->
+        <section class="screen panel" id="stages" data-today-home hidden aria-labelledby="stages-h">
+          <div class="card wide">
+            <h2 id="stages-h">스테이지 선택</h2>
+            <p class="sub" id="stages-sum"></p>
+            <div class="stage-grid" id="stage-grid"></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 스테이지 안내 -->
+        <section class="screen panel" id="intro" hidden aria-labelledby="intro-h">
+          <div class="card">
+            <p class="res-k" id="intro-k">STAGE 1</p>
+            <h2 id="intro-h">이름</h2>
+            <p class="goal-line" id="intro-goal"></p>
+            <ul class="rules" id="intro-stars"></ul>
+            <p class="energy-note" id="intro-energy" hidden></p>
+            <p class="best-line" id="intro-best"></p>
+            <button type="button" class="btn-main" id="intro-go">시작!</button>
+            <button type="button" class="btn-sub wide" id="intro-back">돌아가기</button>
+          </div>
+        </section>
+
+        <!-- 오늘의 자석 실험 -->
+        <section class="screen panel" id="daily" data-today-home hidden aria-labelledby="daily-date">
+          <div class="card">
+            <p class="res-k">오늘의 자석 실험</p>
+            <h2 id="daily-date">오늘의 실험</h2>
+            <p class="sub" id="daily-name"></p>
+            <p class="goal-line" id="daily-goal"></p>
+            <p class="best-line" id="daily-status"></p>
+            <p class="note">날짜(서울 기준)마다 모든 사람이 같은 실험을 해요. 기록은 이 기기에 남고, 깬 뒤에 원하면 오늘 순위에 이름을 올릴 수 있어요. 시작한 실험은 자정이 지나도 그대로예요.</p>
+            <p class="note hint" id="daily-hint">스테이지를 다 깨면 더 쉬워요!</p>
+            <button type="button" class="btn-main lemon" id="daily-go">실험 시작!</button>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 마그 꾸미기 -->
+        <section class="screen panel" id="skins" data-today-home hidden aria-labelledby="skins-h">
+          <div class="card wide">
+            <h2 id="skins-h">마그 꾸미기</h2>
+            <p class="sub" id="skins-sum"></p>
+            <div class="skin-grid" id="skin-grid"></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 도움말 -->
+        <section class="screen panel" id="help" hidden aria-labelledby="help-h">
+          <div class="card wide">
+            <h2 id="help-h">도움말</h2>
+            <h3>조작</h3>
+            <ul class="how">
+              <li><b>컴퓨터</b> <kbd>←</kbd><kbd>→</kbd>(<kbd>A</kbd><kbd>D</kbd>) 이동 · <kbd>↑</kbd>(<kbd>W</kbd> · <kbd>스페이스</kbd>) 점프 · <kbd>K</kbd> 자석 켜기/끄기 · <kbd>L</kbd> 극 바꾸기 · <kbd>E</kbd> 레버 조작 · <kbd>P</kbd> 멈춤 · <kbd>R</kbd> 다시</li>
+              <li><b>휴대폰</b> 왼쪽 ◀ ▶ 로 이동 · 오른쪽 <b>점프</b> · <b>🧲 자석</b> · <b>극 바꾸기</b> · <b>✋ 조작</b></li>
+            </ul>
+            <h3>자석 규칙</h3>
+            <ul class="how">
+              <li>자석을 켜면 둥근 범위 안의 금속이 움직여요. 가까울수록 세고, 무거운 것은 덜 움직여요.</li>
+              <li>철은 N 이든 S 든 끌려와요. 자석 블록은 <b>같은 극이면 밀려나고</b>, 다른 극이면 끌려와요.</li>
+              <li>자석을 끄면 붙어 있던 물건이 떨어져요. 끌려오는 중에 끄면 그대로 날아가요!</li>
+              <li>노란 칸에 물건을 넣으면 '딸깍' 고정돼요. 누름 스위치는 올라가 있는 동안만 켜져요.</li>
+              <li>⚡ 에너지가 있는 스테이지는 자석을 켜 두면 에너지가 줄어요.</li>
+            </ul>
+            <h3>재질</h3>
+            <ul class="mats" id="help-mats"></ul>
+            <button type="button" class="btn-main small" data-back>알겠어요</button>
+          </div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel" id="settings" hidden aria-labelledby="settings-h">
+          <div class="card">
+            <h2 id="settings-h">설정</h2>
+            <label class="set-row"><span><b>효과음</b><small>자석 · 철컹 · 딸깍</small></span><input type="checkbox" id="set-sound" /></label>
+            <label class="set-row"><span><b>움직임 줄이기</b><small>흔들림 · 반짝임 · 꽃가루를 줄여요</small></span><input type="checkbox" id="set-reduced" /></label>
+            <p class="note" id="save-note"></p>
+            <button type="button" class="btn-main small" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 멈춤 -->
+        <section class="screen panel" id="pause" hidden aria-labelledby="pause-h">
+          <div class="card">
+            <h2 id="pause-h">잠깐 쉬어요</h2>
+            <button type="button" class="btn-main" id="p-resume">계속하기</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="p-restart">다시 하기</button>
+              <button type="button" class="btn-sub" id="p-stages">스테이지 선택</button>
+            </div>
+            <div class="row">
+              <button type="button" class="btn-sub" id="p-help">도움말</button>
+              <button type="button" class="btn-sub" id="p-settings">설정</button>
+              <button type="button" class="btn-sub" id="p-menu">메뉴로</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 다시 하기 확인 -->
+        <section class="screen panel" id="confirm" hidden aria-labelledby="confirm-h">
+          <div class="card">
+            <h2 id="confirm-h">처음부터 다시 할까요?</h2>
+            <div class="row">
+              <button type="button" class="btn-main small" id="c-yes">다시 하기</button>
+              <button type="button" class="btn-sub" id="c-no">계속하기</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 결과 -->
+        <section class="screen panel" id="result" hidden aria-labelledby="r-h">
+          <div class="card result">
+            <p class="res-k" id="r-k">STAGE 1</p>
+            <h2 id="r-h">실험 성공!</h2>
+            <p class="stars" id="r-stars" role="img" aria-label="별"></p>
+            <p class="new-best" id="r-new" hidden>🎉 최고 기록!</p>
+            <div class="stats" id="r-stats"></div>
+            <p class="note" id="r-rules"></p>
+            <div class="share-box" id="r-share-box" hidden>
+              <canvas id="r-card" width="520" height="260" aria-label="결과 공유 카드"></canvas>
+              <div class="row">
+                <button type="button" class="btn-sub" id="r-share">공유하기</button>
+                <button type="button" class="btn-sub" id="r-copy">결과 복사</button>
+              </div>
+            </div>
+            <div class="rank-slot" id="r-rank"></div>
+            <p class="note hint" id="r-daily-hint" hidden>🏭 공장 대소동 해결! 마그가 거대 자석 장치를 다시 움직였어요. 매일 바뀌는 '오늘의 자석 실험'에도 도전해 봐요.</p>
+            <button type="button" class="btn-main" id="r-next">다음 스테이지</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="r-retry">다시 도전</button>
+              <button type="button" class="btn-sub" id="r-stages">스테이지 선택</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="fallback" id="fallback" hidden><p>이 브라우저에서는 게임을 열 수 없어요. 최신 브라우저로 다시 와 주세요!</p><a class="btn-sub" href="/">사이트로</a></div>
+      </div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="자석 대소동 소개">
+  <h2>자석 대소동 소개</h2>
+  <p>고장 난 공장에서 정비 로봇 마그가 자석으로 사고를 해결하는 물리 퍼즐 어드벤처 게임입니다. 마그의 자석을 켜고 끄고, N극과 S극을 바꿔 가며 물건을 끌어당기거나 밀어내요. 철은 세게, 합금은 약하게 붙고, 나무와 고무는 붙지 않아 몸으로 밀어야 해요. 자석 블록은 다른 극이면 끌려오고 같은 극이면 밀려나요. 누름 스위치와 문, 컨베이어, 스프링, 움직이는 발판, 리프트, 레버, 벽에 붙은 전자석이 이어져 물건 하나가 스위치를 누르면 다른 장치가 움직이는 연쇄가 일어나요. 물체는 무게와 마찰, 튕김을 계산하는 물리 엔진으로 움직이고, 무거운 철 상자는 끌 때 마그가 천천히 걸어요. 자석과의 첫 만남부터 극성 바꾸기, 철구 대소동, 컨베이어 혼란, 스프링 실험, 에너지 위기, 공장 연쇄 사고, 코어 세 개로 깨우는 거대 자석 장치까지 스테이지 12개가 있고, 모든 스테이지는 게임과 같은 규칙으로 돌아가는 자동 풀이로 깰 수 있는 것을 확인했어요. 깨면 별 1개, 정한 시간 안이면 별 2개, 숨은 기어 찾기 · 자석 적게 켜기 · 극 적게 바꾸기 · 에너지 남기기 같은 스테이지별 목표를 이루면 별 3개예요. 숨은 기어를 모으면 마그의 색을 바꿀 수 있고, 날짜마다 누구나 같은 판을 푸는 오늘의 자석 실험도 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>컴퓨터에서는 ← → 또는 A · D 로 걷고, ↑ · W · 스페이스로 점프해요(길게 누르면 더 높이). K(또는 J)는 자석 켜기 · 끄기, L(또는 Q)은 N극 · S극 바꾸기, E(또는 Enter)는 레버 조작이에요. P 나 Esc 는 일시정지, R 은 다시 하기예요. 휴대폰과 패드에서는 화면 왼쪽 아래 ◀ ▶ 로 걷고, 오른쪽 아래 큰 버튼으로 점프 · 자석 · 극 바꾸기 · 레버를 눌러요. 위쪽에는 스테이지 이름과 목표, 자석 상태, 지금 극, 에너지, 시간이 보여요. 자석에 붙은 물건은 마그 곁에 붙어 따라다니고, 칸 위에서 자석을 끄면 쏙 들어가 딸깍 고정돼요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>어떤 물건이 자석에 붙나요?</dt>
+    <dd>철(Fe)은 세게, 합금은 약하게 붙어요. 나무와 고무는 붙지 않아서 몸으로 밀어야 해요. N · S 가 적힌 자석 블록은 마그의 극과 다르면 끌려오고, 같으면 밀려나요.</dd>
+    <dt>에너지는 무엇인가요?</dt>
+    <dd>에너지가 있는 스테이지에서는 자석을 켜 둔 동안 에너지가 줄고, 다 쓰면 자석이 저절로 꺼져요. 꼭 필요할 때만 켜고 바로 끄는 것이 요령이에요.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>출구로 나가면 별 1개, 정한 시간 안에 깨면 별 2개, 스테이지마다 정한 특별 목표(숨은 기어 · 자석 적게 켜기 · 극 적게 바꾸기 · 에너지 남기기)까지 이루면 별 3개예요. 시작 안내와 결과 화면에 기준이 나와요.</dd>
+    <dt>오늘의 자석 실험은 무엇인가요?</dt>
+    <dd>서울 날짜마다 정해진 짧은 실험 판이에요. 같은 날에는 누구나 같은 판을 풀고, 깬 시간이 이 기기에 최고 기록으로 저장돼요. 원하면 결과 화면에서 이름을 적어 오늘 순위에 직접 올릴 수 있어요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>스테이지 별 · 최고 기록 · 숨은 기어 · 꾸미기는 이 기기의 브라우저에만 저장돼요. 순위는 결과 화면에서 직접 이름을 적어 올릴 때만 서버에 보내져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
