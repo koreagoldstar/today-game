@@ -14,8 +14,9 @@ const STATIC_PAGES = [
   { path: "/", priority: "1.0" },
   { path: "/rankings/", priority: "0.8" },
   { path: "/fame/", priority: "0.6" },
-  { path: "/privacy/", priority: "0.3" },
-  { path: "/terms/", priority: "0.3" },
+  // 개인정보처리방침 · 이용약관은 잠시 숨김 (다시 보이면 아래 두 줄을 되살림)
+  // { path: "/privacy/", priority: "0.3" },
+  // { path: "/terms/", priority: "0.3" },
 ];
 
 /** Per-path overrides. New games default to 0.7 (archive: 0.6). */
