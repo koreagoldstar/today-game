@@ -7,6 +7,8 @@
  * GET            → { today, total, day }  (세지 않고 읽기만)
  * GET ?count=1 · POST → 한 명 더 세고 { today, total, day }
  */
+const stats = require("./_stats");
+
 const NAMESPACE = "todaygamekr";
 const ABACUS = "https://abacus.jasoncameron.dev";
 const TOTAL_KEY = "todaygame:visits:total";
@@ -114,6 +116,7 @@ module.exports = async function handler(req, res) {
   } catch (_) {
     today = null;
   }
+  if (shouldCount) await stats.bumpVisitor(); // 모니터실: 우리 저장소에도 날짜별 방문자
   let total = null;
   try {
     total = await cumulative(shouldCount, today, day);

@@ -4,6 +4,8 @@
  * POST { game } → 카운트 +1 (백그라운드, 홈 속도 무관)
  * GET → 오늘자 캐시된 plays/order 반환 (하루 1번만 재계산)
  */
+const stats = require("./_stats");
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -282,6 +284,7 @@ module.exports = async function handler(req, res) {
       if (redisConfigured()) {
         const inc = await redis(["HINCRBY", REDIS_PLAYS, game, 1]);
         if (inc.ok) {
+          await stats.bumpGame("plays", game); // 모니터실: 날짜별 게임 참여
           res.status(200).json({ ok: true, game, count: Number(inc.result) || 0, store: "redis" });
           return;
         }

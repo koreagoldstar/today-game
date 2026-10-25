@@ -1,3 +1,5 @@
+const stats = require("./_stats");
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -406,6 +408,7 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    await stats.bumpGame("ranks", game); // 모니터실: 날짜별 랭킹 등록
     const rankDay = dayNext.findIndex((e) => e.name === name) + 1;
     const rankWeek = weekNext.findIndex((e) => e.name === name) + 1;
 

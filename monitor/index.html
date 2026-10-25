@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <title>모니터실 | 오늘의 게임</title>
+    <link rel="stylesheet" href="monitor.css?v=1" />
+  </head>
+  <body>
+    <!-- 잠금 화면 -->
+    <main class="login" id="login" hidden>
+      <form class="login-card" id="login-form" autocomplete="on">
+        <p class="kicker">TODAY GAME</p>
+        <h1>모니터실</h1>
+        <p class="lead">운영자만 들어올 수 있어요.</p>
+        <label class="field">
+          <span>비밀번호</span>
+          <input id="pin" name="password" type="password" inputmode="numeric" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="btn primary" id="login-btn">들어가기</button>
+        <p class="msg" id="login-msg" role="alert"></p>
+        <p class="hint">한 번 들어오면 이 기기에서 30일 동안 기억해요.</p>
+      </form>
+    </main>
+
+    <!-- 대시보드 -->
+    <div class="app" id="app" hidden>
+      <header class="top">
+        <div>
+          <h1>모니터실</h1>
+          <p class="sub" id="updated">불러오는 중…</p>
+        </div>
+        <div class="top-actions">
+          <button type="button" class="btn" id="refresh-btn">새로고침</button>
+          <button type="button" class="btn ghost" id="logout-btn">나가기</button>
+        </div>
+      </header>
+
+      <nav class="filters" aria-label="기간">
+        <div class="seg" role="radiogroup" aria-label="기간" id="range">
+          <button type="button" role="radio" data-days="7">7일</button>
+          <button type="button" role="radio" data-days="30" aria-checked="true">30일</button>
+          <button type="button" role="radio" data-days="90">90일</button>
+        </div>
+        <p class="note" id="range-note"></p>
+      </nav>
+
+      <section class="tiles" id="tiles" aria-label="요약"></section>
+
+      <section class="card" aria-labelledby="c-visit-h">
+        <div class="card-head">
+          <div>
+            <h2 id="c-visit-h">일별 방문자</h2>
+            <p class="card-sub">같은 브라우저는 하루 한 번 (홈 · 게임 페이지 공통)</p>
+          </div>
+          <button type="button" class="btn small" data-table="visit">표로 보기</button>
+        </div>
+        <div class="chart" id="chart-visit"></div>
+        <div class="table-wrap" id="table-visit" hidden></div>
+      </section>
+
+      <section class="card" aria-labelledby="c-play-h">
+        <div class="card-head">
+          <div>
+            <h2 id="c-play-h">일별 게임 참여 (모든 게임 합)</h2>
+            <p class="card-sub" id="play-sub">게임 페이지를 연 수 (같은 창에서는 한 번)</p>
+          </div>
+          <button type="button" class="btn small" data-table="play">표로 보기</button>
+        </div>
+        <div class="chart" id="chart-play"></div>
+        <div class="table-wrap" id="table-play" hidden></div>
+      </section>
+
+      <section class="card" aria-labelledby="c-top-h">
+        <div class="card-head">
+          <div>
+            <h2 id="c-top-h">많이 한 게임</h2>
+            <p class="card-sub" id="top-sub"></p>
+          </div>
+          <div class="seg small" role="radiogroup" aria-label="기준" id="top-range">
+            <button type="button" role="radio" data-top="today" aria-checked="true">오늘</button>
+            <button type="button" role="radio" data-top="yesterday">어제</button>
+            <button type="button" role="radio" data-top="range">기간</button>
+            <button type="button" role="radio" data-top="all">누적</button>
+          </div>
+        </div>
+        <div class="hbars" id="chart-top"></div>
+      </section>
+
+      <section class="card" aria-labelledby="c-games-h">
+        <div class="card-head">
+          <div>
+            <h2 id="c-games-h">게임별 참여</h2>
+            <p class="card-sub">제목을 누르면 정렬 · 최근 14일 흐름</p>
+          </div>
+          <input class="search" id="game-search" type="search" placeholder="게임 찾기" aria-label="게임 찾기" />
+        </div>
+        <div class="table-wrap games" id="games-table"></div>
+      </section>
+
+      <footer class="foot">
+        <p><b>방문자</b> 같은 브라우저는 하루 한 번만 세요 (외부 카운터 · 2026-07-15부터 날짜별).</p>
+        <p><b>게임 참여</b> 게임 페이지를 연 수예요. 같은 창(탭)에서 같은 게임은 한 번만 세요. 날짜별 기록은 모니터실을 만든 날(2026-10-25)부터, <b>누적</b>은 사이트 처음부터예요.</p>
+        <p><b>랭킹 등록</b> 결과 화면에서 이름을 올린 수 (2026-10-25부터).</p>
+        <p>시간은 모두 서울 기준이에요. 이 화면은 검색에 나오지 않고, 비밀번호로만 열려요.</p>
+      </footer>
+    </div>
+
+    <div class="tip" id="tip" role="status" hidden></div>
+    <script src="monitor.js?v=1"></script>
+  </body>
+</html>
