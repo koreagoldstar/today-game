@@ -64,6 +64,7 @@
     { id: "tower", title: "흔들흔들 스카이" },
     { id: "fish-rush", title: "황금 낚시" },
     { id: "chick-defense", title: "둥지 디펜스" },
+    { id: "chick-defense-new", title: "NEW 둥지디펜스 · 무한 생존" },
     { id: "jet-strike", title: "제트 스트라이크" },
     { id: "number-hole", title: "넘버 홀" },
     { id: "penalty-kick", title: "승부차기 히어로" },

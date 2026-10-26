@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2a3a6e" />
+    <title>NEW 둥지디펜스 | Today Game</title>
+    <meta name="description" content="황금 둥지를 지키는 3D 카툰 타워 디펜스! 5개 월드 150 웨이브, 월드마다 다른 몬스터 군단 30종과 보스 10종, 타워 6종 진화, 전술 카드, 무한 생존까지." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/chick-defense-new/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NEW 둥지디펜스 | Today Game" />
+    <meta property="og:description" content="5개 월드 · 150 웨이브 · 보스 10종! 병아리 궁수와 친구들로 황금 둥지를 지키는 3D 타워 디펜스" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/chick-defense-new/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/chick-defense-new.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="cdn is-title">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="NEW 둥지디펜스 전장"></canvas>
+        <div class="nums" id="nums" aria-hidden="true"></div>
+
+        <!-- 불러오기 -->
+        <div class="loading" id="loading" role="status">
+          <div class="load-card">
+            <p class="load-k">NEW CHICK DEFENSE</p>
+            <p class="load-h">NEW 둥지디펜스</p>
+            <div class="load-bar"><b id="load-bar"></b></div>
+            <p class="load-t" id="load-t">황금 둥지를 깨우는 중…</p>
+          </div>
+        </div>
+
+        <!-- 위: 월드 · 웨이브 · 남은 적 · 코인 · 둥지 · 배속 · 멈춤 -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-l">
+            <small id="hud-world">햇살 초원</small>
+            <b id="hud-wave">웨이브 1 / 30</b>
+            <span class="left" id="hud-left"></span>
+          </div>
+          <div class="hud-r">
+            <span class="chip coin" title="코인"><i class="ico coin" aria-hidden="true"></i><b id="hud-coins">0</b></span>
+            <span class="chip nest" title="둥지 체력"><i class="ico nest" aria-hidden="true"></i><b id="hud-nest">20</b><em id="hud-shield" hidden></em></span>
+            <button type="button" class="round speed" id="speed-btn" aria-label="게임 배속">×1</button>
+            <button type="button" class="round" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.6" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" /></svg></button>
+          </div>
+        </header>
+        <div class="bossbar" id="bossbar" hidden>
+          <b id="boss-name">보스</b>
+          <span class="bbar"><i id="boss-fill"></i><i class="sh" id="boss-shield"></i></span>
+          <small id="boss-phase"></small>
+        </div>
+
+        <div class="banner" id="banner" hidden>
+          <p class="bk" id="banner-k">BOSS</p>
+          <p class="bh" id="banner-h">보스 등장!</p>
+          <p class="bs" id="banner-s"></p>
+          <button type="button" class="btn-sub small" id="banner-skip">건너뛰기</button>
+        </div>
+        <div class="tip" id="tip" role="status" hidden><span id="tip-t"></span><button type="button" id="tip-x" aria-label="안내 닫기">✕</button></div>
+        <p class="toast" id="toast" role="status" hidden></p>
+        <div class="flash" id="flash" hidden></div>
+
+        <!-- 아래: 타워 고르기 · 다음 웨이브 -->
+        <nav class="tbar" id="tbar" hidden aria-label="타워">
+          <div class="towers" id="tower-list"></div>
+          <div class="go-wrap">
+            <div class="peek" id="peek"></div>
+            <button type="button" class="go" id="next-btn">▶ 시작</button>
+          </div>
+        </nav>
+        <div class="place-ok" id="place-ok" hidden>
+          <button type="button" class="btn-main small" id="place-yes">여기에 세우기</button>
+          <button type="button" class="btn-sub small" id="place-no">취소</button>
+        </div>
+
+        <!-- 고른 타워 -->
+        <aside class="tpanel" id="tpanel" hidden aria-labelledby="tp-name">
+          <div class="tp-head">
+            <img class="tp-pic" id="tp-pic" alt="" width="64" height="64" />
+            <div>
+              <small id="tp-kind">병아리 궁수</small>
+              <b id="tp-name">병아리 궁수</b>
+              <span class="tp-tier" id="tp-tier">★</span>
+            </div>
+            <button type="button" class="round x" id="tp-close" aria-label="닫기">✕</button>
+          </div>
+          <div class="tp-stats" id="tp-stats"></div>
+          <p class="tp-desc" id="tp-desc"></p>
+          <div class="tp-target" id="tp-target"></div>
+          <div class="tp-actions" id="tp-actions"></div>
+        </aside>
+
+        <!-- 첫 화면 -->
+        <section class="screen title" id="title" hidden aria-labelledby="title-h">
+          <div class="title-main">
+          <div class="logo">
+            <p class="logo-k">NEW CHICK DEFENSE</p>
+            <h1 id="title-h"><span class="l0">NEW</span><span class="l1">둥지</span><span class="l2">디펜스</span></h1>
+            <p class="logo-s">병아리 수호대와 함께 황금 둥지를 지켜요!</p>
+          </div>
+          <div class="menu">
+            <button type="button" class="btn-main" id="go-campaign">캠페인 · 5개 월드</button>
+            <button type="button" class="btn-main teal" id="go-endless">무한 생존</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="go-help">도움말 · 도감</button>
+              <button type="button" class="btn-sub" id="go-settings">설정</button>
+            </div>
+            <p class="title-rec" id="title-rec"></p>
+          </div>
+          </div>
+        </section>
+
+        <!-- 월드 고르기 -->
+        <section class="screen panel" id="worlds" data-today-home hidden aria-labelledby="worlds-h">
+          <div class="card wide">
+            <h2 id="worlds-h">월드 고르기</h2>
+            <div class="diff" id="diff" role="radiogroup" aria-label="난이도"></div>
+            <div class="world-grid" id="world-grid"></div>
+            <div class="run-box" id="run-box" hidden>
+              <p id="run-t"></p>
+              <div class="row">
+                <button type="button" class="btn-main small" id="run-go">이어서 하기</button>
+                <button type="button" class="btn-sub" id="run-drop">처음부터</button>
+              </div>
+            </div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 무한 생존 -->
+        <section class="screen panel" id="endless" data-today-home hidden aria-labelledby="endless-h">
+          <div class="card wide">
+            <h2 id="endless-h">무한 생존</h2>
+            <p class="sub" id="endless-sub"></p>
+            <div class="world-grid small" id="endless-grid"></div>
+            <button type="button" class="btn-sub wide" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 전술 카드 -->
+        <section class="screen panel" id="cards" hidden aria-labelledby="cards-h">
+          <div class="card wide">
+            <p class="res-k" id="cards-k">웨이브 1 클리어!</p>
+            <h2 id="cards-h">전술 카드 한 장을 골라요</h2>
+            <div class="card-row" id="card-row"></div>
+            <p class="note" id="cards-note">고른 카드는 이 월드 판 안에서 계속 이어져요.</p>
+          </div>
+        </section>
+
+        <!-- 새로운 적 -->
+        <section class="screen panel" id="newfoe" hidden aria-labelledby="nf-h">
+          <div class="card">
+            <p class="res-k">새로운 적</p>
+            <div class="nf-list" id="nf-list"></div>
+            <button type="button" class="btn-main small" id="nf-ok">알겠어요!</button>
+          </div>
+        </section>
+
+        <!-- 멈춤 -->
+        <section class="screen panel" id="pause" hidden aria-labelledby="pause-h">
+          <div class="card">
+            <h2 id="pause-h">잠깐 쉬어요</h2>
+            <button type="button" class="btn-main" id="p-resume">계속하기</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="p-restart">이 월드 처음부터</button>
+              <button type="button" class="btn-sub" id="p-help">도움말</button>
+            </div>
+            <div class="row">
+              <button type="button" class="btn-sub" id="p-settings">설정</button>
+              <button type="button" class="btn-sub" id="p-menu">메뉴로</button>
+            </div>
+            <p class="note" id="p-note"></p>
+          </div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel" id="settings" hidden aria-labelledby="settings-h">
+          <div class="card">
+            <h2 id="settings-h">설정</h2>
+            <label class="set-row"><span><b>배경음악</b></span><input type="range" id="set-music" min="0" max="100" step="5" /></label>
+            <label class="set-row"><span><b>효과음</b></span><input type="range" id="set-sfx" min="0" max="100" step="5" /></label>
+            <div class="set-row"><span><b>그래픽</b><small>낮을수록 빨라요</small></span><div class="seg" id="set-quality"></div></div>
+            <label class="set-row"><span><b>화면 흔들림</b><small>보스 · 폭발 때 흔들림</small></span><input type="checkbox" id="set-shake" /></label>
+            <label class="set-row"><span><b>피해 숫자</b></span><input type="checkbox" id="set-nums" /></label>
+            <p class="note" id="save-note"></p>
+            <button type="button" class="btn-main small" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 도움말 · 도감 -->
+        <section class="screen panel" id="help" hidden aria-labelledby="help-h">
+          <div class="card wide">
+            <h2 id="help-h">도움말 · 도감</h2>
+            <div class="tabs" id="help-tabs">
+              <button type="button" data-tab="how" class="on">하는 법</button>
+              <button type="button" data-tab="towers">타워</button>
+              <button type="button" data-tab="foes">몬스터 도감</button>
+            </div>
+            <div class="tab" id="tab-how">
+              <ul class="how">
+                <li><b>타워 세우기</b> 아래에서 타워를 고르고 길 옆 초록 칸을 눌러요. 휴대폰은 한 번 더 '여기에 세우기'.</li>
+                <li><b>웨이브</b> ▶ 시작을 누르면 몬스터가 와요. 몬스터가 황금 둥지에 닿으면 둥지 체력이 줄어요. 0 이 되면 져요.</li>
+                <li><b>강화 · 진화</b> 세운 타워를 눌러 강화해요. 3단계가 되면 두 갈래 중 하나로 진화해 공격 방식이 바뀌어요.</li>
+                <li><b>하늘 몬스터</b> 폭탄 병아리 · 대포 곰은 하늘을 못 쏴요. 궁수 · 얼음 · 번개로 막아요.</li>
+                <li><b>전술 카드</b> 웨이브를 깨면 카드 3장 중 하나를 골라요. 그 월드 판 안에서만 이어져요.</li>
+                <li><b>보스</b> 공격 전에 바닥에 원 · 선이 깜빡이며 미리 알려 줘요. 약점(번쩍이는 때)을 노려요.</li>
+                <li><b>컴퓨터</b> 1~6 타워 고르기 · Esc 취소/멈춤 · 스페이스 웨이브 시작 · F 배속 · U 강화 · Del 판매</li>
+              </ul>
+            </div>
+            <div class="tab" id="tab-towers" hidden></div>
+            <div class="tab" id="tab-foes" hidden></div>
+            <button type="button" class="btn-main small" data-back>닫기</button>
+          </div>
+        </section>
+
+        <!-- 결과 -->
+        <section class="screen panel" id="result" hidden aria-labelledby="r-h">
+          <div class="card result">
+            <p class="res-k" id="r-k">햇살 초원</p>
+            <h2 id="r-h">월드 클리어!</h2>
+            <p class="stars" id="r-stars"></p>
+            <div class="stats" id="r-stats"></div>
+            <p class="note" id="r-note"></p>
+            <div class="rank-slot" id="r-rank"></div>
+            <button type="button" class="btn-main" id="r-next">다음 월드</button>
+            <div class="row">
+              <button type="button" class="btn-sub" id="r-retry">다시 하기</button>
+              <button type="button" class="btn-sub" id="r-menu">메뉴로</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 확인 -->
+        <section class="screen panel" id="confirm" hidden aria-labelledby="c-h">
+          <div class="card">
+            <h2 id="c-h">정말요?</h2>
+            <p class="sub" id="c-t"></p>
+            <div class="row">
+              <button type="button" class="btn-main small" id="c-yes">네</button>
+              <button type="button" class="btn-sub" id="c-no">아니요</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="fallback" id="fallback" hidden><p>이 브라우저에서는 3D 게임을 열 수 없어요 (WebGL 필요). 최신 브라우저로 다시 와 주세요!</p><a class="btn-sub" href="/">사이트로</a></div>
+      </div>
+    </div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="NEW 둥지디펜스 소개">
+  <h2>NEW 둥지디펜스 소개</h2>
+  <p>병아리 왕국의 황금 둥지를 노리는 몬스터 군단을 막는 3D 카툰 타워 디펜스 게임입니다. 햇살 초원, 버섯 숲, 얼음 계곡, 용암 협곡, 어둠의 성채까지 5개 월드에 웨이브가 30개씩, 모두 150 웨이브가 있어요. 월드마다 그곳에만 사는 몬스터가 6종씩 나와요. 등껍질에 숨는 바위 거북, 땅굴로 앞질러 가는 두더지, 코인을 훔치는 박쥐 도적, 독 구름을 남기는 독버섯, 무리로 달려오는 얼음 늑대, 둥지 앞에서 자폭하는 화염 폭탄병, 앞쪽 공격을 방패로 막는 그림자 기사, 분신을 만드는 환영 까마귀 같은 몬스터의 능력이 실제 전투에 영향을 줘요. 월드마다 보스가 2종씩, 모두 10종이 있고, 공격하기 전에 바닥에 원이나 선으로 미리 알려 줘요. 페이즈가 바뀌고 약점이 드러나는 때도 있어요. 병아리 궁수, 폭탄 병아리, 얼음 토끼, 번개 다람쥐, 대포 곰, 치유 수호자 6종의 타워는 3단계까지 강화한 뒤 두 갈래 중 하나로 진화하면 공격 방식이 바뀌어요. 웨이브를 깨면 전술 카드 3장 중 하나를 골라 판을 키워요. 포자 꽃밭, 빙판, 용암 분출구, 그림자 구역 같은 월드별 환경도 규칙에 영향을 줘요. 150 웨이브를 모두 깨면 무한 생존 모드가 열려요. 모든 웨이브는 게임과 같은 규칙으로 돌리는 자동 플레이로 깰 수 있는지 확인했어요.</p>
+  <h3>플레이 방법</h3>
+  <p>아래 칸에서 타워를 고른 뒤 길 옆 빈 칸을 눌러 세워요. 휴대폰에서는 칸을 누르면 미리 보기가 나오고, '여기에 세우기'를 누르면 세워져요. 코인이 모자라거나 길 · 물 · 둥지 위면 세울 수 없고, 코인도 빠지지 않아요. ▶ 시작을 누르면 웨이브가 시작돼요. 세운 타워를 누르면 공격력 · 공격속도 · 사거리와 다음 단계 수치, 강화 · 진화 · 판매 버튼, 표적 고르기(맨 앞 · 가장 센 적 · 가까운 적 · 맨 뒤)가 나와요. 폭탄 병아리와 대포 곰은 하늘을 나는 몬스터를 못 맞혀요. 위쪽에는 월드, 웨이브, 남은 적, 코인, 둥지 체력, 배속(×1 · ×2 · ×3), 멈춤 버튼이 있어요. 컴퓨터에서는 1~6으로 타워 고르기, 스페이스로 웨이브 시작, F로 배속, U로 강화, Esc로 취소 · 멈춤을 할 수 있어요. 난이도는 쉬움 · 보통 · 어려움 중에서 고르고, 정비 시간마다 저장되니 다음에 '이어서 하기'로 계속할 수 있어요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>하늘을 나는 몬스터는 어떻게 막나요?</dt>
+    <dd>병아리 궁수, 얼음 토끼, 번개 다람쥐는 하늘을 쏠 수 있어요. 폭탄 병아리와 대포 곰은 땅 위 몬스터만 맞혀요. 서리 박쥐처럼 가끔 내려앉는 몬스터는 내려앉았을 때 폭탄으로도 맞힐 수 있어요.</dd>
+    <dt>타워 진화는 어떻게 하나요?</dt>
+    <dd>타워를 3단계(별 3개)까지 강화하면 두 가지 진화 중 하나를 고를 수 있어요. 예를 들어 병아리 궁수는 공격속도가 빠른 속사 궁수, 여러 마리를 꿰뚫는 관통 궁수 중 하나가 돼요. 진화한 뒤에도 한 번 더 강화할 수 있어요.</dd>
+    <dt>보스는 어떻게 이기나요?</dt>
+    <dd>보스는 공격하기 전에 바닥에 원이나 선이 깜빡여요. 근처 타워가 잠깐 멈출 수 있으니 타워를 한곳에만 몰지 마세요. 보스가 지치거나 보호막이 깨지면 '약점 노출'이 떠요. 그때 더 큰 피해를 줄 수 있어요.</dd>
+    <dt>전술 카드는 계속 이어지나요?</dt>
+    <dd>카드는 그 월드 판 안에서만 이어지고, 새 월드를 시작하면 처음부터 다시 골라요. 카드마다 고를 수 있는 횟수의 상한이 있어요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>월드 진행, 이어하기, 최고 기록, 설정은 이 기기의 브라우저에만 저장돼요. 무한 생존 점수는 결과 화면에서 직접 이름을 적어 올릴 때만 순위에 보내져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

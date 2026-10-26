@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "chick-defense-new",
+      title: "NEW 둥지디펜스",
+      tag: "3D 타워디펜스 · 150웨이브",
+      href: "/games/chick-defense-new/",
+      thumb: "/assets/thumbs/chick-defense-new.png",
+      category: "arcade",
+    },
+    {
       id: "magnet-mayhem",
       title: "자석 대소동",
       tag: "자석 물리 퍼즐 · 12스테이지",

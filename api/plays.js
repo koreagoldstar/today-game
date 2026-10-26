@@ -104,10 +104,12 @@ module.exports = async function handler(req, res) {
     "slime-lab",
     "jelly-factory",
     "magnet-mayhem",
+    "chick-defense-new",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "chick-defense-new",
     "magnet-mayhem",
     "jelly-factory",
     "slime-lab",
