@@ -3,66 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#030508" />
+    <meta name="theme-color" content="#ffd9e8" />
     <title>핀볼팡팡</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="pinball">
     <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
-        <div class="panel">
-          <span>STAGE <b id="hud-stage">1</b></span>
-          <span>점수 <b id="hud-score">0</b></span>
+      <canvas id="game" width="390" height="700" aria-label="핀볼 판"></canvas>
+      <header class="hud">
+        <a class="home" href="/">홈</a>
+        <div class="hud-mid">
+          <div class="hud-row">
+            <span class="st-badge">스테이지 <b id="hud-stage">1</b></span>
+            <span class="score"><b id="hud-score">0</b>점</span>
+            <span class="balls" id="hud-lives" aria-label="남은 공"></span>
+          </div>
+          <div class="goal-meter" aria-label="목표 점수까지">
+            <i id="goal-fill"></i>
+            <span id="hud-goal">목표 3,500</span>
+          </div>
         </div>
-        <div class="panel right">
-          <span>목표 <b id="hud-goal">14000</b></span>
-          <div class="lives" id="hud-lives"></div>
-        </div>
-      </div>
-      <div class="goal-meter"><i id="goal-fill"></i></div>
-      <div class="combo-bar hidden" id="combo-bar">COMBO x<span id="hud-combo">0</span></div>
-
-      <div class="touch-hint" id="touch-hint" aria-hidden="true">
-        <span class="th-left">◀ 플립</span>
-        <span class="th-plunger">플런저 ↓</span>
-        <span class="th-right">플립 ▶</span>
-      </div>
+        <span class="fever hidden" id="hud-fever">점수 2배!</span>
+      </header>
 
       <div class="overlay" id="title">
-        <img class="hero-art" src="assets/thumb.webp" alt="" width="160" height="160" />
-        <div class="badge">NEON PINBALL</div>
+        <img class="hero-art" src="assets/thumb.webp?v=2" alt="" width="150" height="150" />
         <h1>핀볼팡팡</h1>
-        <p>
-          플런저로 쏘고, 플립퍼로 올려쳐요!<br />
-          Z / X 또는 ← → · 범퍼를 맞히면 콤보
-        </p>
-        <div class="icons">길게 눌러 파워 충전 · 터치로도 조작</div>
+        <p class="lead">공을 쏘고, 날개로 탁! 튕겨서<br />귀여운 범퍼 친구들을 팡팡 맞혀요</p>
+        <ul class="how">
+          <li><b>◀ ▶</b> 화면 왼쪽 · 오른쪽을 누르면 날개가 탁!</li>
+          <li><b>발사</b> 오른쪽 길을 꾹 눌렀다 떼면 슝~</li>
+          <li><b>⭐</b> 위쪽 별 3개를 켜면 구름이 공을 받아 줘요!</li>
+          <li><b>🎁</b> 선물상자 3개를 다 맞히면 점수 2배!</li>
+        </ul>
+        <p class="keys">키보드: Z · X (또는 ← →) · 발사는 스페이스</p>
+        <p class="best" id="title-best"></p>
         <button type="button" class="btn" id="start-btn">시작!</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="clear">
-        <div class="badge soft">CLEAR</div>
+        <div class="badge">CLEAR</div>
         <h1>스테이지 클리어!</h1>
         <p id="clear-detail"></p>
         <button type="button" class="btn" id="next-btn">다음 스테이지</button>
       </div>
 
       <div class="overlay hidden" id="over">
-        <div class="badge">GAME OVER</div>
-        <h1>아쉬워요</h1>
+        <div class="badge soft">GAME OVER</div>
+        <h1>괜찮아요!</h1>
         <p id="over-detail"></p>
-        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <button type="button" class="btn" id="retry-btn">다시 해 볼래요</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="allclear">
-        <div class="badge soft">ALL CLEAR</div>
-        <h1>핀볼왕!</h1>
+        <div class="badge">ALL CLEAR</div>
+        <h1>핀볼왕 탄생!</h1>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
         <a href="/">← 오늘의 게임</a>
@@ -75,7 +75,7 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="핀볼팡팡 소개">
   <h2>핀볼팡팡 소개</h2>

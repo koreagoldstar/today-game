@@ -411,7 +411,7 @@
       title: "핀볼팡팡",
       tag: "아케이드 · 50단계",
       href: "/games/pinball/",
-      thumb: "/assets/thumbs/sm/pinball.webp",
+      thumb: "/assets/thumbs/sm/pinball.webp?v=2",
       category: "arcade",
     },
     {
