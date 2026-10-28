@@ -56,11 +56,11 @@
     arenaMsg.textContent = msg;
     arenaSub.textContent = sub;
     if (mode === "ready") {
-      mascot.src = "assets/go.png";
+      mascot.src = "assets/go.webp";
     } else if (mode === "wait") {
-      mascot.src = "assets/wait.png";
+      mascot.src = "assets/wait.webp";
     } else {
-      mascot.src = "assets/thumb.png";
+      mascot.src = "assets/thumb.webp";
     }
   }
 

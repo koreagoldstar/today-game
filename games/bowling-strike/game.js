@@ -29,12 +29,12 @@
     ball: new Image(),
     alley: new Image(),
   };
-  raw.bowler.src = "assets/bowler.png?v=6";
-  raw.throw.src = "assets/bowler-bowl.png?v=6";
+  raw.bowler.src = "assets/bowler.jpg?v=6";
+  raw.throw.src = "assets/bowler-bowl.jpg?v=6";
   raw.pin.src = "assets/pin.png?v=8";
   raw.pinDown.src = "assets/pin-down.png?v=3";
   raw.ball.src = "assets/ball.png?v=2";
-  raw.alley.src = "assets/alley.png?v=7";
+  raw.alley.src = "assets/alley.jpg?v=7";
   const spr = { bowler: null, throw: null, pin: null, pinDown: null, ball: null };
 
   const ui = {

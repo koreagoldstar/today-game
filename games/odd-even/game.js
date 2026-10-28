@@ -108,7 +108,7 @@
     const [red, blue, bg] = await Promise.all([
       loadImg("assets/ball-red.png"),
       loadImg("assets/ball-blue.png"),
-      loadImg("assets/bg.png"),
+      loadImg("assets/bg.webp"),
     ]);
     if (red) sprites.red = punchBg(red);
     if (blue) sprites.blue = punchBg(blue);

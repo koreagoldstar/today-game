@@ -8,3 +8,7 @@ test-results
 scratch
 *.zip
 edu-svg-assets
+
+# 사이트에서 쓰지 않는 개발용 스크립트 (서버 함수가 읽는 SEO 자료는 올림)
+scripts/*
+!scripts/game-seo-data.js

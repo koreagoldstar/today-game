@@ -82,7 +82,7 @@
       loadImg("assets/rock.png"),
       loadImg("assets/scissors.png"),
       loadImg("assets/paper.png"),
-      loadImg("assets/bg-metal.png"),
+      loadImg("assets/bg-metal.webp"),
       loadImg("assets/arena-ring.png"),
       loadImg("assets/vs-badge.png"),
     ]);

@@ -24,12 +24,12 @@
     throw: new Image(),
     stadium: new Image(),
   };
-  raw.batter.src = "assets/batter.png?v=5";
-  raw.contact.src = "assets/batter-contact.png?v=5";
-  raw.swing.src = "assets/batter-swing.png?v=5";
-  raw.pitcher.src = "assets/pitcher.png?v=4";
-  raw.throw.src = "assets/pitcher-throw.png?v=4";
-  raw.stadium.src = "assets/stadium.png?v=4";
+  raw.batter.src = "assets/batter.jpg?v=5";
+  raw.contact.src = "assets/batter-contact.jpg?v=5";
+  raw.swing.src = "assets/batter-swing.jpg?v=5";
+  raw.pitcher.src = "assets/pitcher.jpg?v=4";
+  raw.throw.src = "assets/pitcher-throw.jpg?v=4";
+  raw.stadium.src = "assets/stadium.jpg?v=4";
   const spr = { batter: null, contact: null, swing: null, pitcher: null, throw: null };
 
   const ui = {

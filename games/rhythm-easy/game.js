@@ -36,9 +36,9 @@
     { src: "/assets/audio/hip/cyber02.mp3", baseBpm: 110 },
     { src: "/assets/audio/hip/cyber05.mp3", baseBpm: 128 },
     { src: "/assets/audio/hip/cyber06.mp3", baseBpm: 132 },
-    { src: "audio/cyber02.mp3", baseBpm: 110 },
-    { src: "audio/cyber05.mp3", baseBpm: 128 },
-    { src: "audio/cyber06.mp3", baseBpm: 132 },
+    { src: "/assets/audio/hip/cyber02.mp3", baseBpm: 110 },
+    { src: "/assets/audio/hip/cyber05.mp3", baseBpm: 128 },
+    { src: "/assets/audio/hip/cyber06.mp3", baseBpm: 132 },
   ];
 
   const CYBER_NAMES = [
@@ -233,7 +233,7 @@
               resolve();
             };
             img.onerror = () => resolve();
-            img.src = `${ASSET_BASE}${key}.png`;
+            img.src = `${ASSET_BASE}${key}${key === "stage_bg" ? ".webp" : ".png"}`;
           })
       )
     );

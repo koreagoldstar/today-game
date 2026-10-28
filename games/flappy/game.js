@@ -58,7 +58,7 @@
     const [bird, pipe, thumb] = await Promise.all([
       loadImg("assets/bird.png"),
       loadImg("assets/pipe.png"),
-      loadImg("assets/thumb.png"),
+      loadImg("assets/thumb.webp"),
     ]);
     sprites.bird = chromaKey(bird) || bird;
     sprites.pipe = chromaKey(pipe) || pipe;

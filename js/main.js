@@ -34,7 +34,7 @@
       title: "NEW 둥지디펜스",
       tag: "3D 타워디펜스 · 150웨이브",
       href: "/games/chick-defense-new/",
-      thumb: "/assets/thumbs/chick-defense-new.png",
+      thumb: "/assets/thumbs/sm/chick-defense-new.webp",
       category: "arcade",
     },
     {
@@ -42,7 +42,7 @@
       title: "자석 대소동",
       tag: "자석 물리 퍼즐 · 12스테이지",
       href: "/games/magnet-mayhem/",
-      thumb: "/assets/thumbs/magnet-mayhem.png",
+      thumb: "/assets/thumbs/sm/magnet-mayhem.webp",
       category: "puzzle",
     },
     {
@@ -50,7 +50,7 @@
       title: "말랑콩떡! 젤리 공장",
       tag: "미끄러지기 퍼즐 · 30스테이지",
       href: "/games/jelly-factory/",
-      thumb: "/assets/thumbs/jelly-factory.png",
+      thumb: "/assets/thumbs/sm/jelly-factory.webp",
       category: "puzzle",
     },
     {
@@ -58,7 +58,7 @@
       title: "말랑팡! 슬라임 연구소",
       tag: "젤리 합체 퍼즐 · 미션 · 도감",
       href: "/games/slime-lab/",
-      thumb: "/assets/thumbs/slime-lab.png",
+      thumb: "/assets/thumbs/sm/slime-lab.webp",
       category: "puzzle",
     },
     {
@@ -66,7 +66,7 @@
       title: "용암 서핑",
       tag: "3D 서핑 · 15스테이지 · 보스 3",
       href: "/games/lava-surfers/",
-      thumb: "/assets/thumbs/lava-surfers.png",
+      thumb: "/assets/thumbs/sm/lava-surfers.webp",
       category: "arcade",
     },
     {
@@ -74,7 +74,7 @@
       title: "하늘섬 대탈출",
       tag: "3D 탈출 · 6스테이지 · 보스전",
       href: "/games/sky-island/",
-      thumb: "/assets/thumbs/sky-island.png",
+      thumb: "/assets/thumbs/sm/sky-island.webp",
       category: "arcade",
     },
     {
@@ -82,7 +82,7 @@
       title: "드래곤 석상 대작전",
       tag: "3D 모험 · 6지역 · 보스전",
       href: "/games/dragon-statue/",
-      thumb: "/assets/thumbs/dragon-statue.png",
+      thumb: "/assets/thumbs/sm/dragon-statue.webp",
       category: "arcade",
     },
     {
@@ -91,7 +91,7 @@
       title: "바다괴물 탐험대",
       tag: "수중 탐험 · 12바다 · 도감 34",
       href: "/games/sea-monster/",
-      thumb: "/assets/thumbs/sea-monster.png",
+      thumb: "/assets/thumbs/sm/sea-monster.webp",
       category: "action",
     },
     {
@@ -100,7 +100,7 @@
       title: "제트스키 썬더 레이스",
       tag: "레이싱 · 12코스 · 기록 경쟁",
       href: "/games/jetski-race/",
-      thumb: "/assets/thumbs/jetski-race.png",
+      thumb: "/assets/thumbs/sm/jetski-race.webp",
       category: "sports",
     },
     {
@@ -109,7 +109,7 @@
       title: "바다 물총 대작전",
       tag: "물총 슈팅 · 12해역 · 보스 5",
       href: "/games/ocean-blaster/",
-      thumb: "/assets/thumbs/ocean-blaster.png",
+      thumb: "/assets/thumbs/sm/ocean-blaster.webp",
       category: "action",
     },
     {
@@ -143,7 +143,7 @@
       title: "홈런왕",
       tag: "야구 · 10구 더비",
       href: "/games/homerun-derby/",
-      thumb: "/assets/thumbs/homerun-derby.png?v=2",
+      thumb: "/assets/thumbs/sm/homerun-derby.webp",
       category: "sports",
     },
     {
@@ -152,7 +152,7 @@
       title: "농구 슛아웃",
       tag: "농구 · 60초",
       href: "/games/basketball-shootout/",
-      thumb: "/assets/thumbs/basketball-shootout.png?v=2",
+      thumb: "/assets/thumbs/sm/basketball-shootout.webp",
       category: "sports",
     },
     {
@@ -161,7 +161,7 @@
       title: "리듬 배틀",
       tag: "대결 · 체력전",
       href: "/games/rhythm-battle/",
-      thumb: "/assets/thumbs/rhythm-battle.png",
+      thumb: "/assets/thumbs/sm/rhythm-battle.webp",
       category: "rhythm",
     },
     {
@@ -170,7 +170,7 @@
       title: "네온 러너",
       tag: "점프 · 슬라이드",
       href: "/games/neon-runner/",
-      thumb: "/assets/thumbs/neon-runner.png",
+      thumb: "/assets/thumbs/sm/neon-runner.webp",
       category: "rhythm",
     },
     {
@@ -178,7 +178,7 @@
       title: "미러 리듬",
       tag: "양손 · 대칭",
       href: "/games/mirror-rhythm/",
-      thumb: "/assets/thumbs/mirror-rhythm.png",
+      thumb: "/assets/thumbs/sm/mirror-rhythm.webp",
       category: "rhythm",
     },
     {
@@ -186,7 +186,7 @@
       title: "오늘의 상식퀴즈",
       tag: "퀴즈 · 매일 5문제",
       href: "/games/wisdom-quiz/",
-      thumb: "/assets/thumbs/wisdom-quiz.png",
+      thumb: "/assets/thumbs/sm/wisdom-quiz.webp",
       category: "puzzle",
     },
     {
@@ -194,7 +194,7 @@
       title: "오늘의 운세 뽑기",
       tag: "운세 · 메뉴 · 행운템",
       href: "/games/fortune-draw/",
-      thumb: "/assets/thumbs/fortune-draw.png",
+      thumb: "/assets/thumbs/sm/fortune-draw.webp",
       category: "arcade",
     },
     {
@@ -293,7 +293,7 @@
       title: "용암괴물을 물리쳐라 (지혁요청)",
       tag: "아케이드 · 물총 · 50스테이지",
       href: "/games/lava-monster/",
-      thumb: "/assets/thumbs/lava-monster.png",
+      thumb: "/assets/thumbs/sm/lava-monster.webp",
       category: "arcade",
     },
     {
@@ -302,7 +302,7 @@
       title: "좀비런 (지혁 제작)",
       tag: "액션 · 탑승 · 50스테이지",
       href: "/games/zombie-run/",
-      thumb: "/assets/thumbs/zombie-run.png",
+      thumb: "/assets/thumbs/sm/zombie-run.webp",
       category: "action",
     },
     {
@@ -310,7 +310,7 @@
       title: "우주 회피",
       tag: "슈팅 · 50스테이지",
       href: "/games/cosmic-dodge/",
-      thumb: "/assets/thumbs/cosmic-dodge.png",
+      thumb: "/assets/thumbs/sm/cosmic-dodge.webp",
       category: "action",
     },
     {
@@ -319,7 +319,7 @@
       title: "공룡 헌터",
       tag: "슈팅 · 나무 오르기",
       href: "/games/dino-hunt/",
-      thumb: "/assets/thumbs/dino-hunt.png",
+      thumb: "/assets/thumbs/sm/dino-hunt.webp",
       category: "action",
     },
     {
@@ -328,7 +328,7 @@
       title: "승부차기 히어로",
       tag: "축구 · 예측 타이밍",
       href: "/games/penalty-kick/",
-      thumb: "/assets/thumbs/penalty-kick.png",
+      thumb: "/assets/thumbs/sm/penalty-kick.webp",
       category: "sports",
     },
     {
@@ -337,7 +337,7 @@
       title: "넘버 홀",
       tag: "팩맨 · 30스테이지",
       href: "/games/number-hole/",
-      thumb: "/assets/thumbs/number-hole.png",
+      thumb: "/assets/thumbs/sm/number-hole.webp",
       category: "action",
     },
     {
@@ -345,7 +345,7 @@
       title: "제트 스트라이크",
       tag: "슈팅 · 50스테이지",
       href: "/games/jet-strike/",
-      thumb: "/assets/thumbs/jet-strike.png",
+      thumb: "/assets/thumbs/sm/jet-strike.webp",
       category: "action",
     },
     {
@@ -353,7 +353,7 @@
       title: "둥지 디펜스",
       tag: "타워디펜스 · 50단계",
       href: "/games/chick-defense/",
-      thumb: "/assets/thumbs/chick-defense.png",
+      thumb: "/assets/thumbs/sm/chick-defense.webp",
       category: "arcade",
     },
     {
@@ -361,7 +361,7 @@
       title: "황금 낚시",
       tag: "골드러시 · 50단계",
       href: "/games/fish-rush/",
-      thumb: "/assets/thumbs/fish-rush.png",
+      thumb: "/assets/thumbs/sm/fish-rush.webp",
       category: "arcade",
     },
     {
@@ -369,7 +369,7 @@
       title: "순서톡톡",
       tag: "기억 · 50단계",
       href: "/games/order-memo/",
-      thumb: "/assets/thumbs/order-memo.png",
+      thumb: "/assets/thumbs/sm/order-memo.webp",
       category: "puzzle",
     },
     {
@@ -377,7 +377,7 @@
       title: "번쩍 반응",
       tag: "반사 · ms 기록",
       href: "/games/reaction/",
-      thumb: "/assets/thumbs/reaction.png",
+      thumb: "/assets/thumbs/sm/reaction.webp",
       category: "rhythm",
     },
     {
@@ -385,7 +385,7 @@
       title: "오늘의 워들",
       tag: "퍼즐 · 하루 100문제",
       href: "/games/wordle/",
-      thumb: "/assets/thumbs/wordle.png",
+      thumb: "/assets/thumbs/sm/wordle.webp",
       category: "puzzle",
     },
     {
@@ -394,7 +394,7 @@
       title: "폴짝 하늘",
       tag: "점프 · 랭킹",
       href: "/games/doodle/",
-      thumb: "/assets/thumbs/doodle.png",
+      thumb: "/assets/thumbs/sm/doodle.webp",
       category: "arcade",
     },
     {
@@ -403,7 +403,7 @@
       title: "펄럭 병아리",
       tag: "아케이드 · 랭킹",
       href: "/games/flappy/",
-      thumb: "/assets/thumbs/flappy.png",
+      thumb: "/assets/thumbs/sm/flappy.webp",
       category: "arcade",
     },
     {
@@ -411,7 +411,7 @@
       title: "핀볼팡팡",
       tag: "아케이드 · 50단계",
       href: "/games/pinball/",
-      thumb: "/assets/thumbs/pinball.png",
+      thumb: "/assets/thumbs/sm/pinball.webp",
       category: "arcade",
     },
     {
@@ -420,7 +420,7 @@
       title: "콩콩 점프",
       tag: "점프런 · 무한 · 랭킹",
       href: "/games/jump-run/",
-      thumb: "/assets/thumbs/jump-run.png",
+      thumb: "/assets/thumbs/sm/jump-run.webp",
       category: "action",
     },
     {
@@ -428,7 +428,7 @@
       title: "동키콩",
       tag: "Internet Archive",
       href: "/games/donkey-kong/",
-      thumb: "/assets/thumbs/donkey-kong.png",
+      thumb: "/assets/thumbs/sm/donkey-kong.webp",
       category: "archive",
     },
     {
@@ -436,7 +436,7 @@
       title: "프린스 오브 페르시아",
       tag: "Internet Archive",
       href: "/games/prince/",
-      thumb: "/assets/thumbs/prince.png",
+      thumb: "/assets/thumbs/sm/prince.webp",
       category: "archive",
     },
     {
@@ -444,7 +444,7 @@
       title: "레밍즈",
       tag: "Internet Archive",
       href: "/games/lemmings/",
-      thumb: "/assets/thumbs/lemmings.png",
+      thumb: "/assets/thumbs/sm/lemmings.webp",
       category: "archive",
     },
     {
@@ -452,7 +452,7 @@
       title: "보글보글",
       tag: "Internet Arcade",
       href: "/games/bubble-bobble/",
-      thumb: "/assets/thumbs/bubble-bobble.png",
+      thumb: "/assets/thumbs/sm/bubble-bobble.webp",
       category: "archive",
     },
     {
@@ -460,7 +460,7 @@
       title: "팩맨",
       tag: "Internet Arcade",
       href: "/games/pacman-classic/",
-      thumb: "/assets/thumbs/pacman-classic.png",
+      thumb: "/assets/thumbs/sm/pacman-classic.webp",
       category: "archive",
     },
     {
@@ -468,7 +468,7 @@
       title: "갤러그",
       tag: "Internet Arcade",
       href: "/games/galaga/",
-      thumb: "/assets/thumbs/galaga.png",
+      thumb: "/assets/thumbs/sm/galaga.webp",
       category: "archive",
     },
     {
@@ -476,7 +476,7 @@
       title: "로드러너",
       tag: "Internet Archive",
       href: "/games/lode-runner/",
-      thumb: "/assets/thumbs/lode-runner.png",
+      thumb: "/assets/thumbs/sm/lode-runner.webp",
       category: "archive",
     },
     {
@@ -484,7 +484,7 @@
       title: "고인돌",
       tag: "Internet Archive",
       href: "/games/sinseokgi/",
-      thumb: "/assets/thumbs/goindol.png",
+      thumb: "/assets/thumbs/sm/goindol.webp",
       category: "archive",
     },
     {
@@ -493,7 +493,7 @@
       title: "애플 스네이크",
       tag: "아케이드 · 50단계",
       href: "/games/snake/",
-      thumb: "/assets/thumbs/snake.png",
+      thumb: "/assets/thumbs/sm/snake.webp",
       category: "arcade",
     },
     {
@@ -501,7 +501,7 @@
       title: "지뢰찾기",
       tag: "퍼즐 · 추억",
       href: "/games/minesweeper/",
-      thumb: "/assets/thumbs/minesweeper.png",
+      thumb: "/assets/thumbs/sm/minesweeper.webp",
       category: "puzzle",
     },
     {
@@ -509,7 +509,7 @@
       title: "알까기",
       tag: "대결 · 50단계",
       href: "/games/alggagi/",
-      thumb: "/assets/thumbs/alggagi.png",
+      thumb: "/assets/thumbs/sm/alggagi.webp",
       category: "sports",
     },
     {
@@ -517,7 +517,7 @@
       title: "두더지 팡팡",
       tag: "반응 · 50단계",
       href: "/games/whack-mole/",
-      thumb: "/assets/thumbs/whack-mole.png",
+      thumb: "/assets/thumbs/sm/whack-mole.webp",
       category: "arcade",
     },
     {
@@ -525,7 +525,7 @@
       title: "오목",
       tag: "대국 · AI",
       href: "/games/omok/",
-      thumb: "/assets/thumbs/omok.png",
+      thumb: "/assets/thumbs/sm/omok.webp",
       category: "puzzle",
     },
     {
@@ -534,7 +534,7 @@
       title: "닌자 표창 피하기",
       tag: "회피 · 무한 · 랭킹",
       href: "/games/ninja-dodge/",
-      thumb: "/assets/thumbs/ninja-dodge.png",
+      thumb: "/assets/thumbs/sm/ninja-dodge.webp",
       category: "action",
     },
     {
@@ -543,7 +543,7 @@
       title: "서빙왕",
       tag: "균형 · 무한 · 랭킹",
       href: "/games/stork-stride/",
-      thumb: "/assets/thumbs/stork-stride.png",
+      thumb: "/assets/thumbs/sm/stork-stride.webp",
       category: "arcade",
     },
     {
@@ -551,7 +551,7 @@
       title: "블록 팡팡",
       tag: "퍼즐 · 랭킹",
       href: "/games/tetris/",
-      thumb: "/assets/thumbs/tetris.png",
+      thumb: "/assets/thumbs/sm/tetris.webp",
       category: "puzzle",
     },
     {
@@ -583,7 +583,7 @@
       title: "리듬 톡톡 지혁이용",
       tag: "쉬운 모드 · 50곡",
       href: "/games/rhythm-easy/",
-      thumb: "/assets/thumbs/rhythm.png",
+      thumb: "/assets/thumbs/sm/rhythm.webp",
       category: "jihyeok",
     },
     {
@@ -591,7 +591,7 @@
       title: "리듬 톡톡",
       tag: "리듬 · 50곡",
       href: "/games/rhythm/",
-      thumb: "/assets/thumbs/rhythm.png",
+      thumb: "/assets/thumbs/sm/rhythm.webp",
       category: "rhythm",
     },
     {
@@ -600,7 +600,7 @@
       title: "홀인원 골프",
       tag: "골프 · 18홀",
       href: "/games/minigolf/",
-      thumb: "/assets/thumbs/minigolf.png",
+      thumb: "/assets/thumbs/sm/minigolf.webp",
       category: "sports",
     },
     {
@@ -609,7 +609,7 @@
       title: "스피드 삐약이",
       tag: "레이싱 · 50단계",
       href: "/games/racing/",
-      thumb: "/assets/thumbs/racing.png",
+      thumb: "/assets/thumbs/sm/racing.webp",
       category: "sports",
     },
     {
@@ -618,7 +618,7 @@
       title: "드리프트 삐약이",
       tag: "드리프트 · 원터치",
       href: "/games/drift-chick/",
-      thumb: "/assets/thumbs/drift-chick.png",
+      thumb: "/assets/thumbs/sm/drift-chick.webp",
       category: "sports",
     },
     {
@@ -627,7 +627,7 @@
       title: "삐약이 건너기",
       tag: "액션 · 50단계",
       href: "/games/crossy/",
-      thumb: "/assets/thumbs/crossy.png",
+      thumb: "/assets/thumbs/sm/crossy.webp",
       category: "action",
     },
     {
@@ -635,7 +635,7 @@
       title: "한 발 저격",
       tag: "슈팅 · 정밀조준",
       href: "/games/one-shot/",
-      thumb: "/assets/thumbs/one-shot.png",
+      thumb: "/assets/thumbs/sm/one-shot.webp",
       category: "action",
     },
     {
@@ -644,7 +644,7 @@
       title: "막아요 쏴요",
       tag: "슈팅 · 방패",
       href: "/games/chick-shield/",
-      thumb: "/assets/thumbs/chick-shield.png",
+      thumb: "/assets/thumbs/sm/chick-shield.webp",
       category: "action",
     },
     {
@@ -653,7 +653,7 @@
       title: "귀염뽀짝 쏘세요",
       tag: "슈팅 · 자체제작",
       href: "/games/cute-shoot/",
-      thumb: "/assets/thumbs/cute-shoot.png",
+      thumb: "/assets/thumbs/sm/cute-shoot.webp",
       category: "action",
     },
     {
@@ -661,7 +661,7 @@
       title: "별똥별 벽돌깨기",
       tag: "아케이드 · 50단계",
       href: "/games/brick/",
-      thumb: "/assets/thumbs/brick.png",
+      thumb: "/assets/thumbs/sm/brick.webp",
       category: "action",
     },
     {
@@ -670,7 +670,7 @@
       title: "팝샷 버블",
       tag: "슈팅 · 50단계",
       href: "/games/puzzle-bubble/",
-      thumb: "/assets/thumbs/puzzlebubble.png",
+      thumb: "/assets/thumbs/sm/puzzlebubble.webp",
       category: "action",
     },
     {
@@ -678,7 +678,7 @@
       title: "땅땅 차지",
       tag: "아케이드 · 38단계",
       href: "/games/ttamogi/",
-      thumb: "/assets/thumbs/ttamogi.png",
+      thumb: "/assets/thumbs/sm/ttamogi.webp",
       category: "action",
     },
     {
@@ -686,7 +686,7 @@
       title: "짝짝 사천성",
       tag: "연결 · 60단계",
       href: "/games/memory/",
-      thumb: "/assets/thumbs/sacheon.png",
+      thumb: "/assets/thumbs/sm/sacheon.webp",
       category: "puzzle",
     },
     {
@@ -694,7 +694,7 @@
       title: "다른 그림 찾기",
       tag: "찾기 · 50단계",
       href: "/games/diff/",
-      thumb: "/assets/thumbs/diff.png",
+      thumb: "/assets/thumbs/sm/diff.webp",
       category: "puzzle",
     },
     {
@@ -702,7 +702,7 @@
       title: "수박 합치기",
       tag: "머지 · 물리",
       href: "/games/suika/",
-      thumb: "/assets/thumbs/suika.png",
+      thumb: "/assets/thumbs/sm/suika.webp",
       category: "puzzle",
     },
     {
@@ -711,7 +711,7 @@
       title: "상자야 굴러가",
       tag: "퍼즐 · 50단계",
       href: "/games/sokoban/",
-      thumb: "/assets/thumbs/sokoban.png",
+      thumb: "/assets/thumbs/sm/sokoban.webp",
       category: "puzzle",
     },
     {
@@ -719,7 +719,7 @@
       title: "두배두배",
       tag: "퍼즐 · 2048",
       href: "/games/slide-2048/",
-      thumb: "/assets/thumbs/2048.png",
+      thumb: "/assets/thumbs/sm/2048.webp",
       category: "puzzle",
     },
     {
@@ -727,7 +727,7 @@
       title: "흔들흔들 스카이",
       tag: "타이밍 · 쌓기",
       href: "/games/tower/",
-      thumb: "/assets/thumbs/tower.png",
+      thumb: "/assets/thumbs/sm/tower.webp",
       category: "arcade",
     },
     {
@@ -735,7 +735,7 @@
       title: "과일 바스켓",
       tag: "캐치 · 50단계",
       href: "/games/fruit-catch/",
-      thumb: "/assets/thumbs/fruit.png",
+      thumb: "/assets/thumbs/sm/fruit.webp",
       category: "arcade",
     },
     {
@@ -743,7 +743,7 @@
       title: "팝팝 방울",
       tag: "탭 · 50단계",
       href: "/games/bubble-pop/",
-      thumb: "/assets/thumbs/bubble.png",
+      thumb: "/assets/thumbs/sm/bubble.webp",
       category: "arcade",
     },
   ];

@@ -48,11 +48,11 @@
   const raw = {
     enemy: loadImg("assets/enemy.png"),
     scope: loadImg("assets/scope.png"),
-    bg0: loadImg("assets/bg-nest.png"),
-    bg1: loadImg("assets/bg-nest-night.png"),
-    bg2: loadImg("assets/bg-alley.png"),
-    bg3: loadImg("assets/bg-rooftop.png"),
-    bg4: loadImg("assets/bg-market.png"),
+    bg0: loadImg("assets/bg-nest.webp"),
+    bg1: loadImg("assets/bg-nest-night.webp"),
+    bg2: loadImg("assets/bg-alley.webp"),
+    bg3: loadImg("assets/bg-rooftop.webp"),
+    bg4: loadImg("assets/bg-market.webp"),
   };
   const img = { enemy: null, scope: null, bgs: [] };
   let assetsReady = false;

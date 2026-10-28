@@ -25,9 +25,9 @@
     over: document.getElementById("over"),
   };
   const chickImg = new Image();
-  chickImg.src = "assets/chick.png";
+  chickImg.src = "assets/chick.jpg";
   const thumbImg = new Image();
-  thumbImg.src = "assets/thumb.png";
+  thumbImg.src = "assets/thumb.webp";
 
   let state = "title";
   let chart = [];

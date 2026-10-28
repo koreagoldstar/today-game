@@ -286,7 +286,7 @@
     won = win;
     cancelAnimationFrame(rafId);
     if (audio) audio.stop();
-    document.getElementById("over-art").src = win ? "assets/chick.png" : "assets/fox.png";
+    document.getElementById("over-art").src = win ? "assets/chick.jpg" : "assets/fox.jpg";
     document.getElementById("over-badge").textContent = win ? "WIN" : "LOSE";
     document.getElementById("over-badge").classList.toggle("soft", win);
     document.getElementById("over-title").textContent = win ? "승리!" : "아쉬워요";

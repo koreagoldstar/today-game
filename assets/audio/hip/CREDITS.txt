@@ -15,4 +15,16 @@ https://opengameart.org/content/funky-house
 hip05.mp3 — "Liquid Flame" by Of Far Different Nature (CC0)
 https://opengameart.org/content/liquid-flame
 
-cyber01–cyber07 — see games/rhythm/audio/CREDITS.txt
+cyber01.mp3 — "Cyberpunk Beauty" by Tarush Singhal (CC0)
+https://opengameart.org/content/cyberpunk-beauty
+
+cyber02.mp3 — "PYNCHON" by James Gargette / cinameng (CC0)
+https://opengameart.org/content/pynchon
+
+cyber05.mp3 — "Oldskool" by Of Far Different Nature (CC0)
+https://opengameart.org/content/oldskool
+
+cyber06.mp3 — "Approach" by Ruskerdax (CC0)
+https://opengameart.org/content/approach
+
+(cyber03 · cyber04 · cyber07 were byte-identical copies of hip03 · hip04 · hip05 and were removed.)

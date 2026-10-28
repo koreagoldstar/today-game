@@ -23,10 +23,10 @@
   if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
 
   const raw = { idle: new Image(), shoot: new Image(), court: new Image(), hoop: new Image() };
-  raw.idle.src = "assets/player.png?v=6";
-  raw.shoot.src = "assets/player-shoot.png?v=6";
-  raw.court.src = "assets/court.png?v=7";
-  raw.hoop.src = "assets/hoop.png?v=1";
+  raw.idle.src = "assets/player.jpg?v=6";
+  raw.shoot.src = "assets/player-shoot.jpg?v=6";
+  raw.court.src = "assets/court.jpg?v=7";
+  raw.hoop.src = "assets/hoop.jpg?v=1";
   const spr = { idle: null, shoot: null, hoop: null };
 
   function hoopLayout() {

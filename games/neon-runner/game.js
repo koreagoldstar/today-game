@@ -563,11 +563,11 @@
   resize();
   seedBuildings();
   Promise.all([
-    loadImg("assets/chick.png"),
-    loadImg("assets/chick-jump.png"),
-    loadImg("assets/chick-slide.png"),
-    loadImg("assets/crate.png"),
-    loadImg("assets/bar.png"),
+    loadImg("assets/chick.jpg"),
+    loadImg("assets/chick-jump.jpg"),
+    loadImg("assets/chick-slide.jpg"),
+    loadImg("assets/crate.jpg"),
+    loadImg("assets/bar.jpg"),
   ]).then(([run, jump, slide, crate, bar]) => {
     sprites.run = run;
     sprites.jump = jump;

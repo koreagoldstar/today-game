@@ -142,7 +142,7 @@
       loadImg("assets/marble-blue.png"),
       loadImg("assets/marble-red.png"),
       loadImg("assets/board.png"),
-      loadImg("assets/sand-bg.png"),
+      loadImg("assets/sand-bg.webp"),
       loadImg("assets/mascots.png"),
     ]);
     if (blue) sprites.blue = punchBg(blue);
