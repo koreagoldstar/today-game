@@ -109,10 +109,15 @@
             <strong class="visit-count" id="visit-count">…</strong>
           </div>
           <script>
-            /* 오늘 방문: 같은 날 다시 오면 마지막 숫자를 먼저 (새 숫자는 js/main.js 가 받아서 바꿈) */
+            /* 오늘 방문: 같은 날 다시 오면 마지막 숫자를 먼저 · 답이 오면 다른 스크립트를 기다리지 않고 바로 그림 (나머지는 js/main.js) */
             (function () {
               var v = window.__todayVisits;
-              if (v && v.seen > 0) document.getElementById("visit-count").textContent = v.seen.toLocaleString("ko-KR");
+              if (!v) return;
+              var el = document.getElementById("visit-count");
+              if (v.seen > 0) el.textContent = v.seen.toLocaleString("ko-KR");
+              v.req.then(function (d) {
+                if (d && d.today != null) el.textContent = Number(d.today).toLocaleString("ko-KR");
+              }, function () {});
             })();
           </script>
         </div>
