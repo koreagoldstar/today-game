@@ -3,46 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#c48e4d" />
+    <meta name="theme-color" content="#f3e9d8" />
     <title>오목</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=3" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="omok">
     <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
-        <div class="panel">
-          <span id="hud-turn">흑돌 차례</span>
-          <span id="hud-diff">난이도: 보통</span>
+      <canvas id="game" width="390" height="700" aria-label="오목판"></canvas>
+
+      <header class="hud">
+        <a class="home" href="/">홈</a>
+        <div class="status" aria-live="polite">
+          <i class="stone-ico black" id="status-stone"></i>
+          <div class="status-text">
+            <b id="hud-turn">대국을 기다려요</b>
+            <span id="hud-diff">쉬움</span>
+          </div>
         </div>
-        <div class="panel right">
-          <button type="button" class="undo-btn" id="undo-btn">↩ 무르기</button>
+      </header>
+
+      <section class="dock" aria-label="대국 정보">
+        <div class="players">
+          <div class="player" id="card-me">
+            <i class="stone-ico black"></i>
+            <div class="who"><b>나</b><span>흑돌 · 먼저 둬요</span></div>
+          </div>
+          <span class="vs">VS</span>
+          <div class="player" id="card-ai">
+            <i class="stone-ico white"></i>
+            <div class="who"><b>AI <em id="ai-level">쉬움</em></b><span id="ai-state">백돌</span></div>
+          </div>
         </div>
-      </div>
+        <div class="actions" id="actions">
+          <button type="button" class="act" id="undo-btn">↩ 무르기</button>
+          <button type="button" class="act" id="new-btn">↻ 새 판</button>
+        </div>
+      </section>
 
       <div class="overlay" id="title">
         <img class="hero-art" src="assets/thumb.webp" alt="" width="160" height="160" />
-        <div class="badge">FIVE IN A ROW</div>
+        <div class="five" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         <h1>오목</h1>
-        <p>15×15 바둑판에서<br />다섯 알을 먼저 놓으세요</p>
-        <div class="diff-picker">
-          <button type="button" class="diff-btn active" data-diff="easy">쉬움</button>
-          <button type="button" class="diff-btn" data-diff="normal">보통</button>
-          <button type="button" class="diff-btn" data-diff="hard">어려움</button>
+        <p class="lead">가로 · 세로 · 대각선으로<br />다섯 알을 먼저 나란히 놓으면 이겨요</p>
+        <div class="diff-picker" role="group" aria-label="난이도">
+          <button type="button" class="diff-btn active" data-diff="easy"><b>쉬움</b><small>처음이라면</small></button>
+          <button type="button" class="diff-btn" data-diff="normal"><b>보통</b><small>딱 알맞게</small></button>
+          <button type="button" class="diff-btn" data-diff="hard"><b>어려움</b><small>고수 도전</small></button>
         </div>
-        <button type="button" class="btn" id="start-btn">대국 시작!</button>
+        <p class="note">나는 <i class="stone-ico black"></i> 흑돌 · 먼저 둬요</p>
+        <button type="button" class="btn" id="start-btn">대국 시작</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="result">
-        <div class="badge soft" id="result-badge">WIN</div>
-        <h1 id="result-title">승리!</h1>
-        <p id="result-detail"></p>
-        <button type="button" class="btn" id="retry-btn">한 판 더</button>
-        <a href="/">← 오늘의 게임</a>
+        <div class="result-card">
+          <div class="seal" id="result-badge">승</div>
+          <h1 id="result-title">승리!</h1>
+          <p id="result-detail"></p>
+          <button type="button" class="btn" id="retry-btn">한 판 더</button>
+          <button type="button" class="link-btn" id="change-btn">난이도 바꾸기</button>
+          <a href="/">← 오늘의 게임</a>
+        </div>
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
@@ -52,7 +76,7 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js?v=2"></script>
+    <script src="game.js?v=3"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="오목 소개">
   <h2>오목 소개</h2>
