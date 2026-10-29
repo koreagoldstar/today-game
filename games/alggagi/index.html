@@ -3,57 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#e8c896" />
+    <meta name="theme-color" content="#d8f1e4" />
     <title>알까기</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="alggagi">
     <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
-        <div class="panel">
-          <span>STAGE <b id="hud-stage">1</b></span>
-          <span>승 <b id="hud-wins">0</b></span>
+      <canvas id="game" width="390" height="700" aria-label="알까기 판"></canvas>
+
+      <header class="hud">
+        <a class="home" href="/">홈</a>
+        <div class="hud-mid">
+          <div class="hud-row">
+            <span class="st-badge">스테이지 <b id="hud-stage">1</b></span>
+            <span class="score"><b id="hud-score">0</b>점</span>
+            <span class="hearts" id="hud-hearts" aria-label="남은 하트"></span>
+          </div>
+          <div class="hud-name" id="hud-name">한 줄 대결</div>
         </div>
-        <div class="panel right">
-          <span id="hud-turn">내 차례</span>
-          <span>남은 구슬 <b id="hud-mine">3</b> : <b id="hud-enemy">3</b></span>
-        </div>
+      </header>
+
+      <div class="team ai" id="team-ai">
+        <i class="face black"></i>
+        <div class="who"><b>깜장이 팀</b><span class="left" id="ai-left"></span></div>
+        <em class="say" id="ai-say"></em>
+      </div>
+      <div class="team me" id="team-me">
+        <i class="face white"></i>
+        <div class="who"><b>하양이 팀 <small>나</small></b><span class="left" id="me-left"></span></div>
+        <em class="say" id="me-say"></em>
+      </div>
+      <div class="dock" id="dock">
+        <p class="tip" id="tip">내 알을 뒤로 당겼다 놓으면 탁!</p>
       </div>
 
       <div class="overlay" id="title">
-        <img class="hero-art" src="assets/thumb.webp" alt="" width="196" height="196" />
-        <div class="badge">모래 위 구슬 대결</div>
+        <img class="hero-art" src="assets/thumb.webp?v=2" alt="" width="160" height="160" />
         <h1>알까기</h1>
-        <p>
-          구슬을 <b>뒤로 당겨</b> 힘을 모은 뒤<br />
-          손을 떼면 반대 방향으로 굴러가요!
-        </p>
-        <div class="icons">50단계 · 랜덤 배치 대결</div>
+        <p class="lead">하양이 알을 <b>뒤로 당겼다 놓으면</b> 탁!<br />깜장이 알을 판 밖으로 모두 떨어뜨려요</p>
+        <ul class="how">
+          <li><b>한 번 더</b> 상대 알을 떨어뜨리고 내 알이 남으면 또 쏴요</li>
+          <li><b>더블</b> 한 번에 여러 개 떨어뜨리면 보너스!</li>
+          <li><b>♥ 3개</b> 져도 하트로 다시 도전해요</li>
+        </ul>
+        <p class="best" id="title-best"></p>
         <button type="button" class="btn" id="start-btn">시작!</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="round">
-        <div class="badge soft" id="round-badge">ROUND WIN</div>
+        <div class="badge" id="round-badge">ROUND WIN</div>
         <h1 id="round-title">라운드 승리!</h1>
         <p id="round-detail"></p>
-        <button type="button" class="btn" id="next-btn">다음 라운드</button>
+        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
       </div>
 
       <div class="overlay hidden" id="over">
-        <div class="badge">GAME OVER</div>
-        <h1>아쉬워요</h1>
+        <div class="badge soft">GAME OVER</div>
+        <h1>괜찮아요!</h1>
         <p id="over-detail"></p>
-        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <button type="button" class="btn" id="retry-btn">처음부터 다시</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="allclear">
-        <div class="badge soft">ALL CLEAR</div>
+        <div class="badge">ALL CLEAR</div>
         <h1>알까기왕!</h1>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
@@ -67,7 +84,7 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="알까기 소개">
   <h2>알까기 소개</h2>

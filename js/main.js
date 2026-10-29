@@ -411,7 +411,7 @@
       title: "핀볼팡팡",
       tag: "아케이드 · 50단계",
       href: "/games/pinball/",
-      thumb: "/assets/thumbs/sm/pinball.webp?v=2",
+      thumb: "/assets/thumbs/sm/pinball.webp?v=3",
       category: "arcade",
     },
     {
@@ -509,7 +509,7 @@
       title: "알까기",
       tag: "대결 · 50단계",
       href: "/games/alggagi/",
-      thumb: "/assets/thumbs/sm/alggagi.webp",
+      thumb: "/assets/thumbs/sm/alggagi.webp?v=2",
       category: "sports",
     },
     {
