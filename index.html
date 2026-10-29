@@ -3,6 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      /* 오늘 방문 숫자: 글꼴 · 다른 스크립트를 기다리지 않고 페이지가 열리자마자 물어봄 (js/main.js 가 이어받아 그림) */
+      (function () {
+        try {
+          var day = new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+          var flag = "today-game-visit-" + day;
+          var first = !localStorage.getItem(flag);
+          if (first) localStorage.setItem(flag, "1");
+          var seen = String(localStorage.getItem("today-game-visit-seen") || "").split(":");
+          window.__todayVisits = {
+            day: day,
+            first: first,
+            seen: seen[0] === day ? Number(seen[1]) || 0 : 0,
+            req: fetch("/api/visits" + (first ? "?count=1" : ""), { cache: "no-store" }).then(function (r) {
+              return r.json();
+            }),
+          };
+          window.__todayVisits.req.catch(function () {}); // 잠깐 끊겨도 오류로 남지 않게 (js/main.js 가 대신 처리)
+        } catch (e) {}
+      })();
+    </script>
     <meta name="theme-color" content="#7ec8ff" />
     <!-- Google & Naver Search Engine Verification -->
     <!-- Google Search Console: add <meta name="google-site-verification" content="..." /> here -->
@@ -87,6 +108,13 @@
             <span class="visit-label">오늘 방문</span>
             <strong class="visit-count" id="visit-count">…</strong>
           </div>
+          <script>
+            /* 오늘 방문: 같은 날 다시 오면 마지막 숫자를 먼저 (새 숫자는 js/main.js 가 받아서 바꿈) */
+            (function () {
+              var v = window.__todayVisits;
+              if (v && v.seen > 0) document.getElementById("visit-count").textContent = v.seen.toLocaleString("ko-KR");
+            })();
+          </script>
         </div>
         <h1 class="brand">오늘의게임</h1>
         <p class="tagline">작고 귀여운 게임들을 모아둔 플레이룸</p>
@@ -894,7 +922,7 @@
     <script src="js/edu-speech.js?v=11"></script>
     <script src="js/game-rank.js?v=2"></script>
     <script src="js/my-face.js?v=3"></script>
-    <script src="js/main.js?v=43"></script>
+    <script src="js/main.js?v=44"></script>
     <script src="js/record-cards.js?v=1"></script>
     <script src="js/pwa.js?v=2"></script>
 </body>

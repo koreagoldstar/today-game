@@ -796,20 +796,31 @@
   }
 
   async function loadVisitors() {
-    const day = todayKey();
-    const flag = `today-game-visit-${day}`;
-    const firstToday = !localStorage.getItem(flag);
-    if (firstToday) localStorage.setItem(flag, "1");
+    // index.html 이 페이지 열리자마자 보낸 요청이 있으면 그걸 이어받음 (두 번 세지 않게)
+    const early = window.__todayVisits;
+    const day = early ? early.day : todayKey();
+    let firstToday;
+    let request;
+    if (early && early.req) {
+      firstToday = early.first;
+      request = early.req;
+    } else {
+      const flag = `today-game-visit-${day}`;
+      firstToday = !localStorage.getItem(flag);
+      if (firstToday) localStorage.setItem(flag, "1");
+      request = fetch(`/api/visits${firstToday ? "?count=1" : ""}`, { method: "GET", cache: "no-store" }).then((res) => res.json());
+    }
 
     try {
-      const res = await fetch(`/api/visits${firstToday ? "?count=1" : ""}`, {
-        method: "GET",
-        cache: "no-store",
-      });
-      const data = await res.json();
+      const data = await request;
       paintVisitTotal(data && data.total);
       if (data && data.today != null) {
         visitCount.textContent = Number(data.today).toLocaleString("ko-KR");
+        try {
+          localStorage.setItem("today-game-visit-seen", `${day}:${Number(data.today)}`);
+        } catch (_) {
+          /* 저장 못 해도 화면은 그대로 */
+        }
         return;
       }
     } catch (_) {

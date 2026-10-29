@@ -31,7 +31,8 @@ function daysBetween(a, b) {
 }
 
 async function abacus(action, key) {
-  const response = await fetch(`${ABACUS}/${action}/${NAMESPACE}/${key}`);
+  // 외부 카운터가 느려도 화면이 오래 기다리지 않게 3초까지만
+  const response = await fetch(`${ABACUS}/${action}/${NAMESPACE}/${key}`, { signal: AbortSignal.timeout(3000) });
   const data = await response.json();
   return Number(data.value ?? data.count ?? 0) || 0;
 }
@@ -74,17 +75,20 @@ async function redis(command) {
   }
 }
 
-/** 누적 방문 (저장소가 없거나 실패하면 null → 화면에 안 보임) */
-async function cumulative(counted, today, day) {
+/**
+ * 누적 방문 (저장소가 없거나 실패하면 null → 화면에 안 보임)
+ * 보통은 저장소에 한 번만 다녀옴: 셀 때 INCR · 읽기만 할 때 GET
+ * todayPromise: 오늘 숫자(abacus) — 처음 한 번 시작값을 만들 때만 기다림
+ */
+async function cumulative(counted, todayPromise, day) {
   if (!redisConfigured()) return null;
-  const cur = await redis(["GET", TOTAL_KEY]);
+  const cur = await redis(counted ? ["INCR", TOTAL_KEY] : ["GET", TOTAL_KEY]);
   if (!cur.ok) return null;
-  if (cur.result != null) {
-    if (!counted) return Number(cur.result) || 0;
-    const inc = await redis(["INCR", TOTAL_KEY]);
-    return inc.ok ? Number(inc.result) : null;
-  }
-  // 처음 한 번: 예전 기록 합 + 그 뒤 날짜들 + 오늘 (오늘 숫자를 못 읽으면 다음에)
+  if (counted && Number(cur.result) > 1) return Number(cur.result);
+  if (!counted && cur.result != null) return Number(cur.result) || 0;
+  // 처음 한 번(키가 없었음): 예전 기록 합 + 그 뒤 날짜들 + 오늘 (오늘 숫자를 못 읽으면 다음에)
+  if (counted) await redis(["DEL", TOTAL_KEY]); // INCR 이 새로 만든 1 은 지우고 시작값으로
+  const today = await todayPromise;
   if (today == null) return null;
   let start = BASE_TOTAL + today;
   for (const d of daysBetween(BASE_DAY, day)) {
@@ -110,19 +114,13 @@ module.exports = async function handler(req, res) {
   const day = seoulDay();
   const shouldCount = req.method === "POST" || (req.query && req.query.count === "1");
 
-  let today = null;
-  try {
-    today = await abacus(shouldCount ? "hit" : "get", `day-${day}`);
-  } catch (_) {
-    today = null;
-  }
-  if (shouldCount) await stats.bumpVisitor(); // 모니터실: 우리 저장소에도 날짜별 방문자
-  let total = null;
-  try {
-    total = await cumulative(shouldCount, today, day);
-  } catch (_) {
-    total = null;
-  }
+  // 오늘(abacus) · 누적(Redis) · 모니터실 기록을 차례로 기다리지 않고 한꺼번에
+  const todayPromise = abacus(shouldCount ? "hit" : "get", `day-${day}`).catch(() => null);
+  const [today, total] = await Promise.all([
+    todayPromise,
+    cumulative(shouldCount, todayPromise, day).catch(() => null),
+    shouldCount ? stats.bumpVisitor().catch(() => {}) : null, // 모니터실: 우리 저장소에도 날짜별 방문자
+  ]);
   if (today == null) {
     res.status(200).json({ today: null, total, day, error: "counter unavailable" });
     return;
