@@ -19,6 +19,7 @@ const IP_WINDOW = 60 * 15;
 const ALL_LIMIT = 30;
 const ALL_WINDOW = 60 * 60;
 const VISITS_SINCE = "2026-07-15"; // 날짜별 방문자 기록(외부 카운터)이 시작된 날
+const OWN_VISITS_SINCE = "2026-10-29"; // 이날부터 방문자는 우리 저장소에서만 셈 (그 전 날짜는 외부 카운터 기록)
 const ABACUS_CACHE = "todaygame:monitor:abacus"; // 지난 날 방문자 수 (외부 카운터) 모아 둔 것
 const EXTRA_TITLES = { "bowling-strike": "볼링 스트라이크", goindol: "고인돌" };
 
@@ -116,9 +117,9 @@ async function collect(days) {
   }
   const res = await stats.pipeline(cmds);
   const r = (i) => (res && res[i] && res[i].result != null ? res[i].result : null);
-  // 지난 날 방문자 수는 바뀌지 않으니 한 번 읽은 것은 저장해 두고 씀 (오늘만 매번 새로)
+  // 외부 카운터 시절 방문자 수는 바뀌지 않으니 한 번 읽은 것은 저장해 두고 씀 · 그 뒤 날짜는 우리 저장소 숫자
   const cache = hashToObject(r(2));
-  const visitors = await mapLimit(list, 6, (d) => (d < today && cache[d] != null ? cache[d] : abacusDay(d)));
+  const visitors = await mapLimit(list, 6, (d) => (d >= OWN_VISITS_SINCE ? null : d < today && cache[d] != null ? cache[d] : abacusDay(d)));
   const fresh = [];
   list.forEach((d, k) => {
     if (d < today && cache[d] == null && visitors[k] != null && visitors[k] > 0) fresh.push(d, String(visitors[k]));

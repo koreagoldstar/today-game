@@ -150,6 +150,7 @@ function seed() {
     d.setUTCDate(d.getUTCDate() - 1);
   }
   cmd(["SET", "todaygame:visits:total", "5000"]);
+  cmd(["SET", stats.dayKey("visitors", today), "7"]); // 2026-10-29 부터 오늘 방문자는 우리 저장소
   for (const [g, n] of [
     ["jelly-factory", 120],
     ["slime-lab", 300],
@@ -212,12 +213,17 @@ function seed() {
   await invoke("plays", { method: "POST", body: { game: "no-such-game" } });
   await invoke("scores", { method: "POST", body: { game: "jelly-factory", name: "점검이", score: 777 } });
   const v0 = Number(cmd(["GET", stats.dayKey("visitors", stats.seoulDay())]) || 0);
-  await invoke("visits", { method: "GET", query: { count: "1" } });
-  await invoke("visits", { method: "GET", query: {} });
+  const totalBefore = Number(cmd(["GET", "todaygame:visits:total"]) || 0);
+  abacusCalls = 0;
+  const counted = (await invoke("visits", { method: "GET", query: { count: "1" } })).json;
+  const readOnly = (await invoke("visits", { method: "GET", query: {} })).json;
+  const visitsAbacus = abacusCalls;
   const v1 = Number(cmd(["GET", stats.dayKey("visitors", stats.seoulDay())]) || 0);
   const after = (await invoke("monitor", { method: "GET", headers: auth, query: { days: "7" } })).json;
   const t2 = after.days[after.days.length - 1];
   check("M5", "게임 열기 · 랭킹 등록 · 방문이 오늘 날짜로 쌓임 (없는 게임은 안 셈 · 세지 않는 조회는 안 셈) · 누적도 그대로 늘어남", t2.plays["jelly-factory"] === 2 && !t2.plays["no-such-game"] && t2.ranks["jelly-factory"] === 1 && v1 === v0 + 1 && after.playsTotal["jelly-factory"] === 122 && t2.tracked, `오늘 젤리 공장 참여 ${t2.plays["jelly-factory"]} · 랭킹 ${t2.ranks["jelly-factory"]} · 방문 ${v0}→${v1} · 누적 ${after.playsTotal["jelly-factory"]}`);
+
+  check("M5b", "홈 '오늘 방문' 숫자 = 모니터실 오늘 방문자 (우리 저장소 · 바깥 카운터 안 부름) · 세면 오늘 · 누적 +1 · 읽기만 하면 그대로", counted.today === v1 && readOnly.today === v1 && t2.visitors === v1 && counted.total === totalBefore + 1 && readOnly.total === counted.total && visitsAbacus === 0, `세기 ${JSON.stringify(counted)} · 읽기 ${JSON.stringify(readOnly)} · 모니터 오늘 ${t2.visitors} · 바깥 호출 ${visitsAbacus}`);
 
   /* ---------- M6: 지난 방문자 수는 한 번만 바깥에서 ---------- */
   abacusCalls = 0;
