@@ -617,9 +617,9 @@
       id: "minigolf",
       face: true,
       title: "홀인원 골프",
-      tag: "골프 · 18홀",
+      tag: "3D 골프 · 18홀",
       href: "/games/minigolf/",
-      thumb: "/assets/thumbs/sm/minigolf.webp",
+      thumb: "/assets/thumbs/sm/minigolf.webp?v=2",
       category: "sports",
     },
     {
@@ -728,9 +728,9 @@
       id: "sokoban",
       face: true,
       title: "상자야 굴러가",
-      tag: "퍼즐 · 50단계",
+      tag: "퍼즐 · 월드 5개",
       href: "/games/sokoban/",
-      thumb: "/assets/thumbs/sm/sokoban.webp",
+      thumb: "/assets/thumbs/sm/sokoban.webp?v=2",
       category: "puzzle",
     },
     {

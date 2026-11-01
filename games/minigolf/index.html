@@ -3,86 +3,178 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#a5e6ba" />
-    <title>홀인원 골프</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-      <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <meta name="theme-color" content="#0f2a1c" />
+    <title>홀인원 골프 | Today Game</title>
+    <meta name="description" content="드라이버부터 퍼터까지 8개 클럽으로 바람과 경사를 읽는 3D 골프 게임. 벙커 · 호수 · 숲길이 펼쳐지는 18홀 정규 코스를 돌아 보세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/minigolf/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="홀인원 골프 | Today Game" />
+    <meta property="og:description" content="바람과 경사를 읽고 3번 탭으로 스윙! 18홀 정규 코스를 도는 3D 골프 게임" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/minigolf/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/minigolf.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
-  <body data-bgm="minigolf" data-face="1">
-    <div class="stage">
-      <canvas id="game" width="390" height="620"></canvas>
-      <div class="hud">
-        <div class="panel">
-          <span>홀 <b id="hud-hole">1</b>/50</span>
-          <span>타수 <b id="hud-strokes">0</b></span>
+  <body class="golf is-title" data-face="1">
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="홀인원 골프 화면"></canvas>
+
+      <!-- 땅 위 표지 -->
+      <div class="m-pin" id="m-pin" hidden aria-hidden="true"><span id="m-pin-d"></span></div>
+      <div class="m-land" id="m-land" hidden aria-hidden="true"></div>
+
+      <!-- 위 HUD -->
+      <header class="hud" id="hud" hidden>
+        <div class="h-card">
+          <div class="h-no"><small>HOLE</small><b id="h-no">1</b></div>
+          <div class="h-info">
+            <p><b>PAR <span id="h-par">4</span></b><span id="h-len">322m</span></p>
+            <p class="h-sub"><b id="h-stroke">1타째</b><span>합계 <em id="h-total">E</em></span></p>
+          </div>
         </div>
-        <div class="panel mid">
-          <span id="hud-name">파4 페어웨이</span>
-          <span>남은 거리 <b id="hud-dist">0</b>야드</span>
-          <span>바람 <b id="hud-wind">없음</b></span>
+        <div class="h-right">
+          <div class="wind" aria-label="바람">
+            <svg id="wind-arrow" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4l9 13h-6v16h-6V17h-6z" /></svg>
+            <span><b id="wind-speed">0.0</b>m/s</span>
+          </div>
+          <canvas class="mini" id="mini" aria-label="코스 지도"></canvas>
+          <button type="button" class="tool" id="card-btn" aria-label="스코어카드"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M15 4v16" fill="none" stroke="currentColor" stroke-width="1.9" /></svg></button>
         </div>
-        <div class="panel right">
-          <span>파 <b id="hud-par">4</b></span>
-          <span>별 <b id="hud-stars">0</b></span>
-          <span>합계 <b id="hud-total">0</b></span>
+      </header>
+
+      <div class="word" id="word" aria-live="polite"></div>
+      <div class="toast" id="toast" role="status"></div>
+      <div class="score-word" id="score-word" hidden><b></b><small></small></div>
+
+      <div class="banner" id="banner">
+        <p class="b-no">HOLE 1</p>
+        <p class="b-par">PAR 4</p>
+        <p class="b-name"></p>
+      </div>
+      <button type="button" class="skip" id="skip" hidden>건너뛰기 ›</button>
+
+      <!-- 아래 샷 패널 -->
+      <section class="shot" id="shot" hidden aria-label="샷">
+        <p class="g-hint" id="g-hint" hidden></p>
+        <div class="lie">
+          <b id="lie-name">티잉 그라운드</b>
+          <span id="lie-pow"></span>
+          <div class="tools">
+            <button type="button" class="tool" id="aim-btn" aria-label="핀 쪽으로 조준"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21V3l11 5-11 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /></svg></button>
+            <button type="button" class="tool" id="view-btn" aria-label="위에서 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg></button>
+          </div>
+        </div>
+        <div class="gauge" id="gauge" aria-hidden="true">
+          <i class="g-zone"></i>
+          <i class="g-fill" id="g-fill"></i>
+          <i class="g-tick" style="left: 33.25%"></i>
+          <i class="g-tick" style="left: 55.5%"></i>
+          <i class="g-tick" style="left: 77.75%"></i>
+          <i class="g-line"></i>
+          <i class="g-pin" id="g-pin" hidden></i>
+          <i class="g-mark" id="g-mark"></i>
+          <em class="g-text" id="g-text"></em>
+        </div>
+        <div class="row">
+          <div class="clubs">
+            <button type="button" class="c-arrow" id="club-prev" aria-label="이전 클럽">‹</button>
+            <div class="club-now">
+              <b id="club-short">7I</b>
+              <span><i id="club-name">7번 아이언</i><em id="club-carry">146m</em></span>
+            </div>
+            <button type="button" class="c-arrow" id="club-next" aria-label="다음 클럽">›</button>
+          </div>
+          <button type="button" class="swing-btn" id="swing">스윙</button>
+        </div>
+      </section>
+
+      <div class="fade" id="fade" aria-hidden="true"></div>
+
+      <!-- 첫 화면 -->
+      <section class="screen title" id="title">
+        <div class="t-box">
+          <p class="t-k" id="title-best">PAR 72 · 6,246m</p>
+          <h1 class="logo"><small>HOLE IN ONE</small>홀인원 골프</h1>
+          <p class="t-s">바람과 경사를 읽는 18홀 정규 코스</p>
+          <div class="t-menu">
+            <button type="button" class="btn primary" id="btn-continue" hidden><span>이어서 치기</span><small id="continue-note"></small></button>
+            <button type="button" class="btn primary" id="btn-18"><span>18홀 라운드</span></button>
+            <div class="t-two">
+              <button type="button" class="btn" id="btn-front"><span>전반 9홀</span></button>
+              <button type="button" class="btn" id="btn-back"><span>후반 9홀</span></button>
+            </div>
+          </div>
+          <div class="seg" role="group" aria-label="실력">
+            <button type="button" data-level="am">아마추어</button>
+            <button type="button" data-level="pro">프로</button>
+          </div>
+          <p class="t-note" id="level-note"></p>
+        </div>
+      </section>
+
+      <!-- 스코어카드 -->
+      <section class="screen sheet" id="card" hidden>
+        <div class="s-box">
+          <h2 id="card-title">스코어카드</h2>
+          <p class="s-sub" id="card-sub"></p>
+          <div id="card-table"></div>
+          <button type="button" class="btn primary" id="btn-next">다음 홀</button>
+          <button type="button" class="btn" id="btn-card-close" hidden>돌아가기</button>
+        </div>
+      </section>
+
+      <!-- 라운드 끝 -->
+      <section class="screen sheet" id="result" hidden>
+        <div class="s-box">
+          <p class="s-kick" id="res-mode">18홀 · 아마추어</p>
+          <h1 class="res-h">라운드 완료</h1>
+          <p class="res-score"><b id="res-total">72타</b><em id="res-par">E</em></p>
+          <p class="res-best" id="res-best" hidden>최고 기록!</p>
+          <p class="res-pts" id="res-points">0점</p>
+          <p class="res-stats" id="res-stats"></p>
+          <div id="res-table"></div>
+          <div id="rank-slot"></div>
+          <button type="button" class="btn primary" id="btn-again">다시 치기</button>
+          <button type="button" class="btn" id="btn-home">처음으로</button>
+        </div>
+      </section>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <p class="boot-logo">홀인원 골프</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">클럽을 챙기는 중…</p>
         </div>
       </div>
-
-      <div class="club-bar" id="club-bar">
-        <button type="button" class="club" data-club="driver">드라이버</button>
-        <button type="button" class="club" data-club="iron">아이언</button>
-        <button type="button" class="club" data-club="wedge">웨지</button>
-        <button type="button" class="club" data-club="putter">퍼터</button>
-      </div>
-      <div class="power-bar hidden" id="power-bar"><i id="power-fill"></i></div>
-
-      <div class="overlay" id="title">
-        <div class="badge">CHICK GOLF</div>
-        <img class="title-mascot" src="assets/mascot.png" alt="삐약 골퍼" />
-        <h1>홀인원 골프</h1>
-        <p>50홀 챔피언십 코스<br />바람·벙커·별을 뚫고 공략해요</p>
-        <div class="tip">멀리서 드라이버 → 그린에선 퍼터 · 별도 모아봐요!</div>
-        <button type="button" class="btn" id="start-btn">라운드 시작</button>
-        <a href="/">← 홈</a>
-      </div>
-
-      <div class="overlay hidden" id="clear">
-        <div class="badge soft">HOLE OUT</div>
-        <h1 id="clear-title">홀 클리어!</h1>
-        <p id="clear-detail"></p>
-        <button type="button" class="btn" id="next-btn">다음 홀</button>
-      </div>
-
-      <div class="overlay hidden" id="allclear">
-        <div class="badge">ALL CLEAR</div>
-        <h1>챔피언 라운드!</h1>
-        <p id="all-detail"></p>
-        <button type="button" class="btn" id="again-btn">다시 라운드</button>
-        <a href="/">← 홈</a>
-      </div>
+      <div class="fallback" id="fallback" hidden><p>이 브라우저에서는 3D 게임을 열 수 없어요 (WebGL 필요). 최신 브라우저로 다시 와 주세요.</p></div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
     <script src="/js/game-chrome.js?v=4"></script>
-    <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
-
-    <script src="game.js?v=face2"></script>
+    <script type="module" src="main.js?v=1"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="홀인원 골프 소개">
   <h2>홀인원 골프 소개</h2>
-  <p>18홀을 도는 미니골프 게임으로, 장애물을 피해 적은 타수로 홀인하는 것이 목표입니다.</p>
+  <p>드라이버부터 퍼터까지 8개 클럽으로 벙커 · 호수 · 숲길을 공략하는 18홀 3D 골프 게임입니다. 바람과 그린 경사를 읽어 적은 타수로 홀아웃하세요.</p>
   <h3>플레이 방법</h3>
-  <p>방향과 세기를 조절해 공을 치고, 홀에 넣으면 다음 홀로 이동합니다.</p>
+  <p>화면을 좌우로 밀어 방향을 정하고 스윙 버튼을 세 번 누르세요. 처음은 시작, 두 번째는 힘, 세 번째는 흰 선에 맞춰 임팩트입니다. 클럽은 거리에 맞춰 자동으로 골라 주며 직접 바꿀 수도 있습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>18홀 다 클리어하면 기록이 남나요?</dt>
-    <dd>네, 전체 타수가 기록되어 랭킹에 반영됩니다.</dd>
+    <dt>중간에 그만두면 처음부터 다시 쳐야 하나요?</dt>
+    <dd>아니요. 홀을 마칠 때마다 저장되어 다음에 이어서 칠 수 있습니다.</dd>
+    <dt>골프를 몰라도 할 수 있나요?</dt>
+    <dd>아마추어를 고르면 바람이 약하고 빗맞아도 덜 휘며, 깃발 표시까지 힘을 채우면 핀까지 날아갑니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

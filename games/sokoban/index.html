@@ -3,68 +3,113 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffc1d8" />
-    <title>상자야 굴러가</title>
+    <meta name="theme-color" content="#6fb9ec" />
+    <title>상자야 굴러가 | Today Game</title>
+    <meta name="description" content="토끼를 움직여 상자를 제자리로 밀어 넣는 소코반 퍼즐. 정원 · 숲 · 사막 · 얼음 · 네온 공장 5개 월드 50단계, 별 3개에 도전해 보세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/sokoban/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="상자야 굴러가 | Today Game" />
+    <meta property="og:description" content="상자를 제자리로! 5개 월드 50단계 소코반 퍼즐 · 되돌리기와 힌트로 누구나 끝까지" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/sokoban/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/sokoban.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-      <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
-  <body data-bgm="sokoban" data-face="1">
-    <div class="app">
-      <header class="top">
-        <a class="home" href="/">← 홈</a>
-        <div class="scores">
-          <div class="score-box">STAGE <b id="hud-stage">1</b></div>
-          <div class="score-box">푸시 <b id="hud-moves">0</b></div>
+  <body class="box" data-bgm="sokoban" data-face="1">
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="상자야 굴러가 게임 화면"></canvas>
+
+      <header class="hud" id="hud" hidden>
+        <button type="button" class="st-card" id="stage-btn" aria-label="단계 고르기">
+          <small id="hud-world">봄 정원</small>
+          <b id="hud-stage">1-1</b>
+        </button>
+        <div class="st-score">
+          <div class="st-moves"><small>걸음</small><b id="hud-moves">0</b></div>
+          <div class="st-goal">
+            <span class="stars" id="hud-stars"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+            <small><span id="hud-par">0</span>걸음 이내</small>
+          </div>
         </div>
       </header>
 
-      <div class="board-wrap">
-        <canvas id="game" width="390" height="390"></canvas>
-      </div>
+      <div class="toast" id="toast" role="status"></div>
 
-      <div class="pad">
-        <button type="button" class="pad-btn" data-dir="up" aria-label="위">▲</button>
-        <button type="button" class="pad-btn" data-dir="left" aria-label="왼쪽">◀</button>
-        <button type="button" class="pad-btn" data-dir="down" aria-label="아래">▼</button>
-        <button type="button" class="pad-btn" data-dir="right" aria-label="오른쪽">▶</button>
-      </div>
+      <section class="bar" id="bar" hidden aria-label="조작">
+        <div class="tools">
+          <button type="button" class="tool" id="undo-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5L4 10l5 5M4.5 10H14a5.5 5.5 0 0 1 0 11h-3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg><span>되돌리기</span></button>
+          <button type="button" class="tool" id="restart-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.3-5.4M18 2.5V7h-4.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg><span>다시</span></button>
+          <button type="button" class="tool" id="hint-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 21h5M10 18h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" /></svg><span>힌트</span></button>
+        </div>
+        <div class="pad" aria-label="방향">
+          <button type="button" class="pad-btn up" data-dir="up" aria-label="위"><svg viewBox="0 0 24 24"><path d="M12 6l8 11H4z" /></svg></button>
+          <button type="button" class="pad-btn left" data-dir="left" aria-label="왼쪽"><svg viewBox="0 0 24 24"><path d="M6 12l11-8v16z" /></svg></button>
+          <button type="button" class="pad-btn down" data-dir="down" aria-label="아래"><svg viewBox="0 0 24 24"><path d="M12 18L4 7h16z" /></svg></button>
+          <button type="button" class="pad-btn right" data-dir="right" aria-label="오른쪽"><svg viewBox="0 0 24 24"><path d="M18 12L7 20V4z" /></svg></button>
+        </div>
+      </section>
 
-      <div class="actions">
-        <button type="button" class="act-btn" id="undo-btn">↩ 되돌리기</button>
-        <button type="button" class="act-btn soft" id="restart-btn">↻ 다시</button>
-      </div>
-    </div>
+      <!-- 첫 화면 -->
+      <section class="screen title" id="title">
+        <div class="t-box">
+          <p class="t-k" id="title-progress">50단계 · 월드 5개</p>
+          <h1 class="logo">상자야<br />굴러가</h1>
+          <div class="hero-slot" id="hero-slot" aria-hidden="true"></div>
+          <p class="t-s">상자를 제자리로 밀어 넣는 퍼즐<br />길은 하나가 아니에요. 적은 걸음으로 별 3개!</p>
+          <div class="t-menu">
+            <button type="button" class="btn primary" id="start-btn"><span id="start-label">시작하기</span></button>
+            <button type="button" class="btn" id="stages-btn">단계 고르기</button>
+          </div>
+          <p class="t-keys">빈 칸을 누르면 걸어가고, 상자를 누르면 밀 방향이 나와요 · 방향키 · 밀기도 돼요</p>
+        </div>
+      </section>
 
-    <div class="overlay" id="title">
-      <img class="hero-art" src="assets/thumb.webp" alt="" width="140" height="140" />
-      <div class="badge">PUZZLE</div>
-      <h1>상자야 굴러가</h1>
-      <p>분홍 토끼가 상자를 목표까지 밀어요<br />50단계 · 뒤로 갈수록 빡세져요 · 되돌리기 OK</p>
-      <div class="title-controls">
-        <span>📱 방향패드 · 스와이프</span>
-        <span>📱 스와이프 · 방향 버튼 &nbsp;|&nbsp; ⌨️ ←→↑↓ · 되돌리기 버튼</span>
-      </div>
-      <button type="button" class="btn" id="start-btn">시작!</button>
-      <a href="/">← 홈</a>
-    </div>
+      <!-- 단계 고르기 -->
+      <section class="screen stages" id="stages" data-today-home hidden>
+        <div class="panel">
+          <header class="panel-head">
+            <button type="button" class="back" id="stages-back" data-back="title">← 뒤로</button>
+            <h2>단계 고르기</h2>
+            <span class="sum" id="stages-sum">별 0 / 150</span>
+          </header>
+          <div class="tabs" role="tablist">
+            <button type="button" data-world="0">봄 정원</button>
+            <button type="button" data-world="1">통나무 숲</button>
+            <button type="button" data-world="2">사막 유적</button>
+            <button type="button" data-world="3">얼음 창고</button>
+            <button type="button" data-world="4">네온 공장</button>
+          </div>
+          <div class="grid" id="stage-grid"></div>
+          <p class="note">깬 단계 다음 3단계까지 열려 있어요. 막히면 다른 단계부터 해도 돼요.</p>
+        </div>
+      </section>
 
-    <div class="overlay hidden" id="clear">
-      <div class="badge soft">CLEAR</div>
-      <h1>스테이지 클리어!</h1>
-      <p id="clear-detail"></p>
-      <button type="button" class="btn" id="next-btn">다음 스테이지</button>
-    </div>
-
-    <div class="overlay hidden" id="allclear">
-      <div class="badge soft">ALL CLEAR</div>
-      <h1>퍼즐 마스터!</h1>
-      <p id="all-detail"></p>
-      <button type="button" class="btn" id="again-btn">처음부터</button>
-      <a href="/">← 홈</a>
+      <!-- 클리어 -->
+      <section class="screen sheet" id="clear" hidden>
+        <div class="c-card">
+          <p class="c-kick" id="clear-stage">1-1</p>
+          <h2 id="clear-title">클리어!</h2>
+          <div class="c-stars" id="clear-stars"><i></i><i></i><i></i></div>
+          <p class="c-new" id="clear-new" hidden>새 기록!</p>
+          <dl class="c-stats">
+            <div><dt>내 걸음</dt><dd id="clear-moves">0</dd></div>
+            <div><dt>기준</dt><dd id="clear-par">0</dd></div>
+            <div><dt>총 점수</dt><dd id="clear-points">0</dd></div>
+          </dl>
+          <div id="rank-slot" hidden></div>
+          <button type="button" class="btn primary" id="next-btn">다음 단계</button>
+          <div class="c-row">
+            <button type="button" class="btn" id="retry-btn">다시 하기</button>
+            <button type="button" class="btn" id="clear-stages-btn">단계 고르기</button>
+          </div>
+        </div>
+      </section>
     </div>
 
     <script src="/js/today-audio.js?v=2"></script>
@@ -75,18 +120,21 @@
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
-
-    <script src="game.js?v=face1"></script>
+    <script src="levels.js?v=2"></script>
+    <script src="solver.js?v=2"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="상자야 굴러가 소개">
   <h2>상자야 굴러가 소개</h2>
-  <p>상자를 밀어 정해진 위치에 놓는 50단계 구성의 클래식 소코반 퍼즐 게임입니다.</p>
+  <p>토끼를 움직여 상자를 제자리로 밀어 넣는 소코반 퍼즐입니다. 봄 정원 · 통나무 숲 · 사막 유적 · 얼음 창고 · 네온 공장까지 5개 월드 50단계가 쉬운 순서로 이어집니다.</p>
   <h3>플레이 방법</h3>
-  <p>방향키로 캐릭터를 움직여 상자를 목표 지점까지 밀어 넣으세요.</p>
+  <p>빈 칸을 누르면 토끼가 걸어가고, 상자를 누르면 밀 수 있는 방향이 나옵니다. 방향키와 화면 밀기, 방향 단추로도 움직일 수 있습니다. 적은 걸음으로 끝내면 별 3개를 받습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>되돌리기 기능이 있나요?</dt>
-    <dd>잘못 밀었을 때 이전 상태로 되돌리는 기능이 있을 수 있습니다.</dd>
+    <dt>실수하면 처음부터 다시 해야 하나요?</dt>
+    <dd>아니요. 되돌리기를 몇 번이든 쓸 수 있고, 진행 상황은 저장되어 다음에 이어서 할 수 있습니다.</dd>
+    <dt>막히면 어떻게 하나요?</dt>
+    <dd>힌트를 누르면 지금 어떤 상자를 어느 쪽으로 밀지 알려 줍니다. 힌트를 쓴 단계는 별을 2개까지 받습니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
