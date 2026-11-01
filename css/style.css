@@ -634,8 +634,13 @@ body {
 .today-pair {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch; /* 두 상자 높이를 똑같이 (짧은 쪽이 늘어남) */
   gap: 10px;
+}
+
+/* TOP10 을 펼쳤을 때만 챌린지 상자가 더 길어지고 오른쪽은 그대로 */
+.today-pair:has(.challenge-top.is-open) {
+  align-items: start;
 }
 
 @media (max-width: 339px) {
@@ -674,6 +679,8 @@ body {
 }
 
 .challenge-body {
+  flex: 1 1 auto;
+  align-content: space-between; /* 늘어난 높이는 줄 사이에 고르게 */
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
@@ -1932,6 +1939,7 @@ body {
 }
 
 .rec-card {
+  flex: 1 1 auto; /* 옆 상자가 더 길면 카드가 고르게 늘어남 */
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
