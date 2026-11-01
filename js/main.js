@@ -1230,19 +1230,19 @@
     }
   }
 
-  /** 홈에서는 TOP 3 만 보이고, 버튼으로 TOP10 전체를 펼친다 (챌린지 상자를 작게) */
+  /** 홈 챌린지 상자는 작게: TOP10 은 접어 두고 'TOP10 ▾' 를 눌러야 펼친다 */
   function syncTopMore(count) {
     const btn = document.getElementById("challenge-top-more");
     const box = btn && btn.closest(".challenge-top");
     if (!btn || !box) return;
-    btn.hidden = count <= 3;
+    btn.hidden = count < 1;
     if (!btn.__bound) {
       btn.__bound = true;
       btn.addEventListener("click", () => {
         const open = !box.classList.contains("is-open");
         box.classList.toggle("is-open", open);
         btn.setAttribute("aria-expanded", open ? "true" : "false");
-        btn.textContent = open ? "접기 ▴" : "TOP10 전체 보기 ▾";
+        btn.textContent = open ? "접기 ▴" : "TOP10 ▾";
       });
     }
   }

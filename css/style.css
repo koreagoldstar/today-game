@@ -630,44 +630,63 @@ body {
   color: var(--muted);
 }
 
-/* 오늘의 챌린지 — 작게 (예전의 절반 높이). 게임·버튼 한 줄, 순위·최고기록 한 줄, TOP3 + 펼치기 */
+/* 오늘의 챌린지 + 오늘의 기록 챌린지: 작게 나란히 (왼쪽 · 오른쪽) */
+.today-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+@media (max-width: 339px) {
+  .today-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 오늘의 챌린지 — 작은 상자 (TOP10 은 눌러야 펼침) */
 .challenge {
+  position: relative;
   margin: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 12px 14px 12px;
-  border-radius: 22px;
+  padding: 10px;
+  border-radius: 18px;
   text-align: left;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 247, 251, 0.55)),
     linear-gradient(135deg, #ffe3ef 0%, #d9f0ff 55%, #fff6d8 100%);
   border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 24px rgba(61, 42, 54, 0.1);
+  box-shadow: 0 8px 18px rgba(61, 42, 54, 0.1);
   animation: rise-in 0.75s ease-out 0.06s both;
 }
 
 .challenge-eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
+  padding-right: 54px;
   font-family: "Bagel Fat One", "Jua", cursive;
-  font-size: 17px;
+  font-size: 13px;
   color: #ff4f8b;
   text-shadow: 0 2px 0 #fff;
   text-align: left;
+  white-space: nowrap;
 }
 
 .challenge-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
-    "main main btn"
-    "players remain remain"
-    "rank best best"
-    "share share share"
-    "top top top";
+    "main main"
+    "players players"
+    "remain remain"
+    "rank best"
+    "btn btn"
+    "share share"
+    "top top";
   align-items: center;
-  column-gap: 8px;
-  row-gap: 8px;
+  column-gap: 6px;
+  row-gap: 5px;
 }
 
 .challenge-main {
@@ -676,17 +695,15 @@ body {
 }
 
 .challenge-label {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted);
+  display: none;
 }
 
 .challenge-game {
-  margin: 1px 0 0;
+  margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;
   font-weight: 400;
-  font-size: clamp(21px, 6vw, 26px);
-  line-height: 1.1;
+  font-size: 17px;
+  line-height: 1.15;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
@@ -696,22 +713,25 @@ body {
 .challenge-challengers {
   grid-area: players;
   margin: 0;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #ff4f8b;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .challenge-remain {
   grid-area: remain;
   margin: 0;
-  text-align: right;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #3a8fd4;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .challenge-rank-box,
@@ -719,10 +739,10 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
-  padding: 7px 10px;
-  border-radius: 12px;
+  padding: 4px 7px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.78);
   box-shadow: inset 0 0 0 1px rgba(255, 79, 139, 0.16);
 }
@@ -738,26 +758,28 @@ body {
 .challenge-rank-label {
   margin: 0;
   flex: none;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
 }
 
 .challenge-rank-value {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1.1;
   color: #ff4f8b;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #challenge-best {
   min-width: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.2;
   color: var(--ink);
-  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -768,7 +790,7 @@ body {
   grid-area: share;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 5px;
 }
 
 .challenge-share-row[hidden] {
@@ -781,31 +803,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 6px;
   border-radius: 999px;
   font: inherit;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
+  white-space: nowrap;
   cursor: pointer;
   background: linear-gradient(180deg, #7ec8ff, #3a8fd4);
-  box-shadow: 0 4px 0 #2a6fa8;
+  box-shadow: 0 3px 0 #2a6fa8;
 }
 
 .challenge-share-btn.challenge-share-kakao {
   background: linear-gradient(180deg, #fee500, #f5d800);
   color: #191919;
-  box-shadow: 0 4px 0 #c4a800;
+  box-shadow: 0 3px 0 #c4a800;
 }
 
 .challenge-share-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #2a6fa8;
+  box-shadow: 0 1px 0 #2a6fa8;
 }
 
 .challenge-share-btn.challenge-share-kakao:active {
-  box-shadow: 0 2px 0 #c4a800;
+  box-shadow: 0 1px 0 #c4a800;
 }
 
 .challenge-stats {
@@ -843,11 +866,11 @@ body {
   line-height: 1.25;
 }
 
-/* 최고기록: 이름과 점수를 한 줄로 */
+/* 최고기록: 이름과 점수를 한 줄로 (좁은 상자에선 점수만) */
 .challenge-best-name {
-  display: inline;
-  margin-right: 5px;
-  font-size: 13px;
+  display: none;
+  margin-right: 4px;
+  font-size: 11px;
   font-weight: 700;
   color: #ff4f8b;
 }
@@ -857,99 +880,118 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 32px;
+  padding: 0 12px;
   border-radius: 999px;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #fff;
   white-space: nowrap;
   background: linear-gradient(180deg, #ff8ab5, var(--coral));
-  box-shadow: 0 4px 0 #e03f74;
+  box-shadow: 0 3px 0 #e03f74;
 }
 
 .challenge-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #e03f74;
+  box-shadow: 0 1px 0 #e03f74;
 }
 
 .challenge-top {
   grid-area: top;
-  padding-top: 8px;
-  border-top: 1px solid rgba(61, 42, 54, 0.08);
 }
 
 .challenge-top-title {
-  margin: 0 0 6px;
-  font-family: "Bagel Fat One", "Jua", cursive;
-  font-weight: 400;
-  font-size: 14px;
-  color: #ff4f8b;
-  text-shadow: 0 1px 0 #fff;
+  display: none;
 }
 
 .challenge-top-list {
   max-height: none;
   flex: none;
-  gap: 4px;
+  gap: 3px;
+}
+
+/* 접혀 있을 땐 목록을 숨김 · 'TOP10 ▾' 를 누르면 펼침 */
+.challenge-top:not(.is-open) .challenge-top-list {
+  display: none;
 }
 
 .challenge-top-list li {
-  padding: 5px 10px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 9px;
+  font-size: 12px;
 }
 
 .challenge-top-list .score-empty {
-  padding: 6px 10px;
-}
-
-/* 평소에는 TOP 3 만 */
-.challenge-top:not(.is-open) .challenge-top-list li:nth-child(n + 4) {
-  display: none;
+  padding: 5px 8px;
+  font-size: 11px;
 }
 
 .challenge-top-list .pts {
   color: #ff4f8b;
 }
 
+/* 'TOP10 ▾' 는 상자 오른쪽 위 (제목 옆) */
 .challenge-top-more {
   appearance: none;
   border: 0;
   cursor: pointer;
-  display: block;
-  margin: 6px auto 0;
-  padding: 4px 12px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 3px 8px;
   border-radius: 999px;
   font: inherit;
-  font-size: 12px;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  color: #ff4f8b;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(255, 79, 139, 0.2);
 }
 
 .challenge-top-more[hidden] {
   display: none;
 }
 
-/* 넓은 화면: 게임 · 순위 · 최고기록 · 버튼을 한 줄에, TOP3 는 가로로 */
-@media (min-width: 700px) {
+/* 넓은 화면: 게임 이름 옆에 도전하기 · 아래 한 줄에 도전 인원 · 남은 시간 */
+@media (min-width: 600px) {
+  .challenge {
+    padding: 12px 14px;
+  }
+
+  .challenge-eyebrow {
+    font-size: 15px;
+  }
+
   .challenge-body {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
     grid-template-areas:
-      "main rank best btn"
-      "players players remain remain"
-      "share share share share"
-      "top top top top";
+      "main main btn"
+      "players remain remain"
+      "rank best best"
+      "share share share"
+      "top top top";
   }
 
-  .challenge-top-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .challenge-game {
+    font-size: 20px;
   }
 
-  .challenge-top-list .score-empty {
-    grid-column: 1 / -1;
+  .challenge-remain {
+    text-align: right;
+  }
+
+  .challenge-btn {
+    padding: 0 18px;
+  }
+
+  .challenge-best-name {
+    display: inline;
+  }
+
+  .challenge-rank-box,
+  .challenge-best-box {
+    gap: 6px;
   }
 }
 
@@ -1859,90 +1901,136 @@ body {
   pointer-events: none;
 }
 
-/* 🔥 오늘의 기록 챌린지 (10초 맞추기 · 색깔 반응 · 폭탄 피하기) — 카드마다 게임 분위기 색 */
+/* 🔥 오늘의 기록 챌린지 (10초 맞추기 · 색깔 반응 · 폭탄 피하기) — 작은 카드 세로로 · 카드마다 게임 분위기 색 */
 .rec-challenges {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
   text-align: left;
   animation: rise-in 0.75s ease-out 0.12s both;
 }
 
 .rec-head {
-  padding: 0 4px;
+  padding: 2px 2px 0;
 }
 
 .rec-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 14px;
+  line-height: 1.25;
   color: var(--ink);
+  white-space: nowrap;
 }
 
 .rec-desc {
-  margin: 2px 0 0;
-  font-size: 14px;
+  display: none;
+  margin: 1px 0 0;
+  font-size: 11px;
   color: var(--muted);
 }
 
 .rec-card {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  min-height: 92px;
-  padding: 12px 12px 12px 12px;
-  border-radius: 22px;
+  gap: 7px;
+  min-height: 0;
+  padding: 6px 7px;
+  border-radius: 14px;
   text-decoration: none;
   color: #fff;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18), 0 14px 28px rgba(61, 42, 54, 0.14);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18), 0 6px 14px rgba(61, 42, 54, 0.12);
   transition: transform 0.12s ease;
 }
 
 .rec-card:active {
-  transform: translateY(3px);
+  transform: translateY(2px);
 }
 
 .rec-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
 }
 
 .rec-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
 .rec-name {
-  font-size: 18px;
+  overflow: hidden;
+  font-size: 12.5px;
   font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .rec-line {
-  font-size: 13px;
+  display: none;
+  font-size: 11px;
   opacity: 0.85;
 }
 
 .rec-top {
-  margin-top: 2px;
-  font-size: 13px;
+  margin-top: 0;
+  font-size: 10.5px;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* 좁을 땐 '도전하기' 대신 동그란 › 만 */
 .rec-go {
   display: grid;
   place-items: center;
-  min-width: 76px;
-  min-height: 48px;
-  padding: 0 12px;
-  border-radius: 16px;
-  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0;
+}
+
+.rec-go::after {
+  content: "\203A";
+  font-size: 15px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 600px) {
+  .rec-title {
+    font-size: 15px;
+  }
+
+  .rec-desc {
+    display: block;
+  }
+
+  .rec-card {
+    gap: 9px;
+    padding: 6px 8px;
+  }
+
+  .rec-go {
+    width: auto;
+    height: auto;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .rec-go::after {
+    content: none;
+  }
 }
 
 /* 정확도: 어두운 스톱워치 + 라임 */
@@ -1983,17 +2071,4 @@ body {
 .rec-bomb .rec-go {
   color: #2b1300;
   background: linear-gradient(180deg, #ffd23f, #ff7a1a);
-}
-
-@media (max-width: 360px) {
-  .rec-card {
-    grid-template-columns: 52px 1fr;
-  }
-  .rec-icon {
-    width: 52px;
-    height: 52px;
-  }
-  .rec-go {
-    grid-column: 1 / -1;
-  }
 }

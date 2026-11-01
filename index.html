@@ -72,7 +72,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=22" />
+    <link rel="stylesheet" href="css/style.css?v=23" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -136,6 +136,7 @@
 
         <p class="streak-badge" id="streak-badge" hidden aria-live="polite"></p>
 
+        <div class="today-pair">
         <section class="challenge" id="today-challenge" aria-label="오늘의 챌린지">
           <p class="challenge-eyebrow">🏆 오늘의 챌린지</p>
           <div class="challenge-body">
@@ -147,14 +148,14 @@
             <p class="challenge-challengers" id="challenge-players">오늘 —명 도전중</p>
 
             <div class="challenge-rank-box" id="challenge-rank-box">
-              <p class="challenge-rank-label">현재 순위</p>
+              <p class="challenge-rank-label">순위</p>
               <p class="challenge-rank-value" id="challenge-my-rank">—</p>
             </div>
 
             <p class="challenge-remain" id="challenge-left">⏰ — 남음</p>
 
             <div class="challenge-stat-best challenge-best-box">
-              <p class="challenge-rank-label">최고기록</p>
+              <p class="challenge-rank-label">최고</p>
               <div id="challenge-best">—</div>
             </div>
 
@@ -171,7 +172,7 @@
               <ol class="score-list challenge-top-list" id="challenge-top10">
                 <li class="score-empty">불러오는 중…</li>
               </ol>
-              <button type="button" class="challenge-top-more" id="challenge-top-more" aria-expanded="false" hidden>TOP10 전체 보기 ▾</button>
+              <button type="button" class="challenge-top-more" id="challenge-top-more" aria-expanded="false" hidden>TOP10 ▾</button>
             </div>
           </div>
         </section>
@@ -209,6 +210,7 @@
             <span class="rec-go">도전하기</span>
           </a>
         </section>
+        </div>
       </header>
 
       <section class="shelf" aria-label="게임 목록">
@@ -927,7 +929,7 @@
     <script src="js/edu-speech.js?v=11"></script>
     <script src="js/game-rank.js?v=2"></script>
     <script src="js/my-face.js?v=3"></script>
-    <script src="js/main.js?v=45"></script>
+    <script src="js/main.js?v=46"></script>
     <script src="js/record-cards.js?v=1"></script>
     <script src="js/pwa.js?v=2"></script>
 </body>
