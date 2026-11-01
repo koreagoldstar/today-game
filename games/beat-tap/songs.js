@@ -1,167 +1,116 @@
 /*
- * 펄스 탭 노래 20곡 — 모두 저작권이 끝난 옛 동요 · 민요 · 클래식 멜로디 (가사 없음)
- *  음표: "E4" = 1박, "E4:.5" = 반 박, "R:1" = 쉼
- *  반주는 멜로디에 맞춰 화음을 자동으로 고름
- *  누를 음표는 난이도(코스)에 따라 추림: 코스 1 은 2박마다, 코스 4 는 거의 모든 음
+ * 펄스 탭 곡 20개 — 진짜 전자음 곡(CC0 · assets/audio/hip/CREDITS.txt)의 실제 박자에 음표를 얹음
+ *  bpm · beat0 은 mp3 를 디코딩해 킥 소리 위치로 잰 값 (표기 BPM 과 다른 곡이 많아 직접 쟀음)
+ *  kick: 마디별 킥 세기(0~9) → 조용한 마디는 음표를 줄임
+ *  음표는 한 마디 16칸 패턴. 코스가 오를수록 촘촘해짐
  */
 (() => {
   "use strict";
 
   const COURSES = [
-    { name: "과일 정원", buddy: "hippo", step: 2, minGap: 1.05, approach: 2.3, perfect: 0.2, good: 0.42, hearts: 0 },
-    { name: "바닷속", buddy: "whale", step: 1, minGap: 0.55, approach: 2.1, perfect: 0.17, good: 0.34, hearts: 5 },
-    { name: "과자 나라", buddy: "bear", step: 0.5, minGap: 0.4, approach: 1.9, perfect: 0.14, good: 0.27, hearts: 5 },
-    { name: "반짝 우주", buddy: "alien", step: 0.25, minGap: 0.3, approach: 1.75, perfect: 0.12, good: 0.22, hearts: 5 },
+    { name: "네온 스테이지", approach: 2.0, perfect: 0.16, good: 0.34, hearts: 0 },
+    { name: "레이저 클럽", approach: 1.8, perfect: 0.14, good: 0.28, hearts: 5 },
+    { name: "선셋 드라이브", approach: 1.6, perfect: 0.12, good: 0.2, hearts: 5 },
+    { name: "스타 아레나", approach: 1.45, perfect: 0.1, good: 0.16, hearts: 5 },
   ];
 
-  const RAW = [
-    // 코스 1
-    { name: "반짝반짝 작은 별", bpm: 84, notes: "C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2" },
-    { name: "따끈따끈 빵 노래", bpm: 88, repeat: 4, notes: "E4 D4 C4:2 E4 D4 C4:2 C4:.5 C4:.5 C4:.5 C4:.5 D4:.5 D4:.5 D4:.5 D4:.5 E4 D4 C4:2" },
-    { name: "떴다 떴다 비행기", bpm: 92, repeat: 2, notes: "E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4" },
-    { name: "달빛 아래서", bpm: 92, notes: "C4 C4 C4 D4 E4:2 D4:2 C4 E4 D4 D4 C4:4 C4 C4 C4 D4 E4:2 D4:2 C4 E4 D4 D4 C4:4 D4 D4 D4 D4 A3:2 A3:2 D4 C4 B3 A3 G3:4 C4 C4 C4 D4 E4:2 D4:2 C4 E4 D4 D4 C4:4" },
-    { name: "나비야 나비야", bpm: 96, notes: "G4 E4 E4:2 F4 D4 D4:2 C4 D4 E4 F4 G4 G4 G4:2 G4 E4 E4 E4 F4 D4 D4 D4 C4 E4 G4 G4 E4 E4 E4:2 D4 D4 D4 D4 D4 E4 F4:2 E4 E4 E4 E4 E4 F4 G4:2 G4 E4 E4:2 F4 D4 D4:2 C4 E4 G4 G4 C4:4" },
-    // 코스 2
-    { name: "런던 다리", bpm: 92, repeat: 2, notes: "G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 E4 F4:2 E4 F4 G4:2 G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4:2 G4:2 E4 C4:3" },
-    { name: "아침 종소리", bpm: 96, repeat: 2, notes: "C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4:2 E4 F4 G4:2 G4:.5 A4:.5 G4:.5 F4:.5 E4 C4 G4:.5 A4:.5 G4:.5 F4:.5 E4 C4 C4 G3 C4:2 C4 G3 C4:2" },
-    { name: "기쁨의 노래", bpm: 100, repeat: 2, notes: "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2" },
-    { name: "맥도널드 농장", bpm: 104, repeat: 2, notes: "C4 C4 C4 G3 A3 A3 G3:2 E4 E4 D4 D4 C4:3 G3 C4 C4 C4 G3 A3 A3 G3:2 E4 E4 D4 D4 C4:4" },
-    { name: "생일 축하 노래", bpm: 104, beats: 3, pickup: 1, repeat: 2, notes: "G4:.75 G4:.25 A4 G4 C5 B4:2 G4:.75 G4:.25 A4 G4 D5 C5:2 G4:.75 G4:.25 G5 E5 C5 B4 A4 F5:.75 F5:.25 E5 C5 D5 C5:2" },
-    // 코스 3
-    { name: "징글벨", bpm: 108, notes: "E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4" },
-    { name: "노를 저어요", bpm: 104, beats: 3, compound: true, repeat: 2, notes: "C4:1.5 C4:1.5 C4 D4:.5 E4:1.5 E4 D4:.5 E4 F4:.5 G4:3 C5:.5 C5:.5 C5:.5 G4:.5 G4:.5 G4:.5 E4:.5 E4:.5 E4:.5 C4:.5 C4:.5 C4:.5 G4 F4:.5 E4 D4:.5 C4:3" },
-    { name: "오! 수재너", bpm: 108, pickup: 1, repeat: 2, notes: "C4:.5 D4:.5 E4 G4 G4:1.5 A4:.5 G4 E4 C4:1.5 D4:.5 E4 E4 D4 C4 D4:3 C4:.5 D4:.5 E4 G4 G4:1.5 A4:.5 G4 E4 C4:1.5 D4:.5 E4 E4 D4 D4 C4:3" },
-    { name: "양키 두들", bpm: 112, repeat: 2, notes: "C4 C4 D4 E4 C4 E4 D4 G3 C4 C4 D4 E4 C4:2 B3:2 C4 C4 D4 E4 F4 E4 D4 C4 B3 G3 A3 B3 C4:2 C4:2" },
-    { name: "클레멘타인", bpm: 112, beats: 3, pickup: 1, repeat: 2, notes: "C4:.75 C4:.25 C4 G3 E4:.75 E4:.25 E4 C4 C4:.75 E4:.25 G4:1.5 G4:.5 F4 E4 D4:2 D4:.75 E4:.25 F4 F4 E4:.75 D4:.25 E4 C4 C4:.75 E4:.25 D4 G3 B3:.75 D4:.25 C4:2" },
-    // 코스 4
-    { name: "성자들의 행진", bpm: 120, pickup: 3, repeat: 2, notes: "C4 E4 F4 G4:4 R:1 C4 E4 F4 G4:4 R:1 C4 E4 F4 G4:2 E4:2 C4:2 E4:2 D4:4 R:1 E4 E4 D4 C4:3 C4 E4:2 G4 G4 F4:3 E4 F4 G4:2 E4:2 C4:2 D4:2 C4:4" },
-    { name: "깜짝 족제비", bpm: 112, beats: 3, compound: true, repeat: 3, notes: "C4 C4:.5 D4 D4:.5 E4:.5 G4:.5 E4:.5 C4 G3:.5 C4 C4:.5 D4 D4:.5 E4:1.5 C4 G3:.5 C4 C4:.5 D4 D4:.5 E4:.5 G4:.5 E4:.5 C4:1.5 A4:1.5 D4 F4:.5 E4:1.5 C4:1.5" },
-    { name: "캠프타운 달리기", bpm: 116, repeat: 4, notes: "G4:.5 G4:.5 E4:.5 G4:.5 A4:.5 G4:.5 E4 E4:.5 D4:1.5 E4:.5 D4:1.5 G4:.5 G4:.5 E4:.5 G4:.5 A4:.5 G4:.5 E4 D4 E4:.5 D4:.5 C4:2" },
-    { name: "캉캉 춤", bpm: 116, repeat: 5, notes: "C4:2 D4:.5 F4:.5 E4:.5 D4:.5 G4 G4 G4:.5 A4:.5 E4:.5 F4:.5 D4 D4 D4:.5 F4:.5 E4:.5 D4:.5 C4:.5 C5:.5 B4:.5 A4:.5 G4:.5 F4:.5 E4:.5 D4:.5" },
-    { name: "터키 행진곡", bpm: 108, beats: 2, repeat: 6, notes: "B4:.25 A4:.25 G#4:.25 A4:.25 C5 D5:.25 C5:.25 B4:.25 C5:.25 E5 F5:.25 E5:.25 D#5:.25 E5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 C6:2" },
-  ];
-
-  const SEMI = { C: 0, "C#": 1, D: 2, "D#": 3, E: 4, F: 5, "F#": 6, G: 7, "G#": 8, A: 9, "A#": 10, B: 11 };
-  const pitchOf = (name) => {
-    const m = /^([A-G]#?)(\d)$/.exec(name);
-    return SEMI[m[1]] + (Number(m[2]) + 1) * 12;
+  const TRACKS = {
+    hip01: { bpm: 89.994, beat0: 0.1797, kick: "8798798889886888879878979979979979978979879978979879879879500" },
+    hip02: { bpm: 127.998, beat0: 0.011, kick: "4444887788878889888788889778888778878888888888888888444487887878887888888888877888878888888788888898889" },
+    hip03: { bpm: 127.996, beat0: 0.1209, kick: "4142324298899899313265629998999955655665019999989" },
+    hip04: { bpm: 127.992, beat0: 0.1648, kick: "999967676667676667675555555567666766" },
+    hip05: { bpm: 125, beat0: 0.1238, kick: "433254335555668878777789787777897777778977777789456645755565556622433344324322457777778877778779777776887878778943" },
+    cyber05: { bpm: 120.024, beat0: 0.0664, kick: "9999999999999999" },
   };
-  const freqOf = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
 
-  /* 고를 수 있는 화음 (근음 · 구성음) */
-  const CHORDS = [
-    { root: 0, tones: [0, 4, 7], weight: 0.3 }, // C
-    { root: 5, tones: [5, 9, 0], weight: 0.1 }, // F
-    { root: 7, tones: [7, 11, 2], weight: 0.15 }, // G
-    { root: 9, tones: [9, 0, 4], weight: 0 }, // Am
-    { root: 2, tones: [2, 5, 9], weight: -0.1 }, // Dm
-    { root: 4, tones: [4, 8, 11], weight: -0.2 }, // E
+  /* 코스별 패턴 (마디 16칸) */
+  const PATTERNS = [
+    { main: [0, 8], vary: [[0, 8]], fill: [0, 8, 12], quiet: [0] },
+    { main: [0, 4, 8, 12], vary: [[0, 4, 8], [0, 8, 12], [0, 4, 12]], fill: [0, 4, 8, 12], quiet: [0, 8] },
+    { main: [0, 4, 8, 12], vary: [[0, 4, 6, 8, 12], [0, 4, 8, 10, 12], [0, 6, 8, 12]], fill: [0, 2, 4, 8, 10, 12], quiet: [0, 8] },
+    { main: [0, 4, 6, 8, 12], vary: [[0, 3, 6, 8, 12], [0, 4, 8, 10, 12, 14], [0, 2, 4, 8, 11, 14]], fill: [0, 2, 4, 6, 8, 10, 12, 14], quiet: [0, 4, 8, 12] },
   ];
 
-  function parse(raw) {
-    const out = [];
-    let pos = 0;
-    const repeat = raw.repeat || 1;
-    for (let r = 0; r < repeat; r += 1) {
-      for (const tok of raw.notes.split(/\s+/)) {
-        const [name, durStr] = tok.split(":");
-        const dur = durStr ? Number(durStr) : 1;
-        if (name !== "R") out.push({ pos, dur, midi: pitchOf(name) });
-        pos += dur;
-      }
-    }
-    return { notes: out, length: pos };
-  }
+  /* 이름 · 곡 · 시작 마디 · 마디 수 */
+  const RAW = [
+    ["원버튼 스톰", "cyber05", 2, 13],
+    ["펄스 캐논", "hip04", 2, 22],
+    ["비트 펀치", "hip02", 6, 22],
+    ["네온 원샷", "hip05", 14, 22],
+    ["하이퍼 클릭", "hip03", 8, 24],
+    ["제로 미스", "hip04", 12, 23],
+    ["플래시 탭", "hip02", 28, 24],
+    ["메가 펄스", "hip05", 24, 24],
+    ["핑크 트리거", "hip02", 58, 22],
+    ["볼트 탭", "hip05", 86, 24],
+    ["슈퍼 클릭", "hip02", 80, 22],
+    ["울트라 탭", "hip04", 4, 30],
+    ["글리치 펀치", "hip01", 2, 20],
+    ["핫 트리거", "hip05", 14, 28],
+    ["탭 메가톤", "hip03", 8, 24],
+    ["인피니티 탭", "hip02", 6, 24],
+    ["레이저 원샷", "hip05", 86, 26],
+    ["코어 펄스", "hip01", 24, 20],
+    ["스타 드롭", "hip04", 6, 28],
+    ["라스트 비트", "hip02", 58, 44],
+  ];
 
-  /** 마디마다 멜로디에 가장 잘 맞는 화음 */
-  function harmonize(notes, length, beats, pickup) {
-    const barOf = (p) => Math.floor((p + (pickup ? beats - pickup : 0)) / beats);
-    const bars = barOf(length - 0.001) + 1;
-    const out = [];
-    for (let b = 0; b < bars; b += 1) {
-      const inBar = notes.filter((n) => barOf(n.pos) === b);
-      let best = CHORDS[0];
-      let score = -Infinity;
-      for (const c of CHORDS) {
-        let s = c.weight;
-        inBar.forEach((n, i) => {
-          const hit = c.tones.includes(n.midi % 12);
-          s += (hit ? n.dur : -0.35 * n.dur) * (i === 0 ? 1.5 : 1);
-          // G# · D# 이 있으면 그에 맞는 화음으로
-          if (n.midi % 12 === 8 && c.root === 4) s += 2;
-        });
-        if (s > score) {
-          score = s;
-          best = c;
-        }
-      }
-      out.push(b === bars - 1 ? CHORDS[0] : best);
-    }
-    return { chords: out, barOf };
+  function rng(seed) {
+    let a = seed;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
   function build(raw, index) {
+    const [name, track, startBar, bars] = raw;
+    const T = TRACKS[track];
     const courseIdx = Math.floor(index / 5);
     const course = COURSES[courseIdx];
-    const beats = raw.beats || 4;
-    const beatSec = 60 / raw.bpm;
-    const pickup = raw.pickup || 0;
-    // 박 세기: 첫 먹이가 맨 위에서 내려올 시간은 꼭 있게
-    let countIn = beats + (beats === 2 ? 2 : 0) + (pickup ? beats - pickup : 0);
-    while (countIn * beatSec < course.approach + 0.4) countIn += beats;
-    const lead = countIn * beatSec;
-    const { notes, length } = parse(raw);
-    const { chords, barOf } = harmonize(notes, length, beats, pickup);
-    const timeOf = (p) => lead + p * beatSec;
-
-    // 누를 음표 고르기 (앞 음 가까이는 건너뜀)
-    const eps = 0.001;
-    const offset = pickup ? beats - pickup : 0;
+    const P = PATTERNS[courseIdx];
+    const beat = 60 / T.bpm;
+    const barSec = beat * 4;
+    const barTime = (b) => T.beat0 + b * barSec;
+    // 음악은 첫 음표보다 앞에서 시작 (먹이가 내려올 시간 + 카운트다운)
+    let leadBars = 1;
+    while (leadBars * barSec < course.approach + 0.5 && startBar - leadBars > 0) leadBars += 1;
+    const startAt = barTime(startBar - leadBars);
+    const r = rng(1000 + index * 77);
+    const pick = (list) => list[Math.floor(r() * list.length) % list.length];
+    const vary = [pick(P.vary), pick(P.vary), pick(P.vary)];
     const chart = [];
-    let lastT = -9;
-    for (const n of notes) {
-      const grid = (n.pos + offset) / course.step;
-      const onGrid = Math.abs(grid - Math.round(grid)) < eps;
-      const t = timeOf(n.pos);
-      if (!onGrid || t - lastT < course.minGap) continue;
-      chart.push({ time: t, midi: n.midi });
-      lastT = t;
+    let peak = 0;
+    for (let b = startBar; b < startBar + bars; b += 1) peak = Math.max(peak, Number(T.kick[b] || 0));
+    for (let i = 0; i < bars; i += 1) {
+      const b = startBar + i;
+      const level = Number(T.kick[b] || 0);
+      const ph = i % 8;
+      let pat = ph === 7 ? P.fill : ph === 1 ? vary[0] : ph === 3 ? vary[1] : ph === 5 ? vary[2] : P.main;
+      // 쉬운 코스 앞 곡은 채움 없이
+      if (courseIdx === 0 && index < 2) pat = P.main;
+      if (level < peak * 0.45) pat = P.quiet;
+      if (i === bars - 1) pat = [0];
+      for (const s of pat) chart.push({ time: barTime(b) + (s * beat) / 4 - startAt, bar: i, step: s });
     }
-
-    // 소리 일정 (박 세기 · 멜로디 · 반주)
-    const events = [];
-    for (let i = 0; i < countIn; i += 1) events.push({ t: i * beatSec, type: "click", high: i % beats === 0 });
-    for (const n of notes) events.push({ t: timeOf(n.pos), type: "melody", midi: n.midi, dur: n.dur * beatSec });
-    const firstBar = pickup ? 1 : 0;
-    for (let b = firstBar; b < chords.length; b += 1) {
-      const c = chords[b];
-      const barStart = timeOf(b * beats - offset);
-      if (barStart + 0.01 > timeOf(length)) break;
-      const bassMidi = 36 + c.root + (c.root > 7 ? -12 : 0);
-      const fifth = bassMidi + 7;
-      if (raw.compound) {
-        events.push({ t: barStart, type: "bass", midi: bassMidi });
-        events.push({ t: barStart + 1.5 * beatSec, type: "bass", midi: fifth });
-        events.push({ t: barStart + 0.5 * beatSec, type: "chord", tones: c.tones });
-        events.push({ t: barStart + 1 * beatSec, type: "chord", tones: c.tones });
-        events.push({ t: barStart + 2 * beatSec, type: "chord", tones: c.tones });
-        events.push({ t: barStart + 2.5 * beatSec, type: "chord", tones: c.tones });
-      } else if (beats === 3) {
-        events.push({ t: barStart, type: "bass", midi: bassMidi });
-        events.push({ t: barStart + beatSec, type: "chord", tones: c.tones });
-        events.push({ t: barStart + 2 * beatSec, type: "chord", tones: c.tones });
-      } else {
-        for (let k = 0; k < beats; k += 1) {
-          if (k % 2 === 0) events.push({ t: barStart + k * beatSec, type: "bass", midi: k === 0 ? bassMidi : fifth });
-          else events.push({ t: barStart + k * beatSec, type: "chord", tones: c.tones });
-        }
-      }
-    }
-    events.sort((a, b) => a.t - b.t);
-    const lastNote = notes[notes.length - 1];
-    const end = timeOf(lastNote.pos + lastNote.dur) + 0.9;
-    return { id: index, name: raw.name, bpm: raw.bpm, beats, course: courseIdx, beatSec, lead, countIn, chart, events, end };
+    const end = barTime(startBar + bars) - startAt;
+    return {
+      id: index,
+      name,
+      track,
+      src: `/assets/audio/hip/${track}.mp3`,
+      bpm: Math.round(track === "hip01" ? T.bpm * 2 : T.bpm),
+      course: courseIdx,
+      beatSec: beat,
+      barSec,
+      startAt,
+      lead: barTime(startBar) - startAt,
+      chart,
+      end,
+    };
   }
 
-  window.PulseSongs = { COURSES, SONGS: RAW.map(build), freqOf };
+  window.PulseSongs = { COURSES, TRACKS, SONGS: RAW.map(build) };
 })();

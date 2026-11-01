@@ -3,87 +3,85 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#8ad2ff" />
+    <meta name="theme-color" content="#0b0626" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>펄스 탭 | Today Game</title>
-    <meta name="description" content="떨어지는 먹이가 입에 들어올 때 콕! 누르면 냠냠. 아는 노래를 내가 연주하는 아이들을 위한 원버튼 리듬 게임이에요." />
+    <meta name="description" content="빛나는 노트가 링에 닿을 때 탭! 신나는 전자음 곡의 박자에 맞춰 버튼 하나로 즐기는 네온 리듬 게임이에요." />
     <meta property="og:title" content="펄스 탭 | Today Game" />
-    <meta property="og:description" content="콕 누르면 냠냠! 동요 20곡을 직접 연주하는 원버튼 리듬 게임" />
+    <meta property="og:description" content="버튼 하나로 즐기는 네온 리듬 · 20곡" />
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/beat-tap.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=6" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=7" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body>
     <div class="stage">
-      <canvas id="game" width="390" height="700" aria-label="펄스 탭 놀이 화면"></canvas>
+      <canvas id="game" width="390" height="700" aria-label="펄스 탭 무대"></canvas>
 
       <div class="hud hidden">
         <div class="hud-top">
-          <span class="hud-title" id="hud-title">노래</span>
+          <span class="hud-title" id="hud-title">곡</span>
           <span class="hud-score" id="hud-score">0</span>
         </div>
         <div class="hud-bar"><i id="hud-fill"></i><span class="hud-stars" id="hud-stars"><span>★</span><span>★</span><span>★</span></span></div>
-        <small id="hud-song" hidden></small>
         <div class="lives" id="hud-lives"></div>
       </div>
 
-      <button type="button" class="tap-pad hidden" id="tap-pad" aria-label="콕 누르기">콕!</button>
-
-      <div class="overlay sky" id="title">
-        <img class="hero-art" src="assets/thumb.webp" alt="" width="212" height="212" />
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.webp?v=3" alt="" width="200" height="200" />
+        <div class="badge">PULSE STAGE</div>
         <h1>펄스 탭</h1>
-        <p>떨어지는 먹이가 입에 들어올 때 콕!<br />누를 때마다 내가 노래를 연주해요</p>
+        <p>빛나는 노트가 링에 닿을 때 탭!<br />버튼 하나로 즐기는 네온 리듬</p>
         <ol class="howto" aria-label="하는 법">
-          <li><b>① 기다려요</b>위에서 먹이가 내려와요</li>
-          <li><b>② 콕!</b>동그라미에 오면 아무 데나 눌러요</li>
-          <li><b>③ 냠냠!</b>별을 모아요</li>
+          <li><b>NOTE</b>노트가 도로를 타고 내려와요</li>
+          <li><b>TAP</b>링에 닿을 때 아무 데나 탭</li>
+          <li><b>COMBO</b>이어 맞혀 별을 모아요</li>
         </ol>
         <p class="title-stars" id="title-stars"></p>
-        <button type="button" class="btn" id="start-btn">시작!</button>
-        <button type="button" class="btn ghost" id="pick-btn">노래 고르기</button>
+        <button type="button" class="btn" id="start-btn">PLAY</button>
+        <button type="button" class="btn ghost" id="pick-btn">곡 고르기</button>
         <a href="/">← 홈</a>
       </div>
 
-      <div class="overlay sky hidden" id="songs" data-today-home>
+      <div class="overlay hidden" id="songs" data-today-home>
         <header class="songs-head">
           <button type="button" class="btn-back" id="songs-back" data-back>← 뒤로</button>
-          <h2>노래 고르기</h2>
+          <h2>곡 고르기</h2>
           <span id="songs-stars"></span>
         </header>
         <div class="song-list" id="song-list"></div>
       </div>
 
-      <div class="overlay result hidden" id="clear">
+      <div class="overlay hidden" id="clear">
         <div class="card">
-          <h1 id="clear-title">다 먹었어요!</h1>
-          <span class="song-n" id="clear-song"></span>
+          <div class="badge" id="clear-badge">CLEAR</div>
+          <h1 id="clear-title">곡 이름</h1>
           <div class="stars" id="clear-stars"></div>
           <p id="clear-detail"></p>
-          <button type="button" class="btn" id="next-btn">다음 노래</button>
+          <button type="button" class="btn" id="next-btn">다음 곡</button>
           <button type="button" class="btn ghost" id="again-btn2">한 번 더</button>
-          <button type="button" class="btn ghost" id="menu-btn">노래 고르기</button>
+          <button type="button" class="btn ghost" id="menu-btn">곡 고르기</button>
           <div class="rank-slot" id="clear-rank"></div>
         </div>
       </div>
 
-      <div class="overlay result hidden" id="over">
+      <div class="overlay hidden" id="over">
         <div class="card">
-          <h1>괜찮아요!</h1>
-          <p>배가 아직 고파요. 다시 해 봐요!</p>
+          <div class="badge">FAILED</div>
+          <h1>아쉬워요</h1>
           <p id="over-detail"></p>
-          <button type="button" class="btn" id="retry-btn">다시 하기</button>
-          <button type="button" class="btn ghost" id="menu-btn2">노래 고르기</button>
+          <button type="button" class="btn" id="retry-btn">다시 도전</button>
+          <button type="button" class="btn ghost" id="menu-btn2">곡 고르기</button>
         </div>
       </div>
 
-      <div class="overlay result hidden" id="allclear">
+      <div class="overlay hidden" id="allclear">
         <div class="card">
-          <h1>꿀꺽 대장!</h1>
-          <p>20곡을 모두 끝냈어요!</p>
+          <div class="badge">ALL CLEAR</div>
+          <h1>펄스 마스터!</h1>
           <p id="all-detail"></p>
-          <button type="button" class="btn" id="again-btn">노래 고르기</button>
+          <button type="button" class="btn" id="again-btn">곡 고르기</button>
           <a href="/">← 홈</a>
         </div>
       </div>
@@ -94,25 +92,26 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="songs.js?v=1"></script>
-    <script src="game.js?v=8"></script>
+    <script src="songs.js?v=2"></script>
+    <script src="game.js?v=9"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="펄스 탭 소개">
   <h2>펄스 탭 소개</h2>
-  <p>위에서 떨어지는 먹이가 입에 들어올 때 콕 누르면 냠냠 먹는 아이들을 위한 원버튼 리듬 게임입니다. 반짝반짝 작은 별, 떴다 떴다 비행기, 나비야 나비야, 징글벨, 생일 축하 노래처럼 저작권이 끝난 옛 노래 20곡이 들어 있고, 누를 때마다 그 노래의 음이 울려서 내가 직접 연주하는 느낌이 나요. 과일 정원의 하마, 바닷속 고래, 과자 나라 곰, 반짝 우주 외계인까지 코스가 4개 있어요.</p>
+  <p>버튼 하나로 즐기는 네온 무대 리듬 게임입니다. DJ 고양이의 부스에서 나온 빛나는 노트가 도로를 타고 내려오면, 아래 링에 닿는 순간 화면을 탭해요. 신나는 전자음 곡 20개의 실제 박자에 노트를 얹어서 쿵쿵 울리는 킥에 맞춰 누르는 손맛이 있어요. 네온 스테이지, 레이저 클럽, 선셋 드라이브, 스타 아레나까지 무대가 4개 있고, 무대가 오를수록 노트가 촘촘해져요.</p>
   <h3>플레이 방법</h3>
-  <p>화면 아무 곳이나 누르거나, 컴퓨터에서는 스페이스를 눌러요. 먹이가 동그라미에 들어오면 콕! 정확하면 최고, 조금 어긋나도 좋아로 먹어요. 너무 일찍 눌러도 벌점은 없어요. 1코스 5곡은 실패가 없고 2박에 한 번만 누르면 돼요. 2코스부터는 하트가 5개 있고, 8번 연속으로 먹으면 하트가 다시 차요. 많이 먹을수록 별을 최대 3개까지 받아요.</p>
+  <p>화면 아무 곳이나 누르거나, 컴퓨터에서는 스페이스를 눌러요. 노트가 링에 정확히 닿으면 PERFECT, 조금 어긋나면 GOOD 이에요. 너무 일찍 눌러도 벌점은 없어요. 첫 무대 5곡은 실패가 없고, 둘째 무대부터는 하트가 5개 있어요. 8번 연속으로 맞히면 하트가 다시 차요. 많이 맞힐수록 별을 최대 3개까지 받아요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>아주 어린 아이도 할 수 있나요?</dt>
-    <dd>네. 1코스는 실패가 없고 천천히 내려오며, 조금 어긋나게 눌러도 먹을 수 있어요. 첫 노래에는 무엇을 할지 글자로 알려 줘요.</dd>
-    <dt>노래는 어떤 곡인가요?</dt>
-    <dd>저작권이 끝난 옛 동요 · 민요 · 클래식 멜로디를 게임 안에서 직접 연주해요. 가사는 없어요.</dd>
+    <dt>리듬 게임이 처음인데 할 수 있나요?</dt>
+    <dd>네. 첫 무대는 실패가 없고 두 박에 한 번만 누르면 돼요. 판정도 넉넉해요.</dd>
+    <dt>소리가 안 나요.</dt>
+    <dd>곡을 불러오는 데 잠깐 걸릴 수 있어요. 오른쪽 위 소리 버튼이 꺼져 있는지도 확인해 주세요. 음악을 못 불러오면 소리 없이 진행돼요.</dd>
     <dt>기록은 어디에 저장되나요?</dt>
     <dd>별과 점수는 이 기기의 브라우저에만 저장돼요. 총점은 결과 화면에서 직접 이름을 적어 올릴 때만 순위에 보내져요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
+
 
       <script src="/js/game-seo.js?v=1"></script>
   </body>

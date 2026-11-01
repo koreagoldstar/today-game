@@ -3,11 +3,11 @@
  *
  * 사용: npm run start 후 node scripts/test-beat-tap.js   (BT_SHOTS=폴더 면 화면 사진)
  *
- * - 노래 20곡: 길이 · 음표 간격 · 판정 창이 겹치지 않음
+ * - 곡 20개: 길이 · 음표 간격 · 판정 창 · 박자 칸 위 · 음악 파일 길이 안
  * - 정확한 봇: 20곡 모두 별 3개
  * - 서툰 아이 봇(타이밍이 많이 어긋나고 가끔 놓침): 1코스에서 별을 받음
  * - 안 누르면: 1코스는 끝까지 가고(실패 없음), 2코스부터는 실패 화면
- * - 진짜 소리 시계로 실제 시간 동안 돌아감 · 버튼 · 저장
+ * - 진짜 음악 시계로 실제 시간 동안 돌아감 · 저장 · 일시정지
  */
 "use strict";
 const path = require("path");
@@ -46,22 +46,45 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.screenshot({ path: path.join(SHOTS, "title.png") });
   }
 
-  // 노래 자료
+  // 곡 자료
   const songs = await page.evaluate(() =>
     window.PulseTap.SONGS.map((s) => {
       const c = window.PulseTap.COURSES[s.course];
       let minGap = 99;
       for (let i = 1; i < s.chart.length; i++) minGap = Math.min(minGap, s.chart[i].time - s.chart[i - 1].time);
-      return { name: s.name, course: s.course, n: s.chart.length, len: s.end, minGap, good: c.good, approach: c.approach, first: s.chart[0].time, nan: s.events.some((e) => !Number.isFinite(e.t)) };
+      // 모든 음표가 박자 칸 위에 있나
+      const grid = s.beatSec / 4;
+      const onGrid = s.chart.every((n) => {
+        const k = (n.time - s.lead) / grid;
+        return Math.abs(k - Math.round(k)) < 1e-6;
+      });
+      return { name: s.name, course: s.course, n: s.chart.length, len: s.end, minGap, good: c.good, approach: c.approach, first: s.chart[0].time, onGrid, src: s.src, startAt: s.startAt };
     })
   );
-  check("노래 20곡 · 코스 4개", songs.length === 20 && new Set(songs.map((s) => s.course)).size === 4);
-  check("모든 곡 길이 25~90초", songs.every((s) => s.len >= 25 && s.len <= 90), songs.map((s) => Math.round(s.len)).join(","));
-  check("모든 곡 누를 음 10개 이상", songs.every((s) => s.n >= 10), songs.map((s) => s.n).join(","));
-  check("1코스는 음표 간격 1초 이상", songs.filter((s) => s.course === 0).every((s) => s.minGap >= 1), songs.filter((s) => s.course === 0).map((s) => s.minGap.toFixed(2)).join(","));
+  check("곡 20개 · 무대 4개", songs.length === 20 && new Set(songs.map((s) => s.course)).size === 4);
+  check("모든 곡 길이 20~90초", songs.every((s) => s.len >= 20 && s.len <= 90), songs.map((s) => Math.round(s.len)).join(","));
+  check("모든 곡 음표 10개 이상", songs.every((s) => s.n >= 10), songs.map((s) => s.n).join(","));
+  check("첫 무대는 음표 간격 0.4초 이상", songs.filter((s) => s.course === 0).every((s) => s.minGap >= 0.4), songs.filter((s) => s.course === 0).map((s) => s.minGap.toFixed(2)).join(","));
   check("판정 창이 다음 음과 겹치지 않음", songs.every((s) => s.minGap >= s.good), songs.filter((s) => s.minGap < s.good).map((s) => s.name));
-  check("첫 먹이가 맨 위에서 내려올 시간이 있음", songs.every((s) => s.first >= s.approach), songs.map((s) => s.first.toFixed(1)).join(","));
-  check("소리 일정에 이상한 값 없음", songs.every((s) => !s.nan));
+  check("첫 노트가 맨 위에서 내려올 시간이 있음", songs.every((s) => s.first >= s.approach), songs.map((s) => s.first.toFixed(1)).join(","));
+  check("모든 음표가 곡의 박자 칸 위에 있음", songs.every((s) => s.onGrid));
+  // 곡 파일 길이 안에 들어가나
+  const durs = await page.evaluate(async () => {
+    const out = {};
+    for (const s of window.PulseTap.SONGS) {
+      if (out[s.src]) continue;
+      out[s.src] = await new Promise((res) => {
+        const a = new Audio();
+        a.preload = "metadata";
+        a.onloadedmetadata = () => res(a.duration);
+        a.onerror = () => res(0);
+        a.src = s.src;
+      });
+    }
+    return out;
+  });
+  const overflow = songs.filter((s) => s.startAt < 0 || s.startAt + s.len > durs[s.src] - 0.2);
+  check("모든 곡이 음악 파일 길이 안에서 끝남", overflow.length === 0 && Object.values(durs).every((d) => d > 0), overflow.map((s) => s.name));
 
   // 봇 플레이 (시계를 직접 돌림)
   const play = (idx, mode, seed = 7) =>
@@ -77,7 +100,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           if (mode === "none") return null;
           if (mode === "perfect") return n.time;
           if (rnd() < 0.15) return null; // 가끔 놓침
-          return n.time + (rnd() - 0.5) * 0.6; // ±0.3초
+          return n.time + (rnd() - 0.5) * 0.44; // ±0.22초
         });
         let k = 0;
         let guard = 0;
@@ -122,23 +145,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await page.tap("#start-btn");
   await sleep(1500);
   const live = await page.evaluate(() => ({ mode: window.PulseTap.clockMode, t: window.PulseTap.time, state: window.PulseTap.state }));
-  check("시작 버튼 · 소리 시계로 시간이 흐름", live.state === "play" && live.t > 0.5 && live.mode === "ctx", live);
-  const padVisible = await page.isVisible("#tap-pad");
-  check("콕 버튼이 보임", padVisible);
-  // 실제 음표 시각에 버튼 누르기
+  check("시작 버튼 · 음악 시계로 시간이 흐름", live.state === "play" && live.t > 0.3 && live.mode === "audio", live);
+  // 실제 음표 시각에 화면 누르기
   const realHits = await page.evaluate(async () => {
     const P = window.PulseTap;
-    const pad = document.getElementById("tap-pad");
-    const press = () => pad.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: 200, clientY: 700 }));
+    const c = document.getElementById("game");
+    const press = () => c.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: 200, clientY: 400 }));
     let done = 0;
     for (const n of P.notes.slice(0, 3)) {
       while (P.time < n.time) await new Promise((r) => setTimeout(r, 5));
       press();
       done++;
     }
-    return { pressed: done, hits: P.hits };
+    return { pressed: done, hits: P.hits, playing: !P.musicEl.paused, audioT: P.musicEl.currentTime };
   });
-  check("콕 버튼으로 실제로 먹음", realHits.hits === 3, realHits);
+  check("화면을 눌러 실제 음악 시간에 맞힘", realHits.hits === 3 && realHits.playing, realHits);
   if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "play-live.png") });
 
   // 일시정지하면 시간이 멈춤
@@ -153,11 +174,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const st = window.PulseTap.state;
     return { st, moved: t1 - t0 };
   });
-  check("일시정지하면 노래 시간이 멈춤", paused.st === "paused" && Math.abs(paused.moved) < 0.02, paused);
+  check("일시정지하면 음악과 시간이 멈춤", paused.st === "paused" && Math.abs(paused.moved) < 0.02, paused);
 
   // 코스별 화면
   if (SHOTS) {
-    for (const [i, at] of [[0, 0.72], [7, 0.5], [12, 0.5], [17, 0.5]]) {
+    for (const [i, at] of [[0, 0.5], [7, 0.5], [12, 0.5], [17, 0.5]]) {
       await page.evaluate(
         ({ i, at }) => {
           const P = window.PulseTap;

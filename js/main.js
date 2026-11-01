@@ -592,9 +592,9 @@
     {
       id: "beat-tap",
       title: "펄스 탭",
-      tag: "콕 누르면 냠냠 · 동요 20곡",
+      tag: "원버튼 네온 리듬 · 20곡",
       href: "/games/beat-tap/",
-      thumb: "/assets/thumbs/sm/beat-tap.webp",
+      thumb: "/assets/thumbs/sm/beat-tap.webp?v=2",
       category: "rhythm",
     },
     {
