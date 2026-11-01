@@ -34,7 +34,7 @@
       title: "NEW 둥지디펜스",
       tag: "3D 타워디펜스 · 150웨이브",
       href: "/games/chick-defense-new/",
-      thumb: "/assets/thumbs/sm/chick-defense-new.webp",
+      thumb: "/assets/thumbs/sm/chick-defense-new.webp?v=2",
       category: "arcade",
     },
     {
@@ -411,7 +411,7 @@
       title: "핀볼팡팡",
       tag: "아케이드 · 50단계",
       href: "/games/pinball/",
-      thumb: "/assets/thumbs/sm/pinball.webp?v=3",
+      thumb: "/assets/thumbs/sm/pinball.webp?v=4",
       category: "arcade",
     },
     {
