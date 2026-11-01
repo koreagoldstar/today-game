@@ -105,10 +105,12 @@ module.exports = async function handler(req, res) {
     "jelly-factory",
     "magnet-mayhem",
     "chick-defense-new",
+    "oneshot-elite",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "oneshot-elite",
     "chick-defense-new",
     "magnet-mayhem",
     "jelly-factory",

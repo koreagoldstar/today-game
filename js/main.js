@@ -30,6 +30,14 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
   const GAMES = [
     {
+      id: "oneshot-elite",
+      title: "ONE SHOT 원샷 엘리트",
+      tag: "3D 저격 · 5월드 50미션",
+      href: "/games/oneshot-elite/",
+      thumb: "/assets/thumbs/sm/oneshot-elite.webp",
+      category: "action",
+    },
+    {
       id: "chick-defense-new",
       title: "NEW 둥지디펜스",
       tag: "3D 타워디펜스 · 150웨이브",

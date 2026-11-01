@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1216" />
+    <title>ONE SHOT 원샷 엘리트 | Today Game</title>
+    <meta name="description" content="스코프로 숨은 표적을 찾아 단 한 발로 끝내는 3D 저격 게임. 도시 · 항구 · 사막 · 밤 · 최후의 작전까지 5개 월드 50개 미션." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/oneshot-elite/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ONE SHOT 원샷 엘리트 | Today Game" />
+    <meta property="og:description" content="스코프 너머 숨은 표적을 찾아라! 5개 월드 · 50개 미션의 3D 저격 게임" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/oneshot-elite/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/oneshot-elite.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="modulepreload" href="/js/vendor/three-0.160.1.module.min.js" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="ose is-title">
+    <div class="stage" id="stage">
+      <div class="field" id="field">
+        <canvas id="game" aria-label="ONE SHOT 저격 화면"></canvas>
+
+        <!-- 스코프 -->
+        <div class="scope" id="scope" hidden aria-hidden="true">
+          <div class="lens" id="lens">
+            <svg class="reticle" viewBox="-500 -500 1000 1000" aria-hidden="true">
+              <g class="r-line">
+                <line x1="-500" y1="0" x2="-46" y2="0" />
+                <line x1="46" y1="0" x2="500" y2="0" />
+                <line x1="0" y1="-500" x2="0" y2="-46" />
+                <line x1="0" y1="46" x2="0" y2="500" />
+              </g>
+              <g class="r-thin">
+                <line x1="-46" y1="0" x2="46" y2="0" />
+                <line x1="0" y1="-46" x2="0" y2="46" />
+              </g>
+              <g class="r-mil" id="r-mil"></g>
+              <circle class="r-dot" r="3.4" />
+              <g class="r-arc">
+                <path d="M -462 -96 A 472 472 0 0 1 -462 96" />
+                <path d="M 462 -96 A 472 472 0 0 0 462 96" />
+              </g>
+            </svg>
+            <div class="glass"></div>
+            <div class="s-read s-left">
+              <span class="s-k">RANGE</span>
+              <b id="s-range">— m</b>
+            </div>
+            <div class="s-read s-right">
+              <span class="s-k">ZOOM</span>
+              <b id="s-zoom">×6.0</b>
+            </div>
+            <div class="breath" id="breath">
+              <span class="b-k" id="b-k">HOLD BREATH</span>
+              <div class="b-bar"><i id="b-fill"></i></div>
+            </div>
+            <div class="reload" id="reload" hidden><i id="reload-fill"></i><span>장전 중</span></div>
+          </div>
+        </div>
+        <div class="flash-s" id="flash-s" aria-hidden="true"></div>
+        <div class="vig-slow" id="vig-slow" aria-hidden="true"></div>
+        <div class="dot" id="dot" hidden aria-hidden="true"></div>
+        <div class="marks" id="marks" aria-hidden="true"></div>
+        <div class="feed" id="feed" role="status"></div>
+        <p class="toast" id="toast" role="status" hidden></p>
+        <div class="tut" id="tut" hidden></div>
+
+        <!-- 위 HUD -->
+        <header class="hud" id="hud" hidden>
+          <div class="hud-l">
+            <small id="h-mis">1-1 FIND THE TARGET</small>
+            <b id="h-obj">표적 0 / 1</b>
+          </div>
+          <div class="hud-c">
+            <b id="h-time">3:00</b>
+            <small id="h-alert" hidden>표적이 숨기까지 <em>5.0</em>초</small>
+          </div>
+          <div class="hud-r">
+            <span class="hud-score" id="h-score">0</span>
+            <button type="button" class="round" id="pause-btn" aria-label="일시정지"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.2" /></svg></button>
+          </div>
+        </header>
+        <div class="ammo" id="ammo" hidden aria-label="남은 총알"></div>
+        <p class="keys" id="keys" hidden>마우스 조준 · <b>우클릭</b> 스코프 · <b>좌클릭</b> 발사 · <b>휠</b> 배율 · <b>Shift</b> 숨참기 · <b>E</b> 표시 · <b>H</b> 힌트 · <b>F</b> 전체 화면</p>
+
+        <!-- 휴대폰 버튼 -->
+        <div class="touch" id="touch" hidden>
+          <div class="t-left">
+            <button type="button" class="t-btn" id="t-spot" aria-label="사람 표시"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l10 10-10 10L2 12z" fill="none" stroke="currentColor" stroke-width="2.4" /><circle cx="12" cy="12" r="2.6" fill="currentColor" /></svg><span>표시</span></button>
+            <button type="button" class="t-btn" id="t-hint" aria-label="힌트"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21h6M10 18h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.3 1 2.2h5.2c0-.9.4-1.7 1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg><span>힌트</span></button>
+            <button type="button" class="t-btn" id="t-nv" hidden aria-label="야간 투시"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg><span>투시</span></button>
+          </div>
+          <button type="button" class="t-btn t-breath" id="t-breath" aria-label="숨 참기 (누르고 있기)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" /></svg><span>숨참기</span></button>
+          <div class="t-zoom" id="t-zoom" hidden>
+            <button type="button" id="t-zoom-in" aria-label="배율 올리기">+</button>
+            <input type="range" id="t-zoom-r" min="0" max="100" value="50" aria-label="배율" orient="vertical" />
+            <button type="button" id="t-zoom-out" aria-label="배율 내리기">−</button>
+          </div>
+          <div class="t-right">
+            <button type="button" class="t-btn t-scope" id="t-scope" aria-label="스코프"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="2.3" /><path d="M12 1v6M12 17v6M1 12h6M17 12h6" stroke="currentColor" stroke-width="2.3" /></svg><span>스코프</span></button>
+            <button type="button" class="t-btn t-fire" id="t-fire" aria-label="발사"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v3l1 2v14H8V7l1-2z" fill="currentColor" /></svg><span>발사</span></button>
+          </div>
+        </div>
+
+        <!-- 첫 화면 -->
+        <section class="screen title" id="title">
+          <div class="t-box">
+            <p class="t-k"><i></i>TACTICAL SNIPER OPERATIONS</p>
+            <h1 class="logo"><span>ONE</span><span class="red">SHOT</span></h1>
+            <p class="t-s">단 한 발로 끝내는 3D 저격 작전</p>
+            <div class="t-menu">
+              <button type="button" class="btn prime" id="btn-play">작전 시작</button>
+              <button type="button" class="btn" id="btn-help">조작법</button>
+              <button type="button" class="btn" id="btn-set">설정</button>
+              <button type="button" class="btn" id="btn-stats">기록</button>
+            </div>
+            <p class="t-total" id="t-total"></p>
+          </div>
+        </section>
+
+        <!-- 월드 -->
+        <section class="screen panel" id="worlds" data-today-home hidden aria-labelledby="worlds-h">
+          <header class="p-head">
+            <button type="button" class="btn-back" data-back="title">← 뒤로</button>
+            <h2 id="worlds-h">작전 지역</h2>
+            <span class="p-stars" id="worlds-stars"></span>
+          </header>
+          <div class="world-list" id="world-list"></div>
+        </section>
+
+        <!-- 미션 -->
+        <section class="screen panel" id="missions" data-today-home hidden aria-labelledby="missions-h">
+          <header class="p-head">
+            <button type="button" class="btn-back" data-back="worlds">← 뒤로</button>
+            <h2 id="missions-h">CITY OPERATIONS</h2>
+            <span class="p-stars" id="missions-stars"></span>
+          </header>
+          <p class="m-blurb" id="m-blurb"></p>
+          <div class="mission-list" id="mission-list"></div>
+        </section>
+
+        <!-- 브리핑 -->
+        <section class="screen panel brief" id="brief" hidden aria-labelledby="b-h">
+          <div class="b-card">
+            <div class="b-top">
+              <span class="b-type" id="b-type">FIND THE TARGET</span>
+              <span class="b-id" id="b-id">1-1</span>
+            </div>
+            <h2 id="b-h">첫 번째 임무</h2>
+            <div class="b-body">
+              <div class="b-photo">
+                <canvas id="b-portrait" width="360" height="460" aria-label="표적 사진"></canvas>
+                <span class="b-photo-k" id="b-photo-k">TARGET</span>
+              </div>
+              <div class="b-info">
+                <p class="b-text" id="b-text"></p>
+                <ul class="b-tags" id="b-tags"></ul>
+                <dl class="b-meta">
+                  <div><dt>총알</dt><dd id="b-ammo">3</dd></div>
+                  <div><dt>제한 시간</dt><dd id="b-time">3:00</dd></div>
+                  <div><dt>표적</dt><dd id="b-count">1</dd></div>
+                </dl>
+                <ul class="b-stars" id="b-stars"></ul>
+              </div>
+            </div>
+            <div class="b-actions">
+              <button type="button" class="btn" id="b-back">돌아가기</button>
+              <button type="button" class="btn prime" id="b-go">작전 개시</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 불러오기 -->
+        <div class="loading" id="loading" role="status" hidden>
+          <div class="load-box">
+            <p class="load-k" id="load-k">CITY OPERATIONS</p>
+            <div class="load-bar"><i></i></div>
+            <p class="load-t">작전 지역으로 이동 중…</p>
+          </div>
+        </div>
+        <div class="boot" id="boot" role="status">
+          <div class="load-box">
+            <h1 class="logo small"><span>ONE</span><span class="red">SHOT</span></h1>
+            <div class="load-bar"><b id="boot-bar"></b></div>
+            <p class="load-t" id="boot-t">장비를 점검하는 중…</p>
+          </div>
+        </div>
+
+        <!-- 일시정지 -->
+        <section class="screen panel center" id="pause" hidden aria-labelledby="pause-h">
+          <div class="s-card">
+            <h2 id="pause-h">일시정지</h2>
+            <button type="button" class="btn prime" id="p-resume">계속하기</button>
+            <button type="button" class="btn" id="p-retry">다시 하기</button>
+            <button type="button" class="btn" id="p-help">조작법</button>
+            <button type="button" class="btn" id="p-set">설정</button>
+            <button type="button" class="btn" id="p-quit">작전 포기</button>
+          </div>
+        </section>
+
+        <!-- 결과 -->
+        <section class="screen panel center" id="result" hidden aria-labelledby="r-h">
+          <div class="s-card r-card">
+            <p class="r-k" id="r-k">MISSION COMPLETE</p>
+            <h2 id="r-h">임무 성공</h2>
+            <div class="r-stars" id="r-stars"></div>
+            <p class="r-why" id="r-why" hidden></p>
+            <p class="r-score"><b id="r-score">0</b><small id="r-best"></small></p>
+            <dl class="r-grid" id="r-grid"></dl>
+            <p class="r-new" id="r-new" hidden></p>
+            <div class="rank-slot" id="r-rank"></div>
+            <button type="button" class="btn prime" id="r-next">다음 미션</button>
+            <div class="r-row">
+              <button type="button" class="btn" id="r-retry">다시 하기</button>
+              <button type="button" class="btn" id="r-menu">미션 목록</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 조작법 -->
+        <section class="screen panel center" id="help" hidden aria-labelledby="help-h">
+          <div class="s-card wide">
+            <h2 id="help-h">조작법 · 규칙</h2>
+            <div class="h-grid">
+              <div>
+                <h3>컴퓨터</h3>
+                <ul>
+                  <li><b>마우스</b> 둘러보기 (처음 한 번 클릭하면 마우스가 잡혀요)</li>
+                  <li><b>우클릭</b> 스코프 켜기 · 끄기</li>
+                  <li><b>좌클릭 · 스페이스</b> 발사</li>
+                  <li><b>휠 · + −</b> 배율 바꾸기</li>
+                  <li><b>Shift</b> 숨 참기 (조준이 멈춰요)</li>
+                  <li><b>E</b> 사람 표시 · <b>H</b> 힌트 · <b>N</b> 야간 투시</li>
+                  <li><b>F</b> 전체 화면 · <b>P · Esc</b> 일시정지 · <b>M</b> 소리</li>
+                </ul>
+              </div>
+              <div>
+                <h3>휴대폰</h3>
+                <ul>
+                  <li>빈 화면을 <b>끌어서</b> 둘러보기</li>
+                  <li><b>스코프</b> 버튼으로 확대, 옆 막대로 배율 조절</li>
+                  <li><b>발사</b> 버튼으로 쏘기</li>
+                  <li><b>숨참기</b>는 누르고 있는 동안만</li>
+                  <li>세로 · 가로 모두 할 수 있어요</li>
+                </ul>
+              </div>
+              <div class="h-full">
+                <h3>규칙</h3>
+                <ul>
+                  <li><b>머리(HEADSHOT)</b>가 점수가 가장 크고, 몸은 ACCURATE HIT, 다리는 LIMB HIT 예요.</li>
+                  <li>숨 참기 막대가 다 닳으면 숨이 차서 잠깐 더 많이 흔들려요.</li>
+                  <li>첫 발이 울리면 표적이 경계해요. 위쪽 시간이 끝나면 숨어 버려요.</li>
+                  <li>민간인이나 미끼를 맞히면 임무 실패예요. 브리핑의 특징을 꼭 확인해요.</li>
+                  <li>조끼를 입은 표적은 머리만 통해요.</li>
+                  <li>별을 모으면 다음 월드가 열리고, 월드의 미션 9개를 깨면 보너스 미션이 열려요.</li>
+                  <li>진행과 기록은 이 기기에만 저장돼요.</li>
+                </ul>
+              </div>
+            </div>
+            <button type="button" class="btn prime" data-close>닫기</button>
+          </div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="screen panel center" id="settings" hidden aria-labelledby="set-h">
+          <div class="s-card">
+            <h2 id="set-h">설정</h2>
+            <label class="set-row"><span>조준 감도</span><input type="range" id="set-sens" min="0.3" max="2.2" step="0.05" /></label>
+            <label class="set-row"><span>효과음</span><input type="range" id="set-sound" min="0" max="1" step="0.05" /></label>
+            <label class="set-row chk"><span>위아래 뒤집기</span><input type="checkbox" id="set-invert" /></label>
+            <label class="set-row chk"><span>쉬운 조준 (흔들림 줄이기)</span><input type="checkbox" id="set-easy" /></label>
+            <label class="set-row"><span>그래픽</span>
+              <select id="set-quality">
+                <option value="auto">자동</option>
+                <option value="high">높음</option>
+                <option value="mid">보통</option>
+                <option value="low">낮음 (빠름)</option>
+              </select>
+            </label>
+            <p class="set-note" id="set-note"></p>
+            <button type="button" class="btn prime" data-close>닫기</button>
+            <button type="button" class="btn danger" id="set-reset">기록 지우기</button>
+          </div>
+        </section>
+
+        <!-- 기록 -->
+        <section class="screen panel center" id="stats" hidden aria-labelledby="st-h">
+          <div class="s-card">
+            <h2 id="st-h">내 기록</h2>
+            <dl class="r-grid" id="st-grid"></dl>
+            <button type="button" class="btn prime" data-close>닫기</button>
+          </div>
+        </section>
+
+        <div class="fallback" id="fallback" hidden><p>이 브라우저에서는 3D 게임을 열 수 없어요 (WebGL 필요). 최신 브라우저로 다시 와 주세요!</p><a class="btn" href="/">사이트로</a></div>
+      </div>
+    </div>
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="ONE SHOT 원샷 엘리트 소개">
+  <h2>ONE SHOT 원샷 엘리트 소개</h2>
+  <p>스코프로 숨은 표적을 찾아 단 한 발로 끝내는 3D 저격 게임입니다. 낡은 콘크리트 도시와 항구, 사막 마을, 밤의 도시, 비바람 치는 적 기지까지 5개 월드에 미션이 10개씩, 모두 50개 미션이 있어요. 민간인 사이에서 브리핑의 특징과 맞는 표적을 찾는 표적 찾기, 총알이 한 발뿐인 단 한 발, 걷거나 달리는 표적을 맞히는 움직이는 표적, 비슷한 사람 가운데 진짜를 고르는 진짜를 찾아라, 첫 발이 울린 뒤 달아나는 표적들을 이어 맞히는 여러 표적, 잠깐씩 나타나는 표적을 제한 시간 안에 맞히는 시간 제한, 방탄조끼 때문에 머리만 통하는 헤드샷만, 곳곳에 숨은 금빛 과녁을 찾는 보너스 미션까지 8가지 임무가 나와요. 표적은 창가, 발코니, 옥상, 컨테이너 위, 화물선 갑판, 감시탑처럼 실제로 보이는 자리에 서고, 모든 미션은 게임과 같은 사격 코드로 돌리는 자동 플레이로 깰 수 있는지 확인했어요. 피는 나오지 않아요. 맞은 사람은 뒤로 쓰러지기만 해요.</p>
+  <h3>플레이 방법</h3>
+  <p>컴퓨터에서는 화면을 한 번 클릭한 뒤 마우스로 둘러보고, 우클릭으로 스코프를 켜고, 휠로 배율을 3배에서 16배까지 바꾸고, 좌클릭이나 스페이스로 발사해요. Shift 를 누르고 있으면 숨을 참아 조준이 거의 멈추지만, 막대가 다 닳으면 숨이 차서 잠깐 더 흔들려요. E 는 사람 표시, H 는 힌트, N 은 야간 투시, F 는 전체 화면, P 나 Esc 는 일시정지예요. 휴대폰에서는 빈 화면을 끌어서 둘러보고, 스코프 · 발사 · 숨참기 · 표시 · 힌트 버튼과 배율 막대를 써요. 세로와 가로 화면 모두 할 수 있어요. 머리를 맞히면 HEADSHOT, 몸은 ACCURATE HIT, 다리는 LIMB HIT 로 점수가 달라요. 첫 발이 울리면 표적이 경계하고, 위쪽에 나오는 시간이 끝나면 숨어 버려요. 민간인이나 미끼를 맞히면 임무 실패예요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>임무에 성공하면 별 1개, 빗나간 총알 없이 또는 미션마다 정한 조건(모든 표적 헤드샷 · 표적 전부 맞히기)을 이루면 별 2개, 정한 시간 안에 힌트 없이 깨면 별 3개예요.</dd>
+    <dt>다음 월드는 어떻게 여나요?</dt>
+    <dd>별을 모으면 열려요. 항구는 14개, 사막은 32개, 밤은 52개, 최후의 작전은 74개가 필요해요. 월드의 미션 9개를 모두 깨면 보너스 미션이 열려요.</dd>
+    <dt>조준이 너무 흔들려요.</dt>
+    <dd>Shift(휴대폰은 숨참기 버튼)를 누르면 조준이 거의 멈춰요. 설정의 쉬운 조준을 켜면 흔들림이 절반 아래로 줄어요. 감도도 설정에서 바꿀 수 있어요.</dd>
+    <dt>휴대폰이 느려요.</dt>
+    <dd>설정의 그래픽을 보통이나 낮음으로 바꾸면 빨라져요. 자동으로 두면 기기에 맞춰 골라요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>별 · 최고 점수 · 통계 · 설정은 이 기기의 브라우저에만 저장돼요. 총점은 결과 화면에서 직접 이름을 적어 올릴 때만 순위에 보내져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
