@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  /** @typedef {{ id: string, title: string, tag: string, href: string, thumb?: string, emoji?: string, category: string }} GameEntry */
+  /** @typedef {{ id: string, title: string, tag: string, href: string, thumb?: string, emoji?: string, category: string, added?: string }} GameEntry */
 
   /** @type {{ id: string, title: string, desc: string }[]} */
   const CATEGORIES = [
@@ -27,7 +27,7 @@
     "edu-sentence-builder",
   ];
 
-  /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가 (위쪽·최신순) */
+  /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
       id: "oneshot-elite",
@@ -36,6 +36,7 @@
       href: "/games/oneshot-elite/",
       thumb: "/assets/thumbs/sm/oneshot-elite.webp",
       category: "action",
+      added: "2026-11-01",
     },
     {
       id: "chick-defense-new",
@@ -44,6 +45,7 @@
       href: "/games/chick-defense-new/",
       thumb: "/assets/thumbs/sm/chick-defense-new.webp?v=2",
       category: "arcade",
+      added: "2026-10-26",
     },
     {
       id: "magnet-mayhem",
@@ -52,6 +54,7 @@
       href: "/games/magnet-mayhem/",
       thumb: "/assets/thumbs/sm/magnet-mayhem.webp",
       category: "puzzle",
+      added: "2026-10-25",
     },
     {
       id: "jelly-factory",
@@ -60,6 +63,7 @@
       href: "/games/jelly-factory/",
       thumb: "/assets/thumbs/sm/jelly-factory.webp",
       category: "puzzle",
+      added: "2026-10-25",
     },
     {
       id: "slime-lab",
@@ -68,6 +72,7 @@
       href: "/games/slime-lab/",
       thumb: "/assets/thumbs/sm/slime-lab.webp",
       category: "puzzle",
+      added: "2026-10-24",
     },
     {
       id: "lava-surfers",
@@ -76,6 +81,7 @@
       href: "/games/lava-surfers/",
       thumb: "/assets/thumbs/sm/lava-surfers.webp",
       category: "arcade",
+      added: "2026-10-19",
     },
     {
       id: "sky-island",
@@ -84,6 +90,7 @@
       href: "/games/sky-island/",
       thumb: "/assets/thumbs/sm/sky-island.webp",
       category: "arcade",
+      added: "2026-10-19",
     },
     {
       id: "dragon-statue",
@@ -92,6 +99,7 @@
       href: "/games/dragon-statue/",
       thumb: "/assets/thumbs/sm/dragon-statue.webp",
       category: "arcade",
+      added: "2026-10-18",
     },
     {
       id: "sea-monster",
@@ -101,6 +109,7 @@
       href: "/games/sea-monster/",
       thumb: "/assets/thumbs/sm/sea-monster.webp",
       category: "action",
+      added: "2026-10-09",
     },
     {
       id: "jetski-race",
@@ -110,6 +119,7 @@
       href: "/games/jetski-race/",
       thumb: "/assets/thumbs/sm/jetski-race.webp",
       category: "sports",
+      added: "2026-10-07",
     },
     {
       id: "ocean-blaster",
@@ -119,6 +129,7 @@
       href: "/games/ocean-blaster/",
       thumb: "/assets/thumbs/sm/ocean-blaster.webp",
       category: "action",
+      added: "2026-10-06",
     },
     {
       id: "10-second",
@@ -916,17 +927,32 @@
     return Number(playCounts[game.id]) || 0;
   }
 
+  /** 출시 후 이 기간(일)은 플레이 수와 상관없이 칸 맨 위. 지나면 플레이 수 순서로 돌아감 */
+  const NEW_GAME_DAYS = 30;
+
+  /** 아직 새 게임이면 출시일 값(최근일수록 큼), 아니면 0 */
+  function newGameRank(game) {
+    if (!game.added) return 0;
+    const added = Date.parse(game.added);
+    const age = (Date.parse(todayKey()) - added) / 86400000;
+    return age >= 0 && age <= NEW_GAME_DAYS ? added : 0;
+  }
+
   function seedRank(game) {
     if (popularOrder[game.id] != null) return popularOrder[game.id];
     return SEED_RANK[game.id] != null ? SEED_RANK[game.id] : 900 + gameIndex(game);
   }
 
-  /** 하루 캐시된 인기순 → 시드 → 맨 아래 고정 */
+  /** 새 게임(최신순) → 하루 캐시된 인기순 → 시드 → 맨 아래 고정 */
   function sortShelfGames(catId, games) {
     return games.slice().sort((a, b) => {
       const bottomA = isBottom(a) ? 1 : 0;
       const bottomB = isBottom(b) ? 1 : 0;
       if (bottomA !== bottomB) return bottomA - bottomB;
+
+      const newA = newGameRank(a);
+      const newB = newGameRank(b);
+      if (newA !== newB) return newB - newA;
 
       const playA = playScore(a);
       const playB = playScore(b);
