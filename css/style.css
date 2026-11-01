@@ -224,6 +224,22 @@ body {
   box-shadow: 0 3px 0 rgba(196, 120, 0, 0.28);
 }
 
+/* 휴대폰 홈: Hall of Fame 버튼은 빼고(전체 게임 랭킹 화면에서 들어감) 나머지 셋을 한 줄로 */
+@media (max-width: 600px) {
+  #hero .hero-link-fame {
+    display: none;
+  }
+
+  #hero .hero-links {
+    gap: 6px;
+  }
+
+  #hero .hero-link {
+    padding: 0 11px;
+    font-size: 13px;
+  }
+}
+
 .pwa-install {
   border: 0;
   color: #238456;
