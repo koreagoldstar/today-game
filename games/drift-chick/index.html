@@ -3,49 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#7ec8ff" />
+    <meta name="theme-color" content="#3a9a5c" />
     <title>드리프트 삐약이</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="drift-chick" data-face="1">
-    <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
-        <div class="panel">
-          <span>거리 <b id="hud-dist">0</b>m</span>
-          <span>콤보 <b id="hud-combo">0</b></span>
-        </div>
-        <div class="panel right">
-          <span>점수 <b id="hud-score">0</b></span>
-          <span>최고 <b id="hud-best">0</b></span>
-        </div>
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="드리프트 삐약이 화면"></canvas>
+      <div class="hud" id="hud">
+        <div class="chip stage-chip"><small>거리</small><b><span id="hud-dist">0</span>m</b></div>
+        <div class="chip combo"><small>콤보</small><b id="hud-combo">0</b></div>
+        <div class="chip"><small>점수</small><b id="hud-score">0</b></div>
       </div>
-      <p class="hint" id="hint">코너에선 반드시 드리프트!</p>
+      <div class="race-bar" aria-hidden="true"><i id="hud-bar"></i></div>
+      <div class="hearts" id="hud-hearts" aria-label="남은 하트"></div>
+      <p class="hint" id="hint">커브가 오면 꺾이는 쪽을 꾹 누르세요!</p>
 
       <div class="overlay" id="title">
-        <div class="badge">DRIFT</div>
-        <img class="title-mascot" src="assets/player.png" alt="드리프트 삐약이" width="120" height="120" />
+        <img class="hero" src="assets/thumb.webp?v=2" alt="드리프트 삐약이" width="384" height="384" />
         <h1>드리프트 삐약이</h1>
-        <p>직선은 자동, <b>코너에선 드리프트 필수!</b><br />꺾이는 쪽으로 눌러 미끄러지세요</p>
-        <div class="title-controls">
-          <span>왼쪽 터치 = 왼쪽 드리프트</span>
-          <span>오른쪽 터치 = 오른쪽 드리프트</span>
-          <span>연속 드리프트로 콤보·부스트!</span>
-        </div>
+        <p class="best" id="title-best">최고 0점</p>
+        <p>직선은 자동으로 달려요. <b>커브에서는 꺾이는 쪽을 꾹!</b><br />연속 드리프트로 콤보를 쌓고 풍경 5곳을 지나가요</p>
+        <div class="tips"><span>왼쪽 · 오른쪽 꾹 누르기</span><span>← → 방향키</span></div>
         <button type="button" class="btn" id="start-btn">출발!</button>
         <a href="/">← 홈</a>
       </div>
 
-      <div class="overlay hidden" id="over">
-        <div class="badge">SPIN OUT</div>
+      <div class="overlay result hidden" id="over">
         <h1>코스 아웃!</h1>
         <p id="over-detail"></p>
-        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <button type="button" class="btn" id="retry-btn">다시 달리기</button>
         <a href="/">← 홈</a>
       </div>
     </div>
@@ -58,17 +50,19 @@
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
 
-    <script src="game.js?v=face1"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="드리프트 삐약이 소개">
   <h2>드리프트 삐약이 소개</h2>
-  <p>원터치 조작으로 드리프트를 하며 트랙을 달리는 레이싱 게임입니다.</p>
+  <p>꾹 누르기 하나로 커브를 미끄러져 달리는 드리프트 게임입니다. 800m마다 벚꽃 길 · 바닷가 · 단풍 고개 · 눈길로 풍경이 바뀝니다.</p>
   <h3>플레이 방법</h3>
-  <p>화면을 탭하고 있으면 드리프트가 걸립니다. 타이밍을 조절해 코너를 빠르게 통과하세요.</p>
+  <p>직선은 알아서 달립니다. 커브가 오면 꺾이는 쪽 화면을 꾹 누르세요. 연속으로 드리프트하면 콤보가 쌓이고 부스터가 붙습니다. 방향키도 됩니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>조작이 어렵나요?</dt>
-    <dd>원터치 조작이라 간단하지만, 타이밍 감각이 필요합니다.</dd>
+    <dd>왼쪽 · 오른쪽 누르기뿐이고 화면에 어느 쪽을 누를지 미리 알려 줍니다.</dd>
+    <dt>코스 밖으로 나가면 끝나나요?</dt>
+    <dd>하트가 3개 있어서 길로 돌아와 계속 달릴 수 있습니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

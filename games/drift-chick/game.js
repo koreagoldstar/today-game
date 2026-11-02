@@ -1,131 +1,406 @@
 (() => {
   "use strict";
 
+  /*
+   * 드리프트 삐약이
+   *  - 카메라가 차를 따라 돌고, 땅 · 길 · 나무가 모두 세상에 붙어 있음
+   *  - 차는 길을 따라가고 좌우 위치만 움직임: 커브에서 안 누르면 바깥으로 밀리고, 꺾이는 쪽을 누르면 미끄러지며 버팀
+   *  - 화면 픽셀에 맞춰 그려 또렷함
+   *  - 코스 밖으로 나가면 하트가 줄고 길로 돌아옴 (3번째에 끝)
+   *  - 800m 마다 풍경이 바뀜
+   */
   const W = 390;
-  const H = 700;
   const BEST_KEY = "drift-chick-best";
   const TRACK_HALF = 74;
   const CAR_R = 18;
+  const KART_W = 74;
+  const KART_H = KART_W * (666 / 504);
+  const FACE = [0.523, 0.72, 0.17];
+  const SECTION = 800;
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const $ = (id) => document.getElementById(id);
+  const angNorm = (a) => {
+    while (a > Math.PI) a -= TAU;
+    while (a < -Math.PI) a += TAU;
+    return a;
+  };
+  const angLerp = (a, b, t) => a + angNorm(b - a) * t;
 
-  const canvas = document.getElementById("game");
+  const THEMES = [
+    { name: "초록 들판", ground: ["#86d662", "#74c853"], blob: "rgba(255,255,255,0.1)", tuft: "rgba(40,100,30,0.28)", road: ["#566072", "#69748a"], curb: "#ff5f7a", tree: "tree", flowers: ["#fff", "#ffd84a", "#ff9cc2"] },
+    { name: "벚꽃 길", ground: ["#a3e27f", "#92d670"], blob: "rgba(255,190,220,0.3)", tuft: "rgba(50,110,40,0.25)", road: ["#5c6176", "#6e7389"], curb: "#ff7fae", tree: "tree_pink", flowers: ["#ffb3d1", "#fff", "#ff8ab5"], weather: "petal" },
+    { name: "바닷가 모래밭", ground: ["#f6e3ab", "#eed693"], blob: "rgba(200,160,90,0.15)", tuft: "rgba(160,120,60,0.25)", road: ["#566577", "#68788c"], curb: "#39b6e8", tree: "tree", flowers: ["#fff", "#ffd27a", "#f7c1a0"] },
+    { name: "단풍 고개", ground: ["#d3cc66", "#c5bd56"], blob: "rgba(214,110,50,0.2)", tuft: "rgba(120,90,30,0.28)", road: ["#5c5a68", "#6e6c7c"], curb: "#ff8a3c", tree: "tree_fall", flowers: ["#ff9a4a", "#ffd24a", "#e8643c"], weather: "leaf" },
+    { name: "눈 쌓인 길", ground: ["#f0f6fb", "#e2edf6"], blob: "rgba(150,190,230,0.24)", tuft: "rgba(120,160,200,0.25)", road: ["#4e586b", "#616c82"], curb: "#6ec6ff", tree: "tree_snow", flowers: ["#fff", "#cfe6ff", "#fff"], weather: "snow" },
+  ];
+
+  const NAMES = ["player", "tree", "tree_pink", "tree_fall", "tree_snow", "cone"];
+  const imgs = {};
+  function loadAssets() {
+    return Promise.all(
+      NAMES.map(
+        (n) =>
+          new Promise((res) => {
+            const im = new Image();
+            im.onload = () => {
+              imgs[n] = im;
+              res();
+            };
+            im.onerror = () => res();
+            im.src = `assets/${n}.webp`;
+          })
+      )
+    );
+  }
+
+  /* ---------- 소리 ---------- */
+  const Sound = {
+    ctx: null,
+    unlock() {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        try {
+          this.ctx = new AC();
+        } catch (_) {
+          return;
+        }
+        this.buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 2, this.ctx.sampleRate);
+        const d = this.buf.getChannelData(0);
+        for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
+        // 엔진 + 타이어 소리 (계속 틀어 두고 크기만 조절)
+        const c = this.ctx;
+        const o = c.createOscillator();
+        o.type = "sawtooth";
+        const f = c.createBiquadFilter();
+        f.type = "lowpass";
+        f.frequency.value = 360;
+        const g = c.createGain();
+        g.gain.value = 0;
+        o.connect(f);
+        f.connect(g);
+        g.connect(c.destination);
+        o.start();
+        const s = c.createBufferSource();
+        s.buffer = this.buf;
+        s.loop = true;
+        const bp = c.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 1500;
+        bp.Q.value = 2.4;
+        const sg = c.createGain();
+        sg.gain.value = 0;
+        s.connect(bp);
+        bp.connect(sg);
+        sg.connect(c.destination);
+        s.start();
+        this.eng = { o, g, sg };
+      }
+      if (this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
+    },
+    loopSet(speed, drift, on) {
+      if (!this.eng) return;
+      const t = this.ctx.currentTime;
+      this.eng.o.frequency.setTargetAtTime(52 + speed * 0.22, t, 0.08);
+      this.eng.g.gain.setTargetAtTime(on ? 0.026 : 0, t, 0.1);
+      this.eng.sg.gain.setTargetAtTime(on ? drift * 0.085 : 0, t, 0.05);
+    },
+    tone(f, dur, type, peak, slide = 1, delay = 0) {
+      if (!this.ctx) return;
+      const c = this.ctx;
+      const t = c.currentTime + delay;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f, t);
+      if (slide !== 1) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g);
+      g.connect(c.destination);
+      o.start(t);
+      o.stop(t + dur + 0.03);
+    },
+    noise(dur, freq, type, peak) {
+      if (!this.ctx) return;
+      const c = this.ctx;
+      const t = c.currentTime;
+      const s = c.createBufferSource();
+      s.buffer = this.buf;
+      const f = c.createBiquadFilter();
+      f.type = type;
+      f.frequency.value = freq;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f);
+      f.connect(g);
+      g.connect(c.destination);
+      s.start(t, Math.random());
+      s.stop(t + dur + 0.03);
+    },
+    combo(n) {
+      const f = 660 * Math.pow(2, Math.min(n, 10) / 12);
+      this.tone(f, 0.12, "triangle", 0.13);
+      this.tone(f * 1.5, 0.16, "sine", 0.09, 1, 0.06);
+    },
+    coin(n) {
+      const f = 880 * Math.pow(2, Math.min(n, 8) / 12);
+      this.tone(f, 0.08, "sine", 0.12);
+    },
+    crash() {
+      this.noise(0.4, 700, "lowpass", 0.5);
+      this.tone(160, 0.28, "square", 0.13, 0.4);
+    },
+    boost() {
+      this.tone(320, 0.5, "sawtooth", 0.09, 3);
+      this.noise(0.45, 1800, "highpass", 0.11);
+    },
+    section() {
+      [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.2, "triangle", 0.13, 1, i * 0.09));
+    },
+    heart() {
+      [660, 880, 1175].forEach((f, i) => this.tone(f, 0.14, "sine", 0.13, 1, i * 0.07));
+    },
+  };
+
+  /* ---------- 화면 ---------- */
+  const stageEl = $("stage");
+  const canvas = $("game");
   const ctx = canvas.getContext("2d");
-  const dpr = Math.min(2.5, window.devicePixelRatio || 1);
-  canvas.width = Math.round(W * dpr);
-  canvas.height = Math.round(H * dpr);
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = true;
+  let H = 700;
+  let PX = 1;
+  let CY = 500;
+  const patterns = new Map();
+  let puff = null;
+  let coinSprite = null;
 
-  const hud = {
-    dist: document.getElementById("hud-dist"),
-    combo: document.getElementById("hud-combo"),
-    score: document.getElementById("hud-score"),
-    best: document.getElementById("hud-best"),
-  };
-  const hint = document.getElementById("hint");
-  const overlays = {
-    title: document.getElementById("title"),
-    over: document.getElementById("over"),
-  };
+  function fit() {
+    const r = stageEl.getBoundingClientRect();
+    const cssW = Math.max(1, r.width);
+    const cssH = Math.max(1, r.height);
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const scale = cssW / W;
+    H = cssH / scale;
+    PX = scale * dpr;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    CY = H * 0.74;
+    patterns.clear();
+    puff = null;
+    coinSprite = null;
+  }
+  function mk(w, h) {
+    const c = document.createElement("canvas");
+    c.width = Math.ceil(w * PX);
+    c.height = Math.ceil(h * PX);
+    const g = c.getContext("2d");
+    g.scale(PX, PX);
+    return [c, g];
+  }
+  function rnd(seed) {
+    let a = seed >>> 0 || 1;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const TILE = 512;
+  /** 땅 무늬: 사방으로 이어지는 타일 */
+  function groundPattern(i) {
+    const key = `g${i}`;
+    if (patterns.has(key)) return patterns.get(key);
+    const T = THEMES[i];
+    const [c, g] = mk(TILE, TILE);
+    const r = rnd(i * 91 + 7);
+    g.fillStyle = T.ground[0];
+    g.fillRect(0, 0, TILE, TILE);
+    const wrap = (x, y, rad, draw) => {
+      for (const ox of [-TILE, 0, TILE]) {
+        for (const oy of [-TILE, 0, TILE]) {
+          if (x + ox + rad < 0 || x + ox - rad > TILE || y + oy + rad < 0 || y + oy - rad > TILE) continue;
+          draw(x + ox, y + oy);
+        }
+      }
+    };
+    for (let k = 0; k < 42; k += 1) {
+      const x = r() * TILE;
+      const y = r() * TILE;
+      const rx = 26 + r() * 70;
+      const ry = 16 + r() * 44;
+      const rot = r() * 3;
+      const dark = r() < 0.6;
+      wrap(x, y, rx, (ax, ay) => {
+        g.fillStyle = dark ? T.ground[1] : T.blob;
+        g.beginPath();
+        g.ellipse(ax, ay, rx, ry, rot, 0, TAU);
+        g.fill();
+      });
+    }
+    for (let k = 0; k < 420; k += 1) {
+      g.fillStyle = T.tuft;
+      g.fillRect(r() * TILE, r() * TILE, 1.4, 4.5);
+    }
+    for (let k = 0; k < 90; k += 1) {
+      const x = r() * TILE;
+      const y = r() * TILE;
+      const col = T.flowers[Math.floor(r() * T.flowers.length)];
+      wrap(x, y, 6, (ax, ay) => {
+        g.fillStyle = col;
+        for (let a = 0; a < 5; a += 1) {
+          g.beginPath();
+          g.arc(ax + Math.cos((a / 5) * TAU) * 2.3, ay + Math.sin((a / 5) * TAU) * 2.3, 1.6, 0, TAU);
+          g.fill();
+        }
+        g.fillStyle = "#ffcf3f";
+        g.beginPath();
+        g.arc(ax, ay, 1.3, 0, TAU);
+        g.fill();
+      });
+    }
+    const p = ctx.createPattern(c, "repeat");
+    p.setTransform(new DOMMatrix().scale(1 / PX));
+    patterns.set(key, p);
+    return p;
+  }
+  /** 아스팔트 알갱이 */
+  function roadPattern(i) {
+    const key = `r${i}`;
+    if (patterns.has(key)) return patterns.get(key);
+    const T = THEMES[i];
+    const [c, g] = mk(256, 256);
+    g.fillStyle = T.road[0];
+    g.fillRect(0, 0, 256, 256);
+    const r = rnd(i * 17 + 3);
+    for (let k = 0; k < 2400; k += 1) {
+      g.fillStyle = r() < 0.5 ? "rgba(255,255,255,0.055)" : "rgba(0,0,0,0.07)";
+      g.fillRect(r() * 256, r() * 256, 1 + r() * 1.6, 1 + r() * 1.6);
+    }
+    const p = ctx.createPattern(c, "repeat");
+    p.setTransform(new DOMMatrix().scale(1 / PX));
+    patterns.set(key, p);
+    return p;
+  }
+  function getPuff() {
+    if (puff) return puff;
+    const [c, g] = mk(64, 64);
+    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+    gr.addColorStop(0, "rgba(255,255,255,0.95)");
+    gr.addColorStop(0.55, "rgba(255,255,255,0.55)");
+    gr.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 64, 64);
+    puff = c;
+    return c;
+  }
+  function getCoin() {
+    if (coinSprite) return coinSprite;
+    const [c, g] = mk(40, 40);
+    g.fillStyle = "rgba(0,0,0,0.2)";
+    g.beginPath();
+    g.ellipse(21, 35, 11, 3.6, 0, 0, TAU);
+    g.fill();
+    g.fillStyle = "#c98a12";
+    g.beginPath();
+    g.arc(20, 20, 13.5, 0, TAU);
+    g.fill();
+    const gr = g.createLinearGradient(0, 7, 0, 33);
+    gr.addColorStop(0, "#fff0a0");
+    gr.addColorStop(1, "#ffc21f");
+    g.fillStyle = gr;
+    g.beginPath();
+    g.arc(20, 19, 12, 0, TAU);
+    g.fill();
+    g.fillStyle = "#e89a0c";
+    g.font = '400 15px "Bagel Fat One", sans-serif';
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText("삐", 20, 20);
+    coinSprite = c;
+    return c;
+  }
 
-  const playerImg = new Image();
-  playerImg.src = "assets/player.png";
-  const treeImg = new Image();
-  treeImg.src = "assets/tree.png";
-
+  /* ---------- 상태 ---------- */
+  const overlays = { title: $("title"), over: $("over") };
   let state = "title";
   let holding = false;
-  let steerInput = 0; // -1 left … +1 right (screen)
-  let pointerX = W / 2;
+  let steerInput = 0;
   let last = 0;
-  let raf = 0;
   let best = Number(localStorage.getItem(BEST_KEY) || 0) || 0;
-  if (hud.best) hud.best.textContent = String(best);
-
   let path = [];
   let decor = [];
+  let coins = [];
+  let items = [];
+  let signs = [];
   let car = null;
   let score = 0;
   let dist = 0;
   let combo = 0;
   let maxCombo = 0;
+  let hearts = 3;
+  let invT = 0;
   let smoke = [];
   let sparks = [];
-  let skids = [];
-  let flowers = [];
+  let skids = [[], []];
+  let skidOn = false;
   let shake = 0;
   let driftBoost = 0;
   let cornerBonusReady = false;
   let exitBonusReady = false;
-  let hintTimer = 4;
-  let skidAcc = 0;
   let time = 0;
   let floats = [];
-  let curveWarn = 0; // -1 left, 0 none, 1 right
+  let curveWarn = 0;
   let perfectStreak = 0;
   let speedLines = 0;
+  let section = 0;
+  let themeI = 0;
+  let themeFrom = 0;
+  let themeMix = 1;
+  let coinChain = 0;
+  let weather = [];
+  let hudTick = 0;
+  let pathGen = null;
+  let pathProgress = 0;
+  let themeForDecor = 0;
 
   function show(id) {
-    Object.keys(overlays).forEach((k) => overlays[k].classList.toggle("hidden", k !== id));
+    for (const k of Object.keys(overlays)) overlays[k].classList.toggle("hidden", k !== id);
+    document.body.classList.toggle("in-play", !id);
   }
 
-  function hideOverlays() {
-    Object.values(overlays).forEach((el) => el.classList.add("hidden"));
-  }
-
-  function clamp(v, a, b) {
-    return Math.max(a, Math.min(b, v));
-  }
-
-  function lerp(a, b, t) {
-    return a + (b - a) * t;
-  }
-
-  function angNorm(a) {
-    while (a > Math.PI) a -= Math.PI * 2;
-    while (a < -Math.PI) a += Math.PI * 2;
-    return a;
-  }
-
-  function angLerp(a, b, t) {
-    return a + angNorm(b - a) * t;
-  }
-
-  let pathGen = null; // { x, y, ang, lastDir }
-  let pathProgress = 0;
-
+  /* ---------- 길 만들기 ---------- */
   function pushPathPoint(step, curve) {
     pathGen.ang += curve;
     pathGen.x += Math.cos(pathGen.ang) * step;
     pathGen.y += Math.sin(pathGen.ang) * step;
-    path.push({ x: pathGen.x, y: pathGen.y, ang: pathGen.ang, curve });
+    pathGen.s += step;
+    path.push({ x: pathGen.x, y: pathGen.y, ang: pathGen.ang, curve, s: pathGen.s });
   }
-
   function appendCurveSegment() {
     pathProgress += 1;
     const progress = Math.min(1, pathProgress / 35);
     const roll = Math.random();
     const curveBias = 0.78 + progress * 0.15;
-
     if (roll > curveBias) {
       const len = 3 + Math.floor(Math.random() * 5);
       for (let k = 0; k < len; k += 1) pushPathPoint(20, 0);
       return;
     }
-
     const kind = Math.random();
     const dir = Math.random() < 0.7 ? -pathGen.lastDir : pathGen.lastDir;
     pathGen.lastDir = dir;
     const scale = 0.95 + progress * 0.4;
-
     if (kind < 0.2) {
-      // 급커브 — 확실히 꺾임
       const sharp = (0.018 + Math.random() * 0.01) * scale;
       const len = 28 + Math.floor(Math.random() * 16);
       for (let k = 0; k < len; k += 1) pushPathPoint(19, dir * sharp);
     } else if (kind < 0.7) {
-      // 긴 S커브 — 좌우로 크게
       const sharp = (0.015 + Math.random() * 0.008) * scale;
       const a = 26 + Math.floor(Math.random() * 14);
       const b = 26 + Math.floor(Math.random() * 14);
@@ -141,217 +416,205 @@
         pathGen.lastDir = -dir;
       }
     } else {
-      // 중간~긴 커브
       const sharp = (0.014 + Math.random() * 0.009) * scale;
       const len = 24 + Math.floor(Math.random() * 16);
       for (let k = 0; k < len; k += 1) pushPathPoint(19, dir * sharp);
     }
   }
-
-  function appendDecorFrom(startIdx) {
-    for (let i = Math.max(startIdx, 2); i < path.length - 2; i += 3) {
+  /** 길 옆 나무 · 콘 · 표지판 · 모이 */
+  function populate(startIdx) {
+    themeForDecor = themeI;
+    for (let i = Math.max(startIdx, 2); i < path.length - 2; i += 1) {
       const p = path[i];
-      const side = i % 2 === 0 ? 1 : -1;
-      const distOut = TRACK_HALF + 38 + (i % 5) * 10;
-      const ox = Math.cos(p.ang + Math.PI / 2) * side * distOut;
-      const oy = Math.sin(p.ang + Math.PI / 2) * side * distOut;
-      if (i % 6 === 0) {
-        decor.push({ type: "tree", x: p.x + ox, y: p.y + oy, s: 0.7 + (i % 4) * 0.08 });
-      } else if (i % 4 === 0) {
-        decor.push({ type: "bush", x: p.x + ox * 0.92, y: p.y + oy * 0.92, s: 14 + (i % 3) * 4 });
+      const nx = Math.cos(p.ang + Math.PI / 2);
+      const ny = Math.sin(p.ang + Math.PI / 2);
+      if (i % 3 === 0) {
+        const side = Math.random() < 0.5 ? 1 : -1;
+        const out = TRACK_HALF + 34 + Math.random() * 110;
+        const kindR = Math.random();
+        const kind = kindR < 0.62 ? "tree" : kindR < 0.74 ? "cone" : "bush";
+        decor.push({ x: p.x + nx * side * out, y: p.y + ny * side * out, kind, s: 0.72 + Math.random() * 0.5, theme: themeForDecor });
       }
-      if (i % 2 === 0) {
-        flowers.push({
-          x: p.x + ox * (0.7 + (i % 5) * 0.05),
-          y: p.y + oy * (0.7 + (i % 5) * 0.05),
-          c: ["#ff8ab5", "#ffd24a", "#fff", "#7dffc2"][i % 4],
-          r: 2 + (i % 3),
-        });
+      // 커브 입구에 화살표 판
+      const prev = path[i - 1];
+      if (Math.abs(p.curve) > 0.0065 && Math.abs(prev.curve) < 0.0065) {
+        const dir = Math.sign(p.curve);
+        const back = path[Math.max(0, i - 6)];
+        const bx = Math.cos(back.ang + Math.PI / 2);
+        const by = Math.sin(back.ang + Math.PI / 2);
+        const off = (TRACK_HALF + 22) * -dir;
+        signs.push({ x: back.x + bx * off, y: back.y + by * off, dir });
+      }
+      // 커브 안쪽 줄에 모이
+      if (Math.abs(p.curve) > 0.0065 && i % 4 === 0 && Math.random() < 0.55) {
+        const lat = Math.sign(p.curve) * 20;
+        coins.push({ x: p.x + nx * lat, y: p.y + ny * lat });
+      }
+      // 직선의 부스터
+      if (Math.abs(p.curve) < 0.001 && i > 60 && Math.random() < 0.018) {
+        items.push({ type: "boost", x: p.x, y: p.y, ang: p.ang });
+      } else if (i > 200 && Math.abs(p.curve) < 0.001 && Math.random() < 0.004) {
+        items.push({ type: "heart", x: p.x, y: p.y });
       }
     }
-    if (decor.length > 400) decor.splice(0, decor.length - 400);
-    if (flowers.length > 500) flowers.splice(0, flowers.length - 500);
+    if (decor.length > 460) decor.splice(0, decor.length - 460);
+    if (coins.length > 200) coins.splice(0, coins.length - 200);
+    if (signs.length > 40) signs.splice(0, signs.length - 40);
+    if (items.length > 30) items.splice(0, items.length - 30);
   }
-
   function ensurePathAhead(minAhead = 90) {
     if (!car || !pathGen) return;
     while (path.length - 1 - car.idx < minAhead) {
       const before = path.length;
       appendCurveSegment();
-      appendDecorFrom(before);
+      populate(before);
     }
-    // 너무 길면 뒤쪽 잘라 메모리 유지
     if (car.idx > 180 && path.length > 420) {
       const cut = car.idx - 80;
       path = path.slice(cut);
       car.idx -= cut;
+      car.u -= cut;
     }
   }
-
   function buildPath() {
     path = [];
     pathProgress = 0;
-    pathGen = { x: 0, y: 0, ang: -Math.PI / 2, lastDir: 1 };
-    path.push({ x: 0, y: 0, ang: pathGen.ang, curve: 0 });
-
-    for (let i = 0; i < 16; i += 1) pushPathPoint(20, 0);
+    pathGen = { x: 0, y: 0, ang: -Math.PI / 2, lastDir: 1, s: 0 };
+    path.push({ x: 0, y: 0, ang: pathGen.ang, curve: 0, s: 0 });
+    for (let i = 0; i < 34; i += 1) pushPathPoint(20, 0);
     for (let i = 0; i < 30; i += 1) pushPathPoint(20, -0.014);
     for (let i = 0; i < 5; i += 1) pushPathPoint(20, 0);
     for (let i = 0; i < 30; i += 1) pushPathPoint(20, 0.014);
     for (let i = 0; i < 6; i += 1) pushPathPoint(20, 0);
-
     while (path.length < 220) appendCurveSegment();
-    return path;
   }
-
-  function buildDecor() {
-    decor = [];
-    flowers = [];
-    appendDecorFrom(0);
-    return { items: decor, blooms: flowers };
-  }
-
-  function nearestOnPath(px, py) {
-    let bestI = 0;
-    let bestD = Infinity;
-    const start = car ? Math.max(0, car.idx - 8) : 0;
-    const end = Math.min(path.length - 1, (car ? car.idx : 0) + 55);
-    for (let i = start; i <= end; i += 1) {
-      const p = path[i];
-      const dx = px - p.x;
-      const dy = py - p.y;
-      const d = dx * dx + dy * dy;
-      if (d < bestD) {
-        bestD = d;
-        bestI = i;
-      }
-    }
-    if (bestD > TRACK_HALF * TRACK_HALF * 5) {
-      for (let i = 0; i < path.length; i += 4) {
-        const p = path[i];
-        const dx = px - p.x;
-        const dy = py - p.y;
-        const d = dx * dx + dy * dy;
-        if (d < bestD) {
-          bestD = d;
-          bestI = i;
-        }
-      }
-    }
-    const p = path[bestI];
-    const dx = px - p.x;
-    const dy = py - p.y;
-    const lateral = -Math.sin(p.ang) * dx + Math.cos(p.ang) * dy;
-    return { i: bestI, p, dist: Math.sqrt(bestD), lateral };
+  /** 차 위치 = 길 위 지점 + 좌우 거리 */
+  function placeCar() {
+    const n = path.length - 2;
+    car.u = clamp(car.u, 0, n);
+    const i = Math.floor(car.u);
+    const t = car.u - i;
+    const a = path[i];
+    const b = path[i + 1];
+    car.idx = i;
+    const ang = a.ang + angNorm(b.ang - a.ang) * t;
+    car.pathAng = ang;
+    const nx = Math.cos(ang + Math.PI / 2);
+    const ny = Math.sin(ang + Math.PI / 2);
+    car.x = lerp(a.x, b.x, t) + nx * car.lat;
+    car.y = lerp(a.y, b.y, t) + ny * car.lat;
+    car.ang = ang + car.yaw;
+    return a;
   }
 
   function resetRun() {
-    path = [];
     decor = [];
-    flowers = [];
+    coins = [];
+    items = [];
+    signs = [];
+    themeI = 0;
+    themeFrom = 0;
+    themeMix = 1;
+    section = 0;
     buildPath();
-    buildDecor();
-    const p0 = path[8];
-    car = {
-      x: p0.x,
-      y: p0.y,
-      ang: p0.ang,
-      speed: 195,
-      idx: 8,
-      drift: 0,
-      slip: 0,
-      lastSteer: 0,
-    };
+    populate(0);
+    car = { u: 8, lat: 0, latV: 0, yaw: 0, x: 0, y: 0, ang: path[8].ang, pathAng: path[8].ang, camAng: path[8].ang, speed: 175, idx: 8, drift: 0, lastSteer: 0 };
+    placeCar();
     score = 0;
     dist = 0;
     combo = 0;
     maxCombo = 0;
+    hearts = 3;
+    invT = 0;
     smoke = [];
     sparks = [];
-    skids = [];
+    skids = [[], []];
+    skidOn = false;
     floats = [];
     shake = 0;
     driftBoost = 0;
     cornerBonusReady = false;
     exitBonusReady = false;
-    hintTimer = 4.5;
     holding = false;
     steerInput = 0;
-    skidAcc = 0;
     time = 0;
     curveWarn = 0;
     perfectStreak = 0;
     speedLines = 0;
+    coinChain = 0;
+    fillWeather();
+    paintHearts();
     updateHud();
   }
-
-  function spawnFloat(text, color) {
-    floats.push({
-      text,
-      color: color || "#ff4f8b",
-      life: 0.9,
-      t: 0,
-      y: 0,
-    });
-    if (floats.length > 6) floats.shift();
+  function fillWeather() {
+    weather = [];
+    const k = THEMES[themeI].weather;
+    if (!k) return;
+    const n = k === "snow" ? 46 : 26;
+    for (let i = 0; i < n; i += 1) weather.push({ x: Math.random() * W, y: Math.random() * H, z: 0.5 + Math.random() * 0.8, p: Math.random() * TAU });
   }
-
+  function paintHearts() {
+    let html = "";
+    for (let i = 0; i < 3; i += 1) html += `<i class="${i < hearts ? "on" : ""}"></i>`;
+    $("hud-hearts").innerHTML = html;
+  }
   function updateHud() {
-    if (hud.dist) hud.dist.textContent = String(Math.floor(dist));
-    if (hud.combo) hud.combo.textContent = String(combo);
-    if (hud.score) hud.score.textContent = String(Math.floor(score));
-    if (hud.best) hud.best.textContent = String(best);
+    $("hud-dist").textContent = Math.floor(dist).toLocaleString("ko-KR");
+    $("hud-combo").textContent = String(combo);
+    $("hud-score").textContent = Math.floor(score).toLocaleString("ko-KR");
+    const pct = ((dist % SECTION) / SECTION) * 100;
+    $("hud-bar").style.width = `${pct}%`;
   }
-
+  function renderTitle() {
+    $("title-best").textContent = `최고 ${best.toLocaleString("ko-KR")}점`;
+  }
+  function spawnFloat(text, color, big = false) {
+    floats.push({ text, color: color || "#ff4f8b", life: 0.95, t: 0, y: 0, big });
+    if (floats.length > 4) floats.shift();
+  }
   function startGame() {
+    if (window.TodayGameRank) window.TodayGameRank.reset();
+    Sound.unlock();
     resetRun();
-    hideOverlays();
-    if (hint) hint.classList.remove("hidden");
+    show(null);
+    $("hint").classList.remove("hidden");
+    hintT = 4.5;
     state = "play";
     last = performance.now();
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(loop);
   }
-
+  let hintT = 0;
+  let comboGrace = 0;
   function gameOver() {
     if (state !== "play") return;
     state = "over";
     shake = 14;
+    holding = false;
+    Sound.loopSet(0, 0, false);
     if (score > best) {
       best = Math.floor(score);
       localStorage.setItem(BEST_KEY, String(best));
     }
     updateHud();
-    const detail = document.getElementById("over-detail");
-    if (detail) {
-      detail.textContent = `${Math.floor(dist)}m · ${Math.floor(score)}점 · 콤보 ${maxCombo}`;
-    }
-    show("over");
-    if (window.TodayGameRank) {
-      TodayGameRank.mount({
-        gameId: "drift-chick",
-        gameTitle: "드리프트 삐약이",
-        formParent: overlays.over,
-      });
-      TodayGameRank.open(Math.max(1, Math.floor(score)), {
-        label: `${Math.floor(dist)}m`,
-      });
-    }
+    $("over-detail").textContent = `${Math.floor(dist).toLocaleString("ko-KR")}m · ${Math.floor(score).toLocaleString("ko-KR")}점 · 최고 콤보 ${maxCombo}`;
+    setTimeout(() => {
+      show("over");
+      renderTitle();
+      if (window.TodayGameRank) window.TodayGameRank.open(Math.max(1, Math.floor(score)), { label: `${Math.floor(dist)}m` });
+    }, 700);
   }
 
-  function updateSteerFromPointer(clientX, clientY) {
+  /* ---------- 입력 ---------- */
+  function updateSteerFromPointer(clientX) {
     const rect = canvas.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * W;
-    pointerX = x;
-    // 화면 중앙 기준 좌/우. 가장자리일수록 강하게
-    const raw = (x - W / 2) / (W * 0.42);
-    steerInput = clamp(raw, -1, 1);
+    const raw = (x - W / 2) / (W * 0.3);
+    const sign = Math.sign(raw) || 1;
+    steerInput = sign * clamp(Math.abs(raw), 0.75, 1);
   }
-
   function setHold(v, e) {
     const was = holding;
     holding = v;
-    if (v && e) updateSteerFromPointer(e.clientX, e.clientY);
+    if (v && e) updateSteerFromPointer(e.clientX);
     if (!v) steerInput = 0;
     if (state === "play" && v && !was) {
       cornerBonusReady = true;
@@ -359,102 +622,135 @@
     }
   }
 
+  /* ---------- 효과 ---------- */
   function spawnSmoke(x, y, ang, side) {
-    const ox = Math.cos(ang + Math.PI / 2) * side * 14;
-    const oy = Math.sin(ang + Math.PI / 2) * side * 14;
+    const ox = Math.cos(ang + Math.PI / 2) * side * 18;
+    const oy = Math.sin(ang + Math.PI / 2) * side * 18;
     smoke.push({
-      x: x + ox - Math.cos(ang) * 10,
-      y: y + oy - Math.sin(ang) * 10,
-      r: 8 + Math.random() * 10,
-      life: 0.55 + Math.random() * 0.4,
+      x: x + ox - Math.cos(ang) * 26,
+      y: y + oy - Math.sin(ang) * 26,
+      r: 9 + Math.random() * 9,
+      life: 0.5 + Math.random() * 0.4,
       t: 0,
-      vx: Math.cos(ang + Math.PI) * (40 + Math.random() * 55) + ox * 1.2,
-      vy: Math.sin(ang + Math.PI) * (40 + Math.random() * 55) + oy * 1.2,
+      vx: Math.cos(ang + Math.PI) * (30 + Math.random() * 40) + ox * 1.1,
+      vy: Math.sin(ang + Math.PI) * (30 + Math.random() * 40) + oy * 1.1,
     });
+    if (smoke.length > 90) smoke.shift();
   }
-
-  function spawnSparks(x, y) {
-    for (let i = 0; i < 18; i += 1) {
-      const a = Math.random() * Math.PI * 2;
-      sparks.push({
-        x,
-        y,
-        vx: Math.cos(a) * (80 + Math.random() * 140),
-        vy: Math.sin(a) * (80 + Math.random() * 140),
-        life: 0.35 + Math.random() * 0.4,
-        t: 0,
-        c: Math.random() < 0.5 ? "#fff6a8" : "#7dffc2",
-      });
+  function spawnSparks(x, y, colors = ["#fff6a8", "#7dffc2"], n = 18, speed = 160) {
+    for (let i = 0; i < n; i += 1) {
+      const a = Math.random() * TAU;
+      const v = speed * (0.4 + Math.random());
+      sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.35 + Math.random() * 0.4, t: 0, c: colors[Math.floor(Math.random() * colors.length)] });
     }
   }
-
   function pushSkid(x, y, ang) {
     const sx = Math.cos(ang + Math.PI / 2);
     const sy = Math.sin(ang + Math.PI / 2);
-    [-1, 1].forEach((side) => {
-      skids.push({
-        x: x + sx * side * 10,
-        y: y + sy * side * 10,
-        ang,
-        life: 2.2,
-        t: 0,
-      });
+    const bx = Math.cos(ang) * 24;
+    const by = Math.sin(ang) * 24;
+    [-1, 1].forEach((side, k) => {
+      skids[k].push({ x: x + sx * side * 24 - bx, y: y + sy * side * 24 - by, t: time, brk: !skidOn });
+      if (skids[k].length > 180) skids[k].shift();
     });
-    if (skids.length > 260) skids.splice(0, skids.length - 260);
+    skidOn = true;
   }
 
+  /* ---------- 진행 ---------- */
+  function hitBarrier() {
+    hearts -= 1;
+    paintHearts();
+    Sound.crash();
+    shake = 13;
+    spawnSparks(car.x, car.y, ["#ff6b6b", "#ffb347", "#fff"], 24, 210);
+    combo = 0;
+    perfectStreak = 0;
+    driftBoost = 0;
+    car.drift = 0;
+    car.yaw = 0;
+    car.latV = 0;
+    skidOn = false;
+    if (hearts <= 0) {
+      spawnFloat("코스 아웃!", "#ff5a6a", true);
+      gameOver();
+      return;
+    }
+    spawnFloat(`앗! 하트 ${hearts}개`, "#ff5a6a", true);
+    car.lat *= 0.45;
+    invT = 1.8;
+  }
   function update(dt) {
-    if (state !== "play" || !car) return;
     time += dt;
-
-    hintTimer -= dt;
-    if (hint && hintTimer <= 0) hint.classList.add("hidden");
+    tickWeather(dt);
+    if (state === "title") {
+      // 첫 화면: 길 가운데를 혼자 달림
+      if (!car) return;
+      ensurePathAhead(120);
+      car.u += (130 * dt) / 20;
+      car.lat = 0;
+      car.yaw = 0;
+      placeCar();
+      car.camAng = angLerp(car.camAng, car.pathAng, clamp(dt * 6, 0, 1));
+      return;
+    }
+    if (state !== "play" || !car) {
+      tickFx(dt);
+      return;
+    }
+    if (hintT > 0) {
+      hintT -= dt;
+      if (hintT <= 0) $("hint").classList.add("hidden");
+    }
+    if (invT > 0) invT -= dt;
 
     ensurePathAhead(120);
-    const near = nearestOnPath(car.x, car.y);
-    car.idx = near.i;
-    const pathAng = near.p.ang;
-    const curv = Math.abs(near.p.curve);
-    const curveDir = Math.sign(near.p.curve || 0);
+    const here = path[car.idx];
+    const curv = Math.abs(here.curve);
+    const curveDir = Math.sign(here.curve || 0);
     const onCurve = curv > 0.0065;
-    const sharpCurve = curv > 0.012;
 
-    // 앞쪽 커브 예고 (더 일찍)
-    const look = path[Math.min(path.length - 1, car.idx + 22)];
-    const look2 = path[Math.min(path.length - 1, car.idx + 36)];
+    const look = path[Math.min(path.length - 1, car.idx + 20)];
+    const look2 = path[Math.min(path.length - 1, car.idx + 34)];
     const aheadCurve = (look.curve + look2.curve) * 0.5;
-    curveWarn = Math.abs(aheadCurve) > 0.007 ? Math.sign(aheadCurve) : 0;
+    curveWarn = onCurve ? curveDir : Math.abs(aheadCurve) > 0.007 ? Math.sign(aheadCurve) : 0;
 
     const base = 175 + Math.min(130, dist * 0.07);
     car.speed = base + driftBoost * 55 + car.drift * 18;
     speedLines = lerp(speedLines, driftBoost > 0.25 || car.drift > 0.55 ? 1 : 0, 1 - Math.pow(0.01, dt));
 
-    if (holding && Math.abs(steerInput) > 0.06) {
-      const steerSign = Math.sign(steerInput);
+    const pressing = holding && Math.abs(steerInput) > 0.06;
+    const steerSign = Math.sign(steerInput);
+    // 원심력: 커브 바깥으로 밀림 / 누르는 힘: 누른 쪽으로 감. 맞는 쪽을 누르면 언제나 버틸 수 있음
+    const press = 92 + car.speed * 0.24;
+    const out = onCurve ? Math.min(112, (curv / 0.015) * 40 * (car.speed / 190)) : 0;
+    let wantV;
+    if (pressing && (!onCurve || steerSign === curveDir)) {
+      // 맞게 누르면 안쪽 줄을 탐 (연석에 딱 붙지 않아 S자에서도 바로 부딪히지 않음)
+      wantV = clamp((steerSign * (onCurve ? 20 : 30) - car.lat) * 3.2, -press, press);
+    } else if (pressing) {
+      wantV = -curveDir * out + steerSign * press * 0.3;
+    } else if (onCurve) {
+      wantV = -curveDir * out;
+    } else {
+      wantV = clamp(-car.lat * 2.4, -110, 110);
+    }
+    car.latV = lerp(car.latV, wantV, 1 - Math.pow(0.0015, dt));
+    car.lat += car.latV * dt;
+
+    const yawTarget = pressing ? steerSign * (0.3 + car.drift * 0.26 + (onCurve ? 0.08 : 0)) : 0;
+    car.yaw = lerp(car.yaw, yawTarget, 1 - Math.pow(0.004, dt));
+
+    if (pressing) {
       if (steerSign !== car.lastSteer) {
         car.lastSteer = steerSign;
         cornerBonusReady = true;
       }
-      // 선회·슬립을 부드럽게
-      const turnPower = 2.2 + car.drift * 1.1 + (onCurve ? 0.35 : 0);
-      car.ang += steerInput * turnPower * dt;
       car.drift = Math.min(1, car.drift + dt * 3.2);
-      const slipTarget = steerInput * (24 + car.drift * 14);
-      car.slip = lerp(car.slip, slipTarget, 1 - Math.pow(0.002, dt));
-
-      car.x += Math.cos(car.ang + Math.PI / 2) * car.slip * dt;
-      car.y += Math.sin(car.ang + Math.PI / 2) * car.slip * dt;
-
-      const correct = onCurve && Math.sign(steerInput) === curveDir;
+      const correct = onCurve && steerSign === curveDir;
       if (correct) {
-        // 올바른 드리프트: 강하게 트랙에 붙여줌
-        car.ang = angLerp(car.ang, pathAng, clamp(dt * 3.4, 0, 1));
-        const pull = clamp(-near.lateral * 2.8, -80, 80);
-        car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
-        car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
+        comboGrace = 0.45;
         score += dt * (55 + combo * 14);
         driftBoost = Math.min(1, driftBoost + dt * 0.4);
-
         if (cornerBonusReady && car.drift > 0.28) {
           combo += 1;
           maxCombo = Math.max(maxCombo, combo);
@@ -465,24 +761,20 @@
           shake = Math.max(shake, 3 + Math.min(3, combo * 0.2));
           const labels = ["DRIFT!", "NICE!", "SUPER!", "야호!", "PERFECT!"];
           const idx = Math.min(labels.length - 1, perfectStreak - 1);
-          spawnFloat(labels[idx], perfectStreak >= 4 ? "#7dffc2" : "#ff4f8b");
+          spawnFloat(combo > 1 ? `${labels[idx]} x${combo}` : labels[idx], perfectStreak >= 4 ? "#7dffc2" : "#ffd84a");
+          Sound.combo(combo);
         }
-      } else if (onCurve && Math.sign(steerInput) === -curveDir) {
-        // 반대 방향 패널티 완화
-        car.x += Math.cos(pathAng + Math.PI / 2) * (-curveDir) * 22 * dt;
-        car.y += Math.sin(pathAng + Math.PI / 2) * (-curveDir) * 22 * dt;
+      } else if (onCurve) {
         combo = 0;
         perfectStreak = 0;
       }
-
-      skidAcc += dt;
-      if (skidAcc > 0.03) {
-        skidAcc = 0;
-        pushSkid(car.x, car.y, car.ang);
-        spawnSmoke(car.x, car.y, car.ang, Math.sign(steerInput) || 1);
-        spawnSmoke(car.x, car.y, car.ang, -(Math.sign(steerInput) || 1));
+      pushSkid(car.x, car.y, car.ang);
+      if (Math.random() < dt * 34) {
+        spawnSmoke(car.x, car.y, car.ang, 1);
+        spawnSmoke(car.x, car.y, car.ang, -1);
       }
     } else {
+      skidOn = false;
       if (exitBonusReady && car.drift > 0.35 && !onCurve) {
         score += 28 + combo * 3;
         exitBonusReady = false;
@@ -490,586 +782,616 @@
         driftBoost = Math.max(driftBoost, 0.7);
       }
       car.drift = Math.max(0, car.drift - dt * 2.8);
-      car.slip = lerp(car.slip, 0, 1 - Math.pow(0.003, dt));
-
       if (onCurve) {
-        // 반응 시간용 약한 보정 (급커브일수록 약함) — 드리프트는 여전히 필요
-        const assist = sharpCurve ? 0.35 : 0.7;
-        car.ang = angLerp(car.ang, pathAng, clamp(dt * 1.4 * assist, 0, 1));
-        const pull = clamp(-near.lateral * 1.1 * assist, -40, 40);
-        car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
-        car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
-        combo = 0;
-        perfectStreak = 0;
-      } else {
-        car.ang = angLerp(car.ang, pathAng, clamp(dt * 4.5, 0, 1));
-        const pull = clamp(-near.lateral * 3.6, -100, 100);
-        car.x += Math.cos(pathAng + Math.PI / 2) * pull * dt;
-        car.y += Math.sin(pathAng + Math.PI / 2) * pull * dt;
+        comboGrace -= dt;
+        if (comboGrace <= 0) {
+          combo = 0;
+          perfectStreak = 0;
+        }
       }
     }
-
+    if (!onCurve) cornerBonusReady = true;
     driftBoost = Math.max(0, driftBoost - dt * 0.5);
 
-    car.x += Math.cos(car.ang) * car.speed * dt;
-    car.y += Math.sin(car.ang) * car.speed * dt;
-
+    const seg = Math.max(1, Math.hypot(path[car.idx + 1].x - here.x, path[car.idx + 1].y - here.y));
+    car.u += (car.speed * dt) / seg;
     dist += (car.speed * dt) / 12;
     score += dt * 6;
 
-    const check = nearestOnPath(car.x, car.y);
-    car.idx = check.i;
-    ensurePathAhead(100);
-    if (check.dist > TRACK_HALF - CAR_R * 0.15) {
-      gameOver();
-      return;
+    // 구간이 바뀌면 풍경 전환
+    const sec = Math.floor(dist / SECTION);
+    if (sec !== section) {
+      section = sec;
+      themeFrom = themeI;
+      themeI = sec % THEMES.length;
+      themeMix = 0;
+      score += 300;
+      fillWeather();
+      Sound.section();
+      spawnFloat(`${THEMES[themeI].name} +300`, "#fff", true);
+      spawnSparks(car.x, car.y, ["#ffd84a", "#ff9ec4", "#6ff0ff", "#fff"], 30, 240);
     }
+    if (themeMix < 1) themeMix = Math.min(1, themeMix + dt / 1.4);
 
+    // 바깥으로 밀려 나가면 하트가 줄고, 안쪽 · 직선은 연석을 타고 미끄러짐
+    const limit = TRACK_HALF - CAR_R * 0.9;
+    if (Math.abs(car.lat) > limit) {
+      const outward = onCurve && Math.sign(car.lat) === -curveDir;
+      if (outward && invT <= 0) {
+        hitBarrier();
+        if (state !== "play") {
+          tickFx(dt);
+          return;
+        }
+      } else {
+        if (Math.random() < dt * 24) spawnSparks(car.x, car.y, ["#fff6a8", "#fff"], 3, 90);
+        car.lat = clamp(car.lat, -limit, limit);
+        car.latV = 0;
+      }
+    }
+    placeCar();
+    car.camAng = angLerp(car.camAng, car.pathAng + car.yaw * 0.25, clamp(dt * 7, 0, 1));
+    ensurePathAhead(100);
+
+    // 먹기
+    for (const c of coins) {
+      if (c.got) continue;
+      const dx = c.x - car.x;
+      const dy = c.y - car.y;
+      if (dx * dx + dy * dy < 1000) {
+        c.got = true;
+        coinChain += 1;
+        score += 10;
+        Sound.coin(coinChain);
+        spawnSparks(c.x, c.y, ["#ffe27a", "#fff"], 5, 80);
+      }
+    }
+    coins = coins.filter((c) => !c.got);
+    for (const it of items) {
+      if (it.got) continue;
+      const dx = it.x - car.x;
+      const dy = it.y - car.y;
+      if (dx * dx + dy * dy < 1900) {
+        it.got = true;
+        if (it.type === "boost") {
+          driftBoost = 1;
+          Sound.boost();
+          spawnFloat("부스터!", "#6ff0ff", true);
+          spawnSparks(car.x, car.y, ["#6ff0ff", "#fff"], 14);
+        } else if (hearts < 3) {
+          hearts += 1;
+          paintHearts();
+          Sound.heart();
+          spawnFloat("하트 +1", "#ff6f91", true);
+        } else {
+          score += 100;
+          Sound.heart();
+          spawnFloat("+100", "#ff6f91");
+        }
+      }
+    }
+    items = items.filter((it) => !it.got);
+    Sound.loopSet(car.speed, holding ? car.drift : 0, true);
+    tickFx(dt);
+    hudTick += dt;
+    if (hudTick > 0.08) {
+      hudTick = 0;
+      updateHud();
+    }
+  }
+  function tickFx(dt) {
     shake = Math.max(0, shake - dt * 18);
-
-    smoke.forEach((s) => {
+    for (const s of smoke) {
       s.t += dt;
       s.x += s.vx * dt;
       s.y += s.vy * dt;
-      s.vx *= 0.86;
-      s.vy *= 0.86;
-    });
+      s.vx *= 0.97;
+      s.vy *= 0.97;
+    }
     smoke = smoke.filter((s) => s.t < s.life);
-    sparks.forEach((s) => {
+    for (const s of sparks) {
       s.t += dt;
       s.x += s.vx * dt;
       s.y += s.vy * dt;
-    });
+    }
     sparks = sparks.filter((s) => s.t < s.life);
-    skids.forEach((s) => {
-      s.t += dt;
-    });
-    skids = skids.filter((s) => s.t < s.life);
-    floats.forEach((f) => {
+    for (const f of floats) {
       f.t += dt;
-      f.y -= 40 * dt;
-    });
+      f.y -= 44 * dt;
+    }
     floats = floats.filter((f) => f.t < f.life);
-
-    updateHud();
+    if (themeMix < 1) themeMix = Math.min(1, themeMix + dt / 1.4);
+  }
+  function tickWeather(dt) {
+    const k = THEMES[themeI].weather;
+    for (const w of weather) {
+      w.y += (k === "snow" ? 90 : 110) * w.z * dt;
+      w.x += Math.sin(time * 1.3 + w.p) * 22 * dt;
+      if (w.y > H + 10) {
+        w.y = -10;
+        w.x = Math.random() * W;
+      }
+    }
   }
 
-  /** 월드 → 화면: 차는 항상 화면 하단 중앙, 전방이 위 + 드리프트 롤 */
+  /* ---------- 그리기 ---------- */
+  function camAngle() {
+    return -car.camAng - Math.PI / 2;
+  }
   function worldToScreen(x, y) {
     const dx = x - car.x;
     const dy = y - car.y;
-    const roll = (car.slip || 0) * 0.0035;
-    const a = -car.ang - Math.PI / 2 + roll;
+    const a = camAngle();
     const c = Math.cos(a);
     const s = Math.sin(a);
-    return {
-      x: dx * c - dy * s + W / 2,
-      y: dx * s + dy * c + H * 0.72,
-    };
+    return { x: dx * c - dy * s + W / 2, y: dx * s + dy * c + CY };
   }
-
-  function drawBackground() {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#6ec4ff");
-    g.addColorStop(0.35, "#9fdfff");
-    g.addColorStop(0.7, "#b8ecb0");
-    g.addColorStop(1, "#8fd489");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    // soft clouds
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    for (let i = 0; i < 5; i += 1) {
-      const cx = ((i * 97 + time * 12) % (W + 80)) - 40;
-      const cy = 40 + (i % 3) * 28;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 36, 16, 0, 0, Math.PI * 2);
-      ctx.ellipse(cx + 22, cy + 4, 28, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
+  function applyCamera() {
+    ctx.translate(W / 2, CY);
+    ctx.rotate(camAngle());
+    ctx.translate(-car.x, -car.y);
+  }
+  function drawGround(R) {
+    ctx.fillStyle = groundPattern(themeMix < 1 ? themeFrom : themeI);
+    ctx.fillRect(car.x - R, car.y - R, R * 2, R * 2);
+    if (themeMix < 1) {
+      ctx.globalAlpha = themeMix;
+      ctx.fillStyle = groundPattern(themeI);
+      ctx.fillRect(car.x - R, car.y - R, R * 2, R * 2);
+      ctx.globalAlpha = 1;
     }
   }
-
-  function drawDecor() {
-    if (!car) return;
-    const start = Math.max(0, car.idx - 12);
-    const end = Math.min(path.length - 1, car.idx + 50);
-
-    flowers.forEach((f, i) => {
-      if (i < start * 2 || i > end * 2) return;
-      const p = worldToScreen(f.x, f.y);
-      if (p.y < -20 || p.y > H + 20 || p.x < -30 || p.x > W + 30) return;
-      ctx.fillStyle = f.c;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, f.r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    decor.forEach((d, i) => {
-      // rough cull by index spacing
-      const p = worldToScreen(d.x, d.y);
-      if (p.y < -80 || p.y > H + 80 || p.x < -80 || p.x > W + 80) return;
-      if (d.type === "tree") {
-        const s = 56 * d.s;
-        // soft ground shadow
-        ctx.fillStyle = "rgba(40,70,40,0.22)";
-        ctx.beginPath();
-        ctx.ellipse(p.x + 2, p.y + 6, s * 0.28, s * 0.1, 0, 0, Math.PI * 2);
-        ctx.fill();
-        if (treeImg.complete && treeImg.naturalWidth) {
-          ctx.drawImage(treeImg, p.x - s / 2, p.y - s * 0.88, s, s);
-        } else {
-          ctx.fillStyle = "#4caa5a";
-          ctx.beginPath();
-          ctx.arc(p.x, p.y - 12, 18 * d.s, 0, Math.PI * 2);
-          ctx.arc(p.x - 10 * d.s, p.y - 4, 12 * d.s, 0, Math.PI * 2);
-          ctx.arc(p.x + 10 * d.s, p.y - 4, 12 * d.s, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#8b5a2b";
-          ctx.fillRect(p.x - 3, p.y - 2, 6, 14);
-        }
-      } else {
-        ctx.fillStyle = "#5cb86a";
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y, d.s, d.s * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    });
-  }
-
   function drawTrack() {
-    if (!car || path.length < 2) return;
-    const start = Math.max(0, car.idx - 12);
-    const end = Math.min(path.length - 1, car.idx + 55);
-
-    const strokeRibbon = (color, width, alpha = 1) => {
+    const T = THEMES[themeI];
+    const start = Math.max(0, car.idx - 18);
+    const end = Math.min(path.length - 1, car.idx + 60);
+    const stroke = (style, width, alpha = 1) => {
       ctx.globalAlpha = alpha;
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = style;
       ctx.lineWidth = width;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
       ctx.beginPath();
       for (let i = start; i <= end; i += 1) {
-        const s = worldToScreen(path[i].x, path[i].y);
-        if (i === start) ctx.moveTo(s.x, s.y);
-        else ctx.lineTo(s.x, s.y);
+        const p = path[i];
+        if (i === start) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
       }
       ctx.stroke();
       ctx.globalAlpha = 1;
     };
-
-    // soft ground shadow under road
-    strokeRibbon("rgba(40,70,40,0.18)", TRACK_HALF * 2 + 36);
-
-    // dark asphalt edge
-    strokeRibbon("#4a5568", TRACK_HALF * 2 + 22);
-
-    // red-white curb (draw as thick then overlay dashed feel with two colors)
-    strokeRibbon("#ff6b8a", TRACK_HALF * 2 + 8);
-    ctx.save();
-    ctx.setLineDash([16, 16]);
-    strokeRibbon("#ffffff", TRACK_HALF * 2 + 8);
-    ctx.restore();
-
-    // main asphalt with subtle banding
-    strokeRibbon("#5c667a", TRACK_HALF * 2 - 4);
-    strokeRibbon("#6f7a90", TRACK_HALF * 2 - 18, 0.9);
-    strokeRibbon("#818ca3", TRACK_HALF * 2 - 34, 0.55);
-
-    // center dashed line
-    ctx.save();
-    ctx.setLineDash([16, 14]);
-    strokeRibbon("#ffe566", 4);
-    ctx.restore();
-
-    // edge reflectors
-    for (let i = start; i <= end; i += 2) {
-      const p = path[i];
-      const sL = worldToScreen(
-        p.x + Math.cos(p.ang + Math.PI / 2) * (TRACK_HALF - 2),
-        p.y + Math.sin(p.ang + Math.PI / 2) * (TRACK_HALF - 2)
-      );
-      const sR = worldToScreen(
-        p.x + Math.cos(p.ang - Math.PI / 2) * (TRACK_HALF - 2),
-        p.y + Math.sin(p.ang - Math.PI / 2) * (TRACK_HALF - 2)
-      );
-      ctx.fillStyle = i % 4 === 0 ? "#fff" : "#ff6b8a";
+    ctx.lineJoin = "round";
+    ctx.lineCap = "butt";
+    const hw = TRACK_HALF * 2;
+    stroke("rgba(20,40,20,0.2)", hw + 40);
+    stroke("#ffffff", hw + 20);
+    // 연석 (길과 함께 움직이게 시작 거리에 맞춤)
+    ctx.setLineDash([28, 28]);
+    ctx.lineDashOffset = path[start].s;
+    stroke(T.curb, hw + 20);
+    ctx.setLineDash([]);
+    stroke("rgba(0,0,0,0.2)", hw + 3);
+    stroke(roadPattern(themeI), hw);
+    stroke(T.road[1], hw - 46, 0.32);
+    stroke(T.road[1], hw - 84, 0.3);
+    // 가운데 점선
+    ctx.setLineDash([22, 26]);
+    ctx.lineDashOffset = path[start].s;
+    stroke("#ffe566", 4.5);
+    ctx.setLineDash([]);
+    // 양쪽 흰 선
+    for (const side of [-1, 1]) {
+      ctx.strokeStyle = "rgba(255,255,255,0.8)";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(sL.x, sL.y, 2.2, 0, Math.PI * 2);
-      ctx.arc(sR.x, sR.y, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  function drawSkids() {
-    skids.forEach((s) => {
-      const a = 1 - s.t / s.life;
-      const p = worldToScreen(s.x, s.y);
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(s.ang - car.ang);
-      ctx.fillStyle = `rgba(30, 28, 40,${0.35 * a})`;
-      ctx.fillRect(-6, -1.5, 12, 3);
-      ctx.restore();
-    });
-  }
-
-  function drawSmoke() {
-    smoke.forEach((s) => {
-      const p = worldToScreen(s.x, s.y);
-      const a = 1 - s.t / s.life;
-      ctx.fillStyle = `rgba(255,255,255,${0.45 * a})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, s.r * (1 + s.t * 2.4), 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-
-  function drawSparks() {
-    sparks.forEach((s) => {
-      const p = worldToScreen(s.x, s.y);
-      ctx.globalAlpha = 1 - s.t / s.life;
-      ctx.fillStyle = s.c;
-      ctx.fillRect(p.x - 2.5, p.y - 2.5, 5, 5);
-      ctx.globalAlpha = 1;
-    });
-  }
-
-  function roundRect(x, y, w, h, r) {
-    const rr = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
-  }
-
-  /** 크게 보이는 탑다운 삐약이 카 */
-  function drawChickCar() {
-    const cx = W / 2;
-    const cy = H * 0.72;
-    const tilt = car.slip * 0.012 + (holding ? steerInput * 0.2 : 0);
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(tilt);
-
-    // shadow
-    ctx.fillStyle = "rgba(40,30,50,0.3)";
-    ctx.beginPath();
-    ctx.ellipse(5, 22, 40, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (driftBoost > 0.15) {
-      const glow = ctx.createRadialGradient(0, 30, 4, 0, 30, 52);
-      glow.addColorStop(0, `rgba(125,255,194,${0.55 * driftBoost})`);
-      glow.addColorStop(1, "rgba(125,255,194,0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(0, 34, 52, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    if (playerImg.complete && playerImg.naturalWidth > 0) {
-      const iw = 108;
-      const ih = 108;
-      ctx.save();
-      ctx.rotate(Math.PI); // 스프라이트 노즈가 아래 → 전방(위)으로
-      ctx.shadowColor = "rgba(255, 180, 60, 0.45)";
-      ctx.shadowBlur = 16;
-      ctx.drawImage(playerImg, -iw / 2, -ih / 2, iw, ih);
-      ctx.restore();
-      // 스프라이트를 180도 돌렸으니 운전석 머리 위치도 뒤집어서 똑바로 그림
-      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -iw / 2, -ih / 2, iw, ih, [0.5, 0.7, 0.09]);
-    } else {
-      drawChickFallback();
-    }
-
-    if (holding && car.drift > 0.25) {
-      ctx.fillStyle = "rgba(255,246,168,0.95)";
-      ctx.fillRect(-10, 44, 20, 6);
-      ctx.fillStyle = "rgba(125,255,194,0.85)";
-      ctx.fillRect(-6, 52, 12, 5);
-    }
-
-    ctx.restore();
-  }
-
-  function drawChickFallback() {
-    // rear wing
-    ctx.fillStyle = "#ff4f7a";
-    roundRect(-24, 30, 48, 14, 5);
-    ctx.fill();
-    ctx.fillStyle = "#ffd24a";
-    ctx.fillRect(-6, 28, 5, 18);
-    ctx.fillRect(1, 28, 5, 18);
-
-    // body
-    const body = ctx.createLinearGradient(-30, -42, 30, 42);
-    body.addColorStop(0, "#fff6c2");
-    body.addColorStop(0.45, "#ffd24a");
-    body.addColorStop(1, "#ff9a2e");
-    ctx.fillStyle = body;
-    roundRect(-28, -40, 56, 74, 20);
-    ctx.fill();
-
-    // racing stripes
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(-7, -36, 5, 62);
-    ctx.fillRect(2, -36, 5, 62);
-
-    // front bumper
-    ctx.fillStyle = "#ff4f7a";
-    roundRect(-22, -46, 44, 12, 5);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.ellipse(-12, -40, 5, 3, 0, 0, Math.PI * 2);
-    ctx.ellipse(12, -40, 5, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // wheels
-    ctx.fillStyle = "#1f1a2e";
-    roundRect(-38, -26, 14, 26, 5);
-    roundRect(24, -26, 14, 26, 5);
-    roundRect(-38, 8, 14, 26, 5);
-    roundRect(24, 8, 14, 26, 5);
-    ctx.fillStyle = "#4fd2ff";
-    roundRect(-35, -18, 8, 12, 3);
-    roundRect(27, -18, 8, 12, 3);
-    roundRect(-35, 16, 8, 12, 3);
-    roundRect(27, 16, 8, 12, 3);
-
-    // chick body
-    ctx.fillStyle = "#ffe566";
-    ctx.beginPath();
-    ctx.arc(0, -4, 26, 0, Math.PI * 2);
-    ctx.fill();
-
-    // eyes
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(-9, -10, 8.5, 0, Math.PI * 2);
-    ctx.arc(9, -10, 8.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#2a2438";
-    ctx.beginPath();
-    ctx.arc(-8, -9, 4, 0, Math.PI * 2);
-    ctx.arc(10, -9, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(-6.5, -11, 1.6, 0, Math.PI * 2);
-    ctx.arc(11.5, -11, 1.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    // blush + beak
-    ctx.fillStyle = "rgba(255,120,150,0.5)";
-    ctx.beginPath();
-    ctx.ellipse(-16, 2, 6, 3.5, 0, 0, Math.PI * 2);
-    ctx.ellipse(16, 2, 6, 3.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ff8a3a";
-    ctx.beginPath();
-    ctx.moveTo(-1, 0);
-    ctx.lineTo(12, 4);
-    ctx.lineTo(-1, 8);
-    ctx.closePath();
-    ctx.fill();
-
-    // tiny wings on wheel
-    ctx.fillStyle = "#ffe566";
-    ctx.beginPath();
-    ctx.ellipse(-22, 4, 8, 5, -0.4, 0, Math.PI * 2);
-    ctx.ellipse(22, 4, 8, 5, 0.4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawSteerCue() {
-    if (state !== "play") return;
-
-    // 커브 예고 화살표
-    if (curveWarn !== 0) {
-      const pulse = 0.65 + Math.sin(time * 10) * 0.35;
-      ctx.fillStyle = `rgba(255,79,139,${0.55 * pulse})`;
-      ctx.font = '800 28px "Bagel Fat One", "Jua", sans-serif';
-      ctx.textAlign = "center";
-      const label = curveWarn < 0 ? "◀ 드리프트" : "드리프트 ▶";
-      ctx.fillText(label, W / 2, 56);
-      ctx.fillStyle = `rgba(255,246,168,${0.8 * pulse})`;
-      ctx.font = '700 14px "Jua", sans-serif';
-      ctx.fillText("코너! 눌러서 미끄러지세요", W / 2, 78);
-    }
-
-    // side zones
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
-    ctx.fillRect(0, H * 0.55, W * 0.28, H * 0.45);
-    ctx.fillRect(W * 0.72, H * 0.55, W * 0.28, H * 0.45);
-
-    if (holding && Math.abs(steerInput) > 0.06) {
-      const side = steerInput < 0 ? "LEFT" : "RIGHT";
-      ctx.fillStyle = "rgba(255,79,139,0.14)";
-      if (steerInput < 0) ctx.fillRect(0, 0, W * 0.48, H);
-      else ctx.fillRect(W * 0.52, 0, W * 0.48, H);
-
-      if (car.drift > 0.3) {
-        ctx.fillStyle = "rgba(255,79,139,0.95)";
-        ctx.font = '800 22px "Bagel Fat One", "Jua", sans-serif';
-        ctx.textAlign = "center";
-        ctx.fillText(`DRIFT ${side}`, W / 2, H * 0.18);
+      for (let i = start; i <= end; i += 1) {
+        const p = path[i];
+        const x = p.x + Math.cos(p.ang + Math.PI / 2) * side * (TRACK_HALF - 9);
+        const y = p.y + Math.sin(p.ang + Math.PI / 2) * side * (TRACK_HALF - 9);
+        if (i === start) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
-
-      ctx.fillStyle = "rgba(255,79,139,0.6)";
-      ctx.beginPath();
-      ctx.arc(pointerX, H - 36, 18, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.stroke();
     }
-
-    // float texts
-    floats.forEach((f) => {
-      const a = 1 - f.t / f.life;
-      ctx.globalAlpha = a;
-      ctx.fillStyle = f.color;
-      ctx.font = '800 26px "Bagel Fat One", "Jua", sans-serif';
-      ctx.textAlign = "center";
-      ctx.fillText(f.text, W / 2, H * 0.38 + f.y);
-      ctx.globalAlpha = 1;
-    });
-
-    // speed lines
-    if (speedLines > 0.05) {
-      ctx.strokeStyle = `rgba(255,255,255,${0.18 * speedLines})`;
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 10; i += 1) {
-        const x = 20 + ((i * 41 + time * 180) % (W - 40));
-        const y = (i * 70 + time * 420) % H;
+    // 부스터 칸
+    for (const it of items) {
+      if (it.type !== "boost") continue;
+      const dx = it.x - car.x;
+      const dy = it.y - car.y;
+      if (dx * dx + dy * dy > 500000) continue;
+      ctx.save();
+      ctx.translate(it.x, it.y);
+      ctx.rotate(it.ang + Math.PI / 2);
+      ctx.fillStyle = "rgba(20,160,220,0.92)";
+      ctx.beginPath();
+      ctx.roundRect(-34, -34, 68, 68, 12);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "#fff";
+      for (let i = 0; i < 2; i += 1) {
+        const off = ((time * 48 + i * 22) % 44) - 22;
+        ctx.globalAlpha = 1 - Math.abs(off) / 26;
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x, y + 18 + speedLines * 22);
+        ctx.moveTo(0, -14 - off);
+        ctx.lineTo(19, 5 - off);
+        ctx.lineTo(10, 5 - off);
+        ctx.lineTo(0, -5 - off);
+        ctx.lineTo(-10, 5 - off);
+        ctx.lineTo(-19, 5 - off);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  }
+  function drawSkids() {
+    ctx.lineCap = "round";
+    ctx.lineWidth = 6;
+    for (const line of skids) {
+      for (let i = 1; i < line.length; i += 1) {
+        const a = line[i - 1];
+        const b = line[i];
+        if (b.brk) continue;
+        const age = time - b.t;
+        if (age > 3) continue;
+        ctx.strokeStyle = `rgba(24,22,32,${0.32 * (1 - age / 3)})`;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
         ctx.stroke();
       }
     }
   }
-
-  function render() {
-    ctx.save();
-    if (shake > 0) {
-      ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+  function drawSmoke() {
+    const img = getPuff();
+    for (const s of smoke) {
+      const u = s.t / s.life;
+      const r = s.r * (1 + u * 2.3);
+      ctx.globalAlpha = 0.62 * (1 - u);
+      ctx.drawImage(img, s.x - r, s.y - r, r * 2, r * 2);
     }
-    drawBackground();
-    drawDecor();
+    ctx.globalAlpha = 1;
+    for (const s of sparks) {
+      ctx.globalAlpha = 1 - s.t / s.life;
+      ctx.fillStyle = s.c;
+      ctx.fillRect(s.x - 2.5, s.y - 2.5, 5, 5);
+    }
+    ctx.globalAlpha = 1;
+  }
+  /** 길 밖 물건들: 카메라가 돌아도 늘 똑바로 서 있음 */
+  function drawUpright() {
+    const list = [];
+    const R = Math.max(W, H) + 90;
+    const near = (x, y) => Math.abs(x - car.x) < R && Math.abs(y - car.y) < R;
+    for (const d of decor) if (near(d.x, d.y)) list.push(d);
+    for (const s of signs) if (near(s.x, s.y)) list.push(Object.assign(s, { kind: "sign" }));
+    for (const c of coins) if (near(c.x, c.y)) list.push(Object.assign(c, { kind: "coin" }));
+    for (const it of items) if (it.type === "heart" && near(it.x, it.y)) list.push(Object.assign(it, { kind: "heart" }));
+    const shown = [];
+    for (const o of list) {
+      const p = worldToScreen(o.x, o.y);
+      if (p.y < -110 || p.y > H + 130 || p.x < -90 || p.x > W + 90) continue;
+      shown.push({ o, p });
+    }
+    shown.sort((a, b) => a.p.y - b.p.y);
+    const ground = (x, y, rx, ry) => {
+      ctx.fillStyle = "rgba(25,40,25,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, 0, 0, TAU);
+      ctx.fill();
+    };
+    for (const { o, p } of shown) {
+      if (o.kind === "coin") {
+        const c = getCoin();
+        const b = Math.sin(time * 5 + o.x * 0.1) * 2;
+        ctx.drawImage(c, p.x - 15, p.y - 22 + b, 30, 30);
+      } else if (o.kind === "heart") {
+        const k = 1 + Math.sin(time * 6) * 0.08;
+        ground(p.x, p.y + 2, 12, 4);
+        ctx.save();
+        ctx.translate(p.x, p.y - 16);
+        ctx.scale(k, k);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#fff";
+        heartPath(0, 0, 16);
+        ctx.stroke();
+        ctx.fillStyle = "#ff5a7e";
+        heartPath(0, 0, 16);
+        ctx.fill();
+        ctx.restore();
+      } else if (o.kind === "sign") {
+        ground(p.x, p.y + 1, 15, 4);
+        ctx.fillStyle = "#5a6478";
+        ctx.fillRect(p.x - 14, p.y - 14, 4, 15);
+        ctx.fillRect(p.x + 10, p.y - 14, 4, 15);
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.roundRect(p.x - 25, p.y - 41, 50, 29, 6);
+        ctx.fill();
+        ctx.fillStyle = "#ff5f6e";
+        for (let i = 0; i < 3; i += 1) {
+          const cx = p.x + o.dir * (-13 + i * 13);
+          ctx.beginPath();
+          ctx.moveTo(cx + o.dir * 7, p.y - 26.5);
+          ctx.lineTo(cx - o.dir * 3, p.y - 37);
+          ctx.lineTo(cx - o.dir * 8, p.y - 37);
+          ctx.lineTo(cx + o.dir * 2, p.y - 26.5);
+          ctx.lineTo(cx - o.dir * 8, p.y - 16);
+          ctx.lineTo(cx - o.dir * 3, p.y - 16);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else if (o.kind === "bush") {
+        const r = 15 * o.s;
+        ground(p.x, p.y + 1, r * 1.2, r * 0.36);
+        const cols = themeI === 4 ? ["#cfe2ef", "#eaf3fa"] : themeI === 3 ? ["#c8843a", "#e0a653"] : themeI === 1 ? ["#f09bbd", "#ffc2d9"] : ["#4fa648", "#74c75f"];
+        ctx.fillStyle = cols[0];
+        ctx.beginPath();
+        ctx.arc(p.x - r * 0.7, p.y - r * 0.5, r * 0.72, 0, TAU);
+        ctx.arc(p.x + r * 0.7, p.y - r * 0.5, r * 0.72, 0, TAU);
+        ctx.arc(p.x, p.y - r * 0.8, r * 0.95, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = cols[1];
+        ctx.beginPath();
+        ctx.arc(p.x - r * 0.25, p.y - r * 1.05, r * 0.44, 0, TAU);
+        ctx.arc(p.x + r * 0.5, p.y - r * 0.75, r * 0.3, 0, TAU);
+        ctx.fill();
+      } else {
+        const key = o.kind === "cone" ? "cone" : THEMES[themeI].tree;
+        const img = imgs[key];
+        if (!img) continue;
+        const h = (o.kind === "cone" ? 30 : 86) * o.s;
+        const w = h * (img.width / img.height);
+        ground(p.x, p.y - 1, w * 0.34, w * 0.11);
+        ctx.drawImage(img, p.x - w / 2, p.y - h, w, h);
+      }
+    }
+  }
+  function heartPath(x, y, s) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + s * 0.95);
+    ctx.bezierCurveTo(x - s * 1.5, y + s * 0.05, x - s * 0.8, y - s * 0.95, x, y - s * 0.28);
+    ctx.bezierCurveTo(x + s * 0.8, y - s * 0.95, x + s * 1.5, y + s * 0.05, x, y + s * 0.95);
+    ctx.closePath();
+  }
+  function drawCar() {
+    const img = imgs.player;
+    if (!img) return;
+    const tilt = angNorm(car.ang - car.camAng) * 0.95;
+    const blink = invT > 0 && Math.sin(time * 26) < 0;
+    ctx.save();
+    ctx.translate(W / 2, CY);
+    ctx.fillStyle = "rgba(20,24,36,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(4, 8, KART_W * 0.52, KART_H * 0.5, tilt, 0, TAU);
+    ctx.fill();
+    if (driftBoost > 0.15) {
+      const glow = ctx.createRadialGradient(0, KART_H * 0.5, 3, 0, KART_H * 0.5, 50);
+      glow.addColorStop(0, `rgba(125,255,194,${0.7 * driftBoost})`);
+      glow.addColorStop(1, "rgba(125,255,194,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-50, KART_H * 0.5 - 50, 100, 100);
+    }
+    ctx.rotate(tilt);
+    ctx.globalAlpha = blink ? 0.45 : 1;
+    ctx.drawImage(img, -KART_W / 2, -KART_H / 2, KART_W, KART_H);
+    if (window.TodayFace) window.TodayFace.drawOnSprite(ctx, -KART_W / 2, -KART_H / 2, KART_W, KART_H, FACE);
+    ctx.globalAlpha = 1;
+    if (driftBoost > 0.3) {
+      const flame = 12 + Math.random() * 12 * driftBoost;
+      for (const dx of [-12, 12]) {
+        ctx.fillStyle = "#6ff0ff";
+        ctx.beginPath();
+        ctx.moveTo(dx - 5, KART_H / 2 - 3);
+        ctx.lineTo(dx, KART_H / 2 + flame);
+        ctx.lineTo(dx + 5, KART_H / 2 - 3);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(dx - 2.5, KART_H / 2 - 3);
+        ctx.lineTo(dx, KART_H / 2 + flame * 0.5);
+        ctx.lineTo(dx + 2.5, KART_H / 2 - 3);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  function drawWeather() {
+    const k = THEMES[themeI].weather;
+    if (!k) return;
+    for (const w of weather) {
+      if (k === "snow") {
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, 1.4 + w.z * 1.1, 0, TAU);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = k === "petal" ? "#ffc4d9" : w.p > 3 ? "#e8863a" : "#d9a636";
+        ctx.beginPath();
+        ctx.ellipse(w.x, w.y, 4 * w.z, 2.2 * w.z, time * 2 + w.p, 0, TAU);
+        ctx.fill();
+      }
+    }
+  }
+  function drawHud() {
+    if (state !== "play") return;
+    // 커브 예고
+    if (curveWarn !== 0 && !(holding && Math.sign(steerInput) === curveWarn)) {
+      const pulse = 0.7 + Math.sin(time * 10) * 0.3;
+      const y = 108;
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = "rgba(255,95,122,0.95)";
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 92, y - 21, 184, 40, 20);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#fff";
+      ctx.font = '400 21px "Bagel Fat One", "Jua", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(curveWarn < 0 ? "◀ 왼쪽 누르기" : "오른쪽 누르기 ▶", W / 2, y);
+      ctx.textBaseline = "alphabetic";
+    }
+    // 누르는 쪽 표시
+    if (holding && Math.abs(steerInput) > 0.06) {
+      const left = steerInput < 0;
+      const g = ctx.createLinearGradient(left ? 0 : W, 0, left ? 110 : W - 110, 0);
+      g.addColorStop(0, "rgba(255,216,74,0.34)");
+      g.addColorStop(1, "rgba(255,216,74,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(left ? 0 : W - 110, 0, 110, H);
+    }
+    if (speedLines > 0.05) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.32 * speedLines})`;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      for (let i = 0; i < 10; i += 1) {
+        const x = 12 + ((i * 41 + 13) % (W - 24));
+        const y = (i * 90 + time * 620) % H;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + 18 + speedLines * 24);
+        ctx.stroke();
+      }
+    }
+    for (const f of floats) {
+      const u = f.t / f.life;
+      ctx.globalAlpha = u > 0.65 ? (1 - u) / 0.35 : 1;
+      ctx.font = `400 ${f.big ? 30 : 26}px "Bagel Fat One", "Jua", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.lineWidth = 6;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(30,30,55,0.85)";
+      ctx.strokeText(f.text, W / 2, H * 0.4 + f.y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, W / 2, H * 0.4 + f.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function render() {
+    if (!car) return;
+    ctx.setTransform(PX, 0, 0, PX, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.save();
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    ctx.save();
+    applyCamera();
+    drawGround(Math.hypot(W, H) + 40);
     drawTrack();
     drawSkids();
     drawSmoke();
-    drawSparks();
-    if (car) drawChickCar();
-    drawSteerCue();
     ctx.restore();
+    drawUpright();
+    drawCar();
+    drawWeather();
+    ctx.restore();
+    drawHud();
   }
-
   function loop(now) {
-    const dt = Math.min(0.033, (now - last) / 1000 || 0.016);
+    requestAnimationFrame(loop);
+    const dt = clamp((now - last) / 1000 || 0.016, 0, 0.033);
     last = now;
-    if (state === "play") update(dt);
-    else time += dt;
+    if (state !== "paused") update(dt);
     render();
-    if (state === "play" || state === "title" || state === "over" || shake > 0) {
-      raf = requestAnimationFrame(loop);
-    }
   }
 
-  function onDown(e) {
-    if (e && e.cancelable) e.preventDefault();
+  /* ---------- 입력 연결 ---------- */
+  canvas.addEventListener("pointerdown", (e) => {
+    if (e.cancelable) e.preventDefault();
     if (state !== "play") return;
+    Sound.unlock();
     setHold(true, e);
-  }
-  function onMove(e) {
+  });
+  canvas.addEventListener("pointermove", (e) => {
     if (!holding || state !== "play") return;
-    if (e && e.cancelable) e.preventDefault();
-    updateSteerFromPointer(e.clientX, e.clientY);
-  }
-  function onUp(e) {
-    if (e && e.cancelable) e.preventDefault();
-    setHold(false);
-  }
-
-  canvas.addEventListener("pointerdown", onDown);
-  canvas.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
-  window.addEventListener("pointercancel", onUp);
-  window.addEventListener("blur", () => setHold(false));
+    updateSteerFromPointer(e.clientX);
+  });
+  const up = () => setHold(false);
+  window.addEventListener("pointerup", up);
+  window.addEventListener("pointercancel", up);
+  window.addEventListener("blur", up);
   window.addEventListener("keydown", (e) => {
-    if (state !== "play") return;
+    if (state !== "play" || e.repeat) return;
     if (e.code === "ArrowLeft" || e.code === "KeyA") {
       e.preventDefault();
+      Sound.unlock();
       holding = true;
       steerInput = -1;
-      pointerX = W * 0.2;
       cornerBonusReady = true;
       exitBonusReady = true;
     }
     if (e.code === "ArrowRight" || e.code === "KeyD") {
       e.preventDefault();
+      Sound.unlock();
       holding = true;
       steerInput = 1;
-      pointerX = W * 0.8;
       cornerBonusReady = true;
       exitBonusReady = true;
     }
-    if (e.code === "Space") {
-      e.preventDefault();
-      holding = true;
-      // 스페이스는 마지막 포인터 쪽 유지, 없으면 오른쪽
-      if (Math.abs(steerInput) < 0.05) {
-        steerInput = pointerX < W / 2 ? -1 : 1;
-      }
-    }
   });
   window.addEventListener("keyup", (e) => {
-    if (
-      e.code === "ArrowLeft" ||
-      e.code === "KeyA" ||
-      e.code === "ArrowRight" ||
-      e.code === "KeyD" ||
-      e.code === "Space"
-    ) {
+    if (["ArrowLeft", "KeyA", "ArrowRight", "KeyD"].includes(e.code)) {
       holding = false;
       steerInput = 0;
     }
   });
+  $("start-btn").addEventListener("click", startGame);
+  $("retry-btn").addEventListener("click", startGame);
 
-  document.getElementById("start-btn").addEventListener("click", startGame);
-  document.getElementById("retry-btn").addEventListener("click", startGame);
-
-  if (window.TodayGameRank) {
-    TodayGameRank.mount({
-      gameId: "drift-chick",
-      gameTitle: "드리프트 삐약이",
-      formParent: overlays.over,
-    });
-  }
-
-  resetRun();
-  last = performance.now();
-  raf = requestAnimationFrame(loop);
-
+  if (window.TodayGameRank) window.TodayGameRank.mount({ gameId: "drift-chick", gameTitle: "드리프트 삐약이", formParent: overlays.over });
   if (window.TodayPause) {
-    TodayPause.mount({
+    window.TodayPause.mount({
       canPause: () => state === "play",
       isPaused: () => state === "paused",
       pause() {
         if (state !== "play") return false;
         state = "paused";
+        Sound.loopSet(0, 0, false);
         return true;
       },
       resume() {
         if (state !== "paused") return false;
         state = "play";
-        if (typeof last !== "undefined") last = performance.now();
+        last = performance.now();
         return true;
       },
     });
   }
 
+  addEventListener("resize", fit);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", fit);
+  fit();
+  resetRun();
+  renderTitle();
+  show("title");
+  loadAssets().then(() => {
+    last = performance.now();
+    requestAnimationFrame(loop);
+  });
+
+  // 점검용
+  window.DriftChick = {
+    get s() {
+      const near = car && path[car.idx] ? path[car.idx] : null;
+      return { state, score, dist, hearts, combo, maxCombo, invT, curve: near ? near.curve : 0, ahead: curveWarn, section, themeI, lateral: car ? car.lat : 0, speed: car ? car.speed : 0, coins: coins.length, signs: signs.length, PX, H };
+    },
+    update,
+    input(hold, steer) {
+      if (hold && !holding) {
+        cornerBonusReady = true;
+        exitBonusReady = true;
+      }
+      holding = hold;
+      steerInput = hold ? steer : 0;
+    },
+    setDist(v) {
+      dist = v;
+    },
+    start: startGame,
+    curveAt(k) {
+      return path[Math.min(path.length - 1, car.idx + k)].curve;
+    },
+  };
 })();

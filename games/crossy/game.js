@@ -1,747 +1,1376 @@
 (() => {
   "use strict";
 
+  /*
+   * 삐약이 건너기
+   *  - 그림 파일 이름이 뒤바뀌어 도로에 병아리, 풀밭에 차가 깔리던 것을 바로잡음 (앞 · 옆 · 뒤 병아리 + 차)
+   *  - 화면 픽셀에 맞춰 그려 또렷함 · 줄마다 미리 그려 빠름
+   *  - 하트 3개 · 스테이지 50개 · 진행 저장 · 기차 경보 · 통나무 · 연잎
+   */
   const W = 390;
-  const H = 620;
-  const TILE = 48;
   const COLS = 9;
-  const VISIBLE_ROWS = 12;
-  const STAGE_COUNT = 50;
-  const ORIGIN_X = (W - COLS * TILE) / 2;
+  const TILE = W / COLS;
+  const HOP = 0.13;
+  const MARGIN = 5;
+  const SPAN = COLS + MARGIN * 2;
+  const TOTAL = 50;
+  const SAVE_KEY = "crossy-save-v2";
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const $ = (id) => document.getElementById(id);
 
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-  canvas.width = W;
-  canvas.height = H;
+  const WORLDS = [
+    { name: "봄 마을", grass: ["#a9e47e", "#9bdb72"], dirt: "#7d9c4c", tree: "tree", flowers: ["#fff", "#ffd84a", "#ff9cc2"], water: ["#58c4f2", "#3daee4"] },
+    { name: "벚꽃 동산", grass: ["#b9e98f", "#acdf83"], dirt: "#86a056", tree: "tree_pink", flowers: ["#ffb3d1", "#fff", "#ff8ab5"], water: ["#6ccdf2", "#4cb7e6"], weather: "petal" },
+    { name: "여름 냇가", grass: ["#8fe36c", "#80d960"], dirt: "#6d9440", tree: "tree", flowers: ["#ffe34a", "#fff", "#ff8f6e"], water: ["#3fc0e8", "#25a8da"] },
+    { name: "단풍 고개", grass: ["#ddd070", "#d1c462"], dirt: "#9a8a40", tree: "tree_fall", flowers: ["#ff9a4a", "#ffd24a", "#e8643c"], water: ["#5ab4d8", "#4298c4"], weather: "leaf" },
+    { name: "눈 내린 마을", grass: ["#f2f8fc", "#e5eff7"], dirt: "#9db4c8", tree: "tree_snow", flowers: ["#fff", "#cfe6ff", "#fff"], water: ["#7fcdea", "#5fb7dd"], weather: "snow" },
+  ];
+  const worldOf = (i) => WORLDS[Math.min(WORLDS.length - 1, Math.floor(i / 10))];
+  const stageGoal = (i) => 12 + Math.round(i * 0.9);
 
-  const overlays = {
-    title: document.getElementById("title"),
-    clear: document.getElementById("clear"),
-    over: document.getElementById("over"),
-    all: document.getElementById("allclear"),
-  };
-
-  const hud = {
-    stage: document.getElementById("hud-stage"),
-    goal: document.getElementById("hud-goal"),
-    score: document.getElementById("hud-score"),
-    best: document.getElementById("hud-best"),
-  };
-
+  const NAMES = ["chick_front", "chick_side", "chick_back", "chick_wave", "car_pink", "car_blue", "car_green", "car_purple", "car_yellow", "car_red", "tree", "tree_pink", "tree_fall", "tree_snow"];
   const imgs = {};
-  let assetsReady = false;
+  function loadAssets() {
+    return Promise.all(
+      NAMES.map(
+        (n) =>
+          new Promise((res) => {
+            const im = new Image();
+            im.onload = () => {
+              imgs[n] = im;
+              res();
+            };
+            im.onerror = () => res();
+            im.src = `assets/${n}.webp`;
+          })
+      )
+    );
+  }
 
+  /* ---------- 소리 ---------- */
+  const Sound = {
+    ctx: null,
+    unlock() {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        try {
+          this.ctx = new AC();
+        } catch (_) {
+          return;
+        }
+        this.buf = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+        const d = this.buf.getChannelData(0);
+        for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
+      }
+      if (this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
+    },
+    tone(f, dur, type, peak, slide = 1, delay = 0) {
+      if (!this.ctx) return;
+      const c = this.ctx;
+      const t = c.currentTime + delay;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f, t);
+      if (slide !== 1) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g);
+      g.connect(c.destination);
+      o.start(t);
+      o.stop(t + dur + 0.03);
+    },
+    noise(dur, freq, type, peak) {
+      if (!this.ctx) return;
+      const c = this.ctx;
+      const t = c.currentTime;
+      const s = c.createBufferSource();
+      s.buffer = this.buf;
+      s.loop = true;
+      const f = c.createBiquadFilter();
+      f.type = type;
+      f.frequency.value = freq;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f);
+      f.connect(g);
+      g.connect(c.destination);
+      s.start(t, Math.random() * 0.5);
+      s.stop(t + dur + 0.03);
+    },
+    hop() {
+      this.tone(520, 0.09, "sine", 0.11, 1.7);
+    },
+    bump() {
+      this.tone(170, 0.08, "sine", 0.14, 0.7);
+    },
+    corn(n) {
+      this.tone(880 * Math.pow(2, Math.min(n, 8) / 12), 0.09, "sine", 0.12);
+    },
+    squish() {
+      this.noise(0.14, 900, "lowpass", 0.3);
+      this.tone(420, 0.28, "triangle", 0.14, 0.32);
+      this.tone(760, 0.2, "sine", 0.08, 0.5, 0.06);
+    },
+    splash() {
+      this.noise(0.42, 1400, "lowpass", 0.36);
+      for (let i = 0; i < 4; i += 1) this.tone(320 + i * 90, 0.08, "sine", 0.08, 2, 0.05 + i * 0.06);
+    },
+    horn() {
+      this.tone(330, 0.5, "square", 0.05);
+      this.tone(415, 0.5, "square", 0.05);
+    },
+    ding() {
+      this.tone(1320, 0.12, "triangle", 0.07);
+    },
+    win() {
+      [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.24, "triangle", 0.15, 1, i * 0.1));
+    },
+    star(i) {
+      this.tone(880 + i * 220, 0.2, "triangle", 0.15);
+    },
+  };
+
+  /* ---------- 화면 ---------- */
+  const stageEl = $("stage");
+  const canvas = $("game");
+  const ctx = canvas.getContext("2d");
+  let H = 700;
+  let PX = 1;
+  let baseY = 480;
+  const strips = new Map();
+  const logCache = new Map();
+  let busCache = null;
+  let cornCache = null;
+
+  function fit() {
+    const r = stageEl.getBoundingClientRect();
+    const cssW = Math.max(1, r.width);
+    const cssH = Math.max(1, r.height);
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const scale = cssW / W;
+    H = cssH / scale;
+    PX = scale * dpr;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    baseY = H - 150;
+    strips.clear();
+    logCache.clear();
+    busCache = null;
+    cornCache = null;
+  }
+  function mk(w, h) {
+    const c = document.createElement("canvas");
+    c.width = Math.ceil(w * PX);
+    c.height = Math.ceil(h * PX);
+    const g = c.getContext("2d");
+    g.scale(PX, PX);
+    return [c, g];
+  }
+  function rnd(seed) {
+    let a = seed >>> 0 || 1;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ---------- 상태 ---------- */
   let state = "title";
   let stageIndex = 0;
   let endless = false;
   let score = 0;
-  let best = Number(localStorage.getItem("crossy-best") || "0");
-  let lanes = [];
-  let seed = 1;
-  let player = { x: 4, z: 0, tx: 4, tz: 0, t: 1 };
-  let moveQueue = [];
-  let particles = [];
+  let scoreAtStart = 0;
+  let hearts = 3;
+  let goal = 12;
+  let lanes = new Map();
+  let genZ = 0;
+  let genR = rnd(1);
+  let cornChain = 0;
+  let player = null;
+  let hop = null;
+  let queued = null;
   let camZ = 0;
-  let swipeStart = null;
+  let maxZ = 0;
+  let lastSafe = { x: 4, z: 0 };
+  let invT = 0;
+  let idleT = 0;
+  let waveT = 0;
+  let deathT = 0;
+  let deathKind = "";
+  let finishT = 0;
+  let time = 0;
   let last = 0;
-  let frameDt = 0;
-  let raf = 0;
+  let shake = 0;
+  let particles = [];
+  let floats = [];
+  let weather = [];
+  let world = WORLDS[0];
+  let swipe = null;
 
+  const save = (() => {
+    try {
+      const d = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
+      return { stage: clamp(Number(d.stage) || 0, 0, TOTAL - 1), score: Number(d.score) || 0, best: Number(d.best) || 0 };
+    } catch (_) {
+      return { stage: 0, score: 0, best: 0 };
+    }
+  })();
+  function persist() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+    } catch (_) {
+      /* 저장이 막혀 있어도 게임은 계속 */
+    }
+  }
+
+  const overlays = { title: $("title"), clear: $("clear"), over: $("over"), all: $("allclear") };
   function showOverlay(name) {
-    Object.values(overlays).forEach((el) => el.classList.add("hidden"));
-    if (overlays[name]) overlays[name].classList.remove("hidden");
+    for (const [k, el] of Object.entries(overlays)) el.classList.toggle("hidden", k !== name);
+    document.body.classList.toggle("in-play", !name);
   }
 
-  function stageGoal(index) {
-    if (endless) return Infinity;
-    return 20 + index * 10;
+  /* ---------- 코스 만들기 ---------- */
+  function diff() {
+    return endless ? 1 : clamp(stageIndex / (TOTAL - 1), 0, 1);
   }
-
-  function loadAssets() {
-    const names = ["chick", "car_red", "car_blue", "car_purple", "car_green", "bush"];
-    return Promise.all(
-      names.map(
-        (n) =>
-          new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              imgs[n] = img;
-              resolve();
-            };
-            img.onerror = () => resolve();
-            img.src = `assets/${n}.png`;
-          })
-      )
-    ).then(() => {
-      assetsReady = Object.keys(imgs).length > 0;
-    });
-  }
-
-  function rand() {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 4294967296;
-  }
-
-  function resetSeed(s) {
-    seed = s >>> 0 || 1;
-  }
-
-  function laneColor(type) {
-    if (type === "grass") return ["#c8f5b8", "#a8e88a"];
-    if (type === "road") return ["#6e7682", "#5a626e"];
-    if (type === "river") return ["#7ec8ff", "#5eb0ef"];
-    return ["#c8c0d8", "#aaa0b8"];
-  }
-
-  function makeGrassLane(z) {
-    const bushes = [];
-    const count = 1 + Math.floor(rand() * 3);
-    for (let i = 0; i < count; i += 1) {
-      bushes.push({ x: Math.floor(rand() * COLS), w: 1 + Math.floor(rand() * 2) });
+  function makeGrass(z, treesMax) {
+    const r = genR;
+    const trees = [];
+    const count = treesMax > 0 ? Math.floor(r() * (treesMax + 1)) : 0;
+    let tries = 0;
+    while (trees.length < count && tries < 30) {
+      tries += 1;
+      const x = Math.floor(r() * COLS);
+      // 나무 사이나 벽 옆에 한 칸만 남는 자리는 피함 (늘 두 칸 이상 비어 있어 갇히지 않음)
+      if (x === 1 || x === COLS - 2 || trees.some((t) => Math.abs(t - x) <= 2)) continue;
+      trees.push(x);
     }
-    return { z, type: "grass", bushes, entities: [], speed: 0, dir: 1 };
+    const coin = r() < 0.24 ? Math.floor(r() * COLS) : -1;
+    return { z, type: "grass", trees, coin: trees.includes(coin) ? -1 : coin, ents: [], v: 0, variant: Math.floor(r() * 6) };
   }
-
-  function makeRoadLane(z) {
-    const dir = rand() > 0.5 ? 1 : -1;
-    const speed = 70 + rand() * 90 + stageIndex * 4;
-    const entities = [];
-    const count = 1 + Math.floor(rand() * 2);
+  function makeRoad(z) {
+    const r = genR;
+    const t = diff();
+    const dir = r() > 0.5 ? 1 : -1;
+    const speed = 1.4 + r() * 1 + t * 1.6;
+    // 빠른 길일수록 차 사이를 넓혀 뛰어들 틈을 줌
+    const wantGap = 3.4 + speed * 0.75 + r() * 1.2 - t * 0.6;
+    const count = clamp(Math.floor(SPAN / (1.6 + wantGap)), 2, 4);
+    const gap = SPAN / count;
+    const ents = [];
+    const off = r() * SPAN;
     for (let i = 0; i < count; i += 1) {
-      entities.push({
-        x: rand() * COLS * 1.5,
-        w: 1.4 + rand() * 0.8,
-        color: ["red", "blue", "purple", "green"][Math.floor(rand() * 4)],
-      });
+      const bus = r() < 0.2 + t * 0.14;
+      ents.push({ x: ((off + i * gap + (r() - 0.5) * gap * 0.4) % SPAN) - MARGIN, w: bus ? 2.5 : 1.28, kind: bus ? "bus" : ["car_pink", "car_blue", "car_green", "car_purple", "car_yellow", "car_red"][Math.floor(r() * 6)] });
     }
-    return { z, type: "road", dir, speed, entities, bushes: [] };
+    const coin = r() < 0.16 ? Math.floor(r() * COLS) : -1;
+    return { z, type: "road", ents, v: dir * speed, dir, coin };
   }
-
-  function makeRiverLane(z) {
-    const dir = rand() > 0.5 ? 1 : -1;
-    const speed = 40 + rand() * 50 + stageIndex * 1.5;
-    const entities = [];
-    const count = 2 + Math.floor(rand() * 2); // 2~3 logs so rides are fair
-    const gap = COLS / count;
-    for (let i = 0; i < count; i += 1) {
-      entities.push({
-        x: i * gap + rand() * 0.8,
-        w: 1.8 + rand() * 1.1,
-      });
+  function makeRiver(z) {
+    const r = genR;
+    const t = diff();
+    // 옆줄 강은 반대로 흐름 (같은 쪽으로 비슷하게 흐르면 통나무가 어긋난 채로 안 맞음)
+    const prevLane = lanes.get(z - 1);
+    const dir = prevLane && prevLane.type === "river" && prevLane.dir && !prevLane.lily ? -prevLane.dir : r() > 0.5 ? 1 : -1;
+    const speed = 0.9 + r() * 0.7 + t * 1;
+    const minW = lerp(3.2, 2.1, t);
+    const ents = [];
+    let x = r() * 2 - MARGIN;
+    while (x < COLS + MARGIN - minW) {
+      const w = minW + r() * 1.4;
+      ents.push({ x, w, kind: "log" });
+      x += w + 1 + r() * lerp(1.5, 2.3, t);
     }
-    return { z, type: "river", dir, speed, entities, bushes: [] };
+    return { z, type: "river", ents, v: dir * speed, dir, coin: -1 };
   }
-
-  function makeRailLane(z) {
-    const speed = 180 + rand() * 80;
-    return {
-      z,
-      type: "rail",
-      dir: rand() > 0.5 ? 1 : -1,
-      speed,
-      entities: [{ x: -3, w: 2.5, timer: 1.2 + rand() * 2.5 }],
-      bushes: [],
+  function makeLily(z) {
+    const r = genR;
+    const ents = [];
+    for (let i = 0; i < COLS; i += 1) if (r() < 0.55) ents.push({ x: i, w: 1, kind: "lily", ph: r() * 6 });
+    if (ents.length < 3) ents.push({ x: 4, w: 1, kind: "lily", ph: 1 });
+    return { z, type: "river", lily: true, ents, v: 0, dir: 1, coin: -1 };
+  }
+  function makeRail(z) {
+    const r = genR;
+    return { z, type: "rail", ents: [], v: 0, dir: r() > 0.5 ? 1 : -1, timer: 1.5 + r() * 3, warn: false, train: null, coin: -1 };
+  }
+  /** 다음 묶음(풀 · 도로 · 강 · 선로)을 이어 붙임 */
+  function generateGroup() {
+    const r = genR;
+    const t = diff();
+    const put = (lane) => {
+      lanes.set(lane.z, lane);
+      genZ = lane.z + 1;
     };
-  }
-
-  function generateLane(z) {
-    if (z <= 2) return makeGrassLane(z);
-    const r = rand();
-    if (r < 0.42) return makeGrassLane(z);
-    if (r < 0.72) return makeRoadLane(z);
-    if (r < 0.9) return makeRiverLane(z);
-    return makeRailLane(z);
-  }
-
-  function ensureLanes(upTo) {
-    while (lanes.length <= upTo + VISIBLE_ROWS + 4) {
-      const z = lanes.length;
-      lanes.push(generateLane(z));
+    if (!endless && genZ > goal) {
+      put(makeGrass(genZ, 3));
+      return;
     }
-  }
-
-  let runStartedAt = 0;
-  let stageStartedAt = 0;
-
-  function resetRun(fromTitle) {
-    stageStartedAt = performance.now();
-    if (fromTitle) runStartedAt = performance.now();
-    if (fromTitle) {
-      stageIndex = 0;
-      endless = false;
-      score = 0;
+    const z0 = genZ;
+    if (z0 <= 2) {
+      const g = makeGrass(z0, 0);
+      g.coin = -1;
+      put(g);
+      return;
     }
-    resetSeed(1000 + stageIndex * 77);
-    lanes = [makeGrassLane(0), makeGrassLane(1), makeGrassLane(2)];
+    if (!endless && z0 === goal) {
+      const g = makeGrass(z0, 0);
+      g.goal = true;
+      g.coin = -1;
+      put(g);
+      return;
+    }
+    const allowRiver = stageIndex >= 2 || endless;
+    const allowRail = stageIndex >= 5 || endless;
+    const k = r();
+    const prev = lanes.get(z0 - 1);
+    const afterHazard = prev && prev.type !== "grass";
+    const grassP = afterHazard ? 0.62 - t * 0.28 : 0.2;
+    const left = endless ? 99 : goal - z0;
+    // 위험한 줄이 너무 길게 이어지지 않게 (뒤로 갈수록 조금 길어짐)
+    let run = 0;
+    for (let zz = z0 - 1; zz >= 0 && lanes.get(zz) && lanes.get(zz).type !== "grass"; zz -= 1) run += 1;
+    const maxRun = 3 + Math.round(t * 2);
+    const room = maxRun - run;
+    if (k < grassP || left <= 1 || room <= 0) {
+      const n = 1 + (r() < 0.3 ? 1 : 0);
+      for (let i = 0; i < n && (endless || genZ < goal); i += 1) put(makeGrass(genZ, 3));
+      return;
+    }
+    const q = r();
+    // 기찻길 앞은 늘 풀밭 (통나무나 찻길 위에서는 기차를 기다릴 곳이 없음)
+    if (allowRail && q < 0.14 && prev && prev.type === "grass") {
+      put(makeRail(genZ));
+      return;
+    }
+    if (allowRiver && q < 0.42) {
+      if (r() < 0.22 && prev && prev.type === "grass" && left > 2) {
+        // 연잎 앞 풀밭의 나무를 치워 어느 연잎으로든 갈 수 있게
+        prev.trees = [];
+        put(makeLily(genZ));
+        const after = makeGrass(genZ, 0);
+        put(after);
+        return;
+      }
+      const n = Math.min(room, 1 + Math.floor(r() * Math.min(3, 1 + Math.floor(stageIndex / 12))));
+      for (let i = 0; i < n && (endless || genZ < goal); i += 1) put(makeRiver(genZ));
+      return;
+    }
+    const n = Math.min(room, 1 + Math.floor(r() * Math.min(4, 1 + Math.floor(stageIndex / 8) + 1)));
+    for (let i = 0; i < n && (endless || genZ < goal); i += 1) put(makeRoad(genZ));
+  }
+  function ensureLanes(z) {
+    while (genZ <= z) generateGroup();
+  }
+  function laneAt(z) {
+    if (z < 0) {
+      if (!lanes.has(z)) {
+        const r = rnd(z * -17 + 3);
+        const trees = [];
+        for (let i = 0; i < COLS; i += 1) if (r() < 0.38) trees.push(i);
+        lanes.set(z, { z, type: "grass", trees, coin: -1, ents: [], v: 0, variant: Math.floor(r() * 6) });
+      }
+      return lanes.get(z);
+    }
+    ensureLanes(z);
+    return lanes.get(z);
+  }
+  function resetStage() {
+    world = endless ? WORLDS[4] : worldOf(stageIndex);
+    goal = endless ? Infinity : stageGoal(stageIndex);
+    lanes = new Map();
+    genZ = 0;
+    genR = rnd(1000 + stageIndex * 77 + (endless ? 991 : 0));
     ensureLanes(30);
-    player = { x: 4, z: 0, tx: 4, tz: 0, t: 1, onLog: null, logOffset: null };
-    moveQueue = [];
-    particles = [];
+    player = { x: 4, z: 0, dir: 0, on: null };
+    hop = null;
+    queued = null;
     camZ = 0;
+    maxZ = 0;
+    lastSafe = { x: 4, z: 0 };
+    hearts = 3;
+    invT = 0;
+    idleT = 0;
+    deathT = 0;
+    finishT = 0;
+    cornChain = 0;
+    particles = [];
+    floats = [];
+    fillWeather();
+    paintHearts();
     updateHud();
   }
-
-  function updateHud() {
-    hud.stage.textContent = endless ? "∞" : String(stageIndex + 1);
-    hud.goal.textContent = endless ? "∞" : String(stageGoal(stageIndex));
-    hud.score.textContent = String(score);
-    hud.best.textContent = String(best);
+  function fillWeather() {
+    weather = [];
+    if (!world.weather) return;
+    const n = world.weather === "snow" ? 44 : 22;
+    for (let i = 0; i < n; i += 1) weather.push({ x: Math.random() * W, y: Math.random() * H, z: 0.5 + Math.random() * 0.8, p: Math.random() * TAU });
   }
-
-  function startGame(fromTitle) {
+  function paintHearts() {
+    let html = "";
+    for (let i = 0; i < 3; i += 1) html += `<i class="${i < hearts ? "on" : ""}"></i>`;
+    $("hud-hearts").innerHTML = html;
+  }
+  function updateHud() {
+    $("hud-stage").textContent = endless ? "∞" : String(stageIndex + 1);
+    $("hud-score").textContent = score.toLocaleString("ko-KR");
+    const pct = endless ? 100 : clamp(maxZ / goal, 0, 1) * 100;
+    $("hud-bar").style.width = `${pct}%`;
+  }
+  function renderTitle() {
+    const n = save.stage;
+    $("start-btn").textContent = n > 0 ? `이어서 건너기 · ${n + 1}` : "시작!";
+    $("restart-btn").hidden = n === 0;
+    $("title-best").textContent = `최고 ${save.best.toLocaleString("ko-KR")}점`;
+  }
+  function startStage(i) {
+    stageIndex = i;
+    scoreAtStart = score;
+    resetStage();
     state = "play";
     showOverlay(null);
-    if (fromTitle && window.TodayGameRank) TodayGameRank.reset();
-    resetRun(fromTitle);
+    Sound.unlock();
     last = performance.now();
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(loop);
+  }
+  function startFromTitle() {
+    if (window.TodayGameRank) window.TodayGameRank.reset();
+    endless = false;
+    score = save.score;
+    startStage(save.stage);
   }
 
-  function spawnParticles(x, y, color) {
-    for (let i = 0; i < 10; i += 1) {
-      const a = Math.random() * Math.PI * 2;
-      particles.push({
-        x,
-        y,
-        vx: Math.cos(a) * (40 + Math.random() * 120),
-        vy: Math.sin(a) * (40 + Math.random() * 120),
-        life: 0.4 + Math.random() * 0.3,
-        t: 0,
-        color,
-      });
+  /* ---------- 움직임 ---------- */
+  const treeAt = (lane, x) => lane.type === "grass" && lane.trees.includes(Math.round(x));
+  function tryMove(dx, dz) {
+    if (state !== "play") return;
+    Sound.unlock();
+    if (hop) {
+      queued = [dx, dz];
+      return;
+    }
+    const riding = Boolean(player.on);
+    const nz = player.z + dz;
+    if (nz < 0 || (dz < 0 && nz < maxZ - 4)) {
+      Sound.bump();
+      return;
+    }
+    const lane = laneAt(nz);
+    let nx = player.x + dx;
+    if (lane.type !== "river") nx = Math.round(nx);
+    if (lane.type !== "river" && riding && !dx) nx = clamp(Math.round(player.x), 0, COLS - 1);
+    if (nx < -0.2 || nx > COLS - 0.8) {
+      Sound.bump();
+      return;
+    }
+    nx = clamp(nx, 0, COLS - 1);
+    if (treeAt(lane, nx)) {
+      player.dir = dx > 0 ? 1 : dx < 0 ? 3 : dz > 0 ? 0 : 2;
+      bumpT = 0.14;
+      Sound.bump();
+      return;
+    }
+    player.dir = dx > 0 ? 1 : dx < 0 ? 3 : dz > 0 ? 0 : 2;
+    hop = { fx: player.x, fz: player.z, tx: nx, tz: nz, t: 0 };
+    player.on = null;
+    idleT = 0;
+    Sound.hop();
+  }
+  let bumpT = 0;
+  const deaths = {};
+  function landed() {
+    player.x = hop.tx;
+    player.z = hop.tz;
+    hop = null;
+    const lane = laneAt(player.z);
+    if (lane.type === "river") {
+      const log = logUnder(lane, player.x);
+      if (!log) {
+        die("splash");
+        return;
+      }
+      player.on = log;
+      player.x = clamp(player.x, log.x - 0.12, log.x + log.w - 0.88);
+      burst(xPx(player.x + 0.5), rowMid(player.z) + 8, ["#fff", "#cfefff"], 5, 60, 2.6);
+    } else {
+      player.on = null;
+      if (lane.type === "grass") lastSafe = { x: player.x, z: player.z };
+    }
+    if (player.z > maxZ) {
+      score += 10 * (player.z - maxZ);
+      maxZ = player.z;
+      ensureLanes(maxZ + 34);
+      updateHud();
+    }
+    if (lane.coin != null && lane.coin >= 0 && Math.abs(lane.coin - player.x) < 0.7) {
+      lane.coin = -1;
+      cornChain += 1;
+      score += 20;
+      Sound.corn(cornChain);
+      burst(xPx(player.x + 0.5), rowMid(player.z) - 10, ["#ffe27a", "#fff"], 8, 90, 3);
+      float("+20", "#ffe27a");
+      updateHud();
+    }
+    if (!endless && player.z >= goal) {
+      finishStage();
+      return;
+    }
+    if (queued) {
+      const q = queued;
+      queued = null;
+      tryMove(q[0], q[1]);
     }
   }
-
-  function screenY(worldZ) {
-    return H - 120 - (worldZ - camZ) * TILE;
+  function logUnder(lane, x) {
+    // 넉넉하게: 몸 양쪽 끝이 조금만 걸쳐도 태워 줌
+    const left = x + 0.14;
+    const right = x + 0.86;
+    let best = null;
+    let bestD = Infinity;
+    for (const e of lane.ents) {
+      if (right > e.x && left < e.x + e.w) {
+        const d = Math.abs(x + 0.5 - (e.x + e.w / 2));
+        if (d < bestD) {
+          bestD = d;
+          best = e;
+        }
+      }
+    }
+    return best;
+  }
+  function vehicleHit(lane, x) {
+    const l = x + 0.2;
+    const r = x + 0.8;
+    for (const e of lane.ents) {
+      if (r > e.x + 0.06 && l < e.x + e.w - 0.06) return true;
+    }
+    return false;
+  }
+  function trainHit(lane, x) {
+    if (!lane.train) return false;
+    const l = x + 0.1;
+    const r = x + 0.9;
+    return r > lane.train.x && l < lane.train.x + lane.train.w;
+  }
+  function moveLanes(dt) {
+    const lo = Math.floor(camZ) - 9;
+    const hi = Math.floor(camZ) + 30;
+    for (let z = Math.max(0, lo); z <= hi; z += 1) {
+      const lane = laneAt(z);
+      if (lane.v) {
+        for (const e of lane.ents) {
+          e.x += lane.v * dt;
+          if (lane.v > 0 && e.x > COLS + MARGIN) e.x -= SPAN;
+          if (lane.v < 0 && e.x + e.w < -MARGIN) e.x += SPAN;
+        }
+      }
+      if (lane.type === "rail") {
+        if (lane.train) {
+          lane.train.x += lane.dir * 16 * dt;
+          if ((lane.dir > 0 && lane.train.x > COLS + 2) || (lane.dir < 0 && lane.train.x + lane.train.w < -2)) {
+            lane.train = null;
+            lane.warn = false;
+            lane.timer = 2.8 + Math.random() * 3.4;
+          }
+        } else {
+          lane.timer -= dt;
+          const nearby = Math.abs(lane.z - (hop ? hop.tz : player ? player.z : 0)) < 12;
+          if (lane.timer < 1.2 && !lane.warn) {
+            lane.warn = true;
+            if (nearby && state === "play") Sound.ding();
+          }
+          if (lane.warn && nearby && state === "play" && Math.floor(lane.timer * 3) !== Math.floor((lane.timer + dt) * 3)) Sound.ding();
+          if (lane.timer <= 0) {
+            const w = 9 + Math.floor(Math.random() * 6);
+            lane.train = { x: lane.dir > 0 ? -w - 1 : COLS + 1, w };
+            if (nearby && state === "play") Sound.horn();
+          }
+        }
+      }
+    }
+  }
+  function die(kind) {
+    if (state !== "play") return;
+    state = "dying";
+    deathKind = kind;
+    deathT = 0;
+    hop = null;
+    queued = null;
+    player.on = null;
+    hearts -= 1;
+    deaths[kind] = (deaths[kind] || 0) + 1;
+    paintHearts();
+    cornChain = 0;
+    shake = kind === "splash" ? 3 : 9;
+    const cx = xPx(player.x + 0.5);
+    const cy = rowMid(player.z);
+    if (kind === "splash") {
+      Sound.splash();
+      burst(cx, cy, ["#fff", "#bfeaff", "#7fd0f5"], 22, 130, 4);
+    } else {
+      Sound.squish();
+      burst(cx, cy, ["#ffe27a", "#fff", "#ffb0c4"], 20, 150, 4);
+    }
+    float(hearts > 0 ? `하트 ${hearts}개` : "앗!", "#ff5a7e", true);
+  }
+  function respawnOrOver() {
+    if (hearts > 0) {
+      const lane = laneAt(lastSafe.z);
+      let x = lastSafe.x;
+      if (treeAt(lane, x)) x = [...Array(COLS).keys()].find((c) => !lane.trees.includes(c)) ?? 4;
+      player.x = x;
+      player.z = lastSafe.z;
+      player.dir = 0;
+      player.on = null;
+      invT = 1.7;
+      idleT = 0;
+      state = "play";
+      return;
+    }
+    state = "over";
+    if (score > save.best) {
+      save.best = score;
+      persist();
+    }
+    $("over-detail").textContent = `${endless ? "무한 모드" : `스테이지 ${stageIndex + 1}`} · 점수 ${score.toLocaleString("ko-KR")}`;
+    showOverlay("over");
+    if (window.TodayGameRank) window.TodayGameRank.open(Math.max(1, score));
+  }
+  function finishStage() {
+    state = "finish";
+    finishT = 0;
+    Sound.win();
+    score += hearts * 50;
+    updateHud();
+    for (let i = 0; i < 80; i += 1) {
+      particles.push({ conf: true, x: Math.random() * W, y: -10 - Math.random() * H * 0.5, vx: (Math.random() - 0.5) * 40, vy: 110 + Math.random() * 150, life: 2.2, t: 0, size: 4 + Math.random() * 5, rot: Math.random() * 6, spin: (Math.random() - 0.5) * 10, color: ["#ffd24a", "#ff6f91", "#5fd0ff", "#8ff07a", "#ffffff"][i % 5] });
+    }
+  }
+  function showClear() {
+    state = "clear";
+    save.stage = Math.min(TOTAL - 1, stageIndex + 1);
+    save.score = score;
+    if (score > save.best) save.best = score;
+    persist();
+    if (stageIndex >= TOTAL - 1) {
+      $("all-detail").textContent = `50스테이지 완주! 점수 ${score.toLocaleString("ko-KR")}`;
+      showOverlay("all");
+      if (window.TodayGameRank) {
+        window.TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.all });
+        window.TodayGameRank.open(Math.max(1, score));
+      }
+      return;
+    }
+    $("clear-title").textContent = `스테이지 ${stageIndex + 1} 클리어!`;
+    $("clear-detail").textContent = `점수 ${score.toLocaleString("ko-KR")}`;
+    const next = worldOf(stageIndex + 1);
+    $("clear-next").textContent = next !== worldOf(stageIndex) ? `다음 마을: ${next.name}` : "";
+    document.querySelectorAll("#clear-stars i").forEach((el, i) => {
+      el.classList.remove("on");
+      if (i < hearts) {
+        setTimeout(() => {
+          el.classList.add("on");
+          Sound.star(i);
+        }, 180 + i * 220);
+      }
+    });
+    showOverlay("clear");
   }
 
-  function drawSprite(img, x, y, w, h, flipX = false) {
-    if (assetsReady && img) {
-      ctx.save();
-      if (flipX) {
-        ctx.translate(x + w, y);
-        ctx.scale(-1, 1);
-        ctx.drawImage(img, 0, 0, w, h);
-      } else {
-        ctx.drawImage(img, x, y, w, h);
+  /* ---------- 진행 ---------- */
+  function burst(x, y, colors, n = 10, speed = 110, size = 3.5) {
+    for (let i = 0; i < n; i += 1) {
+      const a = Math.random() * TAU;
+      const v = speed * (0.3 + Math.random());
+      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, life: 0.35 + Math.random() * 0.35, t: 0, color: colors[Math.floor(Math.random() * colors.length)], size: size * (0.5 + Math.random()) });
+    }
+  }
+  function float(text, color, big = false) {
+    floats.push({ text, color, t: 0, life: 0.9, x: clamp(xPx(player.x + 0.5), 70, W - 70), y: rowMid(player.z) - 34, big });
+  }
+  function update(dt) {
+    time += dt;
+    for (const w of weather) {
+      w.y += (world.weather === "snow" ? 44 : 60) * w.z * dt;
+      w.x += Math.sin(time * 1.3 + w.p) * 18 * dt;
+      if (w.y > H + 10) {
+        w.y = -10;
+        w.x = Math.random() * W;
       }
+    }
+    if (!player) return;
+    if (state !== "clear" && state !== "over" && state !== "all") moveLanes(dt);
+    if (state === "play") {
+      if (invT > 0) invT -= dt;
+      if (bumpT > 0) bumpT -= dt;
+      if (hop) {
+        hop.t += dt / HOP;
+        if (hop.t >= 1) landed();
+      } else {
+        idleT += dt;
+      }
+      if (state === "play") {
+        const z = hop ? (hop.t > 0.5 ? hop.tz : hop.fz) : player.z;
+        const x = hop ? lerp(hop.fx, hop.tx, hop.t) : player.x;
+        const lane = laneAt(z);
+        if (!hop && player.on) {
+          player.x += lane.v * dt;
+          if (player.x < -0.62 || player.x > COLS - 0.38) die("splash");
+        }
+        if (state === "play" && invT <= 0) {
+          if (lane.type === "road" && vehicleHit(lane, x)) die("squish");
+          else if (lane.type === "rail" && trainHit(lane, x)) die("train");
+        }
+      }
+    } else if (state === "dying") {
+      deathT += dt;
+      if (deathT > 0.8) respawnOrOver();
+    } else if (state === "finish") {
+      finishT += dt;
+      if (finishT > 1.3) showClear();
+    }
+    const targetCam = (hop ? lerp(hop.fz, hop.tz, hop.t) : player.z) - 0.5;
+    camZ += (Math.max(0, targetCam) - camZ) * Math.min(1, dt * 7);
+    for (const p of particles) {
+      p.t += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.conf) p.rot += p.spin * dt;
+      else p.vy += 240 * dt;
+    }
+    particles = particles.filter((p) => p.t < p.life);
+    for (const f of floats) {
+      f.t += dt;
+      f.y -= 40 * dt;
+    }
+    floats = floats.filter((f) => f.t < f.life);
+    shake = Math.max(0, shake - dt * 22);
+  }
+
+  /* ---------- 그리기: 좌표 ---------- */
+  const xPx = (x) => x * TILE;
+  const rowTop = (z) => baseY - (z - camZ) * TILE - TILE;
+  const rowMid = (z) => rowTop(z) + TILE / 2;
+
+  /** 줄 하나를 미리 그려 둠 */
+  function strip(lane) {
+    const T = world;
+    const up = lanes.get(lane.z + 1);
+    const down = lanes.get(lane.z - 1);
+    const key =
+      lane.type === "grass"
+        ? `g${lane.variant}${lane.z % 2 ? 1 : 0}${down && down.type !== "grass" ? 1 : 0}`
+        : lane.type === "road"
+          ? `r${up && up.type === "road" ? 1 : 0}${down && down.type === "road" ? 1 : 0}`
+          : lane.type === "river"
+            ? `w${lane.z % 2 ? 1 : 0}`
+            : "t";
+    const full = `${WORLDS.indexOf(T)}:${key}`;
+    if (strips.has(full)) return strips.get(full);
+    const [c, g] = mk(W, TILE + 1);
+    const r = rnd(lane.type === "grass" ? lane.variant * 41 + 5 : 7);
+    if (lane.type === "grass") {
+      g.fillStyle = T.grass[lane.z % 2 ? 0 : 1];
+      g.fillRect(0, 0, W, TILE + 1);
+      // 칸 무늬 살짝
+      for (let i = 0; i < COLS; i += 1) {
+        if (i % 2) continue;
+        g.fillStyle = "rgba(255,255,255,0.07)";
+        g.fillRect(i * TILE, 0, TILE, TILE + 1);
+      }
+      for (let i = 0; i < 26; i += 1) {
+        g.fillStyle = "rgba(50,100,30,0.2)";
+        g.fillRect(r() * W, r() * TILE, 1.3, 4);
+      }
+      for (let i = 0; i < 5; i += 1) {
+        const x = r() * W;
+        const y = 5 + r() * (TILE - 10);
+        const col = T.flowers[Math.floor(r() * T.flowers.length)];
+        g.fillStyle = col;
+        for (let a = 0; a < 5; a += 1) {
+          g.beginPath();
+          g.arc(x + Math.cos((a / 5) * TAU) * 2.3, y + Math.sin((a / 5) * TAU) * 2.3, 1.6, 0, TAU);
+          g.fill();
+        }
+        g.fillStyle = "#ffcf3f";
+        g.beginPath();
+        g.arc(x, y, 1.3, 0, TAU);
+        g.fill();
+      }
+      if (down && down.type !== "grass") {
+        g.fillStyle = T.dirt;
+        g.fillRect(0, TILE - 6, W, 7);
+        g.fillStyle = "rgba(0,0,0,0.16)";
+        g.fillRect(0, TILE - 1.5, W, 2.5);
+      }
+    } else if (lane.type === "road") {
+      const gr = g.createLinearGradient(0, 0, 0, TILE);
+      gr.addColorStop(0, "#5f6776");
+      gr.addColorStop(1, "#555d6c");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, W, TILE + 1);
+      for (let i = 0; i < 240; i += 1) {
+        g.fillStyle = r() < 0.5 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.07)";
+        g.fillRect(r() * W, r() * TILE, 1 + r() * 1.5, 1 + r() * 1.5);
+      }
+      g.fillStyle = "rgba(255,255,255,0.9)";
+      if (!(up && up.type === "road")) g.fillRect(0, 2, W, 2.5);
+      else {
+        for (let i = 0; i < COLS + 1; i += 1) {
+          g.beginPath();
+          g.roundRect(i * TILE + 8, -1.5, TILE - 18, 3, 1.5);
+          g.fill();
+        }
+      }
+      if (!(down && down.type === "road")) {
+        g.fillRect(0, TILE - 4.5, W, 2.5);
+      }
+    } else if (lane.type === "river") {
+      const gr = g.createLinearGradient(0, 0, 0, TILE);
+      gr.addColorStop(0, T.water[lane.z % 2 ? 0 : 1]);
+      gr.addColorStop(1, T.water[lane.z % 2 ? 1 : 0]);
+      g.fillStyle = gr;
+      g.fillRect(0, 0, W, TILE + 1);
+    } else {
+      g.fillStyle = "#9a9080";
+      g.fillRect(0, 0, W, TILE + 1);
+      for (let i = 0; i < 160; i += 1) {
+        g.fillStyle = r() < 0.5 ? "rgba(255,255,255,0.14)" : "rgba(50,40,30,0.18)";
+        g.beginPath();
+        g.arc(r() * W, r() * TILE, 0.8 + r() * 1.5, 0, TAU);
+        g.fill();
+      }
+      g.fillStyle = "#6d4c35";
+      for (let x = 4; x < W; x += 18) g.fillRect(x, 6, 9, TILE - 12);
+      g.fillStyle = "#c9ced6";
+      g.fillRect(0, TILE * 0.28, W, 3.5);
+      g.fillRect(0, TILE * 0.66, W, 3.5);
+      g.fillStyle = "rgba(0,0,0,0.26)";
+      g.fillRect(0, TILE * 0.28 + 3.5, W, 1.3);
+      g.fillRect(0, TILE * 0.66 + 3.5, W, 1.3);
+    }
+    strips.set(full, c);
+    return c;
+  }
+  function logSprite(w) {
+    const key = Math.round(w * 4);
+    if (logCache.has(key)) return logCache.get(key);
+    const pw = w * TILE;
+    const ph = TILE * 0.72;
+    const [c, g] = mk(pw + 4, ph + 6);
+    g.fillStyle = "rgba(10,50,80,0.28)";
+    g.beginPath();
+    g.roundRect(3, 6, pw - 2, ph, ph / 2);
+    g.fill();
+    const gr = g.createLinearGradient(0, 0, 0, ph);
+    gr.addColorStop(0, "#d9a266");
+    gr.addColorStop(0.5, "#b47a43");
+    gr.addColorStop(1, "#83522a");
+    g.fillStyle = gr;
+    g.beginPath();
+    g.roundRect(1, 1, pw - 2, ph, ph / 2);
+    g.fill();
+    const r = rnd(key * 13 + 1);
+    g.strokeStyle = "rgba(80,45,20,0.45)";
+    g.lineWidth = 1.5;
+    for (let i = 0; i < 8; i += 1) {
+      const y = 5 + r() * (ph - 10);
+      const x = 12 + r() * (pw - 44);
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x + 12 + r() * 20, y);
+      g.stroke();
+    }
+    g.fillStyle = "rgba(255,240,210,0.3)";
+    g.beginPath();
+    g.roundRect(ph * 0.35, 4, pw - ph * 0.8, 3.5, 2);
+    g.fill();
+    // 끝 나이테
+    g.fillStyle = "#ecc78e";
+    g.beginPath();
+    g.ellipse(pw - ph * 0.3, ph / 2 + 1, ph * 0.26, ph * 0.46, 0, 0, TAU);
+    g.fill();
+    g.strokeStyle = "#a9733b";
+    g.lineWidth = 1.5;
+    for (const k of [0.16, 0.3]) {
+      g.beginPath();
+      g.ellipse(pw - ph * 0.3, ph / 2 + 1, ph * k * 0.9, ph * k * 1.5, 0, 0, TAU);
+      g.stroke();
+    }
+    logCache.set(key, c);
+    return c;
+  }
+  /** 왼쪽을 보는 귀여운 버스 */
+  function busSprite() {
+    if (busCache) return busCache;
+    const w = TILE * 2.5;
+    const h = TILE * 1.05;
+    const [c, g] = mk(w + 8, h + 8);
+    g.translate(4, 4);
+    g.lineJoin = "round";
+    const body = () => {
+      g.beginPath();
+      g.roundRect(2, 3, w - 4, h - 12, 12);
+    };
+    g.lineWidth = 7;
+    g.strokeStyle = "#fff";
+    body();
+    g.stroke();
+    g.lineWidth = 2.6;
+    g.strokeStyle = "#5c3d10";
+    body();
+    g.stroke();
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, "#ffe25a");
+    gr.addColorStop(1, "#ffb81f");
+    g.fillStyle = gr;
+    body();
+    g.fill();
+    g.fillStyle = "#fff4c2";
+    g.fillRect(4, h * 0.56, w - 8, 4);
+    for (let i = 0; i < 4; i += 1) {
+      g.fillStyle = "#bdeafa";
+      g.beginPath();
+      g.roundRect(w * 0.27 + i * w * 0.17, h * 0.13, w * 0.14, h * 0.32, 4);
+      g.fill();
+      g.fillStyle = "rgba(255,255,255,0.7)";
+      g.fillRect(w * 0.29 + i * w * 0.17, h * 0.16, 3, h * 0.25);
+    }
+    // 앞 얼굴
+    g.fillStyle = "#26263a";
+    g.beginPath();
+    g.arc(w * 0.08, h * 0.32, 4.4, 0, TAU);
+    g.arc(w * 0.19, h * 0.32, 4.4, 0, TAU);
+    g.fill();
+    g.fillStyle = "#fff";
+    g.beginPath();
+    g.arc(w * 0.087, h * 0.3, 1.5, 0, TAU);
+    g.arc(w * 0.197, h * 0.3, 1.5, 0, TAU);
+    g.fill();
+    g.strokeStyle = "#26263a";
+    g.lineWidth = 2;
+    g.beginPath();
+    g.arc(w * 0.135, h * 0.42, 5, 0.15 * Math.PI, 0.85 * Math.PI);
+    g.stroke();
+    g.fillStyle = "rgba(255,120,120,0.6)";
+    g.beginPath();
+    g.ellipse(w * 0.05, h * 0.44, 4, 2.6, 0, 0, TAU);
+    g.ellipse(w * 0.225, h * 0.44, 4, 2.6, 0, 0, TAU);
+    g.fill();
+    // 바퀴
+    for (const x of [w * 0.2, w * 0.78]) {
+      g.fillStyle = "#2b2b38";
+      g.beginPath();
+      g.arc(x, h - 9, 8.5, 0, TAU);
+      g.fill();
+      g.fillStyle = "#c7ccd6";
+      g.beginPath();
+      g.arc(x, h - 9, 3.4, 0, TAU);
+      g.fill();
+    }
+    busCache = c;
+    return c;
+  }
+  function cornSprite() {
+    if (cornCache) return cornCache;
+    const [c, g] = mk(30, 34);
+    g.translate(15, 17);
+    g.fillStyle = "#6dbb48";
+    g.beginPath();
+    g.ellipse(-5, 5, 4.5, 10, -0.45, 0, TAU);
+    g.ellipse(5, 5, 4.5, 10, 0.45, 0, TAU);
+    g.fill();
+    g.fillStyle = "#ffc928";
+    g.beginPath();
+    g.ellipse(0, -1, 6.5, 12, 0, 0, TAU);
+    g.fill();
+    g.fillStyle = "#ffe680";
+    for (let y = -10; y < 10; y += 4) {
+      for (let x = -4; x <= 4; x += 4) {
+        if (Math.hypot(x / 6.5, y / 12) > 0.86) continue;
+        g.beginPath();
+        g.arc(x + (y % 8 ? 2 : 0) * 0, y, 1.3, 0, TAU);
+        g.fill();
+      }
+    }
+    cornCache = c;
+    return c;
+  }
+  function drawShadow(x, y, rx, ry, a = 0.2) {
+    ctx.fillStyle = `rgba(20,35,25,${a})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, TAU);
+    ctx.fill();
+  }
+  function drawVehicle(e, lane, top) {
+    const ex = xPx(e.x);
+    const flip = lane.dir > 0;
+    const bottom = top + TILE - 1;
+    if (e.kind === "bus") {
+      const w = TILE * 2.5;
+      const h = TILE * 1.05;
+      drawShadow(ex + w / 2, bottom - 4, w * 0.48, 6);
+      const img = busSprite();
+      ctx.save();
+      ctx.translate(ex + w / 2, bottom - h / 2 - 2);
+      if (flip) ctx.scale(-1, 1);
+      ctx.drawImage(img, -w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
       ctx.restore();
       return;
     }
-    const rad = Math.min(w, h) * 0.22;
-    if (img === imgs.chick) {
-      ctx.fillStyle = "#ffe27a";
-      roundRect(x, y, w, h, rad);
-      ctx.fill();
-      ctx.fillStyle = "#ff8ab5";
+    const img = imgs[e.kind];
+    if (!img) return;
+    const w = TILE * e.w * 1.08;
+    const h = w * (img.height / img.width);
+    drawShadow(ex + (TILE * e.w) / 2, bottom - 4, w * 0.44, 5.5);
+    ctx.save();
+    ctx.translate(ex + (TILE * e.w) / 2, bottom - h / 2 - 1 + Math.sin(time * 14 + e.x) * 0.5);
+    if (flip) ctx.scale(-1, 1);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+  function drawTrain(lane, top) {
+    const t = lane.train;
+    if (!t) return;
+    const x0 = xPx(t.x);
+    const total = t.w * TILE;
+    const carLen = TILE * 3;
+    const y = top - TILE * 0.28;
+    const h = TILE * 1.16;
+    drawShadow(x0 + total / 2, top + TILE - 5, total * 0.5, 7);
+    const head = lane.dir > 0 ? x0 + total - carLen : x0;
+    for (let cx = x0; cx < x0 + total - 1; cx += carLen) {
+      const isHead = Math.abs(cx - head) < carLen * 0.6;
+      if (cx > W + 8 || cx + carLen < -8) continue;
+      const gr = ctx.createLinearGradient(0, y, 0, y + h);
+      gr.addColorStop(0, isHead ? "#ff7183" : "#68c6f0");
+      gr.addColorStop(1, isHead ? "#d92f50" : "#3a97cc");
+      ctx.fillStyle = gr;
       ctx.beginPath();
-      ctx.arc(x + w * 0.35, y + h * 0.38, w * 0.08, 0, Math.PI * 2);
-      ctx.arc(x + w * 0.65, y + h * 0.38, w * 0.08, 0, Math.PI * 2);
+      ctx.roundRect(cx + 2, y, carLen - 4, h - 7, 11);
       ctx.fill();
-      ctx.fillStyle = "#ff6b3d";
-      ctx.beginPath();
-      ctx.moveTo(x + w * 0.42, y + h * 0.12);
-      ctx.lineTo(x + w * 0.5, y);
-      ctx.lineTo(x + w * 0.58, y + h * 0.12);
-      ctx.fill();
-      return;
-    }
-    if (img === imgs.car_red || img === imgs.car_blue || img === imgs.car_purple || img === imgs.car_green) {
-      const fill =
-        img === imgs.car_red
-          ? "#ff6bb5"
-          : img === imgs.car_blue
-            ? "#5b9fff"
-            : img === imgs.car_purple
-              ? "#b48cff"
-              : "#8be05a";
-      ctx.fillStyle = fill;
-      roundRect(x + 2, y + h * 0.2, w - 4, h * 0.6, rad * 0.6);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      roundRect(x + w * 0.15, y + h * 0.28, w * 0.28, h * 0.22, 4);
-      roundRect(x + w * 0.57, y + h * 0.28, w * 0.28, h * 0.22, 4);
-      ctx.fill();
-      return;
-    }
-    if (img === imgs.bush) {
-      ctx.fillStyle = "#5cb85c";
-      ctx.beginPath();
-      ctx.arc(x + w * 0.3, y + h * 0.65, w * 0.28, 0, Math.PI * 2);
-      ctx.arc(x + w * 0.55, y + h * 0.55, w * 0.32, 0, Math.PI * 2);
-      ctx.arc(x + w * 0.75, y + h * 0.68, w * 0.24, 0, Math.PI * 2);
-      ctx.fill();
-      return;
-    }
-    ctx.fillStyle = "#ffe27a";
-    roundRect(x, y, w, h, rad);
-    ctx.fill();
-  }
-
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
-  function laneAt(z) {
-    ensureLanes(z);
-    return lanes[z];
-  }
-
-  function entityWorldX(ent, lane, dt) {
-    let x = ent.x;
-    if (lane.type === "rail") {
-      ent.timer -= dt;
-      if (ent.timer <= 0) {
-        ent.x = lane.dir > 0 ? -3 : COLS + 1;
-        ent.timer = 2 + rand() * 3;
-      }
-      x = ent.x + lane.dir * lane.speed * dt * 0.015;
-      ent.x = x;
-      return x;
-    }
-    x += lane.dir * lane.speed * dt * 0.012;
-    if (x < -3) x = COLS + 2;
-    if (x > COLS + 2) x = -3;
-    ent.x = x;
-    return x;
-  }
-
-  function tryMove(dx, dz) {
-    if (state !== "play" || player.t < 1) return;
-    const nx = player.x + dx;
-    const nz = player.z + dz;
-    if (nx < 0 || nx >= COLS || nz < 0) return;
-
-    const lane = laneAt(nz);
-    if (lane.type === "grass") {
-      for (const b of lane.bushes) {
-        if (nx >= b.x && nx < b.x + b.w) return;
-      }
-    }
-
-    moveQueue.push({ x: nx, z: nz });
-    if (moveQueue.length === 1) beginMove();
-  }
-
-  function beginMove() {
-    if (!moveQueue.length) return;
-    const m = moveQueue[0];
-    player.tx = m.x;
-    player.tz = m.z;
-    player.t = 0;
-  }
-
-  function finishMove() {
-    player.x = player.tx;
-    player.z = player.tz;
-    player.t = 1;
-    moveQueue.shift();
-    if (player.z > score) {
-      score = player.z;
-      if (score > best) {
-        best = score;
-        localStorage.setItem("crossy-best", String(best));
-      }
-    }
-    ensureLanes(player.z + 8);
-
-    // Landing on river: snap onto overlapping / nearest boat so rides feel fair
-    const lane = laneAt(player.z);
-    if (lane.type === "river") {
-      let log = findLogUnder(player.x, lane);
-      if (!log) {
-        let best = null;
-        let bestD = 1.0;
-        for (const ent of lane.entities) {
-          const mid = ent.x + ent.w / 2;
-          const d = Math.abs(player.x + 0.5 - mid);
-          if (d < bestD) {
-            bestD = d;
-            best = ent;
-          }
-        }
-        log = best;
-      }
-      if (log) {
-        const minX = log.x;
-        const maxX = log.x + log.w - 1;
-        player.x = Math.max(minX, Math.min(maxX, player.x));
-        player.tx = player.x;
-        player.onLog = log;
-        player.logOffset = player.x - log.x;
-      } else {
-        player.onLog = null;
-        player.logOffset = null;
-        die("강에 빠졌어요");
-        return;
-      }
-    } else {
-      player.onLog = null;
-      player.logOffset = null;
-    }
-
-    updateHud();
-    checkStageClear();
-    if (state !== "play") return;
-    if (moveQueue.length) beginMove();
-  }
-
-  function checkStageClear() {
-    if (endless) return;
-    if (score >= stageGoal(stageIndex)) {
-      const elapsed = (performance.now() - stageStartedAt) / 1000;
-      score += Math.max(0, Math.floor(20 - elapsed)) * 8;
-      updateHud();
-      state = "clear";
-      document.getElementById("clear-detail").textContent = `${score}칸 전진 · 스테이지 ${stageIndex + 1} 클리어!`;
-      showOverlay("clear");
-    }
-  }
-
-  function die(reason) {
-    if (state !== "play") return;
-    state = "over";
-    player.onLog = null;
-    player.logOffset = null;
-    const px = ORIGIN_X + player.x * TILE + TILE / 2;
-    const py = screenY(player.z);
-    spawnParticles(px, py, "#ff8ab5");
-    document.getElementById("over-detail").textContent = `${reason} · ${score}칸 · 스테이지 ${endless ? "∞" : stageIndex + 1}`;
-    showOverlay("over");
-    if (window.TodayGameRank) {
-      TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.over });
-      TodayGameRank.open(score);
-    }
-  }
-
-  /** Generous overlap: player body vs log (not "fully inside" which was too harsh). */
-  function findLogUnder(px, lane) {
-    const left = px + 0.08;
-    const right = px + 0.92;
-    for (const log of lane.entities) {
-      if (right > log.x && left < log.x + log.w) return log;
-    }
-    return null;
-  }
-
-  function updatePlayer(dt) {
-    if (player.t < 1) {
-      player.t = Math.min(1, player.t + dt * 9);
-      if (player.t >= 1) finishMove();
-    }
-    if (state !== "play") return;
-
-    const lane = laneAt(player.z);
-    if (lane.type === "river") {
-      let log = findLogUnder(player.x, lane);
-      if (!log && player.onLog && lane.entities.includes(player.onLog)) {
-        // stay glued if we were riding and still near that boat
-        const tracked = player.onLog;
-        if (Math.abs(player.x + 0.5 - (tracked.x + tracked.w / 2)) < tracked.w * 0.7 + 0.4) {
-          log = tracked;
-        }
-      }
-
-      if (log && player.t >= 1) {
-        player.onLog = log;
-        if (player.logOffset == null) player.logOffset = player.x - log.x;
-        // clamp offset so chick stays on boat
-        player.logOffset = Math.max(0, Math.min(log.w - 1, player.logOffset));
-        player.x = log.x + player.logOffset;
-        player.tx = player.x;
-
-        if (player.x < -0.35 || player.x > COLS - 0.65) {
-          die("강에 빠졌어요");
-          return;
-        }
-      } else if (player.t >= 1) {
-        player.onLog = null;
-        player.logOffset = null;
-        die("강에 빠졌어요");
-        return;
-      }
-    } else {
-      player.onLog = null;
-      player.logOffset = null;
-    }
-
-    if (lane.type === "road" && player.t >= 1) {
-      for (const car of lane.entities) {
-        const cx = car.x;
-        const carLeft = cx;
-        const carRight = cx + car.w;
-        const pLeft = player.x + 0.2;
-        const pRight = player.x + 0.8;
-        if (pRight > carLeft && pLeft < carRight) die("차에 치였어요");
-      }
-    }
-
-    if (lane.type === "rail" && player.t >= 1) {
-      for (const train of lane.entities) {
-        const tx = train.x;
-        const pLeft = player.x + 0.15;
-        const pRight = player.x + 0.85;
-        if (pRight > tx && pLeft < tx + train.w) die("기차에 치였어요");
-      }
-    }
-
-    const targetCam = player.z - 3;
-    camZ += (targetCam - camZ) * Math.min(1, dt * 6);
-  }
-
-  function drawLane(lane, dt) {
-    const y = screenY(lane.z);
-    if (y < -TILE || y > H + TILE) return;
-
-    const [c1, c2] = laneColor(lane.type);
-    const laneGradient = ctx.createLinearGradient(0, y, 0, y + TILE);
-    laneGradient.addColorStop(0, lane.z % 2 ? c1 : c2);
-    laneGradient.addColorStop(1, lane.z % 2 ? c2 : c1);
-    ctx.fillStyle = laneGradient;
-    ctx.fillRect(ORIGIN_X, y, COLS * TILE, TILE);
-
-    if (lane.type === "road") {
-      ctx.fillStyle = "rgba(255,255,255,0.16)";
-      ctx.fillRect(ORIGIN_X, y + 2, COLS * TILE, 3);
-      ctx.fillRect(ORIGIN_X, y + TILE - 5, COLS * TILE, 3);
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      for (let i = 0; i < COLS; i += 2) {
-        roundRect(ORIGIN_X + i * TILE + TILE * 0.22, y + TILE * 0.46, TILE * 0.56, 3, 2);
-        ctx.fill();
-      }
-    }
-
-    if (lane.type === "river") {
-      const waveTime = performance.now() * 0.025;
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i += 1) {
-        const wx = ORIGIN_X + ((lane.z * 31 + i * 108 + waveTime) % (COLS * TILE + 50)) - 25;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(cx + 4, y + h * 0.56, carLen - 8, 4);
+      ctx.fillStyle = "#d9f4ff";
+      for (let wx = cx + 12; wx < cx + carLen - 24; wx += 26) {
         ctx.beginPath();
-        ctx.moveTo(wx, y + 10 + i * 9);
-        ctx.quadraticCurveTo(wx + 12, y + 5 + i * 9, wx + 24, y + 10 + i * 9);
-        ctx.quadraticCurveTo(wx + 36, y + 15 + i * 9, wx + 48, y + 10 + i * 9);
-        ctx.stroke();
+        ctx.roundRect(wx, y + 8, 17, h * 0.34, 4);
+        ctx.fill();
       }
-    }
-
-    if (lane.type === "rail") {
-      ctx.fillStyle = "#735f55";
-      for (let x = ORIGIN_X; x < ORIGIN_X + COLS * TILE; x += 25) {
-        ctx.fillRect(x, y + 8, 7, TILE - 16);
-      }
-      ctx.fillStyle = "#5d6570";
-      ctx.fillRect(ORIGIN_X, y + TILE * 0.35, COLS * TILE, 4);
-      ctx.fillRect(ORIGIN_X, y + TILE * 0.62, COLS * TILE, 4);
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.fillRect(ORIGIN_X, y + TILE * 0.35, COLS * TILE, 1);
-    }
-
-    if (lane.type === "grass") {
-      ctx.fillStyle = "rgba(255,255,255,0.14)";
-      for (let i = 0; i < COLS; i += 1) {
-        const gx = ORIGIN_X + i * TILE + ((lane.z * 17 + i * 23) % 30);
-        ctx.fillRect(gx, y + 7 + ((i * 13) % 28), 3, 6);
-      }
-      lane.bushes.forEach((b) => {
-        for (let n = 0; n < b.w; n += 1) {
-          const bx = ORIGIN_X + (b.x + n) * TILE;
-          drawShadow(bx + TILE / 2, y + TILE * 0.78, TILE * 0.34, TILE * 0.1);
-          drawSprite(imgs.bush, bx + 2, y + 1, TILE - 4, TILE - 5);
-        }
-      });
-    }
-
-    lane.entities.forEach((ent) => {
-      const ex = ORIGIN_X + ent.x * TILE;
-      if (lane.type === "road") {
-        const carKey =
-          ent.color === "blue"
-            ? "car_blue"
-            : ent.color === "purple"
-              ? "car_purple"
-              : ent.color === "green"
-                ? "car_green"
-                : "car_red";
-        const img = imgs[carKey];
-        drawShadow(ex + TILE * ent.w / 2, y + TILE * 0.78, TILE * ent.w * 0.38, 5);
-        drawSprite(img, ex, y + 3, TILE * ent.w, TILE - 6, lane.dir < 0);
-      } else if (lane.type === "river") {
-        const logGradient = ctx.createLinearGradient(ex, y, ex, y + TILE);
-        logGradient.addColorStop(0, "#e0aa72");
-        logGradient.addColorStop(1, "#9a603b");
-        ctx.fillStyle = logGradient;
+      ctx.fillStyle = "#2b2b38";
+      for (const k of [0.22, 0.78]) {
         ctx.beginPath();
-        const lw = TILE * ent.w;
-        const lh = TILE - 20;
-        const ly = y + 10;
-        ctx.moveTo(ex + 8, ly);
-        ctx.lineTo(ex + lw - 8, ly);
-        ctx.quadraticCurveTo(ex + lw, ly, ex + lw, ly + 8);
-        ctx.lineTo(ex + lw, ly + lh - 8);
-        ctx.quadraticCurveTo(ex + lw, ly + lh, ex + lw - 8, ly + lh);
-        ctx.lineTo(ex + 8, ly + lh);
-        ctx.quadraticCurveTo(ex, ly + lh, ex, ly + lh - 8);
-        ctx.lineTo(ex, ly + 8);
-        ctx.quadraticCurveTo(ex, ly, ex + 8, ly);
-        ctx.closePath();
+        ctx.arc(cx + carLen * k, y + h - 7, 6.5, 0, TAU);
         ctx.fill();
-        ctx.strokeStyle = "rgba(90,45,20,0.35)";
-        ctx.lineWidth = 2;
-        for (let lx = ex + 16; lx < ex + lw - 10; lx += 22) {
-          ctx.beginPath();
-          ctx.moveTo(lx, y + 13);
-          ctx.lineTo(lx, y + lh + 7);
-          ctx.stroke();
-        }
-        ctx.fillStyle = "rgba(255,255,255,0.28)";
-        roundRect(ex + 8, y + 14, lw - 16, 4, 2);
+      }
+      if (isHead) {
+        const fx = lane.dir > 0 ? cx + carLen - 16 : cx + 16;
+        ctx.fillStyle = "#26263a";
+        ctx.beginPath();
+        ctx.arc(fx - 6, y + h * 0.36, 3.4, 0, TAU);
+        ctx.arc(fx + 6, y + h * 0.36, 3.4, 0, TAU);
         ctx.fill();
-      } else if (lane.type === "rail") {
-        drawShadow(ex + TILE * ent.w / 2, y + TILE * 0.78, TILE * ent.w * 0.42, 6);
-        const trainG = ctx.createLinearGradient(ex, y, ex + TILE * ent.w, y);
-        trainG.addColorStop(0, "#ff5a6b");
-        trainG.addColorStop(1, "#d83252");
-        ctx.fillStyle = trainG;
-        roundRect(ex, y + 4, TILE * ent.w, TILE - 8, 10);
-        ctx.fill();
-        ctx.fillStyle = "#bceaff";
-        for (let wx = ex + 12; wx < ex + TILE * ent.w - 14; wx += 28) {
-          roundRect(wx, y + 12, 16, 10, 4);
-          ctx.fill();
-        }
         ctx.fillStyle = "#ffe27a";
         ctx.beginPath();
-        ctx.arc(lane.dir > 0 ? ex + TILE * ent.w - 7 : ex + 7, y + TILE / 2, 4, 0, Math.PI * 2);
+        ctx.arc(lane.dir > 0 ? cx + carLen - 5 : cx + 5, y + h * 0.66, 4.5, 0, TAU);
         ctx.fill();
       }
-    });
-  }
-
-  function drawShadow(x, y, rx, ry) {
-    ctx.fillStyle = "rgba(30,45,35,0.2)";
-    ctx.beginPath();
-    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function draw() {
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "#7ec8ff");
-    bg.addColorStop(0.35, "#b8e8ff");
-    bg.addColorStop(1, "#e8ffd8");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    // smiling sun like thumb
-    ctx.fillStyle = "#ffe27a";
-    ctx.beginPath();
-    ctx.arc(48, 48, 26, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255, 200, 80, 0.55)";
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 8; i += 1) {
-      const a = (i / 8) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(48 + Math.cos(a) * 32, 48 + Math.sin(a) * 32);
-      ctx.lineTo(48 + Math.cos(a) * 40, 48 + Math.sin(a) * 40);
-      ctx.stroke();
     }
-    ctx.fillStyle = "#5a4030";
+  }
+  function drawRailSignal(lane, top) {
+    const x = lane.dir > 0 ? 12 : W - 12;
+    ctx.fillStyle = "#3d4256";
+    ctx.fillRect(x - 1.5, top - TILE * 0.5, 3, TILE * 1.25);
+    ctx.fillStyle = "#23263a";
     ctx.beginPath();
-    ctx.arc(40, 44, 2.5, 0, Math.PI * 2);
-    ctx.arc(56, 44, 2.5, 0, Math.PI * 2);
+    ctx.roundRect(x - 11, top - TILE * 0.62, 22, 13, 6);
     ctx.fill();
-    ctx.strokeStyle = "#5a4030";
+    const on = lane.warn || lane.train;
+    const blink = Math.sin(time * 14) > 0;
+    ctx.fillStyle = on && blink ? "#ff4040" : "#5c2c34";
+    ctx.beginPath();
+    ctx.arc(x - 5.5, top - TILE * 0.62 + 6.5, 4, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = on && !blink ? "#ff4040" : "#5c2c34";
+    ctx.beginPath();
+    ctx.arc(x + 5.5, top - TILE * 0.62 + 6.5, 4, 0, TAU);
+    ctx.fill();
+    if (on) {
+      ctx.fillStyle = `rgba(255,60,60,${0.1 + (blink ? 0.08 : 0)})`;
+      ctx.fillRect(0, top, W, TILE);
+    }
+  }
+  function drawLily(e, top) {
+    const cx = xPx(e.x + 0.5);
+    const cy = top + TILE / 2 + Math.sin(time * 1.6 + e.ph) * 1.2;
+    drawShadow(cx + 1, cy + 3, TILE * 0.44, TILE * 0.34, 0.22);
+    ctx.fillStyle = "#5fc25a";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, TILE * 0.43, TILE * 0.34, 0, 0.32, TAU - 0.32);
+    ctx.lineTo(cx, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(48, 50, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx - TILE * 0.28, cy - TILE * 0.14);
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx - TILE * 0.2, cy + TILE * 0.2);
     ctx.stroke();
-
-    // fluffy clouds
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.beginPath();
-    ctx.ellipse(200, 40, 36, 16, 0, 0, Math.PI * 2);
-    ctx.ellipse(180, 44, 20, 12, 0, 0, Math.PI * 2);
-    ctx.ellipse(220, 44, 22, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(320, 70, 28, 12, 0, 0, Math.PI * 2);
-    ctx.ellipse(305, 74, 16, 9, 0, 0, Math.PI * 2);
-    ctx.ellipse(335, 74, 16, 9, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    const minZ = Math.max(0, Math.floor(camZ) - 1);
-    const maxZ = Math.floor(camZ) + VISIBLE_ROWS;
-    for (let z = minZ; z <= maxZ; z += 1) {
-      drawLane(laneAt(z), frameDt);
+  }
+  function drawWaves(lane, top) {
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    for (let i = 0; i < 4; i += 1) {
+      const wx = ((lane.z * 37 + i * 97 + time * (lane.v * 14 + 8)) % (W + 60) + W + 60) % (W + 60) - 30;
+      const y = top + 8 + ((i * 11 + lane.z * 5) % (TILE - 14));
+      ctx.beginPath();
+      ctx.moveTo(wx, y);
+      ctx.quadraticCurveTo(wx + 9, y - 4, wx + 18, y);
+      ctx.quadraticCurveTo(wx + 27, y + 4, wx + 36, y);
+      ctx.stroke();
     }
-
-    const px = ORIGIN_X + (player.x + (player.tx - player.x) * player.t) * TILE;
-    const pz = player.z + (player.tz - player.z) * player.t;
-    const hop = player.t < 1 ? Math.sin(player.t * Math.PI) * 12 : 0;
-    const py = screenY(pz) - hop;
-    drawShadow(px + TILE / 2, screenY(pz) + TILE * 0.78, TILE * 0.28, 5);
+  }
+  function drawGoal(top) {
+    const y = top + TILE - 4;
+    // 양쪽 기둥 + 체크 띠
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(10, y - TILE * 1.9, 6, TILE * 1.9);
+    ctx.fillRect(W - 16, y - TILE * 1.9, 6, TILE * 1.9);
+    const bannerY = y - TILE * 2.05;
+    ctx.fillStyle = "#ff5f8f";
+    ctx.beginPath();
+    ctx.roundRect(4, bannerY, W - 8, 30, 9);
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
+    ctx.font = '400 19px "Bagel Fat One", "Jua", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("도착!", W / 2, bannerY + 16);
+    ctx.textBaseline = "alphabetic";
+    const s = TILE / 4;
+    for (let r = 0; r < 2; r += 1) {
+      for (let i = 0; i < COLS * 4; i += 1) {
+        ctx.fillStyle = (r + i) % 2 ? "#fff" : "#26263a";
+        ctx.fillRect(i * s, top + TILE / 2 - s + r * s, s + 0.4, s + 0.4);
+      }
+    }
+  }
+  function drawChick() {
+    let x = player.x;
+    let zv = player.z;
+    let lift = 0;
+    let sx = 1;
+    let sy = 1;
+    if (hop) {
+      x = lerp(hop.fx, hop.tx, hop.t);
+      zv = lerp(hop.fz, hop.tz, hop.t);
+      lift = Math.sin(hop.t * Math.PI) * 17;
+      const k = Math.sin(hop.t * Math.PI);
+      sx = 1 - k * 0.1;
+      sy = 1 + k * 0.1;
+    } else if (idleT < 0.12) {
+      const k = 1 - idleT / 0.12;
+      sx = 1 + k * 0.12;
+      sy = 1 - k * 0.14;
+    } else {
+      sy = 1 + Math.sin(time * 3) * 0.015;
+    }
+    if (state === "finish") lift = Math.abs(Math.sin(finishT * 8)) * 16;
+    const cx = xPx(x + 0.5) + (bumpT > 0 ? Math.sin(bumpT * 60) * 2 : 0);
+    const groundY = rowTop(zv) + TILE - 6;
+    let key = "chick_back";
+    if (player.dir === 1 || player.dir === 3) key = "chick_side";
+    if (player.dir === 2) key = "chick_front";
+    if (!hop && idleT > 0.75) key = (time + 1) % 5 < 0.7 ? "chick_wave" : "chick_front";
+    const faceOn = window.TodayFace && window.TodayFace.ready && window.TodayFace.ready();
+    if (faceOn) key = "chick_front";
+    if (state === "finish") key = "chick_wave";
+    const img = imgs[key];
+    if (!img) return;
+    const h = TILE * 1.2;
+    const w = h * (img.width / img.height);
+    if (state === "dying") {
+      if (deathKind === "splash") {
+        const u = deathT / 0.8;
+        ctx.strokeStyle = `rgba(255,255,255,${1 - u})`;
+        ctx.lineWidth = 3;
+        for (const k of [0.6, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(cx, groundY - 8, TILE * 0.6 * u * k + 6, TILE * 0.26 * u * k + 3, 0, 0, TAU);
+          ctx.stroke();
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, W, groundY - 6);
+        ctx.clip();
+        ctx.globalAlpha = 1 - u * 0.7;
+        ctx.drawImage(img, cx - w / 2, groundY - h + u * h, w, h);
+        ctx.restore();
+        return;
+      }
+      if (deathKind === "train") {
+        const u = deathT / 0.8;
+        ctx.save();
+        ctx.translate(cx + u * 120, groundY - h / 2 - Math.sin(u * Math.PI) * 120);
+        ctx.rotate(u * 9);
+        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        ctx.restore();
+        return;
+      }
+      ctx.save();
+      ctx.translate(cx, groundY);
+      ctx.scale(1.45, 0.24);
+      ctx.drawImage(imgs.chick_front || img, -w / 2, -h, w, h);
+      ctx.restore();
+      for (let i = 0; i < 3; i += 1) {
+        const a = time * 5 + (i / 3) * TAU;
+        ctx.fillStyle = "#ffe27a";
+        ctx.font = '400 13px "Jua", sans-serif';
+        ctx.textAlign = "center";
+        ctx.fillText("★", cx + Math.cos(a) * 19, groundY - 22 + Math.sin(a) * 5);
+      }
+      return;
+    }
+    drawShadow(cx, groundY - 1, TILE * (0.3 - lift * 0.004), TILE * 0.095, 0.26);
+    if (invT > 0 && Math.sin(time * 26) < 0) ctx.globalAlpha = 0.45;
     ctx.save();
-    const squash = player.t < 1 ? 1 + Math.sin(player.t * Math.PI) * 0.08 : 1;
-    ctx.translate(px + TILE / 2, py + TILE / 2);
-    ctx.scale(1 / squash, squash);
-    drawSprite(imgs.chick, -TILE * 0.43, -TILE * 0.48, TILE * 0.86, TILE * 0.86);
-    if (window.TodayFace) TodayFace.drawHead(ctx, -TILE * 0.02, -TILE * 0.16, TILE * 0.3);
+    ctx.translate(cx, groundY - lift);
+    ctx.scale(player.dir === 3 && key === "chick_side" ? -sx : sx, sy);
+    ctx.drawImage(img, -w / 2, -h, w, h);
+    if (faceOn && window.TodayFace) window.TodayFace.drawHead(ctx, 0, -h * 0.6, h * 0.27);
     ctx.restore();
-
-    particles.forEach((p) => {
-      ctx.globalAlpha = 1 - p.t / p.life;
+    ctx.globalAlpha = 1;
+  }
+  function draw() {
+    ctx.setTransform(PX, 0, 0, PX, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.save();
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    if (!player) {
+      ctx.fillStyle = world.grass[0];
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+      return;
+    }
+    const nearZ = Math.floor(camZ - (H - baseY) / TILE) - 1;
+    const farZ = Math.floor(camZ + baseY / TILE) + 2;
+    // 줄 바닥
+    for (let z = farZ; z >= nearZ; z -= 1) {
+      const lane = laneAt(z);
+      const top = rowTop(z);
+      ctx.drawImage(strip(lane), -0.5, top - 0.5, W + 1, TILE + 1.5);
+      if (lane.type === "river") drawWaves(lane, top);
+    }
+    // 위에 놓이는 것: 먼 줄부터
+    const pz = hop ? (hop.t > 0.5 ? hop.tz : hop.fz) : player.z;
+    for (let z = farZ; z >= nearZ; z -= 1) {
+      const lane = laneAt(z);
+      const top = rowTop(z);
+      if (lane.goal) drawGoal(top);
+      if (lane.type === "river") {
+        for (const e of lane.ents) {
+          if (e.kind === "lily") drawLily(e, top);
+          else {
+            const img = logSprite(e.w);
+            ctx.drawImage(img, xPx(e.x), top + TILE * 0.13, (e.w * TILE) + 4, TILE * 0.72 + 6);
+          }
+        }
+      }
+      if (lane.coin != null && lane.coin >= 0) {
+        const b = Math.sin(time * 4 + z) * 2;
+        ctx.drawImage(cornSprite(), xPx(lane.coin + 0.5) - 13, top + 6 + b, 26, 30);
+      }
+      if (lane.type === "grass") {
+        const img = imgs[world.tree];
+        for (const t of lane.trees) {
+          if (!img) continue;
+          const h = TILE * 1.62;
+          const w = h * (img.width / img.height);
+          const cx = xPx(t + 0.5);
+          const gy = top + TILE - 5;
+          drawShadow(cx, gy, w * 0.34, TILE * 0.13);
+          ctx.drawImage(img, cx - w / 2, gy - h, w, h);
+        }
+      }
+      if (lane.type === "rail") drawRailSignal(lane, top);
+      if (z === pz) drawChick();
+      if (lane.type === "road") for (const e of lane.ents) drawVehicle(e, lane, top);
+      if (lane.type === "rail") drawTrain(lane, top);
+    }
+    for (const p of particles) {
+      if (p.conf) {
+        ctx.fillStyle = p.color;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillRect(-p.size / 2, -p.size * 0.3, p.size, p.size * 0.6);
+        ctx.restore();
+        continue;
+      }
+      ctx.globalAlpha = Math.max(0, 1 - p.t / p.life);
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, TAU);
       ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.font = "13px Jua";
-    ctx.textAlign = "center";
-    ctx.fillText("↑앞 · ←→이동 · 스와이프 · WASD", W / 2, H - 8);
-  }
-
-  function loop(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
-    last = now;
-    frameDt = dt;
-
-    if (state === "play") {
-      // Move hazards first so river boats stay in sync with the rider
-      lanes.forEach((lane) => {
-        if (lane.z >= camZ - 1 && lane.z <= camZ + VISIBLE_ROWS) {
-          lane.entities.forEach((ent) => entityWorldX(ent, lane, dt));
-        }
-      });
-      updatePlayer(dt);
-      particles.forEach((p) => {
-        p.t += dt;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-      });
-      particles = particles.filter((p) => p.t < p.life);
     }
-
+    ctx.globalAlpha = 1;
+    for (const w of weather) {
+      if (world.weather === "snow") {
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, 1.4 + w.z * 1.1, 0, TAU);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = world.weather === "petal" ? "#ffc4d9" : w.p > 3 ? "#e8863a" : "#d9a636";
+        ctx.beginPath();
+        ctx.ellipse(w.x, w.y, 4 * w.z, 2.2 * w.z, time * 2 + w.p, 0, TAU);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    for (const f of floats) {
+      const u = f.t / f.life;
+      ctx.globalAlpha = u > 0.6 ? (1 - u) / 0.4 : 1;
+      ctx.font = `400 ${f.big ? 26 : 19}px "Bagel Fat One", "Jua", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.lineWidth = 5;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(30,30,55,0.8)";
+      ctx.strokeText(f.text, f.x, f.y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(now) {
+    requestAnimationFrame(loop);
+    const dt = clamp((now - last) / 1000 || 0.016, 0, 0.033);
+    last = now;
+    if (state !== "paused") update(dt);
     draw();
-    raf = requestAnimationFrame(loop);
   }
 
-  function handleKey(e) {
-    if (state !== "play") return;
+  /* ---------- 입력 ---------- */
+  document.addEventListener("keydown", (e) => {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (state !== "play" || e.repeat) return;
     const k = e.key.toLowerCase();
-    if (k === "arrowup" || k === "w") {
+    if (k === "arrowup" || k === "w" || k === " ") {
       e.preventDefault();
       tryMove(0, 1);
     } else if (k === "arrowdown" || k === "s") {
@@ -754,79 +1383,52 @@
       e.preventDefault();
       tryMove(1, 0);
     }
-  }
-
-  document.addEventListener("keydown", handleKey);
-
+  });
   document.querySelectorAll(".pad-btn").forEach((btn) => {
     btn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
-      const dir = btn.dataset.dir;
-      if (dir === "up") tryMove(0, 1);
-      else if (dir === "left") tryMove(-1, 0);
-      else if (dir === "right") tryMove(1, 0);
+      const d = btn.dataset.dir;
+      if (d === "up") tryMove(0, 1);
+      else if (d === "down") tryMove(0, -1);
+      else if (d === "left") tryMove(-1, 0);
+      else if (d === "right") tryMove(1, 0);
     });
   });
-
   canvas.addEventListener("pointerdown", (e) => {
-    swipeStart = { x: e.clientX, y: e.clientY, t: Date.now() };
+    swipe = { x: e.clientX, y: e.clientY };
   });
-
   canvas.addEventListener("pointerup", (e) => {
-    if (!swipeStart || state !== "play") return;
-    const dx = e.clientX - swipeStart.x;
-    const dy = e.clientY - swipeStart.y;
-    const adx = Math.abs(dx);
-    const ady = Math.abs(dy);
-    if (Math.max(adx, ady) < 18) {
-      tryMove(0, 1);
-    } else if (adx > ady) {
-      tryMove(dx > 0 ? 1 : -1, 0);
-    } else {
-      tryMove(0, dy < 0 ? 1 : -1);
-    }
-    swipeStart = null;
+    if (!swipe || state !== "play") return;
+    const dx = e.clientX - swipe.x;
+    const dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) tryMove(0, 1);
+    else if (Math.abs(dx) > Math.abs(dy)) tryMove(dx > 0 ? 1 : -1, 0);
+    else tryMove(0, dy < 0 ? 1 : -1);
   });
-
-  document.getElementById("start-btn").addEventListener("click", () => startGame(true));
-  document.getElementById("next-btn").addEventListener("click", () => {
-    stageIndex += 1;
-    if (stageIndex >= STAGE_COUNT) {
-      showOverlay("all");
-      if (window.TodayGameRank) {
-      TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.all });
-      TodayGameRank.open(score);
-    }
-      return;
-    }
-    startGame(false);
+  $("start-btn").addEventListener("click", startFromTitle);
+  $("restart-btn").addEventListener("click", () => {
+    save.stage = 0;
+    save.score = 0;
+    persist();
+    renderTitle();
+    startFromTitle();
   });
-  document.getElementById("retry-btn").addEventListener("click", () => startGame(false));
-  document.getElementById("endless-btn").addEventListener("click", () => {
+  $("next-btn").addEventListener("click", () => startStage(stageIndex + 1));
+  $("retry-btn").addEventListener("click", () => {
+    if (window.TodayGameRank) window.TodayGameRank.reset();
+    score = endless ? save.score : scoreAtStart;
+    startStage(stageIndex);
+  });
+  $("endless-btn").addEventListener("click", () => {
+    if (window.TodayGameRank) window.TodayGameRank.reset();
     endless = true;
-    startGame(false);
-  });
-  document.getElementById("again-btn")?.addEventListener("click", () => startGame(true));
-
-  hud.best.textContent = String(best);
-  if (window.TodayGameRank) {
-    TodayGameRank.mount({
-      gameId: "crossy",
-      gameTitle: "삐약이 건너기",
-      formParent: overlays.over || overlays.all || document.body,
-    });
-  }
-
-  loadAssets().then(() => {
-    // 이미지가 오기 전에 시작을 눌렀으면 루프가 이미 돌고 있어요. 두 번 돌면 게임이 2배로 빨라져요.
-    if (raf) return;
-    showOverlay("title");
-    last = performance.now();
-    raf = requestAnimationFrame(loop);
+    startStage(TOTAL - 1);
   });
 
+  if (window.TodayGameRank) window.TodayGameRank.mount({ gameId: "crossy", gameTitle: "삐약이 건너기", formParent: overlays.over });
   if (window.TodayPause) {
-    TodayPause.mount({
+    window.TodayPause.mount({
       canPause: () => state === "play",
       isPaused: () => state === "paused",
       pause() {
@@ -837,10 +1439,49 @@
       resume() {
         if (state !== "paused") return false;
         state = "play";
-        if (typeof last !== "undefined") last = performance.now();
+        last = performance.now();
         return true;
       },
     });
   }
+  addEventListener("resize", fit);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", fit);
+  fit();
+  renderTitle();
+  stageIndex = save.stage;
+  resetStage();
+  state = "title";
+  showOverlay("title");
+  loadAssets().then(() => {
+    last = performance.now();
+    requestAnimationFrame(loop);
+  });
 
+  // 점검용
+  window.CrossyChick = {
+    get s() {
+      return { state, stageIndex, hearts, score, goal, maxZ, x: player.x, z: player.z, hop: Boolean(hop), on: Boolean(player.on), invT, PX, H, camZ };
+    },
+    update,
+    tryMove,
+    startStage,
+    laneAt,
+    vehicleHit,
+    trainHit,
+    logUnder,
+    treeAt,
+    HOP,
+    COLS,
+    save,
+    stageGoal,
+    WORLDS,
+    die,
+    deaths,
+    finishNow() {
+      if (state === "finish") finishT = 2;
+    },
+    clearAll() {
+      score = 0;
+    },
+  };
 })();

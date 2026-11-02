@@ -1,236 +1,396 @@
+/* 삐약이 건너기: 화면을 꽉 채우는 또렷한 마을 + 작은 칩 HUD */
 :root {
-  --pink: #ff6b9d;
-  --ink: #3d2a45;
-  --muted: #6a8068;
-  --grass: #a8e6a0;
+  --ink: #26324d;
+  --muted: #5f6b86;
+  --gold: #ffd339;
+  --pink: #ff5f8f;
+  --sky: #48a9ff;
+  --line: rgba(255, 255, 255, 0.85);
 }
-
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  -webkit-user-select: none;
 }
-
 html,
 body {
   margin: 0;
   height: 100%;
-  height: 100dvh;
   overflow: hidden;
-  font-family: "Jua", system-ui, sans-serif;
-  background: linear-gradient(180deg, #7ec8ff 0%, #b8e8ff 40%, #c8f5b8 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overscroll-behavior: none;
+  background: linear-gradient(160deg, #6bc8f5, #2f8fc9);
   color: var(--ink);
+  font-family: "Jua", system-ui, sans-serif;
 }
-
+.hidden,
+[hidden] {
+  display: none !important;
+}
 .stage {
-  position: relative;
-  width: min(100vw, calc(100dvh * 0.629));
-  height: min(100dvh, calc(100vw / 0.629));
-  max-width: 420px;
-  border-radius: 24px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(100vw, calc(100dvh * 0.64));
+  transform: translateX(-50%);
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.75);
-  box-shadow:
-    0 24px 70px rgba(80, 140, 180, 0.35),
-    0 0 0 6px rgba(118, 200, 130, 0.18);
-  background: var(--grass);
+  background: #9bdb72;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.25);
 }
-
 canvas {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
   touch-action: none;
 }
 
+/* ---------- HUD ---------- */
 .hud {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  width: 56%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   pointer-events: none;
   z-index: 3;
 }
-
-.panel {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 13px;
-  color: var(--muted);
-  min-width: 96px;
-  box-shadow:
-    0 4px 0 rgba(74, 158, 66, 0.2),
-    0 8px 20px rgba(60, 100, 60, 0.14);
+body:not(.in-play) .hud,
+body:not(.in-play) .race-bar,
+body:not(.in-play) .hearts,
+body:not(.in-play) .kmh {
+  display: none;
 }
-
-.panel.right {
-  align-items: flex-end;
-}
-
-.panel b {
-  color: #4a9e42;
-  font-size: 16px;
-}
-
-.controls {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  z-index: 4;
-}
-
-.pad-btn {
-  border: 2px solid rgba(255, 255, 255, 0.72);
-  border-radius: 18px;
-  width: 58px;
-  height: 52px;
-  font-family: inherit;
-  font-size: 22px;
-  color: #fff;
-  background: linear-gradient(180deg, #ffb8d2, var(--pink));
-  box-shadow:
-    0 6px 0 #d93f74,
-    0 10px 22px rgba(217, 63, 116, 0.22);
-  cursor: pointer;
-}
-
-.pad-btn.big {
-  width: 88px;
-  font-size: 28px;
-  background: linear-gradient(180deg, #c9ffad, #6fc86a);
-  box-shadow:
-    0 6px 0 #4a9e42,
-    0 10px 22px rgba(74, 158, 66, 0.24);
-}
-
-.pad-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 #d93f74;
-}
-
-.pad-btn.big:active {
-  box-shadow: 0 2px 0 #4a9e42;
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
+.chip {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 24px;
+  min-width: 52px;
+  padding: 3px 10px 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 2px 0 rgba(38, 50, 77, 0.28);
+}
+.chip small {
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.chip b {
+  font: 400 19px/1.05 "Bagel Fat One", "Jua", sans-serif;
+  color: var(--ink);
+}
+.chip.stage-chip {
+  background: linear-gradient(#ffe27a, #ffc42e);
+}
+.chip.stage-chip small {
+  color: #7a5a10;
+}
+.race-bar {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 50px);
+  left: 72px;
+  right: 16px;
+  height: 11px;
+  border-radius: 7px;
+  background: rgba(24, 31, 52, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  z-index: 3;
+  pointer-events: none;
+}
+.race-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #ffe15b, #ff7ca9);
+}
+.race-bar::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: -8px;
+  width: 16px;
+  height: 22px;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.65), transparent 24%),
-    radial-gradient(circle at 82% 30%, rgba(255, 226, 122, 0.4), transparent 25%),
-    linear-gradient(180deg, rgba(161, 230, 255, 0.97), rgba(221, 255, 204, 0.98));
+    linear-gradient(#20232e 0 0) 0 0 / 2px 22px no-repeat,
+    conic-gradient(#fff 25%, #20232e 0 50%, #fff 0 75%, #20232e 0) 2px 0 / 7px 7px;
+  background-size: 2px 22px, 7px 7px;
+  background-repeat: no-repeat, repeat;
+  clip-path: polygon(0 0, 100% 0, 100% 56%, 14% 56%, 14% 100%, 0 100%);
+}
+.hearts {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 70px);
+  right: 14px;
+  display: flex;
+  gap: 3px;
+  z-index: 3;
+  pointer-events: none;
+}
+.hearts i {
+  width: 21px;
+  height: 21px;
+  background: rgba(30, 34, 52, 0.42);
+  clip-path: path("M10.5 19 C-2 11 1 2.5 6.5 2.5 C8.6 2.5 10 3.8 10.5 5.5 C11 3.8 12.4 2.5 14.5 2.5 C20 2.5 23 11 10.5 19 Z");
+}
+.hearts i.on {
+  background: #ff4f76;
+}
+.kmh {
+  position: absolute;
+  left: 50%;
+  bottom: max(26px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(24, 28, 46, 0.72);
+  color: #fff;
+  font-size: 13px;
+  z-index: 3;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.kmh b {
+  font: 400 19px "Bagel Fat One", sans-serif;
+  color: var(--gold);
 }
 
-.overlay.hidden {
+/* ---------- 좌우 버튼 ---------- */
+.controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  padding: 0 12px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 3;
+}
+body:not(.in-play) .controls {
   display: none;
 }
-
-.badge {
-  display: inline-block;
-  background: linear-gradient(180deg, #ff9ec4, var(--pink));
-  color: #fff;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 0 #d93f74;
-}
-
-.badge.soft {
-  background: linear-gradient(180deg, #b5ff9a, #6fc86a);
-  box-shadow: 0 4px 0 #4a9e42;
-}
-
-.title-mascot {
-  width: 116px;
-  height: 116px;
-  object-fit: contain;
-  margin: -2px 0 -8px;
-  filter: drop-shadow(0 10px 12px rgba(80, 110, 50, 0.2));
-  animation: mascot-float 1.8s ease-in-out infinite;
-}
-
-@keyframes mascot-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  50% {
-    transform: translateY(-7px) rotate(2deg);
-  }
-}
-
-h1 {
-  margin: 0;
-  font-family: "Bagel Fat One", "Jua", cursive;
-  font-weight: 400;
-  font-size: clamp(28px, 8vw, 40px);
-  color: #388d4c;
-  text-shadow:
-    0 3px 0 #fff,
-    0 8px 20px rgba(56, 141, 76, 0.2);
-}
-
-.overlay p {
-  margin: 8px 0 14px;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.title-controls {
+.pad-btn {
+  appearance: none;
+  pointer-events: auto;
+  width: 72px;
+  height: 72px;
   display: grid;
-  gap: 5px;
-  margin: -2px 0 14px;
-  padding: 9px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--muted);
-  font-size: 13px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 4px 0 rgba(38, 50, 77, 0.45);
+  cursor: pointer;
+  touch-action: none;
+}
+.pad-btn svg {
+  width: 34px;
+  height: 34px;
+  fill: #f28a1c;
+}
+.pad-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(38, 50, 77, 0.45);
+  background: #ffe27a;
 }
 
+/* ---------- 덮는 화면 ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: max(58px, calc(env(safe-area-inset-top) + 48px)) 22px 22px;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(16, 28, 60, 0.28), rgba(16, 28, 60, 0.62));
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.overlay.result {
+  justify-content: center;
+  background: rgba(16, 24, 48, 0.55);
+}
+.hero {
+  flex: none;
+  width: min(62vw, 250px);
+  height: min(62vw, 250px);
+  border-radius: 28px;
+  border: 5px solid #fff;
+  box-shadow: 0 8px 0 rgba(38, 50, 77, 0.35), 0 14px 30px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+.overlay h1 {
+  margin: 4px 0 0;
+  font: 400 clamp(36px, 11vw, 46px) / 1.1 "Bagel Fat One", "Jua", sans-serif !important;
+  color: #ffd339;
+  -webkit-text-stroke: 7px #26324d;
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 #26324d;
+}
+.overlay p.best {
+  color: var(--ink);
+  text-shadow: none;
+}
+.overlay p {
+  margin: 0;
+  color: #fff;
+  font-size: 15.5px;
+  line-height: 1.5;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+.best {
+  padding: 3px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-size: 14px;
+}
+.tips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.tips span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+}
 .btn {
   appearance: none;
-  border: none;
+  flex: none;
+  min-width: 210px;
+  padding: 13px 26px;
+  border: 0;
   border-radius: 999px;
-  padding: 13px 32px;
-  font: inherit;
-  font-size: 18px;
-  color: #fff;
-  background: linear-gradient(180deg, #ff9ec4, var(--pink));
-  box-shadow: 0 6px 0 #d93f74;
+  background: linear-gradient(#ffe27a, #ffbb22);
+  color: var(--ink);
+  font: 400 21px "Jua", sans-serif;
+  box-shadow: 0 5px 0 #b77f12, 0 9px 18px rgba(0, 0, 0, 0.25);
   cursor: pointer;
 }
-
+.btn.ghost {
+  min-width: 150px;
+  padding: 8px 18px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 3px 0 rgba(38, 50, 77, 0.4);
+}
 .btn:active {
   transform: translateY(3px);
-  box-shadow: 0 3px 0 #d93f74;
+}
+.overlay > a {
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.stars3 {
+  display: flex;
+  gap: 4px;
+  margin: 2px 0;
+}
+.stars3 i {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.28);
+  clip-path: polygon(50% 0, 62% 35%, 100% 38%, 70% 60%, 80% 96%, 50% 76%, 20% 96%, 30% 60%, 0 38%, 38% 35%);
+}
+.stars3 i:nth-child(2) {
+  transform: translateY(-6px) scale(1.12);
+}
+.stars3 i.on {
+  background: linear-gradient(#ffe88a, #f5a81d);
+  animation: pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+@keyframes pop {
+  from {
+    scale: 0.2;
+  }
+}
+.next-world {
+  color: #ffe27a !important;
 }
 
-a {
-  margin-top: 12px;
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 14px;
+/* 건너기: 앞으로 가는 단추를 크게 */
+.controls.cross {
+  justify-content: center;
+  gap: 8px;
+  align-items: flex-end;
+}
+.controls.cross .pad-btn {
+  width: 62px;
+  height: 62px;
+}
+.controls.cross .pad-btn.big {
+  width: 92px;
+  height: 78px;
+  border-radius: 26px;
+  background: linear-gradient(#ffe27a, #ffbb22);
+  box-shadow: 0 4px 0 #b77f12;
+}
+.controls.cross .pad-btn.big svg {
+  fill: #5c3d10;
+  width: 40px;
+  height: 40px;
+}
+.controls.cross .pad-btn.small {
+  position: absolute;
+  right: 14px;
+  width: 46px;
+  height: 46px;
+  bottom: 8px;
+  opacity: 0.85;
+}
+
+/* 폰을 눕혔을 때: 폭을 넉넉히 · 작은 표시 줄임 */
+@media (orientation: landscape) and (max-height: 560px) {
+  .stage {
+    width: min(100vw, max(calc(100dvh * 0.64), 372px));
+  }
+  .kmh {
+    display: none;
+  }
+  .overlay .hero {
+    width: 120px;
+    height: 120px;
+    border-radius: 18px;
+  }
+  .overlay h1 {
+    font-size: 30px !important;
+  }
+  .pad-btn {
+    width: 58px;
+    height: 58px;
+  }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .controls.cross .pad-btn.big {
+    width: 76px;
+    height: 58px;
+  }
+  .controls.cross .pad-btn {
+    width: 52px;
+    height: 52px;
+  }
+  .controls.cross .pad-btn.small {
+    width: 42px;
+    height: 42px;
+  }
 }
