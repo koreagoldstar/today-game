@@ -3,113 +3,110 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#071b3a" />
+    <meta name="theme-color" content="#050b1e" />
     <meta name="description" content="골키퍼의 움직임을 읽고 완벽한 타이밍에 슛하는 고퀄리티 페널티킥 미니게임" />
     <title>승부차기 히어로 · 오늘의 게임</title>
     <link rel="canonical" href="https://www.todaygame.co.kr/games/penalty-kick/" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=4" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
-  <body data-bgm="penalty-kick" data-face="1">
-    <main class="stage">
-      <canvas id="game" width="390" height="700" aria-label="승부차기 경기장"></canvas>
+  <body data-face="1">
+    <main class="stage" id="stage">
+      <canvas id="game" aria-label="승부차기 경기장"></canvas>
 
-      <header class="hud" aria-live="polite">
-        <div class="hud-block">
-          <span>ROUND</span>
-          <strong><b id="hud-round">1</b>/10</strong>
+      <div class="hud" id="hud" aria-live="polite">
+        <div class="sb-row">
+          <span id="sb-us">대한민국</span>
+          <b id="sb-score">0 : 0</b>
+          <span id="sb-them">상대</span>
         </div>
-        <div class="hud-score">
-          <span>대한민국</span>
-          <strong id="hud-goals">0</strong>
-          <i>:</i>
-          <strong id="hud-saves">0</strong>
-          <span>KEEPER</span>
+        <div class="sb-row">
+          <div class="sb-dots" id="sb-dots-us"></div>
+          <em class="sb-round" id="sb-round" style="font-style: normal">1번째</em>
+          <div class="sb-dots" id="sb-dots-them"></div>
         </div>
-        <div class="hud-block right">
-          <span>SCORE</span>
-          <strong id="hud-score">0</strong>
-        </div>
-      </header>
+      </div>
+      <div class="score-chip"><small>점수</small><b id="hud-score">0</b></div>
 
-      <div class="shot-dots" id="shot-dots" aria-label="슈팅 결과"></div>
-      <p class="coach" id="coach">골키퍼의 시선과 무게중심을 읽으세요</p>
+      <div class="keep-pad hidden" id="keep-pad" aria-label="몸을 날릴 곳">
+        <button type="button" data-x="-2.6" data-y="1.8" aria-label="왼쪽 위"></button>
+        <button type="button" data-x="0" data-y="1.9" aria-label="가운데 위"></button>
+        <button type="button" data-x="2.6" data-y="1.8" aria-label="오른쪽 위"></button>
+        <button type="button" data-x="-2.6" data-y="0.55" aria-label="왼쪽 아래"></button>
+        <button type="button" data-x="0" data-y="0.6" aria-label="가운데 아래"></button>
+        <button type="button" data-x="2.6" data-y="0.55" aria-label="오른쪽 아래"></button>
+      </div>
+      <p class="hint hidden" id="hint"></p>
+      <div class="finger hidden" id="finger" aria-hidden="true"></div>
+      <div class="curve-tag hidden" id="curve-tag">감아차기!</div>
 
-      <section class="timing-panel hidden" id="timing-panel" aria-label="슈팅 타이밍">
-        <div class="timing-label">
-          <span>SHOT TIMING</span>
-          <b id="timing-grade">탭!</b>
-        </div>
-        <div class="timing-track">
-          <i class="timing-danger left"></i>
-          <i class="timing-good"></i>
-          <i class="timing-perfect"></i>
-          <i class="timing-danger right"></i>
-          <span id="timing-cursor"></span>
-        </div>
-        <button type="button" id="kick-btn">지금 슛!</button>
-      </section>
+      <div class="shout" id="shout" role="status"><b></b><small></small></div>
+      <div class="banner" id="banner"><p class="b-cup"></p><p class="b-vs"></p></div>
+      <button type="button" class="skip" id="skip">건너뛰기</button>
 
       <section class="overlay" id="title">
-        <div class="title-ball" aria-hidden="true">⚽</div>
-        <p class="eyebrow">PENALTY SHOOTOUT</p>
-        <h1>승부차기<br /><em>히어로</em></h1>
-        <p>골키퍼의 방향을 예측하고<br />완벽한 타이밍에 골망을 흔드세요!</p>
-        <ol class="rules">
-          <li><b>1</b><span>골대 안을 눌러 슛 방향 선택</span></li>
-          <li><b>2</b><span>움직이는 바가 중앙일 때 슛</span></li>
-          <li><b>3</b><span>10번의 승부차기로 최고점 도전</span></li>
-        </ol>
-        <button type="button" class="primary" id="start-btn">경기 시작</button>
+        <img class="hero" src="/assets/thumbs/sm/penalty-kick.webp" alt="승부차기 히어로" width="512" height="512" />
+        <h1>승부차기 <em>히어로</em></h1>
+        <p class="best" id="title-best">최고 0점</p>
+        <p>내가 차고, 내가 막는다!<br />5번씩 번갈아 차고 동점이면 서든데스</p>
+        <div class="tips"><span>위로 밀어 슛</span><span>빠르게 밀면 강슛</span><span>휘어 밀면 감아차기</span></div>
+        <button type="button" class="btn" id="start-btn">경기 시작</button>
+        <button type="button" class="btn ghost hidden" id="restart-btn">처음부터</button>
         <a href="/">← 오늘의 게임</a>
       </section>
 
-      <section class="overlay compact hidden" id="round-result">
-        <p class="eyebrow" id="result-badge">GOAL!</p>
-        <h1 id="result-title">골!</h1>
-        <p id="result-detail"></p>
-        <button type="button" class="primary" id="next-btn">다음 킥</button>
+      <section class="overlay result hidden" id="win">
+        <div class="trophy hidden" id="win-trophy" aria-hidden="true"></div>
+        <h1 id="win-title">승리!</h1>
+        <p id="win-detail"></p>
+        <div id="win-rank" class="hidden"></div>
+        <button type="button" class="btn" id="win-btn"><span id="win-next">다음 경기</span></button>
+        <a href="/">← 오늘의 게임</a>
       </section>
 
-      <section class="overlay hidden" id="game-over">
-        <div class="trophy" aria-hidden="true">🏆</div>
-        <p class="eyebrow">FULL TIME</p>
-        <h1 id="over-title">승부차기 종료</h1>
-        <p id="over-detail"></p>
-        <div class="final-stats">
-          <span>GOALS <b id="final-goals">0</b></span>
-          <span>PERFECT <b id="final-perfect">0</b></span>
-          <span>BEST COMBO <b id="final-combo">0</b></span>
+      <section class="overlay result hidden" id="lose">
+        <h1>탈락…</h1>
+        <p id="lose-detail"></p>
+        <div id="lose-rank"></div>
+        <button type="button" class="btn" id="lose-btn">이 경기 다시</button>
+        <a href="/">← 오늘의 게임</a>
+      </section>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <p class="boot-logo">승부차기 히어로</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">경기장 불을 켜는 중…</p>
         </div>
-        <button type="button" class="primary" id="retry-btn">다시 도전</button>
-        <a href="/">← 오늘의 게임</a>
-      </section>
+      </div>
+      <div class="fallback hidden" id="fallback"><p>이 브라우저에서는 3D 게임을 열 수 없어요 (WebGL 필요). 최신 브라우저로 다시 와 주세요.</p></div>
     </main>
 
     <script src="/js/today-audio.js?v=2"></script>
     <script src="/js/game-chrome.js?v=4"></script>
-    <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
 
-    <script src="game.js?v=12"></script>
+    <script type="module" src="main.js?v=1"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="승부차기 히어로 소개">
   <h2>승부차기 히어로 소개</h2>
-  <p>골키퍼의 움직임을 예측해서 승부차기를 성공시키는 타이밍 기반 축구 게임입니다.</p>
+  <p>직접 공을 차고 직접 몸을 날려 막는 3D 승부차기 토너먼트입니다. 컵 3개의 8강부터 결승까지 이겨 우승 트로피를 노립니다.</p>
   <h3>플레이 방법</h3>
-  <p>슛 방향과 세기를 정하고 타이밍에 맞춰 클릭해 슈팅하세요.</p>
+  <p>화면을 누르면 키커가 달려 나가고, 끌어서 노릴 곳을 정한 뒤 손을 떼면 공을 찹니다. 빠르게 튕길수록 세게 나가고, 휘어서 밀면 감아 찹니다. 수비 차례에는 여섯 칸 중 하나를 눌러 몸을 날리세요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>골키퍼도 조종할 수 있나요?</dt>
-    <dd>공격과 수비 모드를 번갈아 즐길 수 있습니다.</dd>
+    <dd>네. 번갈아 차고 막으며 5번씩 겨루고, 동점이면 서든데스로 이어집니다.</dd>
+    <dt>구석으로 차면 더 잘 들어가나요?</dt>
+    <dd>구석은 막기 어렵지만 빗나가기 쉽고, 가운데는 안전하지만 잘 막힙니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

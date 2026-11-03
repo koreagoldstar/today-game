@@ -345,7 +345,7 @@
       id: "penalty-kick",
       face: true,
       title: "승부차기 히어로",
-      tag: "축구 · 예측 타이밍",
+      tag: "3D 축구 · 토너먼트",
       href: "/games/penalty-kick/",
       thumb: "/assets/thumbs/sm/penalty-kick.webp",
       category: "sports",
@@ -703,9 +703,9 @@
     {
       id: "memory",
       title: "짝짝 사천성",
-      tag: "연결 · 60단계",
+      tag: "사천성 · 60단계",
       href: "/games/memory/",
-      thumb: "/assets/thumbs/sm/sacheon.webp",
+      thumb: "/assets/thumbs/sm/sacheon.webp?v=3",
       category: "puzzle",
     },
     {
