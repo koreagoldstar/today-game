@@ -6,6 +6,11 @@
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
 
 const TAU = Math.PI * 2;
+/* 몸 치수: 목 없이 통통한 찹쌀떡 */
+const BODY_Y0 = 0.06;
+const BODY_H = 1.05;
+const HEAD_Y = 0.74;
+const SHOULDER_Y = 0.57;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -24,54 +29,39 @@ function canvas(w, h) {
   return [c, c.getContext("2d")];
 }
 
-/** 몸통 무늬: 짙은 남색 등, 크림색 배, 하트 모양 얼굴, 볼터치 (u=0.5 가 앞) */
+/** 몸통 무늬: 등은 포근한 남색, 앞은 얼굴까지 이어진 큰 하트 모양 크림색 (u=0.5 가 앞) */
 function bodyTexture() {
   const [c, g] = canvas(1024, 1024);
   const grad = g.createLinearGradient(0, 0, 0, 1024);
-  grad.addColorStop(0, "#35528f");
-  grad.addColorStop(0.55, "#2c4579");
-  grad.addColorStop(1, "#223660");
+  grad.addColorStop(0, "#44597f");
+  grad.addColorStop(0.5, "#3c4e74");
+  grad.addColorStop(1, "#334466");
   g.fillStyle = grad;
   g.fillRect(0, 0, 1024, 1024);
-  const soft = (fn, col) => {
-    g.save();
-    g.fillStyle = col;
-    if ("filter" in g) g.filter = "blur(5px)";
-    fn();
-    g.restore();
-  };
-  // v: 0(아래)~1(위) 를 그림 y 로 (flipY)
-  const Y = (v) => (1 - v) * 1024;
-  // 배
-  soft(() => {
-    g.beginPath();
-    g.ellipse(512, Y(0.3), 182, 262, 0, 0, TAU);
-    g.fill();
-  }, "#fff6e6");
-  // 얼굴: 두 눈 위가 볼록한 하트 모양
-  soft(() => {
-    g.beginPath();
-    g.ellipse(430, Y(0.745), 112, 100, 0.12, 0, TAU);
-    g.ellipse(594, Y(0.745), 112, 100, -0.12, 0, TAU);
-    g.fill();
-    g.beginPath();
-    g.ellipse(512, Y(0.67), 170, 92, 0, 0, TAU);
-    g.fill();
-  }, "#fff9ef");
-  // 볼터치
-  for (const x of [372, 652]) {
-    const r = g.createRadialGradient(x, Y(0.655), 2, x, Y(0.655), 52);
-    r.addColorStop(0, "rgba(255,125,135,.8)");
-    r.addColorStop(1, "rgba(255,125,135,0)");
-    g.fillStyle = r;
-    g.fillRect(x - 60, Y(0.655) - 60, 120, 120);
-  }
-  // 배 아래 그림자, 윗머리 빛
-  const b = g.createLinearGradient(0, Y(0.2), 0, Y(0.02));
-  b.addColorStop(0, "rgba(30,40,80,0)");
-  b.addColorStop(1, "rgba(30,40,80,.28)");
+  const Y = (y) => (1 - (y - BODY_Y0) / BODY_H) * 1024;
+  g.save();
+  g.fillStyle = "#fffdf7";
+  if ("filter" in g) g.filter = "blur(4px)";
+  // 눈 위로 볼록한 두 언덕 (사이가 쏙 들어가 하트 모양)
+  g.beginPath();
+  g.ellipse(512 - 74, Y(0.82), 88, 150, 0.06, 0, TAU);
+  g.ellipse(512 + 74, Y(0.82), 88, 150, -0.06, 0, TAU);
+  g.fill();
+  // 볼 · 턱
+  g.beginPath();
+  g.ellipse(512, Y(0.66), 182, 122, 0, 0, TAU);
+  g.fill();
+  // 통통한 배
+  g.beginPath();
+  g.ellipse(512, Y(0.4), 158, 330, 0, 0, TAU);
+  g.fill();
+  g.restore();
+  // 배 아래쪽 은은한 그늘
+  const b = g.createLinearGradient(0, Y(0.26), 0, Y(0.06));
+  b.addColorStop(0, "rgba(120,130,170,0)");
+  b.addColorStop(1, "rgba(120,130,170,.3)");
   g.fillStyle = b;
-  g.fillRect(0, Y(0.2), 1024, 1024 - Y(0.2));
+  g.fillRect(0, Y(0.26), 1024, 1024 - Y(0.26));
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 4;
@@ -84,13 +74,12 @@ function eyeTexture() {
   const S = 256;
   const [c, g] = canvas(S * 4, S * 2);
   const cell = (i) => [(i % 4) * S, Math.floor(i / 4) * S];
-  const skin = "#fff9ef";
-  const ink = "#1b1626";
+  const ink = "#17131f";
   const pupil = (x, y, rx, ry) => {
-    const grd = g.createRadialGradient(x, y + ry * 0.55, 8, x, y, Math.max(rx, ry));
-    grd.addColorStop(0, "#6b4331");
-    grd.addColorStop(0.42, "#2a1a23");
-    grd.addColorStop(1, "#0c0a14");
+    const grd = g.createRadialGradient(x, y + ry * 0.62, 6, x, y, Math.max(rx, ry));
+    grd.addColorStop(0, "#5b3a33");
+    grd.addColorStop(0.45, "#241823");
+    grd.addColorStop(1, "#0b0911");
     g.fillStyle = grd;
     g.beginPath();
     g.ellipse(x, y, rx, ry, 0, 0, TAU);
@@ -105,50 +94,42 @@ function eyeTexture() {
   // 0: 큰 반짝 눈
   {
     const [x, y] = cell(0);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
-    pupil(x + 128, y + 128, 112, 122);
-    shine(x + 92, y + 78, 40);
-    shine(x + 166, y + 170, 19, 0.9);
-    shine(x + 118, y + 196, 9, 0.75);
+    pupil(x + 128, y + 128, 120, 124);
+    shine(x + 86, y + 76, 46);
+    shine(x + 170, y + 176, 21, 0.95);
+    shine(x + 112, y + 200, 10, 0.75);
   }
   // 1: 감은 눈
   {
     const [x, y] = cell(1);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
     g.strokeStyle = ink;
-    g.lineWidth = 20;
+    g.lineWidth = 24;
     g.lineCap = "round";
     g.beginPath();
-    g.moveTo(x + 40, y + 130);
-    g.quadraticCurveTo(x + 128, y + 180, x + 216, y + 130);
+    g.moveTo(x + 34, y + 118);
+    g.quadraticCurveTo(x + 128, y + 188, x + 222, y + 118);
     g.stroke();
   }
   // 2: 웃는 눈 ^ ^
   {
     const [x, y] = cell(2);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
     g.strokeStyle = ink;
-    g.lineWidth = 26;
+    g.lineWidth = 30;
     g.lineCap = "round";
     g.beginPath();
-    g.moveTo(x + 36, y + 158);
-    g.quadraticCurveTo(x + 128, y + 44, x + 220, y + 158);
+    g.moveTo(x + 30, y + 166);
+    g.quadraticCurveTo(x + 128, y + 34, x + 226, y + 166);
     g.stroke();
   }
   // 3: 어지러운 눈 (소용돌이)
   {
     const [x, y] = cell(3);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
     g.strokeStyle = ink;
-    g.lineWidth = 15;
+    g.lineWidth = 16;
     g.lineCap = "round";
     g.beginPath();
     for (let a = 0; a < TAU * 2.5; a += 0.15) {
-      const r = 6 + a * 6.2;
+      const r = 6 + a * 6.4;
       const px = x + 128 + Math.cos(a) * r;
       const py = y + 128 + Math.sin(a) * r;
       if (a === 0) g.moveTo(px, py);
@@ -156,57 +137,54 @@ function eyeTexture() {
     }
     g.stroke();
   }
-  // 4: 깜짝 놀란 눈
+  // 4: 깜짝 놀란 눈 (동그랗게)
   {
     const [x, y] = cell(4);
-    g.fillStyle = "#ffffff";
-    g.fillRect(x, y, S, S);
-    pupil(x + 128, y + 128, 62, 68);
-    shine(x + 106, y + 98, 24);
-    shine(x + 150, y + 156, 10, 0.85);
-    g.strokeStyle = "rgba(30,30,60,.3)";
-    g.lineWidth = 8;
-    g.beginPath();
-    g.arc(x + 128, y + 128, 118, 0, TAU);
-    g.stroke();
+    pupil(x + 128, y + 128, 92, 100);
+    shine(x + 96, y + 90, 32);
+    shine(x + 162, y + 164, 14, 0.9);
   }
-  // 5: 시무룩한 눈
+  // 5: 시무룩한 눈 (눈꼬리가 처짐)
   {
     const [x, y] = cell(5);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
-    pupil(x + 128, y + 148, 100, 100);
-    shine(x + 96, y + 118, 30);
-    shine(x + 160, y + 190, 15, 0.9);
-    g.fillStyle = skin;
+    pupil(x + 128, y + 146, 108, 104);
+    shine(x + 92, y + 118, 34);
+    shine(x + 166, y + 186, 17, 0.95);
+    g.save();
+    g.globalCompositeOperation = "destination-out";
     g.beginPath();
     g.moveTo(x, y);
     g.lineTo(x + S, y);
-    g.lineTo(x + S, y + 92);
-    g.lineTo(x, y + 44);
+    g.lineTo(x + S, y + 86);
+    g.lineTo(x, y + 38);
     g.closePath();
     g.fill();
-    g.strokeStyle = ink;
-    g.lineWidth = 14;
-    g.beginPath();
-    g.moveTo(x + 18, y + 48);
-    g.lineTo(x + 238, y + 92);
-    g.stroke();
+    g.restore();
   }
-  // 6: 씩씩한 눈 (달릴 때)
+  // 6: 씩씩한 눈 (달릴 때, 눈이 살짝 납작)
   {
     const [x, y] = cell(6);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, S);
-    pupil(x + 128, y + 138, 106, 108);
-    shine(x + 96, y + 104, 34);
-    shine(x + 164, y + 176, 15, 0.9);
-    g.fillStyle = skin;
-    g.fillRect(x, y, S, 44);
+    pupil(x + 128, y + 136, 118, 112);
+    shine(x + 88, y + 96, 40);
+    shine(x + 168, y + 178, 18, 0.95);
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 4;
+  return t;
+}
+
+/** 볼터치 */
+function blushTexture() {
+  const [c, g] = canvas(128, 128);
+  const r = g.createRadialGradient(64, 64, 2, 64, 64, 64);
+  r.addColorStop(0, "rgba(255,120,140,.92)");
+  r.addColorStop(0.55, "rgba(255,135,150,.62)");
+  r.addColorStop(1, "rgba(255,150,165,0)");
+  g.fillStyle = r;
+  g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
@@ -236,10 +214,10 @@ const bendPatch = (mat, uniforms, extra = "") => {
       uniform vec3 uBend;
       uniform float uTwist;
       vec3 pdDeform(vec3 p){
-        float a = uTwist * smoothstep(0.6, 0.88, p.y);
+        float a = uTwist * smoothstep(0.42, 0.7, p.y);
         float c = cos(a), s = sin(a);
         p.xz = mat2(c, -s, s, c) * p.xz;
-        float h = max(0.0, p.y - 0.12) / 1.1;
+        float h = max(0.0, p.y - 0.1);
         p.x += uBend.x * h * h;
         p.z += uBend.z * h * h;
         return p;
@@ -277,8 +255,8 @@ export class Penguin {
     this.group.add(this.pivot);
     this.body = new THREE.Group();
     this.pivot.add(this.body);
-    this.pivot.position.y = 0.48;
-    this.body.position.y = -0.48;
+    this.pivot.position.y = 0.5;
+    this.body.position.y = -0.5;
     this.u = { uBend: { value: new THREE.Vector3() }, uTwist: { value: 0 } };
     this.costume = "courier";
     this.expr = "normal";
@@ -328,20 +306,17 @@ export class Penguin {
     const q = this.q;
     // 머리 + 몸통 한 덩어리
     const prof = [
-      [0.001, 0.07],
-      [0.2, 0.08],
-      [0.36, 0.17],
-      [0.445, 0.31],
-      [0.465, 0.46],
-      [0.425, 0.6],
-      [0.385, 0.695],
-      [0.395, 0.76],
-      [0.442, 0.86],
-      [0.462, 0.97],
-      [0.44, 1.08],
-      [0.36, 1.18],
-      [0.22, 1.25],
-      [0.001, 1.28],
+      [0.001, 0.06],
+      [0.22, 0.07],
+      [0.4, 0.14],
+      [0.52, 0.28],
+      [0.56, 0.44],
+      [0.54, 0.6],
+      [0.5, 0.76],
+      [0.43, 0.9],
+      [0.32, 1.02],
+      [0.17, 1.09],
+      [0.001, 1.11],
     ].map((a) => new THREE.Vector2(a[0], a[1]));
     const spline = new THREE.SplineCurve(prof);
     const pts = spline.getPoints(q === "low" ? 26 : 44);
@@ -350,64 +325,92 @@ export class Penguin {
     // 텍스처 v 를 실제 높이에 맞춤
     const uv = geo.attributes.uv;
     const pos = geo.attributes.position;
-    for (let i = 0; i < uv.count; i += 1) uv.setY(i, clamp((pos.getY(i) - 0.07) / 1.21, 0, 1));
+    for (let i = 0; i < uv.count; i += 1) uv.setY(i, clamp((pos.getY(i) - BODY_Y0) / BODY_H, 0, 1));
     this.bodyTex = bodyTexture();
-    const skin = bendPatch(toyMat({ map: this.bodyTex, rough: 0.46, coat: 0.42 }, q), this.u);
+    const skin = bendPatch(toyMat({ map: this.bodyTex, rough: 0.5, coat: 0.22 }, q), this.u);
     this.skin = new THREE.Mesh(geo, skin);
     this.skin.castShadow = true;
     this.skin.customDepthMaterial = bendPatch(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), this.u);
     this.body.add(this.skin);
     // 꼬리
-    const tail = new THREE.Mesh(ball(0.13, 0.9, 0.55, 1.3, 14), toyMat({ color: 0x2a4274, rough: 0.5 }, q));
-    tail.position.set(0, 0.2, -0.42);
+    const tail = new THREE.Mesh(ball(0.1, 1, 0.6, 1.2, 14), toyMat({ color: 0x3c4e74, rough: 0.5, coat: 0.2 }, q));
+    tail.position.set(0, 0.16, -0.49);
     tail.rotation.x = -0.5;
     tail.castShadow = true;
     this.body.add(tail);
     this.tail = tail;
     // 머리 묶음 (셰이더와 같은 식으로 따라감)
     this.head = new THREE.Group();
-    this.head.position.y = 0.94;
+    this.head.position.y = HEAD_Y;
     this.body.add(this.head);
-    // 눈: 평면 투영 UV 의 납작한 공
+    // 눈: 낮고 넓게, 평면 투영 UV 의 납작한 공 (배경 투명)
     this.eyeTex = eyeTexture();
-    const eyeGeo = new THREE.SphereGeometry(0.128, 24, 18);
-    eyeGeo.scale(1, 1.14, 0.56);
+    const EYE_R = 0.128;
+    const eyeGeo = new THREE.SphereGeometry(EYE_R, 24, 18);
+    eyeGeo.scale(1, 1.14, 0.5);
     const eUv = eyeGeo.attributes.uv;
     const ep = eyeGeo.attributes.position;
-    for (let i = 0; i < eUv.count; i += 1) eUv.setXY(i, ep.getX(i) / 0.256 + 0.5, ep.getY(i) / (0.256 * 1.14) + 0.5);
+    for (let i = 0; i < eUv.count; i += 1) eUv.setXY(i, ep.getX(i) / (EYE_R * 2) + 0.5, ep.getY(i) / (EYE_R * 2 * 1.14) + 0.5);
     this.eyes = [];
     for (const side of [-1, 1]) {
       const tex = this.eyeTex.clone();
       tex.needsUpdate = true;
       tex.repeat.set(0.25, 0.5);
       tex.offset.set(0, 0.5);
-      const m = toyMat({ map: tex, rough: 0.12, coat: 1 }, q);
+      const m = toyMat({ map: tex, rough: 0.1, coat: 1, transparent: true, depthWrite: false, alphaTest: 0.04 }, q);
       m.emissive = new THREE.Color(0xffffff);
       m.emissiveMap = tex;
-      m.emissiveIntensity = 0.16;
+      m.emissiveIntensity = 0.12;
       const e = new THREE.Mesh(eyeGeo, m);
-      e.position.set(side * 0.178, 0.015, 0.378);
-      e.rotation.y = side * 0.42;
+      e.position.set(side * 0.232, 0.05, 0.408);
+      e.rotation.y = side * 0.5;
       e.rotation.order = "YXZ";
+      e.renderOrder = 2;
       e.userData = { side, tex };
       this.head.add(e);
       this.eyes.push(e);
     }
-    // 부리
-    const orange = toyMat({ color: 0xff9d24, rough: 0.34, coat: 0.7 }, q);
-    const beakUp = new THREE.Mesh(ball(0.1, 1.18, 0.62, 1.12, 18), orange);
-    beakUp.position.set(0, -0.085, 0.44);
+    // 볼터치
+    this.blushTex = blushTexture();
+    const blushM = new THREE.MeshBasicMaterial({ map: this.blushTex, transparent: true, depthWrite: false, toneMapped: true });
+    for (const side of [-1, 1]) {
+      const b = new THREE.Mesh(new THREE.CircleGeometry(0.088, 20), blushM);
+      b.scale.set(1.28, 0.86, 1);
+      b.position.set(side * 0.3, -0.082, 0.452);
+      b.rotation.y = side * 0.6;
+      b.renderOrder = 1;
+      this.head.add(b);
+    }
+    // 작고 동그란 부리
+    const orange = toyMat({ color: 0xff9d24, rough: 0.36, coat: 0.6 }, q);
+    const beakUp = new THREE.Mesh(ball(0.074, 1.18, 0.66, 1.02, 18), orange);
+    beakUp.position.set(0, -0.022, 0.492);
     beakUp.castShadow = true;
     this.head.add(beakUp);
     this.beakLow = new THREE.Group();
-    this.beakLow.position.set(0, -0.115, 0.4);
-    const low = new THREE.Mesh(ball(0.08, 1.12, 0.45, 1.08, 14), toyMat({ color: 0xf58512, rough: 0.4, coat: 0.5 }, q));
-    low.position.z = 0.04;
+    this.beakLow.position.set(0, -0.046, 0.468);
+    const low = new THREE.Mesh(ball(0.056, 1.14, 0.46, 1.04, 14), toyMat({ color: 0xf58512, rough: 0.42, coat: 0.45 }, q));
+    low.position.z = 0.026;
     this.beakLow.add(low);
-    const inner = new THREE.Mesh(ball(0.06, 1.1, 0.4, 1, 12), new THREE.MeshStandardMaterial({ color: 0xa8324a, roughness: 0.6 }));
-    inner.position.set(0, 0.012, 0.03);
+    const inner = new THREE.Mesh(ball(0.042, 1.1, 0.42, 1, 12), new THREE.MeshStandardMaterial({ color: 0xc23a55, roughness: 0.6 }));
+    inner.position.set(0, 0.008, 0.02);
     this.beakLow.add(inner);
     this.head.add(this.beakLow);
+    // 머리 위 삐죽한 솜털
+    const tuftM = toyMat({ color: 0x44597f, rough: 0.55, coat: 0.15 }, q);
+    this.tuft = new THREE.Group();
+    this.tuft.position.set(0.02, 0.345, 0.0);
+    for (const [x, rz, sc] of [[-0.05, 0.5, 0.9], [0.0, 0.0, 1.15], [0.055, -0.55, 0.85]]) {
+      const g = ball(0.04, 0.8, 2, 0.8, 10);
+      g.translate(0, 0.07, 0);
+      const f = new THREE.Mesh(g, tuftM);
+      f.position.x = x;
+      f.rotation.z = rz;
+      f.scale.setScalar(sc);
+      f.castShadow = true;
+      this.tuft.add(f);
+    }
+    this.head.add(this.tuft);
     // 눈물
     this.tear = new THREE.Mesh(ball(0.035, 0.85, 1.25, 0.7, 10), new THREE.MeshPhysicalMaterial({ color: 0x8fd8ff, roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.9 }));
     this.tear.visible = false;
@@ -416,18 +419,18 @@ export class Penguin {
     // 날개: 끝으로 갈수록 부드럽게 휜다
     this.flips = [];
     const flipGeo = new THREE.SphereGeometry(0.1, 16, 20);
-    flipGeo.scale(0.72, 2.75, 1.32);
-    flipGeo.translate(0, -0.24, 0);
+    flipGeo.scale(0.66, 1.95, 1.22);
+    flipGeo.translate(0, -0.165, 0);
     for (const side of [-1, 1]) {
       const uu = { uCurl: { value: 0 } };
-      const mat = toyMat({ color: 0x2c4579, rough: 0.46, coat: 0.45 }, q);
+      const mat = toyMat({ color: 0x3c4e74, rough: 0.5, coat: 0.22 }, q);
       mat.onBeforeCompile = (sh) => {
         Object.assign(sh.uniforms, uu);
         sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uCurl;");
         sh.vertexShader = sh.vertexShader.replace(
           "#include <begin_vertex>",
           `#include <begin_vertex>
-          float tt = clamp(-transformed.y / 0.5, 0.0, 1.0);
+          float tt = clamp(-transformed.y / 0.36, 0.0, 1.0);
           transformed.x += uCurl * tt * tt * 0.5;
           transformed.y *= 1.0 - abs(uCurl) * tt * 0.16;`
         );
@@ -435,7 +438,7 @@ export class Penguin {
       const m = new THREE.Mesh(flipGeo, mat);
       m.castShadow = true;
       const j = new THREE.Group();
-      j.position.set(side * 0.405, 0.665, 0.01);
+      j.position.set(side * 0.53, SHOULDER_Y, 0.02);
       j.add(m);
       j.rotation.order = "ZXY";
       this.body.add(j);
@@ -445,8 +448,8 @@ export class Penguin {
     // 발
     const footMat = toyMat({ color: 0xff9620, rough: 0.38, coat: 0.65 }, q);
     const footGeo = (() => {
-      const main = ball(0.115, 1.08, 0.46, 1.42, 14);
-      main.translate(0, 0.045, 0.06);
+      const main = ball(0.105, 1.12, 0.5, 1.28, 14);
+      main.translate(0, 0.045, 0.07);
       return main;
     })();
     this.feet = [];
@@ -456,26 +459,26 @@ export class Penguin {
       m.castShadow = true;
       f.add(m);
       for (const a of [-1, 0, 1]) {
-        const toe = new THREE.Mesh(ball(0.052, 1, 0.7, 1.3, 10), footMat);
-        toe.position.set(a * 0.073, 0.033, 0.195 - Math.abs(a) * 0.022);
+        const toe = new THREE.Mesh(ball(0.046, 1, 0.74, 1.15, 10), footMat);
+        toe.position.set(a * 0.066, 0.033, 0.17 - Math.abs(a) * 0.02);
         toe.rotation.y = a * 0.35;
         f.add(toe);
       }
       const stub = new THREE.Mesh(ball(0.075, 1, 1.25, 1, 10), footMat);
       stub.position.set(0, 0.1, -0.02);
       f.add(stub);
-      f.position.set(side * 0.19, 0, 0.03);
-      f.rotation.y = side * 0.14;
+      f.position.set(side * 0.24, 0, 0.1);
+      f.rotation.y = side * 0.22;
       this.body.add(f);
       this.feet.push({ f, side });
     }
 
     // 눈덩이 옷 (눈덩이에 맞았을 때)
     const snowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
-    this.snowBody = new THREE.Mesh(ball(0.66, 1, 0.92, 1, 20), snowMat);
-    this.snowBody.position.y = 0.46;
-    this.snowHead = new THREE.Mesh(ball(0.54, 1, 0.95, 1, 18), snowMat);
-    this.snowHead.position.y = 1.08;
+    this.snowBody = new THREE.Mesh(ball(0.72, 1, 0.9, 1, 20), snowMat);
+    this.snowBody.position.y = 0.42;
+    this.snowHead = new THREE.Mesh(ball(0.55, 1, 0.95, 1, 18), snowMat);
+    this.snowHead.position.y = 0.9;
     this.snowHead.castShadow = this.snowBody.castShadow = true;
     this.body.add(this.snowBody, this.snowHead);
     this.snowBody.visible = this.snowHead.visible = false;
@@ -497,12 +500,12 @@ export class Penguin {
   }
   /** 몸 휘는 식과 같은 위치 (머리 · 어깨가 함께 움직이게) */
   bendAt(y, out) {
-    const h = Math.max(0, y - 0.12) / 1.1;
+    const h = Math.max(0, y - 0.1);
     const b = this.u.uBend.value;
     out.x = b.x * h * h;
     out.z = b.z * h * h;
-    out.sx = (2 * h * b.x) / 1.1;
-    out.sz = (2 * h * b.z) / 1.1;
+    out.sx = 2 * h * b.x;
+    out.sz = 2 * h * b.z;
     return out;
   }
   setExpr(name, hold = 0) {
@@ -521,6 +524,8 @@ export class Penguin {
   }
   setCostume(id) {
     this.costume = id;
+    this.tuft.visible = id === "bunny" || id === "courier" || id === "shades";
+    this.carryLift = { courier: 0.5, shades: 0.5, bunny: 0.4, chef: 0.68, santa: 0.56, explorer: 0.52, pirate: 0.54, space: 0.74, crown: 0.56 }[id] || 0.5;
     for (const g of [this.wear, this.bodyWear]) {
       while (g.children.length) {
         const c = g.children.pop();
@@ -544,54 +549,53 @@ export class Penguin {
       return new THREE.LatheGeometry(new THREE.SplineCurve(up.map((a) => new THREE.Vector2(a[0], a[1]))).getPoints(20), seg);
     };
     const scarf = (col, col2) => {
-      const t = new THREE.TorusGeometry(0.385, 0.085, 12, 34);
+      const t = new THREE.TorusGeometry(0.52, 0.078, 12, 40);
       t.rotateX(Math.PI / 2);
       const mat = bendPatch(M(col, 0.72, 0.1), this.u);
-      add(t, mat, 0, 0.69, 0.005, 0, 0, 0, this.bodyWear);
-      add(ball(0.11, 0.9, 1.5, 0.45, 12), bendPatch(M(col2 || col, 0.72, 0.1), this.u), 0.2, 0.47, 0.37, 0.25, 0, 0.18, this.bodyWear);
+      add(t, mat, 0, 0.53, 0.005, 0, 0, 0, this.bodyWear);
+      add(ball(0.1, 0.9, 1.5, 0.45, 12), bendPatch(M(col2 || col, 0.72, 0.1), this.u), 0.2, 0.36, 0.5, 0.2, 0, 0.18, this.bodyWear);
     };
     const bag = (color = 0xf0b23a) => {
       // 뒤에서도 잘 보이는 작은 택배 배낭
-      const Bm = (c, r = 0.5, co = 0.35) => bendPatch(M(c, r, co), this.u);
-      const box = new THREE.BoxGeometry(0.5, 0.46, 0.2, 4, 4, 3);
-      roundBox(box, 0.5, 0.46, 0.2, 0.08);
-      add(box, Bm(color), 0, 0.42, -0.45, -0.06, 0, 0, this.bodyWear);
-      const lid = new THREE.BoxGeometry(0.52, 0.17, 0.23, 3, 2, 2);
-      roundBox(lid, 0.52, 0.17, 0.23, 0.07);
-      add(lid, Bm(0xe9463c), 0, 0.59, -0.45, -0.06, 0, 0, this.bodyWear);
-      const pocket = new THREE.BoxGeometry(0.3, 0.17, 0.07, 2, 2, 1);
-      roundBox(pocket, 0.3, 0.17, 0.07, 0.03);
-      add(pocket, Bm(0xfff6dc), 0, 0.36, -0.57, -0.06, 0, 0, this.bodyWear);
+      const Bm = (c, r = 0.5, co = 0.3) => bendPatch(M(c, r, co), this.u);
+      const box = new THREE.BoxGeometry(0.44, 0.4, 0.18, 4, 4, 3);
+      roundBox(box, 0.44, 0.4, 0.18, 0.08);
+      add(box, Bm(color), 0, 0.42, -0.55, -0.05, 0, 0, this.bodyWear);
+      const lid = new THREE.BoxGeometry(0.46, 0.15, 0.21, 3, 2, 2);
+      roundBox(lid, 0.46, 0.15, 0.21, 0.065);
+      add(lid, Bm(0xe9463c), 0, 0.57, -0.545, -0.05, 0, 0, this.bodyWear);
+      const pocket = new THREE.BoxGeometry(0.26, 0.15, 0.06, 2, 2, 1);
+      roundBox(pocket, 0.26, 0.15, 0.06, 0.028);
+      add(pocket, Bm(0xfff6dc), 0, 0.37, -0.65, -0.05, 0, 0, this.bodyWear);
       for (const sx of [-1, 1]) {
-        // 어깨 끈: 등에서 어깨까지만 보임
-        const st = new THREE.TorusGeometry(0.47, 0.03, 8, 22, 2.5);
-        st.rotateZ(-0.5);
-        st.rotateY(Math.PI / 2);
-        add(st, Bm(0xc97f26, 0.6, 0.2), sx * 0.2, 0.5, 0, 0, 0, sx * 0.05, this.bodyWear);
+        // 어깨 끈: 배낭 위에서 어깨로
+        const st = new THREE.CapsuleGeometry(0.026, 0.2, 4, 8);
+        add(st, Bm(0xc97f26, 0.6, 0.2), sx * 0.16, 0.72, -0.475, 0.5, 0, 0, this.bodyWear);
       }
     };
     const courierCap = () => {
-      const r = M(0xdb3028, 0.46, 0.3);
-      add(lathe([[0.001, 0.25], [0.17, 0.24], [0.29, 0.17], [0.365, 0.07], [0.375, 0.0]]), r, 0, 0.255, -0.03, -0.1);
-      add(new THREE.TorusGeometry(0.372, 0.032, 10, 40).rotateX(Math.PI / 2), M(0xffffff, 0.5, 0.3), 0, 0.262, -0.03, -0.1);
-      const visor = ball(0.23, 1.06, 0.15, 0.88, 20);
-      const v = add(visor, M(0xb9261f, 0.42, 0.4), 0, 0.262, 0.335, 0.16);
-      v.castShadow = true;
-      // 작은 상자 표시
-      const em = new THREE.BoxGeometry(0.13, 0.11, 0.04, 2, 2, 1);
-      roundBox(em, 0.13, 0.11, 0.04, 0.016);
-      add(em, M(0xffc62e, 0.4, 0.5), 0, 0.4, 0.255, -0.5);
+      // 머리 위에 살짝 삐딱하게 얹은 작은 모자
+      const cap = new THREE.Group();
+      cap.position.set(-0.05, 0.285, 0.015);
+      cap.rotation.set(-0.08, 0, 0.2);
+      this.wear.add(cap);
+      const r = M(0xe5352d, 0.46, 0.28);
+      add(lathe([[0.27, 0.0], [0.262, 0.05], [0.215, 0.13], [0.12, 0.185], [0.001, 0.2]]), r, 0, 0, 0, 0, 0, 0, cap);
+      add(new THREE.TorusGeometry(0.268, 0.03, 10, 34).rotateX(Math.PI / 2), M(0xffffff, 0.5, 0.25), 0, 0.005, 0, 0, 0, 0, cap);
+      add(ball(0.17, 1.08, 0.16, 0.86, 18), M(0xbf2a22, 0.42, 0.35), 0, 0.0, 0.25, 0.14, 0, 0, cap);
+      const em = new THREE.BoxGeometry(0.105, 0.09, 0.035, 2, 2, 1);
+      roundBox(em, 0.105, 0.09, 0.035, 0.014);
+      add(em, M(0xffc62e, 0.4, 0.5), 0, 0.095, 0.215, -0.45, 0, 0, cap);
     };
     switch (id) {
       case "bunny": {
-        courierCap();
         const white = M(0xfffbf4, 0.6, 0.2);
         const pink = M(0xffa9c0, 0.6, 0.2);
         this.ears = [];
         for (const side of [-1, 1]) {
           const j = new THREE.Group();
-          j.position.set(side * 0.17, 0.4, -0.07);
-          j.rotation.z = -side * 0.14;
+          j.position.set(side * 0.17, 0.3, -0.04);
+          j.rotation.z = -side * 0.2;
           add(ball(0.09, 0.8, 2.6, 0.5, 14), white, 0, 0.21, 0);
           const a = this.wear.children[this.wear.children.length - 1];
           this.wear.remove(a);
@@ -609,10 +613,10 @@ export class Penguin {
         courierCap();
         const black = M(0x12121c, 0.12, 1);
         for (const side of [-1, 1]) {
-          add(ball(0.135, 1.15, 0.86, 0.3, 18), black, side * 0.178, 0.025, 0.44, 0, side * 0.34, 0);
-          add(ball(0.04, 1, 0.6, 0.2, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), side * 0.14, 0.07, 0.49, 0, side * 0.34, 0);
+          add(ball(0.15, 1.12, 0.9, 0.28, 18), black, side * 0.226, 0.055, 0.45, 0, side * 0.48, 0);
+          add(ball(0.044, 1, 0.6, 0.2, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), side * 0.19, 0.1, 0.495, 0, side * 0.48, 0);
         }
-        add(new THREE.CylinderGeometry(0.014, 0.014, 0.14, 6).rotateZ(Math.PI / 2), black, 0, 0.05, 0.445);
+        add(new THREE.CylinderGeometry(0.016, 0.016, 0.16, 6).rotateZ(Math.PI / 2), black, 0, 0.085, 0.495);
         bag(0x6d82e8);
         break;
       }
@@ -673,8 +677,8 @@ export class Penguin {
         skull.position.set(0, 0.37, 0.3);
         skull.rotation.x = -0.3;
         this.wear.add(skull);
-        add(ball(0.13, 1, 1.05, 0.26, 16), M(0x14141e, 0.6, 0.2), 0.18, 0.03, 0.44, 0, 0.36, 0);
-        const strap = new THREE.TorusGeometry(0.44, 0.012, 6, 40);
+        add(ball(0.14, 1, 1.05, 0.24, 16), M(0x14141e, 0.6, 0.2), 0.232, 0.05, 0.435, 0, 0.5, 0);
+        const strap = new THREE.TorusGeometry(0.505, 0.012, 6, 40);
         strap.rotateX(Math.PI / 2 + 0.08);
         strap.rotateZ(-0.12);
         add(strap, M(0x14141e, 0.6, 0.2), 0, 0.08, -0.01);
@@ -682,15 +686,15 @@ export class Penguin {
         break;
       }
       case "space": {
-        const dome = new THREE.Mesh(ball(0.6, 1, 0.94, 1, 28), new THREE.MeshPhysicalMaterial({ color: 0xbfe8ff, roughness: 0.04, transmission: q === "high" ? 0.0 : 0, transparent: true, opacity: 0.2, clearcoat: 1, clearcoatRoughness: 0.02, metalness: 0.0, depthWrite: false }));
+        const dome = new THREE.Mesh(ball(0.68, 1, 0.9, 1, 28), new THREE.MeshPhysicalMaterial({ color: 0xbfe8ff, roughness: 0.04, transmission: q === "high" ? 0.0 : 0, transparent: true, opacity: 0.2, clearcoat: 1, clearcoatRoughness: 0.02, metalness: 0.0, depthWrite: false }));
         dome.position.set(0, 0.035, 0);
         this.wear.add(dome);
-        add(new THREE.TorusGeometry(0.44, 0.075, 12, 34).rotateX(Math.PI / 2), M(0xf2f6ff, 0.35, 0.7), 0, -0.26, 0, 0.0);
-        add(new THREE.CylinderGeometry(0.016, 0.016, 0.26, 8), M(0xdfe5f0, 0.3, 0.6), 0.24, 0.62, 0);
-        add(ball(0.055, 1, 1, 1, 12), new THREE.MeshStandardMaterial({ color: 0xff5d5d, emissive: 0xff2d2d, emissiveIntensity: 0.9 }), 0.24, 0.76, 0);
+        add(new THREE.TorusGeometry(0.565, 0.07, 12, 34).rotateX(Math.PI / 2), M(0xf2f6ff, 0.35, 0.7), 0, -0.24, 0, 0.0);
+        add(new THREE.CylinderGeometry(0.016, 0.016, 0.24, 8), M(0xdfe5f0, 0.3, 0.6), 0.24, 0.66, 0);
+        add(ball(0.055, 1, 1, 1, 12), new THREE.MeshStandardMaterial({ color: 0xff5d5d, emissive: 0xff2d2d, emissiveIntensity: 0.9 }), 0.24, 0.79, 0);
         const pack = new THREE.BoxGeometry(0.46, 0.5, 0.2, 3, 3, 3);
         roundBox(pack, 0.46, 0.5, 0.2, 0.07);
-        add(pack, bendPatch(M(0xf0f4fb, 0.38, 0.6), this.u), 0, 0.47, -0.47, 0, 0, 0, this.bodyWear);
+        add(pack, bendPatch(M(0xf0f4fb, 0.38, 0.6), this.u), 0, 0.42, -0.57, 0, 0, 0, this.bodyWear);
         break;
       }
       case "crown": {
@@ -711,7 +715,7 @@ export class Penguin {
           add(ball(0.045, 1, 1, 1, 10), toyMat({ color: [0xff3d6e, 0x41c6ff, 0x62e07a, 0xc77dff][i], rough: 0.1, coat: 1 }, q), Math.sin(a) * 0.275, 0.37, Math.cos(a) * 0.275 - 0.02);
         }
         // 망토
-        const capeG = new THREE.PlaneGeometry(0.9, 0.86, 8, 8);
+        const capeG = new THREE.PlaneGeometry(0.86, 0.66, 8, 8);
         const cp = capeG.attributes.position;
         for (let i = 0; i < cp.count; i += 1) {
           const x = cp.getX(i);
@@ -719,7 +723,7 @@ export class Penguin {
           cp.setX(i, x * (1 + (0.43 - cp.getY(i)) * 0.3));
         }
         capeG.computeVertexNormals();
-        const cape = add(capeG, bendPatch(toyMat({ color: 0xc4213f, rough: 0.5, coat: 0.25, side: THREE.DoubleSide }, q), this.u), 0, 0.33, -0.43, 0.09, 0, 0, this.bodyWear);
+        const cape = add(capeG, bendPatch(toyMat({ color: 0xc4213f, rough: 0.5, coat: 0.25, side: THREE.DoubleSide }, q), this.u), 0, 0.34, -0.565, 0.08, 0, 0, this.bodyWear);
         cape.renderOrder = 1;
         scarf(0xf5efe0, 0xf5efe0);
         break;
@@ -753,17 +757,17 @@ export class Penguin {
     const br = Math.sin(T * 2.1);
     let t = {
       hop: 0,
-      squash: br * 0.018,
+      squash: br * 0.024,
       pitch: 0,
       roll: Math.sin(T * 1.1) * 0.02,
       bendX: Math.sin(T * 0.9) * 0.015,
       bendZ: 0.02,
       twist: 0,
       nod: Math.sin(T * 1.6) * 0.012,
-      headRoll: Math.sin(T * 1.3) * 0.02,
+      headRoll: Math.sin(T * 1.3) * 0.02 + (this.tiltT > 0 ? this.tiltDir * 0.26 : 0),
       lift: 0,
-      flipLr: 0.22 + br * 0.03,
-      flipRr: 0.22 - br * 0.03,
+      flipLr: 0.42 + br * 0.04,
+      flipRr: 0.42 - br * 0.04,
       flipLs: 0,
       flipRs: 0,
       curlL: 0.2,
@@ -777,10 +781,15 @@ export class Penguin {
       mouth: 0,
     };
     let expr = "normal";
-    // 대기 중 두리번
+    // 대기 중 두리번 · 가끔 고개 갸웃
+    this.tiltT = (this.tiltT || 0) - dt;
     this.lookT -= dt;
     if (this.lookT <= 0) {
       this.lookT = 1.4 + Math.random() * 2.6;
+      if (Math.random() < 0.34) {
+        this.tiltT = 0.9;
+        this.tiltDir = Math.random() < 0.5 ? -1 : 1;
+      }
       const on = Math.random();
       this.gaze.tx = on < 0.55 ? (Math.random() - 0.5) * 0.9 : 0;
       this.gaze.ty = on < 0.55 ? (Math.random() - 0.4) * 0.3 : 0;
@@ -796,10 +805,10 @@ export class Penguin {
           t.footRz = -Math.cos(ph) * lerp(0.09, 0.2, clamp(run, 0, 1));
           t.footLp = -Math.cos(ph) * 0.4;
           t.footRp = Math.cos(ph) * 0.4;
-          t.roll = sL * lerp(0.14, 0.09, clamp(run, 0, 1));
+          t.roll = sL * lerp(0.17, 0.11, clamp(run, 0, 1));
           t.bendX = -sL * 0.06;
           t.hop = Math.abs(Math.cos(ph)) * lerp(0.035, 0.07, clamp(run, 0, 1));
-          t.squash = -Math.abs(Math.cos(ph)) * 0.03 + 0.012;
+          t.squash = -Math.abs(Math.cos(ph)) * 0.055 + 0.022;
           t.pitch = lerp(0.04, 0.2, clamp(run, 0, 1));
           t.bendZ = lerp(0.04, 0.2, clamp(run, 0, 1));
           t.headRoll = -sL * 0.05;
@@ -835,8 +844,8 @@ export class Penguin {
           // 배로 슝
           t.pitch = 1.42;
           t.bendZ = -0.12;
-          t.nod = -1;
-          t.hop = -0.03;
+          t.nod = -0.72;
+          t.hop = 0.05;
           t.flipLr = 0.5;
           t.flipRr = 0.5;
           t.flipLs = -1.5;
@@ -881,8 +890,8 @@ export class Penguin {
       // 택배를 머리에 이고 양 날개로 받침
       if (carrying && S.mode !== "slide") {
         const k = S.grounded ? 1 : 0.45;
-        t.flipLr = lerp(t.flipLr, 2.72, k);
-        t.flipRr = lerp(t.flipRr, 2.72, k);
+        t.flipLr = lerp(t.flipLr, 2.25, k);
+        t.flipRr = lerp(t.flipRr, 2.25, k);
         t.flipLs = lerp(t.flipLs, 0.02 + (moving ? sL * 0.04 : 0), k);
         t.flipRs = lerp(t.flipRs, 0.02 + (moving ? sR * 0.04 : 0), k);
         t.curlL = lerp(t.curlL, 0.55, k);
@@ -916,7 +925,7 @@ export class Penguin {
     } else if (S.mode === "stun") {
       // 엉덩방아
       t.pitch = -0.72;
-      t.hop = -0.18;
+      t.hop = -0.1;
       t.bendZ = 0.1;
       t.nod = 0.42;
       t.headRoll = Math.sin(T * 8) * 0.2;
@@ -1040,7 +1049,7 @@ export class Penguin {
     // 뼈대에 반영
     const sq = 1 + s.squash.x;
     this.body.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
-    this.pivot.position.y = 0.48 + s.hop.x;
+    this.pivot.position.y = 0.5 + s.hop.x;
     this.pivot.rotation.x = s.pitch.x + (S.spin ? S.spin * TAU : 0);
     this.pivot.rotation.z = s.roll.x;
     const bend = this.u.uBend.value;
@@ -1049,14 +1058,14 @@ export class Penguin {
     this.u.uTwist.value = s.twist.x;
     // 머리 따라가기
     const o = this._o || (this._o = {});
-    this.bendAt(0.94, o);
-    this.head.position.set(o.x, 0.94, o.z);
+    this.bendAt(HEAD_Y, o);
+    this.head.position.set(o.x, HEAD_Y, o.z);
     this.head.rotation.set(o.sz + s.nod.x, s.twist.x, -o.sx + s.headRoll.x, "YXZ");
     // 날개
     for (const fl of this.flips) {
       const L = fl.side < 0;
-      this.bendAt(0.665, o);
-      fl.j.position.set(fl.side * 0.405 + o.x, 0.665, 0.01 + o.z);
+      this.bendAt(SHOULDER_Y, o);
+      fl.j.position.set(fl.side * 0.53 + o.x, SHOULDER_Y, 0.02 + o.z);
       fl.j.rotation.z = fl.side * (L ? s.flipLr.x : s.flipRr.x);
       fl.j.rotation.x = L ? s.flipLs.x : s.flipRs.x;
       fl.uu.uCurl.value = (L ? s.curlL.x : s.curlR.x) * -1;
@@ -1065,7 +1074,7 @@ export class Penguin {
     for (const ft of this.feet) {
       const L = ft.side < 0;
       ft.f.position.y = Math.max(0, L ? s.footLy.x : s.footRy.x);
-      ft.f.position.z = 0.03 + (L ? s.footLz.x : s.footRz.x);
+      ft.f.position.z = 0.1 + (L ? s.footLz.x : s.footRz.x);
       ft.f.rotation.x = L ? s.footLp.x : s.footRp.x;
     }
     this.tail.rotation.z = Math.sin(T * 7) * (moving ? 0.25 : 0.06);
@@ -1083,16 +1092,17 @@ export class Penguin {
     if (showSnow) {
       this.snowBody.scale.setScalar(snowK);
       this.snowHead.scale.setScalar(snowK);
-      this.snowHead.position.set(o.x * 0.7, 1.08, o.z * 0.7);
+      this.snowHead.position.set(o.x * 0.7, 0.9, o.z * 0.7);
     }
     // 눈과 부리가 눈덩이 밖으로 빠져나옴
     this.head.scale.setScalar(1 + snowK * 0.06);
-    for (const e of this.eyes) e.position.z = 0.378 + snowK * 0.13;
+    for (const e of this.eyes) e.position.z = 0.408 + snowK * 0.17;
+    this.beakLow.position.z = 0.468 + snowK * 0.1;
     // 어지러운 별
     const dizzy = S.mode === "stun" || S.mode === "snow";
     this.stars.visible = dizzy;
     if (dizzy) {
-      this.stars.position.y = S.mode === "stun" ? 1.05 : 1.65;
+      this.stars.position.y = S.mode === "stun" ? 0.92 : 1.5;
       this.stars.rotation.y = T * 5;
       this.stars.children.forEach((c, i) => {
         const a = (i / 4) * TAU;
@@ -1118,7 +1128,7 @@ export class Penguin {
     this.gaze.x += (this.gaze.tx - this.gaze.x) * Math.min(1, dt * 7);
     this.gaze.y += (this.gaze.ty - this.gaze.y) * Math.min(1, dt * 7);
     for (const e of this.eyes) {
-      e.rotation.y = e.userData.side * 0.42 + this.gaze.x * 0.28;
+      e.rotation.y = e.userData.side * 0.5 + this.gaze.x * 0.28;
       e.rotation.x = -this.gaze.y * 0.28;
     }
     // 눈물
@@ -1126,7 +1136,7 @@ export class Penguin {
     this.tear.visible = crying;
     if (crying) {
       const u = (T * 0.8) % 1;
-      this.tear.position.set(0.24, 0.0 - u * 0.28, 0.42 - u * 0.05);
+      this.tear.position.set(0.3, -0.03 - u * 0.26, 0.42 - u * 0.05);
       this.tear.scale.setScalar(0.6 + u * 0.8);
       this.tear.material.opacity = u < 0.8 ? 0.95 : (1 - u) * 5;
     }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -7,64 +7,62 @@
     <title>서빙왕</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Pretendard:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=3" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
-  <body data-bgm="stork-stride" data-face="1">
-    <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
+  <body class="sk" data-bgm="stork-stride" data-face="1">
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="서빙왕 게임 화면"></canvas>
 
-      <header class="hud">
-        <div class="stat">
-          <em>거리</em>
-          <b id="hud-dist">0</b>
+      <div class="hud" id="hud">
+        <div class="hud-top">
+          <div class="stat main"><small>점수</small><b id="hud-score">0</b></div>
+          <div class="stat"><small>거리</small><b id="hud-dist">0m</b></div>
+          <div class="stat"><small>접시</small><b id="hud-plates">5</b></div>
+          <div class="stat"><small>최고</small><b id="hud-best">0</b></div>
         </div>
-        <div class="stat mid">
-          <em>콤보</em>
-          <b id="hud-combo">0</b>
-        </div>
-        <div class="stat end">
-          <em>최고</em>
-          <b id="hud-best">0</b>
-        </div>
-      </header>
-
-      <div class="meter hidden" id="balance-meter">
-        <div class="bar"><i class="safe"></i><i class="knob" id="meter-needle"></i></div>
-        <p id="mood-label">안정</p>
+        <div class="meter" id="meter" aria-label="균형"><i id="meter-needle"></i></div>
+        <p class="mood" id="mood">안정</p>
       </div>
-
+      <div class="warn" id="warn" role="status"><span id="warn-text"></span></div>
       <p class="toast" id="toast"></p>
 
-      <div class="pads hidden" id="controls">
-        <button type="button" class="pad" data-dir="-1">뒤로</button>
-        <button type="button" class="pad" data-dir="1">앞으로</button>
+      <div class="pads" id="controls">
+        <button type="button" class="pad" id="pad-back" data-dir="-1" aria-label="뒤로 보정"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4L6 12l9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>뒤로</button>
+        <button type="button" class="pad" id="pad-front" data-dir="1" aria-label="앞으로 보정">앞으로<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l9 8-9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
       </div>
 
-      <div class="overlay" id="title">
-        <img class="hero-art" src="assets/serving-king-thumb.webp" alt="" width="160" height="160" />
-        <p class="eyebrow">FINE DINING</p>
-        <h1>서빙왕</h1>
-        <p class="lead">왕실 고양이에게 고급 요리를<br />접시 탑으로 안전하게 배달하세요.</p>
-        <ul class="tips">
-          <li>기울면 <b>반대 방향</b>을 짧게 보정</li>
-          <li>오래 누르면 반대로 무너집니다</li>
-          <li>손님·돌풍이 나오면 미리 대비</li>
-        </ul>
-        <button type="button" class="btn" id="start-btn">서빙 시작</button>
-        <a href="/">홈으로</a>
-      </div>
+      <section class="overlay title" id="title">
+        <div class="title-first">
+          <p class="eyebrow">FINE DINING</p>
+          <h1>서빙왕</h1>
+          <p class="title-best" id="title-best"></p>
+          <p class="lead">접시 탑이 기울면 반대쪽으로 짧게 톡톡!<br />테이블마다 서빙하고 끝까지 버텨요</p>
+          <div class="title-gap"></div>
+          <button type="button" class="toy main" id="start-btn">서빙 시작</button>
+          <a class="home-link" href="/">홈으로</a>
+        </div>
+      </section>
 
-      <div class="overlay hidden" id="over">
-        <p class="eyebrow">DROP</p>
-        <h1 id="over-title">접시가…</h1>
-        <p id="over-detail"></p>
-        <button type="button" class="btn soft" id="share-rank-btn" hidden>내 결과 공유</button>
-        <button type="button" class="btn" id="retry-btn">다시 서빙</button>
-        <a href="/">홈으로</a>
-      </div>
+      <section class="overlay sheet hidden" id="over">
+        <div class="card">
+          <p class="kick">쨍그랑!</p>
+          <h2 id="over-title">접시가 쏟아졌어요</h2>
+          <p class="big-score"><span id="over-score">0</span><small>점</small></p>
+          <p class="detail" id="over-detail"></p>
+          <dl class="c-stats">
+            <div><dt>서빙</dt><dd id="over-serves">0번</dd></div>
+            <div><dt>완벽</dt><dd id="over-perfect">0번</dd></div>
+            <div><dt>안정</dt><dd id="over-stable">0초</dd></div>
+            <div><dt>최고</dt><dd id="over-best">0</dd></div>
+          </dl>
+          <div id="over-rank"></div>
+          <button type="button" class="toy main" id="retry-btn">다시 서빙</button>
+          <a class="home-link" href="/">홈으로</a>
+        </div>
+      </section>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
     <script src="/js/game-chrome.js?v=4"></script>
@@ -75,17 +73,21 @@
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
 
-    <script src="game.js?v=face2"></script>
+    <script src="game.js?v=3"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="서빙왕 소개">
   <h2>서빙왕 소개</h2>
-  <p>균형을 잡으며 최대한 오래 버티는 무한 랭킹형 밸런스 게임입니다.</p>
+  <p>접시 탑을 머리에 이고 연회장을 달리는 무한 밸런스 게임입니다. 황금 연회장, 장미 테라스, 달빛 발코니, 왕실 대연회장을 지나며 고양이 손님들에게 요리를 서빙해요.</p>
   <h3>플레이 방법</h3>
-  <p>타이밍에 맞춰 조작해 쟁반이나 몸의 균형을 유지하며 앞으로 나아가세요.</p>
+  <p>접시 탑이 기울면 반대쪽 단추를 짧게 눌러 바로잡으세요. 오래 누르면 반대로 무너져요. 테이블에 닿으면 저절로 서빙되고, 균형이 좋을수록 팁이 커집니다. 고양이 손님, 물웅덩이, 돌풍은 미리 알려 주니 대비하세요. PC는 방향키로 조작합니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>속도가 점점 빨라지나요?</dt>
-    <dd>네, 시간이 지날수록 균형을 잡기 어려워집니다.</dd>
+    <dd>네, 멀리 갈수록 빨라지고 균형을 잡기 어려워집니다. 접시도 주방에서 계속 올라와요.</dd>
+    <dt>점수는 어떻게 정해지나요?</dt>
+    <dd>달린 거리에 서빙 팁과 안정 보너스를 더한 값이에요. 완벽 서빙은 팁이 두 배예요.</dd>
+    <dt>내 얼굴로 할 수 있나요?</dt>
+    <dd>네, 첫 화면에서 내 얼굴 캐릭터를 켤 수 있어요. 사진은 이 기기 안에만 저장됩니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

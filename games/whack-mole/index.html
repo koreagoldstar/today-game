@@ -6,61 +6,108 @@
     <meta name="theme-color" content="#6bb85a" />
     <title>두더지 팡팡</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=4" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
-  <body data-bgm="whack-mole">
-    <div class="stage">
-      <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
+  <body class="wm" data-bgm="whack-mole">
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="두더지 팡팡 게임 화면"></canvas>
+
+      <div class="hud" id="hud">
+        <div class="hud-top">
+          <span class="hud-stage" id="hud-stage">1-1</span>
+          <div class="time-bar" aria-label="남은 시간"><i id="time-fill"></i></div>
+          <span class="hud-time" id="hud-time">30</span>
+        </div>
+        <div class="hud-row">
+          <div class="hearts" id="hud-hearts" aria-label="하트"></div>
+          <div class="goal-track" aria-label="잡은 두더지"><i id="goal-fill"></i><b id="hud-goal">0 / 10</b></div>
+          <span class="pill"><small>점수</small><b id="hud-score">0</b></span>
+        </div>
+        <div class="fever-row">
+          <span class="fever-label">피버</span>
+          <div class="fever" id="fever"><i id="fever-fill"></i></div>
+          <span class="hud-combo" id="hud-combo"></span>
+        </div>
+      </div>
+      <div class="ready" id="ready" aria-live="polite"></div>
+
+      <section class="overlay title" id="title">
+        <div class="title-main">
+          <p class="title-prog" id="title-prog">5개 월드 · 50단계 · 왕두더지</p>
+          <img class="hero-art" src="assets/thumb.webp" alt="두더지 팡팡" width="240" height="240" />
+          <h1>두더지 팡팡</h1>
+          <p class="title-tip">튀어나오는 두더지를 망치로 팡!<br />콤보를 이으면 피버 타임, 폭탄은 조심!</p>
+          <div class="title-btns">
+            <button type="button" class="toy main" id="start-btn">시작!</button>
+            <button type="button" class="toy" id="stages-btn">단계 고르기</button>
+          </div>
+          <a class="home-link" href="/">← 오늘의 게임</a>
+        </div>
+      </section>
+
+      <section class="overlay stages hidden" id="stages" data-today-home>
         <div class="panel">
-          <span>STAGE <b id="hud-stage">1</b></span>
-          <span>점수 <b id="hud-score">0</b></span>
+          <header class="panel-head">
+            <button type="button" class="back" id="stages-back" data-back="title">← 뒤로</button>
+            <h2>단계</h2>
+            <span class="sum" id="stages-sum">별 0 / 150</span>
+          </header>
+          <div class="tabs">
+            <button type="button" data-world="0">꽃밭 정원</button>
+            <button type="button" data-world="1">당근 농장</button>
+            <button type="button" data-world="2">버섯 숲</button>
+            <button type="button" data-world="3">노을 언덕</button>
+            <button type="button" data-world="4">달빛 왕국</button>
+          </div>
+          <div class="grid" id="stage-grid"></div>
         </div>
-        <div class="panel right">
-          <span>목표 <b id="hud-goal">15</b></span>
-          <div class="lives" id="hud-lives"></div>
+      </section>
+
+      <section class="overlay sheet hidden" id="newcard">
+        <div class="card">
+          <span class="new-tag">새 친구</span>
+          <canvas id="new-art" width="300" height="300"></canvas>
+          <h2 id="new-name"></h2>
+          <p class="new-text" id="new-text"></p>
+          <button type="button" class="toy main" id="new-ok">알겠어요!</button>
         </div>
-      </div>
-      <div class="goal-meter"><i id="goal-fill"></i></div>
-      <div class="combo-bar hidden" id="combo-bar">COMBO x<span id="hud-combo">0</span></div>
+      </section>
 
-      <div class="overlay" id="title">
-        <img class="hero-art" src="assets/thumb.webp" alt="" width="160" height="160" />
-        <div class="badge">WHACK A MOLE</div>
-        <h1>두더지 팡팡</h1>
-        <p>
-          정원에서 귀여운 두더지를 팡!<br />
-          빨간 망치로 잡고 · 폭탄은 피하세요
-        </p>
-        <div class="icons">🔨 망치 · 💣 피하기 · ✨ 황금</div>
-        <button type="button" class="btn" id="start-btn">시작!</button>
-        <a href="/">← 오늘의 게임</a>
-      </div>
+      <section class="overlay sheet hidden" id="clear">
+        <div class="card">
+          <p class="kick" id="clear-stage"></p>
+          <h2 id="clear-title">클리어!</h2>
+          <div class="c-stars" id="clear-stars"><i></i><i></i><i></i></div>
+          <dl class="c-stats">
+            <div><dt>점수</dt><dd id="clear-score">0</dd></div>
+            <div><dt>보너스</dt><dd id="clear-bonus">0</dd></div>
+            <div><dt>최고 콤보</dt><dd id="clear-combo">0</dd></div>
+          </dl>
+          <p class="hint" id="clear-hint"></p>
+          <div id="clear-rank" class="hidden"></div>
+          <button type="button" class="toy main" id="next-btn">다음 단계</button>
+          <div class="row">
+            <button type="button" class="toy" id="replay-btn">다시 하기</button>
+            <button type="button" class="toy" id="clear-stages">단계 고르기</button>
+          </div>
+        </div>
+      </section>
 
-      <div class="overlay hidden" id="clear">
-        <div class="badge soft">CLEAR</div>
-        <h1>스테이지 클리어!</h1>
-        <p id="clear-detail"></p>
-        <button type="button" class="btn" id="next-btn">다음 스테이지</button>
-      </div>
-
-      <div class="overlay hidden" id="over">
-        <div class="badge">GAME OVER</div>
-        <h1>아쉬워요</h1>
-        <p id="over-detail"></p>
-        <button type="button" class="btn" id="retry-btn">다시!</button>
-        <a href="/">← 오늘의 게임</a>
-      </div>
-
-      <div class="overlay hidden" id="allclear">
-        <div class="badge soft">ALL CLEAR</div>
-        <h1>두더지왕!</h1>
-        <p id="all-detail"></p>
-        <button type="button" class="btn" id="again-btn">처음부터</button>
-        <a href="/">← 오늘의 게임</a>
-      </div>
+      <section class="overlay sheet hidden" id="over">
+        <div class="card">
+          <h2 id="over-title">아쉬워요!</h2>
+          <p class="kick" id="over-why"></p>
+          <p class="hint" id="over-detail"></p>
+          <div id="over-rank"></div>
+          <button type="button" class="toy main" id="retry-btn">다시!</button>
+          <div class="row">
+            <button type="button" class="toy" id="over-stages">단계 고르기</button>
+          </div>
+          <a class="home-link dark" href="/">← 오늘의 게임</a>
+        </div>
+      </section>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
     <script src="/js/game-chrome.js?v=4"></script>
@@ -69,17 +116,21 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js"></script>
+    <script src="game.js?v=4"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="두더지 팡팡 소개">
   <h2>두더지 팡팡 소개</h2>
-  <p>튀어나오는 두더지를 빠르게 잡는 50단계 구성의 반응속도 게임입니다.</p>
+  <p>구멍에서 튀어나오는 두더지를 망치로 팡! 잡는 반응속도 게임입니다. 꽃밭 정원부터 달빛 왕국까지 5개 월드 50단계와 왕두더지 보스, 콤보와 피버 타임이 있습니다.</p>
   <h3>플레이 방법</h3>
-  <p>구멍에서 두더지가 나오면 재빨리 클릭하거나 탭해서 잡으세요.</p>
+  <p>두더지가 나오면 재빨리 누르세요. 헬멧 두더지는 두 번, 황금 두더지는 큰 점수와 시간을, 얼음 두더지는 모두를 잠깐 멈춰 줍니다. 폭탄과 토끼 친구를 치면 하트가 줄어요. PC는 QWE · ASD · ZXC 키로도 칠 수 있습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>가짜 두더지도 나오나요?</dt>
-    <dd>잘못 잡으면 감점되는 함정형 캐릭터가 등장할 수 있습니다.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>단계를 깨면 별 1개, 하트를 지키면 1개 더, 시간을 넉넉히 남기면 1개 더 받아요.</dd>
+    <dt>피버 타임은 뭔가요?</dt>
+    <dd>두더지를 계속 잡으면 게이지가 차서 6초 동안 점수가 두 배가 되고 폭탄이 사라져요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>진행과 별은 이 기기의 브라우저에 저장돼요. 총점은 직접 이름을 적어 올릴 때만 순위에 보내져요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

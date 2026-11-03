@@ -1129,7 +1129,7 @@ export class GameView {
     pg.group.updateMatrixWorld(true);
     pg.head.getWorldPosition(headW);
     const sliding = p.mode === "slide";
-    const up = sliding ? 0.46 : 0.31;
+    const up = sliding ? 0.5 : pg.carryLift || 0.5;
     this.slideK = lerp(this.slideK || 0, sliding ? 1 : 0, Math.min(1, dt * 14));
     let free = null;
     for (let vi = 0; vi < this.boxViews.length; vi += 1) {
@@ -1169,7 +1169,7 @@ export class GameView {
         const sway = (kk) => kk * wob * 0.9;
         const hx = lerp(headW.x, p.x, this.slideK);
         const hz = lerp(headW.z, p.z, this.slideK);
-        const hy = lerp(headW.y + up, p.y + 0.98, this.slideK);
+        const hy = lerp(headW.y + up, p.y + 1.1, this.slideK);
         const introK = sim.state === "intro" ? Math.max(0, 1 - (sim.stateT / sim.introLen) * 1.5) : 0;
         m.position.set(hx + sway(p.w.x), hy + h + introK * introK * 5 + Math.abs(Math.sin(introK * 18)) * 0.05, hz + sway(p.w.z));
         m.rotation.set(p.w.z * wob * 0.9, Math.PI - p.face, -p.w.x * wob * 0.9, "YXZ");
