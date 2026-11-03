@@ -106,10 +106,12 @@ module.exports = async function handler(req, res) {
     "magnet-mayhem",
     "chick-defense-new",
     "oneshot-elite",
+    "penguin-delivery",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "penguin-delivery",
     "oneshot-elite",
     "chick-defense-new",
     "magnet-mayhem",

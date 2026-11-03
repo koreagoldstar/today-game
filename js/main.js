@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "penguin-delivery",
+      title: "펭귄 택배 대작전",
+      tag: "3D 물리 액션 · 5월드 45스테이지",
+      href: "/games/penguin-delivery/",
+      thumb: "/assets/thumbs/sm/penguin-delivery.webp",
+      category: "action",
+      added: "2026-11-04",
+    },
+    {
       id: "oneshot-elite",
       title: "ONE SHOT 원샷 엘리트",
       tag: "3D 저격 · 5월드 50미션",

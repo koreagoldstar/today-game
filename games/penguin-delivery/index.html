@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7cc8f2" />
+    <meta name="description" content="미끄러운 얼음길을 달려 택배를 배달하라! 귀여운 3D 펭귄과 함께하는 아슬아슬한 물리 액션 어드벤처. 5개 월드 45개 스테이지를 설치 없이 바로 플레이하세요." />
+    <title>펭귄 택배 대작전 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/penguin-delivery/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="펭귄 택배 대작전 · 오늘의 게임" />
+    <meta property="og:description" content="미끄러운 얼음길을 달려 택배를 배달하라! 귀여운 펭귄과 함께하는 아슬아슬한 물리 액션 어드벤처." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/penguin-delivery/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/penguin-delivery.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+      <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="pd">
+    <main class="stage" id="stage">
+      <canvas id="game" aria-label="펭귄 택배 대작전 게임 화면"></canvas>
+
+      <!-- 플레이 화면 -->
+      <div class="hud" id="hud">
+        <div class="hud-top">
+          <span class="hud-stage" id="hud-stage">1-1</span>
+          <div class="hud-track" aria-label="목적지까지 진행률">
+            <div class="hud-fill" id="hud-fill"></div>
+            <div class="hud-dots" id="hud-dots"></div>
+            <span class="hud-peng" id="hud-peng" aria-hidden="true"></span>
+            <span class="hud-home" aria-hidden="true"></span>
+          </div>
+          <span class="hud-time" id="hud-time-box"><i aria-hidden="true"></i><b id="hud-time">1:00</b></span>
+        </div>
+        <div class="hud-row">
+          <div class="hud-boxes" id="hud-boxes" aria-label="택배 상태"></div>
+          <span class="hud-num"><i class="fish-i" aria-hidden="true"></i><b id="hud-fish">0</b></span>
+          <span class="hud-num star"><i class="star-i" aria-hidden="true"></i><b id="hud-stars">0</b></span>
+        </div>
+        <div class="hud-power" id="hud-power"></div>
+      </div>
+      <div class="wobble" id="wobble" aria-hidden="true">흔들려요!</div>
+      <div class="tip" id="tip" role="status"></div>
+      <div class="floats" id="floats" aria-hidden="true"></div>
+      <div class="banner" id="banner" aria-hidden="true">
+        <span class="b-stage" id="banner-stage">1-1</span>
+        <b id="banner-name"></b>
+        <small id="banner-goal"></small>
+        <em id="banner-box"></em>
+      </div>
+
+      <!-- 터치 조작 -->
+      <div class="touch-ui" id="touch-ui">
+        <div class="joy-zone" id="joy-zone">
+          <div class="joy" id="joy"><i id="joy-knob"></i></div>
+        </div>
+        <button type="button" class="tc tc-grab" id="tc-grab" aria-label="택배 줍기"><span>줍기</span></button>
+        <button type="button" class="tc tc-dash" id="tc-dash" aria-label="대시와 슬라이딩"><span>대시</span></button>
+        <button type="button" class="tc tc-jump" id="tc-jump" aria-label="점프"><span>점프</span></button>
+      </div>
+
+      <!-- 첫 화면 -->
+      <section class="overlay title" id="title">
+        <div class="title-main">
+          <h1 class="logo" aria-label="펭귄 택배 대작전"><span class="l1">펭귄 택배</span><span class="l2">대작전</span></h1>
+          <p class="title-prog" id="title-prog"></p>
+          <div class="title-gap"></div>
+          <button type="button" class="toy-btn play" id="start-btn"><i class="play-i" aria-hidden="true"></i><span id="start-label">PLAY</span></button>
+          <div class="title-menu">
+            <button type="button" class="round-btn" id="btn-worlds"><i class="ic ic-map" aria-hidden="true"></i><span>월드 선택</span></button>
+            <button type="button" class="round-btn" id="btn-costume"><i class="ic ic-hat" aria-hidden="true"></i><span>꾸미기</span></button>
+            <button type="button" class="round-btn" id="btn-records"><i class="ic ic-cup" aria-hidden="true"></i><span>도전 기록</span></button>
+            <button type="button" class="round-btn" id="btn-sound"><i class="ic ic-snd" aria-hidden="true"></i><span>사운드</span></button>
+          </div>
+          <a class="home-link" href="/">← 오늘의 게임</a>
+        </div>
+      </section>
+
+      <!-- 월드 선택 -->
+      <section class="overlay worlds hidden" id="worlds" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" id="worlds-back" data-back="title">← 뒤로</button>
+          <span class="head-stars" id="world-stars"></span>
+        </header>
+        <div class="world-hero">
+          <button type="button" class="arrow" id="world-prev" aria-label="이전 월드">‹</button>
+          <div class="world-text">
+            <h2 id="world-name">눈꽃 마을</h2>
+            <p id="world-sub"></p>
+            <div class="world-dots" id="world-dots"></div>
+          </div>
+          <button type="button" class="arrow" id="world-next" aria-label="다음 월드">›</button>
+        </div>
+        <div class="world-lock" aria-hidden="true"><i class="ic ic-lock"></i></div>
+        <div class="stage-sheet">
+          <div class="stage-grid" id="stage-grid"></div>
+        </div>
+      </section>
+
+      <!-- 꾸미기 -->
+      <section class="overlay costume hidden" id="costume" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" id="costume-back" data-back="title">← 뒤로</button>
+          <h2>펭귄 꾸미기</h2>
+          <span class="head-stars" id="costume-fish"></span>
+        </header>
+        <div class="costume-drag" id="costume-drag" aria-hidden="true"></div>
+        <div class="costume-sheet">
+          <p class="note">꾸미기는 모습만 바꿔요. 능력은 똑같아요.</p>
+          <div class="costume-list" id="costume-list"></div>
+        </div>
+      </section>
+
+      <!-- 도전 기록 -->
+      <section class="overlay records hidden" id="records" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" id="records-back" data-back="title">← 뒤로</button>
+          <h2>도전 기록</h2>
+        </header>
+        <div class="rec-card">
+          <div class="rec-total" id="rec-total"></div>
+          <div class="bar big"><i id="rec-bar"></i></div>
+          <div class="rec-worlds" id="rec-worlds"></div>
+        </div>
+        <div class="rec-card">
+          <h3>재미있는 기록</h3>
+          <div class="rec-fun" id="rec-fun"></div>
+        </div>
+        <button type="button" class="toy-btn sub" id="rec-rank-btn">랭킹에 총점 올리기</button>
+        <div id="rec-rank" class="hidden"></div>
+      </section>
+
+      <!-- 사운드 · 그래픽 -->
+      <div class="overlay modal hidden" id="sound" role="dialog" aria-label="사운드 설정">
+        <div class="modal-card">
+          <h2>설정</h2>
+          <label class="sw"><span>소리</span><input type="checkbox" id="snd-on" /><i aria-hidden="true"></i></label>
+          <label class="rng"><span>배경음악</span><input type="range" id="snd-music" min="0" max="100" /></label>
+          <label class="rng"><span>효과음</span><input type="range" id="snd-sfx" min="0" max="100" /></label>
+          <label class="sel"><span>그래픽</span>
+            <select id="snd-q">
+              <option value="auto">자동</option>
+              <option value="high">높음</option>
+              <option value="mid">보통</option>
+              <option value="low">낮음 (느린 기기)</option>
+            </select>
+          </label>
+          <button type="button" class="toy-btn sub" id="snd-close">닫기</button>
+        </div>
+      </div>
+
+      <!-- 결과 -->
+      <section class="overlay sheet hidden" id="result">
+        <div class="res-card">
+          <p class="res-stage" id="res-stage"></p>
+          <h2 id="res-title">배달 완료!</h2>
+          <div class="res-stars" id="res-stars"><i></i><i></i><i></i></div>
+          <p class="res-score"><b id="res-score">0</b><small>점</small><em id="res-new" class="hidden">최고 기록!</em></p>
+          <dl class="res-rows">
+            <div><dt>배달 시간</dt><dd id="res-time">0:00</dd><span id="res-time-tag"></span></div>
+            <div><dt>택배 상태</dt><dd id="res-cond">100%</dd><span id="res-cond-tag"></span></div>
+            <div><dt>금빛 생선</dt><dd id="res-fish">0</dd><span>마리</span></div>
+            <div><dt>반짝 별</dt><dd id="res-star-item">0개</dd><span></span></div>
+          </dl>
+          <p class="res-hint" id="res-hint"></p>
+          <p class="res-unlock hidden" id="res-unlock"></p>
+          <div id="res-rank" class="hidden"></div>
+          <button type="button" class="toy-btn play small" id="res-next"><span>다음 스테이지</span></button>
+          <div class="res-btns">
+            <button type="button" class="toy-btn sub" id="res-retry">다시 도전</button>
+            <button type="button" class="toy-btn sub" id="res-worlds">월드 선택</button>
+          </div>
+        </div>
+      </section>
+      <section class="overlay sheet hidden" id="fail">
+        <div class="res-card fail-card">
+          <h2 id="fail-title">시간이 다 됐어요…</h2>
+          <p class="res-hint" id="fail-detail"></p>
+          <button type="button" class="toy-btn play small" id="fail-retry"><span>다시 도전</span></button>
+          <button type="button" class="toy-btn sub" id="fail-worlds">월드 선택</button>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" role="status"></div>
+      <div class="veil" id="veil" aria-hidden="true"></div>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <div class="boot-peng" aria-hidden="true"><i class="b"></i><i class="bl"></i><i class="fa"></i><i class="e1"></i><i class="e2"></i><i class="be"></i><i class="fl"></i><i class="fr"></i><i class="pk"></i></div>
+          <p class="boot-logo">펭귄 택배 대작전</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">펭귄이 택배를 꽁꽁 묶는 중…</p>
+        </div>
+      </div>
+      <div class="fallback hidden" id="fallback"><p>이 브라우저에서는 3D 게임을 열 수 없어요 (WebGL 필요). 최신 브라우저로 다시 열어 주세요.</p><a href="/">← 오늘의 게임</a></div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="펭귄 택배 대작전 소개">
+  <h2>펭귄 택배 대작전 소개</h2>
+  <p>미끄러운 얼음길을 달려 택배를 배달하라! 귀여운 아기 펭귄 택배 기사와 함께하는 아슬아슬한 3D 물리 액션 어드벤처입니다. 눈꽃 마을, 얼음 협곡, 북극 바다, 눈보라 산맥, 오로라 왕국까지 5개 월드 45개 스테이지를 설치 없이 바로 플레이할 수 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>PC는 방향키 또는 WASD로 움직이고 Space로 점프, Shift로 대시(배 미끄럼), E로 택배를 줍습니다. 휴대폰은 왼쪽 조이스틱과 오른쪽 점프 · 대시 버튼으로 조작해요. 얼음에서는 미리 방향을 틀고, 택배가 떨어지면 쫓아가서 부딪혀 다시 잡으세요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>택배를 떨어뜨리면 게임 오버인가요?</dt>
+    <dd>아니요. 떨어진 택배는 굴러가거나 통통 튀는데, 쫓아가서 부딪히면 다시 잡아요. 멀리 사라지면 갈매기가 물어다 줘요. 다만 충격을 받을수록 택배 상태가 나빠져요.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>배달에 성공하면 별 1개, 택배 상태가 60% 이상이면 1개 더, 목표 시간 안에 도착하면 1개 더 받아요. 별 3개를 노려 다시 도전해 보세요.</dd>
+    <dt>다음 월드는 어떻게 여나요?</dt>
+    <dd>앞 월드의 스테이지를 모두 깨고 별을 모으면 열려요. 얼음 협곡은 별 12개, 북극 바다는 28개, 눈보라 산맥은 46개, 오로라 왕국은 64개가 필요해요.</dd>
+    <dt>택배마다 뭐가 다른가요?</dt>
+    <dd>무거운 택배는 느리지만 잘 안 흔들리고, 가벼운 택배는 바람에 날아가요. 깨지기 쉬운 택배는 충격에 약하고, 특급 택배는 제한 시간이 빠듯하며, 대형 택배는 시야를 가리고 잘 흔들려요.</dd>
+    <dt>꾸미기를 사면 더 유리한가요?</dt>
+    <dd>아니요. 산타, 해적, 왕관 같은 꾸미기는 금빛 생선으로 사는 모습 변경일 뿐 능력은 똑같아요.</dd>
+    <dt>휴대폰이 느려요.</dt>
+    <dd>설정의 그래픽을 보통이나 낮음으로 바꾸면 빨라져요. 자동으로 두면 기기 성능에 맞춰 조절해요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>진행 상황 · 별 · 생선 · 꾸미기 · 소리 설정은 이 기기의 브라우저에 저장돼요. 로그인 없이 플레이할 수 있고, 총점은 직접 이름을 적어 올릴 때만 순위에 보내져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
