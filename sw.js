@@ -1,19 +1,33 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v69`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v69`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v70`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v70`;
 // 방문자 기기에 쌓아 두는 파일 수 상한 (넘으면 오래된 것부터 지움)
 const RUNTIME_MAX = 150;
 // 음악 · 영상은 크고 브라우저가 따로 잘 기억하니 여기 담지 않음
 const NO_STORE = /\.(mp3|ogg|wav|m4a|mp4|webm)$/i;
+// 홈 화면을 그리는 데 필요한 파일. 미리 받아 두어 느린 인터넷에서도 홈이 바로 뜨게 한다.
+// index.html 의 ?v= 를 바꾸면 여기도 같이 바꾼다 (scripts/test-home-buttons.js 가 어긋나면 알려 준다).
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
   "/manifest.webmanifest",
-  "/css/style.css?v=22",
+  "/css/style.css?v=25",
+  "/css/game-chrome.css?v=5",
+  "/js/today-audio.js?v=2",
+  "/js/game-chrome.js?v=5",
+  "/js/bgm.js?v=6",
+  "/js/scores.js?v=7",
+  "/js/rankable.js?v=10",
+  "/js/retention.js?v=2",
+  "/js/edu-progress.js?v=5",
+  "/js/edu-speech.js?v=11",
+  "/js/game-rank.js?v=2",
+  "/js/my-face.js?v=3",
   "/js/main.js?v=56",
+  "/js/record-cards.js?v=1",
   "/js/pwa.js?v=2",
   "/assets/pwa-icon-192.png",
   "/assets/pwa-icon-512.png"
@@ -55,9 +69,9 @@ async function trim() {
 }
 function store(request, response) {
   // 온전한 응답(200)만 · 음악 · 영상 · 일부 응답(206)은 빼고
-  if (response.status !== 200 || NO_STORE.test(new URL(request.url).pathname)) return;
+  if (response.status !== 200 || NO_STORE.test(new URL(request.url).pathname)) return Promise.resolve();
   const copy = response.clone();
-  caches
+  return caches
     .open(RUNTIME_CACHE)
     .then((cache) => cache.put(request, copy))
     .then(trim)
@@ -87,11 +101,34 @@ async function serveHome(event) {
   }
 }
 
+/**
+ * 구글 글꼴 CSS: 화면 그리기를 막는 파일이라 하루가 지나 다시 받을 때 느린 인터넷에서 홈이 늦게 뜬다.
+ * 저장본을 바로 주고 뒤에서 새로 받아 둔다. 글꼴 파일 자체는 브라우저가 오래 기억하니 건드리지 않는다.
+ */
+async function serveFontCss(event) {
+  const cache = await caches.open(SHELL_CACHE);
+  const key = event.request.url;
+  const cached = await cache.match(key);
+  const network = fetch(key, { mode: "cors", credentials: "omit" }).then(async (response) => {
+    if (response.status === 200) await cache.put(key, response.clone());
+    return response;
+  });
+  if (cached) {
+    event.waitUntil(network.catch(() => {}));
+    return cached;
+  }
+  return network.catch(() => fetch(event.request));
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  if (url.origin === "https://fonts.googleapis.com") {
+    event.respondWith(serveFontCss(event));
+    return;
+  }
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
   // 음악 · 영상(부분 요청)은 손대지 않고 브라우저에 맡김
   if (NO_STORE.test(url.pathname) || request.headers.has("range")) return;
@@ -115,15 +152,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          store(request, response);
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+  // 뒤에서 받아 저장하는 일은 페이지를 떠나도 끝까지 하게 한다 (끊기면 다음 방문도 느리다)
+  const network = fetch(request);
+  event.waitUntil(network.then((response) => store(request, response)).catch(() => {}));
+  event.respondWith(caches.match(request).then((cached) => cached || network));
 });

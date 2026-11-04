@@ -191,6 +191,19 @@ async function open(browser, g, { width = 390, height = 844, errors }) {
   check("H3", "집 버튼을 누르면 홈(/)으로 이동 (첫 화면 · 교육 게임 · 스테이지 목록)", nav.every((x) => x.endsWith(":홈")), nav.join(", "));
   check("H4", "페이지 오류 없음", errors.length === 0, errors.length ? errors.slice(0, 5) : "없음");
 
+  /* ---------- H5: 홈 화면 파일을 서비스워커가 미리 받아 두는지 (버전이 어긋나면 느린 인터넷에서 홈이 늦게 뜬다) ---------- */
+  const homeHtml = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const swSource = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
+  const shellStart = swSource.indexOf("const APP_SHELL");
+  const shellBlock = swSource.slice(shellStart, swSource.indexOf("];", shellStart));
+  const shell = [...shellBlock.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const needed = [...homeHtml.matchAll(/<(?:link[^>]*rel="stylesheet"[^>]*href|script[^>]*src)="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((u) => !/^https?:/.test(u))
+    .map((u) => (u.startsWith("/") ? u : `/${u}`));
+  const missing = needed.filter((u) => !shell.includes(u));
+  check("H5", "홈 화면의 CSS · JS 를 서비스워커가 지금 버전으로 미리 받아 둠", needed.length > 5 && missing.length === 0, missing.length ? `빠짐 ${missing.join(", ")}` : `${needed.length}개`);
+
   await browser.close();
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} PASS${failed.length ? " · FAIL: " + failed.map((f) => f.id).join(", ") : ""}`);
