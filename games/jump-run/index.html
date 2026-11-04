@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#6ec8f8" />
     <title>콩콩 점프</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
@@ -25,24 +25,24 @@
         </div>
       </div>
       <div class="goal-meter"><i id="goal-fill"></i></div>
-      <div class="hint" id="hint">탭 · 스페이스 · ↑ 점프</div>
+      <div class="hint" id="hint">톡 낮게 · 꾹 높이 · 스페이스 / ↑</div>
 
       <div class="overlay" id="title">
-        <img class="hero-art" src="assets/hero.png" alt="" width="196" height="260" />
+        <img class="hero-art" src="assets/hero.webp" alt="" width="196" height="264" />
         <div class="badge">JUMP RUN</div>
         <h1>콩콩 점프</h1>
         <p>
-          햇살 병아리와 하늘 캔디 플랫폼을 달려요!<br />
-          무한 질주 · 난이도 상승 · 랭킹
+          햇살 병아리와 하늘 발판을 달려요!<br />
+          톡 누르면 낮게 · 꾹 누르면 높이 점프
         </p>
-        <div class="icons">무한 질주 · 스프링 · 바람 · 새떼 · ★코인</div>
+        <div class="icons">코인을 따라 뛰면 길이 보여요 · 방패 · 날개 · 자석</div>
         <button type="button" class="btn" id="start-btn">시작!</button>
         <a href="/">← 오늘의 게임</a>
       </div>
 
       <div class="overlay hidden" id="over">
         <div class="badge">GAME OVER</div>
-        <h1>앗, 떨어졌어요</h1>
+        <h1 id="over-title">앗, 떨어졌어요</h1>
         <p id="over-detail"></p>
         <form class="rank-form" id="rank-form">
           <label for="player-name">랭킹 이름 (2~8자)</label>
@@ -56,27 +56,28 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
     <script src="/js/my-face.js?v=3"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js?v=face2"></script>
+    <script src="game.js?v=6"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="콩콩 점프 소개">
   <h2>콩콩 점프 소개</h2>
-  <p>무한으로 이어지는 발판을 밟으며 최대한 멀리 가는 랭킹형 점프 러닝 게임입니다.</p>
+  <p>병아리와 함께 하늘 발판을 달리며 최대한 멀리 가는 랭킹형 점프 러닝 게임입니다.</p>
   <h3>플레이 방법</h3>
-  <p>타이밍에 맞춰 탭해서 점프하며 발판을 밟아 나가세요.</p>
+  <p>톡 누르면 낮게, 꾹 누르면 높이 뜁니다. 코인을 따라 뛰면 안전한 길이 보이고, 방패 · 날개 · 자석 아이템이 도와줍니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>게임이 끝나는 조건은 뭔가요?</dt>
-    <dd>발판을 놓치고 떨어지면 게임이 종료되고 기록이 랭킹에 반영됩니다.</dd>
+    <dd>구름 아래로 떨어지거나 가시 · 새에 부딪히면 끝나고 기록이 랭킹에 반영됩니다. 방패가 있으면 한 번 막아 줍니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
+
       <script src="/js/game-seo.js?v=1"></script>
   </body>
 </html>

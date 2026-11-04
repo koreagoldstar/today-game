@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
@@ -40,11 +40,12 @@
         <h1>닌자 표창 피하기</h1>
         <p>
           무한 수행 · 점점 빨라져요 · 랭킹<br />
-          높은 건 숙이고 · 낮은 건 점프 · 황금은 베기!
+          위쪽 표창은 숙이고 · 아래 표창은 점프 · 황금은 베기!
         </p>
         <div class="title-controls">
-          <span>←→ 이동 · ↓ 숙이기 · ↑/스페이스 점프</span>
-          <span>Z / 베기 버튼으로 황금 표창 튕기기</span>
+          <span>←→ 이동 · ↓ 숙이기 · ↑/스페이스 점프 · Z 베기</span>
+          <span>휴대폰은 화면을 끌면 옆으로 움직여요</span>
+          <span>40초 안 맞고 버티면 하트가 하나 차요</span>
         </div>
         <button type="button" class="btn" id="start-btn">수행 시작!</button>
         <a href="/">← 오늘의 게임</a>
@@ -66,7 +67,7 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
@@ -74,20 +75,21 @@
     <script src="/js/pause.js?v=3"></script>
     <script src="/js/my-face.js?v=3"></script>
 
-    <script src="game.js?v=3"></script>
+    <script src="game.js?v=4"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="닌자 표창 피하기 소개">
   <h2>닌자 표창 피하기 소개</h2>
   <p>날아오는 표창을 피하며 최대한 오래 버티는 무한 랭킹형 회피 게임입니다.</p>
   <h3>플레이 방법</h3>
-  <p>좌우로 움직여 날아오는 표창을 피하세요. 생존 시간이 길수록 점수가 올라갑니다.</p>
+  <p>위쪽 표창은 숙이고, 가운데와 아래 표창은 점프로 넘으세요. 위에서 떨어지는 표창은 옆으로 피하고, 황금 표창은 베면 큰 점수를 받습니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>난이도가 시간이 지나며 오르나요?</dt>
-    <dd>네, 시간이 지날수록 표창 속도와 개수가 늘어납니다.</dd>
+    <dd>네, 시간이 지날수록 표창이 빨라지고 묶음으로 나옵니다. 40초 동안 안 맞으면 하트가 하나 찹니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->
+
       <script src="/js/game-seo.js?v=1"></script>
   </body>
 </html>

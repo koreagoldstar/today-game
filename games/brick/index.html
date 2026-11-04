@@ -3,83 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#2a1f4a" />
+    <meta name="theme-color" content="#1a1458" />
     <title>별똥별 벽돌깨기</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
-  <body data-bgm="brick">
-    <div class="app">
-      <header class="top">
-        <a class="home" href="/">← 홈</a>
-        <div class="stat">STAGE <b id="stage">1</b></div>
-        <div class="stat">점수 <b id="score">0</b></div>
-        <div class="stat" id="lives">♥♥♥</div>
-      </header>
-      <div class="hero-bit">
-        <h1>별똥별 벽돌깨기</h1>
-        <p id="stage-name">첫 번째 밤하늘</p>
+  <body data-bgm="brick" class="bk">
+    <div class="stage" id="stage">
+      <canvas id="game" aria-label="별똥별 벽돌깨기 게임 화면"></canvas>
+
+      <div class="hud" id="hud">
+        <div class="hud-main">
+          <span class="hud-stage" id="stage-no">1-1</span>
+          <span class="hud-name" id="stage-name">첫 번째 밤하늘</span>
+        </div>
+        <div class="hud-side">
+          <span class="hud-score"><small>점수</small><b id="score">0</b></span>
+          <span class="hearts" id="lives" aria-label="목숨"></span>
+        </div>
       </div>
-      <div class="canvas-wrap">
-        <canvas id="game" width="390" height="560"></canvas>
+      <div class="power" id="power"></div>
+      <div class="ready" id="ready" aria-live="polite"></div>
+
+      <div class="overlay" id="title">
+        <img class="hero-art" src="assets/thumb.webp" alt="" width="160" height="160" />
+        <div class="badge">ARCADE</div>
+        <h2>별똥별 벽돌깨기</h2>
+        <p id="title-sub">별똥별로 젤리 벽돌을 깨고<br />5개 하늘 50단계를 지나가요</p>
+        <button type="button" class="btn" id="start-btn">시작!</button>
+        <button type="button" class="btn soft" id="stages-btn">단계 고르기</button>
+        <a class="link" href="/">← 오늘의 게임</a>
       </div>
-      <p class="hint">📱 손가락으로 바 이동 · 탭하면 공 발사 &nbsp;|&nbsp; ⌨️ ←→ · 스페이스</p>
-    </div>
 
-    <div class="overlay" id="title">
-      <img class="hero-art" src="assets/thumb.webp" alt="" width="160" height="160" />
-      <div class="badge">ARCADE</div>
-      <h2>별똥별 벽돌깨기</h2>
-      <p>별빛 공으로 젤리 벽돌을 깨고<br />50단계 밤하늘을 지나가요</p>
-      <button type="button" class="btn" id="start-btn">시작!</button>
-      <a class="link" href="/">← 오늘의 게임</a>
-    </div>
+      <section class="overlay map hidden" id="stages" data-today-home>
+        <div class="panel">
+          <header class="panel-head">
+            <button type="button" class="back" id="stages-back" data-back="title">← 뒤로</button>
+            <h2>단계</h2>
+            <span class="sum" id="stages-sum">별 0 / 150</span>
+          </header>
+          <div class="tabs" id="tabs"></div>
+          <div class="grid" id="stage-grid"></div>
+        </div>
+      </section>
 
-    <div class="overlay hidden" id="clear">
-      <div class="badge soft">CLEAR</div>
-      <h2 id="clear-title">스테이지 클리어!</h2>
-      <p id="clear-detail"></p>
-      <button type="button" class="btn" id="next-btn">다음 스테이지</button>
-    </div>
+      <div class="overlay hidden" id="clear">
+        <div class="badge soft" id="clear-kick">1-1</div>
+        <h2 id="clear-title">스테이지 클리어!</h2>
+        <div class="stars" id="clear-stars"><i></i><i></i><i></i></div>
+        <p id="clear-detail"></p>
+        <button type="button" class="btn" id="next-btn">다음 단계</button>
+        <div class="row">
+          <button type="button" class="btn soft small" id="clear-retry">다시</button>
+          <button type="button" class="btn soft small" id="clear-map">단계 고르기</button>
+        </div>
+      </div>
 
-    <div class="overlay hidden" id="over">
-      <div class="badge">GAME OVER</div>
-      <h2>별이 떨어졌어요</h2>
-      <p id="over-detail"></p>
-      <button type="button" class="btn" id="retry-btn">다시!</button>
-      <a class="link" href="/">← 오늘의 게임</a>
-    </div>
+      <div class="overlay hidden" id="over">
+        <div class="badge">GAME OVER</div>
+        <h2>별이 떨어졌어요</h2>
+        <p id="over-detail"></p>
+        <div class="rank-slot" id="over-rank"></div>
+        <button type="button" class="btn" id="retry-btn">다시!</button>
+        <button type="button" class="btn soft small" id="over-map">단계 고르기</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
 
-    <div class="overlay hidden" id="allclear">
-      <div class="badge">ALL CLEAR</div>
-      <h2>모든 밤하늘 클리어!</h2>
-      <p id="all-detail"></p>
-      <button type="button" class="btn" id="again-btn">처음부터</button>
-      <a class="link" href="/">← 오늘의 게임</a>
+      <div class="overlay hidden" id="allclear">
+        <div class="badge">ALL CLEAR</div>
+        <h2>모든 밤하늘 클리어!</h2>
+        <p id="all-detail"></p>
+        <div class="rank-slot" id="all-rank"></div>
+        <button type="button" class="btn" id="again-btn">단계 고르기</button>
+        <a class="link" href="/">← 오늘의 게임</a>
+      </div>
     </div>
 
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=4"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js"></script>
+    <script src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="별똥별 벽돌깨기 소개">
   <h2>별똥별 벽돌깨기 소개</h2>
-  <p>공을 튕겨 벽돌을 모두 깨는 50단계 구성의 클래식 아케이드 게임입니다.</p>
+  <p>별똥별로 젤리 벽돌을 깨는 5개 하늘 50단계 아케이드 게임입니다. 하트 · 별 · 고양이 모양 판과 10단계마다 나오는 보스가 있습니다.</p>
   <h3>플레이 방법</h3>
-  <p>패들을 좌우로 움직여 공이 아래로 떨어지지 않게 튕겨내며 벽돌을 깨세요.</p>
+  <p>손가락으로 바를 움직여 공을 튕기고, 떨어지는 아이템을 받으세요. 단계마다 별 3개를 모아 총점을 올립니다.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>아이템이 나오나요?</dt>
-    <dd>일부 벽돌을 깨면 패들 크기나 공 개수를 바꾸는 아이템이 등장합니다.</dd>
+    <dd>네, 바 넓히기 · 공 세 개 · 불꽃 공 · 느리게 · 레이저 · 별 그물 · 하트 아이템이 나옵니다.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

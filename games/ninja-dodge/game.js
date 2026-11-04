@@ -1,9 +1,16 @@
+/* 닌자 표창 피하기 — 밸런스 판
+ *
+ * 규칙: 위쪽 표창 = 숙이기, 가운데 · 아래 표창 = 점프, 위에서 떨어지는 표창 = 옆으로 이동, 황금 = 베기.
+ * 표창은 "묶음(패턴)" 으로 나오고, 도착 시각 사이에 답을 바꿀 시간을 항상 준다 (switchGap).
+ * 그래서 아무리 빨라져도 피할 수 없는 조합은 나오지 않는다. 고정 걸음 1/120초.
+ */
 (() => {
   "use strict";
 
   const W = 390;
   const H = 700;
   const GROUND = H - 118;
+  const STEP = 1 / 120;
   const BEST_KEY = "today-ninja-dodge-best";
   const NAME_KEY = "today-ninja-dodge-name";
 
@@ -30,24 +37,30 @@
     "닌자 고수",
   ];
 
+  const LEVEL_SEC = 16;
+  const RAMP_SEC = 210;
+  const MAX_LIVES = 3;
+  const HEAL_EVERY = 40; // 안 맞고 이만큼 버티면 하트 +1
+  const LANE_Y = { high: GROUND - 78, mid: GROUND - 40, low: GROUND - 18 };
+  const ease = (t) => t * t * (3 - 2 * t);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
   let playTime = 0;
   let best = Number(localStorage.getItem(BEST_KEY) || "0") || 0;
 
   function getDifficulty() {
-    // ramp over ~4.5 minutes; stay readable much longer
-    const t = Math.min(1, playTime / 270);
-    const level = 1 + Math.floor(playTime / 16);
+    const e = ease(clamp(playTime / RAMP_SEC, 0, 1));
+    const level = 1 + Math.floor(playTime / LEVEL_SEC);
     return {
       level,
-      name: STAGE_NAMES[Math.min(STAGE_NAMES.length - 1, Math.floor(playTime / 16))] || `수행 ${level}`,
-      meter: (playTime % 16) / 16,
-      spawn: Math.max(0.62, 1.7 - t * 0.95),
-      speed: 120 + t * 280,
-      goldRate: Math.min(0.22, 0.05 + t * 0.16),
-      multi: t < 0.34 ? 1 : t < 0.68 ? 2 : 3,
-      topRate: Math.min(0.2, Math.max(0, (t - 0.24) * 0.3)),
-      warn: Math.max(0.58, 1.28 - t * 0.52),
-      lives: 3,
+      name: STAGE_NAMES[Math.min(STAGE_NAMES.length - 1, level - 1)],
+      meter: (playTime % LEVEL_SEC) / LEVEL_SEC,
+      // 끝까지 간 뒤에도 아주 천천히 빨라진다 (상한 있음)
+      speed: Math.min(420, 165 + 195 * e + Math.max(0, playTime - RAMP_SEC) * 0.2),
+      warn: 1.05 - 0.45 * e,
+      rest: 1.2 - 0.82 * e,
+      goldRate: 0.07 + 0.13 * e,
     };
   }
 
@@ -71,45 +84,44 @@
   nameInput.value = localStorage.getItem(NAME_KEY) || "";
   document.getElementById("hud-best").textContent = String(best);
 
-  const rawImgs = {
-    idle: null,
-    crouch: null,
-    jump: null,
-    shuriken: null,
-    gold: null,
-  };
-  const sprites = {
-    idle: null,
-    crouch: null,
-    jump: null,
-    shuriken: null,
-    gold: null,
-  };
+  const sprites = { idle: null, crouch: null, jump: null, shuriken: null, gold: null };
 
   let state = "title";
   let score = 0;
-  let lives = 3;
+  let lives = MAX_LIVES;
   let combo = 0;
-  let comboTimer = 0;
-  let spawnAcc = 0;
   let invuln = 0;
   let slashT = 0;
+  let slashCd = 0;
   let flash = 0;
   let shake = 0;
   let last = 0;
-  let raf = 0;
+  let accum = 0;
   let submitted = false;
   let keys = Object.create(null);
   let holdCrouch = false;
   let jumpPressed = false;
-  let jumpArmed = true;
+  let jumpBuffer = 0;
   let pointerX = null;
+  let plan = [];
   let warnings = [];
   let shots = [];
   let particles = [];
   let floats = [];
   let leaves = [];
   let moonGlow = 0;
+  let lastArrival = 0;
+  let lastLane = null;
+  let lastDir = null;
+  let scriptIndex = 0;
+  let healT = 0;
+  let timeScore = 0;
+  let hudDirty = true;
+  let lastHudLevel = 0;
+  let topHinted = false;
+  let tip = "";
+  let tipT = 0;
+  const stats = { dodged: 0, hits: 0, goldCut: 0, slashes: 0, whiffs: 0 };
 
   const player = {
     x: W / 2,
@@ -119,55 +131,7 @@
     jumpV: 0,
     onGround: true,
     face: 1,
-    w: 46,
-    h: 70,
   };
-
-  function isPunchBg(r, g, b, a) {
-    if (a < 20) return true;
-    // magenta chroma #FF00FF
-    if (r > 185 && b > 175 && g < 150 && r + b > g * 2.1) return true;
-    if (r > 200 && b > 190 && g < 165 && Math.abs(r - b) < 90) return true;
-    return false;
-  }
-
-  function punchBg(img) {
-    const c = document.createElement("canvas");
-    c.width = img.naturalWidth || img.width;
-    c.height = img.naturalHeight || img.height;
-    const x = c.getContext("2d");
-    x.drawImage(img, 0, 0);
-    const data = x.getImageData(0, 0, c.width, c.height);
-    const d = data.data;
-    let minX = c.width;
-    let minY = c.height;
-    let maxX = 0;
-    let maxY = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      if (isPunchBg(d[i], d[i + 1], d[i + 2], d[i + 3])) {
-        d[i + 3] = 0;
-        continue;
-      }
-      const px = (i / 4) % c.width;
-      const py = ((i / 4) / c.width) | 0;
-      if (px < minX) minX = px;
-      if (py < minY) minY = py;
-      if (px > maxX) maxX = px;
-      if (py > maxY) maxY = py;
-    }
-    x.putImageData(data, 0, 0);
-    if (maxX <= minX || maxY <= minY) return c;
-    const pad = 2;
-    minX = Math.max(0, minX - pad);
-    minY = Math.max(0, minY - pad);
-    maxX = Math.min(c.width - 1, maxX + pad);
-    maxY = Math.min(c.height - 1, maxY + pad);
-    const out = document.createElement("canvas");
-    out.width = maxX - minX + 1;
-    out.height = maxY - minY + 1;
-    out.getContext("2d").drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
-    return out;
-  }
 
   function loadImg(src) {
     return new Promise((resolve) => {
@@ -180,22 +144,17 @@
 
   async function loadAssets() {
     const [idle, crouch, jump, shu, gold] = await Promise.all([
-      loadImg("assets/ninja-idle.png"),
-      loadImg("assets/ninja-crouch.png"),
-      loadImg("assets/ninja-jump.png"),
-      loadImg("assets/shuriken.png"),
-      loadImg("assets/shuriken-gold.png"),
+      loadImg("assets/ninja-idle.webp"),
+      loadImg("assets/ninja-crouch.webp"),
+      loadImg("assets/ninja-jump.webp"),
+      loadImg("assets/shuriken.webp"),
+      loadImg("assets/shuriken-gold.webp"),
     ]);
-    rawImgs.idle = idle;
-    rawImgs.crouch = crouch;
-    rawImgs.jump = jump;
-    rawImgs.shuriken = shu;
-    rawImgs.gold = gold;
-    if (idle) sprites.idle = punchBg(idle);
-    if (crouch) sprites.crouch = punchBg(crouch);
-    if (jump) sprites.jump = punchBg(jump);
-    if (shu) sprites.shuriken = punchBg(shu);
-    if (gold) sprites.gold = punchBg(gold);
+    sprites.idle = idle;
+    sprites.crouch = crouch;
+    sprites.jump = jump;
+    sprites.shuriken = shu;
+    sprites.gold = gold;
   }
 
   function showOverlay(name) {
@@ -210,15 +169,24 @@
     padEl.classList.add("show");
   }
 
+  function multiplier() {
+    if (combo >= 50) return 4;
+    if (combo >= 25) return 3;
+    if (combo >= 10) return 2;
+    return 1;
+  }
+
   function updateHud() {
     const st = getDifficulty();
     document.getElementById("hud-stage").textContent = String(st.level);
-    document.getElementById("hud-score").textContent = String(score);
+    document.getElementById("hud-score").textContent = String(Math.floor(score));
     document.getElementById("hud-best").textContent = String(best);
     document.getElementById("goal-fill").style.width = `${Math.min(100, st.meter * 100)}%`;
+    if (!hudDirty) return;
+    hudDirty = false;
     const livesEl = document.getElementById("hud-lives");
     livesEl.innerHTML = "";
-    for (let i = 0; i < st.lives; i += 1) {
+    for (let i = 0; i < MAX_LIVES; i += 1) {
       const d = document.createElement("div");
       d.className = "life" + (i < lives ? "" : " empty");
       livesEl.appendChild(d);
@@ -237,24 +205,39 @@
   }
 
   function resetStage() {
-    lives = getDifficulty().lives;
+    lives = MAX_LIVES;
     combo = 0;
-    comboTimer = 0;
-    spawnAcc = 0;
     invuln = 0.8;
     slashT = 0;
+    slashCd = 0;
     flash = 0;
     shake = 0;
+    plan = [];
     warnings = [];
     shots = [];
     particles = [];
     floats = [];
+    lastArrival = 0.6;
+    lastLane = null;
+    lastDir = null;
+    scriptIndex = 0;
+    healT = 0;
+    timeScore = 0;
+    topHinted = false;
+    tip = "";
+    tipT = 0;
+    stats.dodged = 0;
+    stats.hits = 0;
+    stats.goldCut = 0;
+    stats.slashes = 0;
+    stats.whiffs = 0;
     player.x = W / 2;
     player.y = GROUND;
     player.vx = 0;
     player.jumpV = 0;
     player.onGround = true;
     player.pose = "idle";
+    hudDirty = true;
     updateHud();
   }
 
@@ -271,103 +254,205 @@
     state = "play";
     hideOverlays();
     resetStage();
+    showTip("위 표창은 숙이기 · 아래 표창은 점프!", 3);
+    last = performance.now();
+    accum = 0;
+  }
+
+  function showTip(text, sec = 2) {
+    tip = text;
+    tipT = sec;
   }
 
   function spawnFloat(x, y, text, color) {
     floats.push({ x, y, text, color: color || "#ffe9a8", t: 0, life: 0.9 });
+    if (floats.length > 14) floats.shift();
   }
 
   function burst(x, y, color, n = 10) {
     for (let i = 0; i < n; i += 1) {
       const a = Math.random() * Math.PI * 2;
       const sp = 60 + Math.random() * 160;
-      particles.push({
-        x,
-        y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 40,
-        t: 0,
-        life: 0.35 + Math.random() * 0.4,
-        color,
-        r: 2 + Math.random() * 3,
-      });
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, t: 0, life: 0.35 + Math.random() * 0.4, color, r: 2 + Math.random() * 3 });
+    }
+    if (particles.length > 180) particles.splice(0, particles.length - 180);
+  }
+
+  /* ---------- 표창 묶음 ---------- */
+  // 앞 표창에 답한 뒤 다음 표창에 답할 수 있는 최소 간격 (도착 시각 기준, 초)
+  function switchGap(a, b) {
+    if (!a) return 0;
+    if (a === "top" || b === "top") return 0.72; // 옆으로 움직이면 다른 표창 도착 시각이 바뀐다 — 여유를 더 준다
+    const A = a === "high" ? "duck" : "jump";
+    const B = b === "high" ? "duck" : "jump";
+    if (A === "duck" && B === "duck") return 0.2;
+    if (A === "duck" && B === "jump") return 0.36;
+    if (A === "jump" && B === "duck") return 0.72; // 착지해야 숙일 수 있다
+    return 0.76; // 착지 → 다시 점프
+  }
+
+  function pickSide() {
+    return Math.random() < 0.5 ? "left" : "right";
+  }
+
+  function pickLane() {
+    const r = Math.random();
+    return r < 0.42 ? "high" : r < 0.72 ? "low" : "mid";
+  }
+
+  function nextPattern() {
+    const t = playTime;
+    // 처음엔 하나씩 가르쳐 준다
+    if (t < 14) {
+      const script = ["high", "low", "high", "low", "mid", "high", "low"];
+      const lane = script[scriptIndex % script.length];
+      scriptIndex += 1;
+      return [{ lane, dir: pickSide() }];
+    }
+    const options = [["single", 5]];
+    if (t > 26) options.push(["twin", 2]);
+    if (t > 38) options.push(["duckJump", 2]);
+    if (t > 34) options.push(["top", 1.5]);
+    if (t > 52) options.push(["jumpDuck", 2]);
+    if (t > 64) options.push(["doubleJump", 1.5]);
+    if (t > 96) options.push(["rain", 1.3]);
+    if (t > 128) options.push(["stairs", 2]);
+    if (t > 160) options.push(["cross", 1.6]);
+    let sum = options.reduce((a, o) => a + o[1], 0);
+    let r = Math.random() * sum;
+    let kind = "single";
+    for (const [k, w] of options) {
+      r -= w;
+      if (r <= 0) {
+        kind = k;
+        break;
+      }
+    }
+    const side = pickSide();
+    const other = side === "left" ? "right" : "left";
+    switch (kind) {
+      case "twin": {
+        const lane = pickLane();
+        return [
+          { lane, dir: side },
+          { lane, dir: other, together: true },
+        ];
+      }
+      case "duckJump":
+        return [
+          { lane: "high", dir: side },
+          { lane: Math.random() < 0.5 ? "low" : "mid", dir: side },
+        ];
+      case "jumpDuck":
+        return [
+          { lane: "low", dir: side },
+          { lane: "high", dir: side },
+        ];
+      case "doubleJump":
+        return [
+          { lane: "low", dir: side },
+          { lane: Math.random() < 0.5 ? "low" : "mid", dir: side },
+        ];
+      case "top": {
+        return [{ lane: "top", x: clamp(player.x + rand(-22, 22), 44, W - 44) }];
+      }
+      case "rain": {
+        const baseX = clamp(player.x + rand(-20, 20), 44, W - 44);
+        const stepX = (baseX > W / 2 ? -1 : 1) * 78;
+        return [
+          { lane: "top", x: baseX },
+          { lane: "top", x: baseX + stepX, together: true, late: 0.28 },
+        ];
+      }
+      case "stairs":
+        return [
+          { lane: "high", dir: side },
+          { lane: "low", dir: side },
+          { lane: "high", dir: side },
+        ];
+      case "cross":
+        return [
+          { lane: "mid", dir: side },
+          { lane: "low", dir: other, together: true },
+          { lane: "high", dir: side },
+        ];
+      default:
+        return [{ lane: pickLane(), dir: side }];
     }
   }
 
-  function laneY(lane) {
-    if (lane === "high") return GROUND - 78;
-    if (lane === "low") return GROUND - 18;
-    return GROUND - 46;
+  function travelTime(e, speed) {
+    if (e.lane === "top") return (GROUND - 60 + 24) / Math.max(250, speed);
+    const dist = e.dir === "left" ? player.x + 24 : W + 24 - player.x;
+    return dist / speed;
   }
 
-  function queueWarning() {
+  function schedulePattern() {
     const st = getDifficulty();
-    const roll = Math.random();
-    let dir;
-    let lane;
-    if (roll < st.topRate) {
-      dir = "top";
-      lane = "mid";
-    } else if (roll < 0.5 + st.topRate * 0.2) {
-      dir = "left";
-      lane = Math.random() < 0.34 ? "high" : Math.random() < 0.5 ? "low" : "mid";
-    } else {
-      dir = "right";
-      lane = Math.random() < 0.34 ? "high" : Math.random() < 0.5 ? "low" : "mid";
+    const list = nextPattern();
+    const rest = st.rest + rand(0, 0.22);
+    let firstOfPack = true;
+    // 앞 표창과 답이 다르면 같은 쪽에서 오게 한다.
+    // 옆으로 움직여도 두 표창 사이 간격이 그대로라 답을 바꿀 시간이 줄지 않는다.
+    if (lastDir && lastLane && lastLane !== "top" && list[0].lane !== "top" && !list[0].together) {
+      if (list[0].dir !== lastDir) {
+        const flip = list[0].dir;
+        for (const e of list) if (e.lane !== "top") e.dir = e.dir === flip ? lastDir : flip;
+      }
     }
-    const gold = Math.random() < st.goldRate;
-    const y = dir === "top" ? 40 : laneY(lane);
-    const x = dir === "left" ? 18 : dir === "right" ? W - 18 : 40 + Math.random() * (W - 80);
-    warnings.push({
-      dir,
-      lane,
-      gold,
-      x,
-      y,
-      t: 0,
-      life: st.warn,
-      speed: st.speed * (gold ? 1.08 : 1) * (0.88 + Math.random() * 0.16),
-    });
+    for (const e of list) {
+      const gold = e.lane !== "top" && playTime > 10 && Math.random() < st.goldRate;
+      const speed = st.speed * (gold ? 1.08 : 1);
+      const travel = travelTime(e, speed);
+      let arrive;
+      if (e.together) {
+        arrive = lastArrival + (e.late || 0);
+      } else {
+        arrive = lastArrival + switchGap(lastLane, e.lane) + (firstOfPack ? rest : 0.06);
+      }
+      arrive = Math.max(arrive, playTime + st.warn + travel);
+      const launchAt = arrive - travel;
+      plan.push({ lane: e.lane, dir: e.lane === "top" ? "top" : e.dir, x: e.x, gold, speed, warnAt: launchAt - st.warn, launchAt, warn: st.warn });
+      if (arrive > lastArrival) {
+        lastArrival = arrive;
+        lastLane = e.lane;
+        lastDir = e.lane === "top" ? lastDir : e.dir;
+      }
+      firstOfPack = false;
+    }
+    if (!topHinted && list[0].lane === "top") {
+      topHinted = true;
+      showTip("위에서 떨어져요! 화면을 끌어 옆으로", 2.6);
+    }
   }
 
-  function fireWarning(w) {
-    let x = w.x;
-    let y = w.y;
-    let vx = 0;
-    let vy = 0;
-    if (w.dir === "left") {
-      x = -24;
-      vx = w.speed;
-    } else if (w.dir === "right") {
-      x = W + 24;
-      vx = -w.speed;
-    } else {
-      y = -24;
-      x = Math.max(40, Math.min(W - 40, player.x + (Math.random() - 0.5) * 130));
-      vy = w.speed * 0.95;
+  function launch(w) {
+    if (w.dir === "top") {
+      shots.push({ x: w.x, y: -24, vx: 0, vy: Math.max(250, w.speed), r: 14, gold: false, lane: "top", rot: 0, spin: 12, alive: true, passed: false });
+      return;
     }
+    const left = w.dir === "left";
     shots.push({
-      x,
-      y,
-      vx,
-      vy,
+      x: left ? -24 : W + 24,
+      y: LANE_Y[w.lane],
+      vx: left ? w.speed : -w.speed,
+      vy: 0,
       r: w.gold ? 16 : 14,
       gold: w.gold,
       lane: w.lane,
       rot: 0,
-      spin: (w.dir === "right" ? -1 : 1) * (10 + Math.random() * 8),
+      spin: (left ? 1 : -1) * (10 + Math.random() * 8),
       alive: true,
+      passed: false,
     });
   }
 
+  /* ---------- 몸 상자 ---------- */
+  // 서 있으면 머리부터 발끝까지 맞는다. 숙이면 위 표창이 지나가고, 뛰면 아래 표창이 지나간다.
   function hitbox() {
-    if (player.pose === "crouch") {
-      return { x: player.x, y: player.y - 20, w: 34, h: 32 };
-    }
-    if (player.pose === "jump") {
-      return { x: player.x, y: player.y - 76, w: 32, h: 46 };
-    }
-    return { x: player.x, y: player.y - 54, w: 34, h: 50 };
+    if (player.pose === "crouch") return { x: player.x, y: player.y - 31, w: 30, h: 58 };
+    if (player.pose === "jump") return { x: player.x, y: player.y - 47, w: 26, h: 82 };
+    return { x: player.x, y: player.y - 43, w: 26, h: 82 };
   }
 
   function circleRect(cx, cy, cr, hb) {
@@ -378,47 +463,68 @@
     return dx * dx + dy * dy < cr * cr;
   }
 
+  function addScore(base) {
+    const gain = base * multiplier();
+    score += gain;
+    return gain;
+  }
+
   function trySlash() {
-    if (state !== "play" || slashT > 0) return;
-    slashT = 0.22;
-    player.face = player.vx >= 0 ? 1 : player.face;
+    if (state !== "play" || slashCd > 0) return;
+    slashT = 0.2;
+    stats.slashes += 1;
     let hit = 0;
     shots.forEach((s) => {
-      if (!s.alive) return;
-      const dx = s.x - player.x;
-      const dy = s.y - (player.y - 40);
-      const dist = Math.hypot(dx, dy);
-      const range = s.gold ? 78 : 52;
+      if (!s.alive || s.lane === "top") return;
+      const dist = Math.hypot(s.x - player.x, s.y - (player.y - 40));
+      // 황금은 넉넉하게, 보통 표창은 아주 가까이 왔을 때만
+      const range = s.gold ? 84 : 46;
       if (dist < range) {
         s.alive = false;
         hit += 1;
-        const gain = s.gold ? 40 + combo * 5 : 15 + combo * 2;
-        combo += 1;
-        comboTimer = 1.6;
-        score += gain;
-        burst(s.x, s.y, s.gold ? "#ffd76a" : "#c9e8ff", s.gold ? 16 : 10);
-        spawnFloat(s.x, s.y - 10, s.gold ? `튕김! +${gain}` : `베기 +${gain}`, s.gold ? "#ffd76a" : "#fff");
+        if (s.gold) {
+          combo += 3;
+          stats.goldCut += 1;
+          const gain = addScore(50);
+          burst(s.x, s.y, "#ffd76a", 16);
+          spawnFloat(s.x, s.y - 10, `베기! +${gain}`, "#ffd76a");
+        } else {
+          const gain = addScore(4);
+          burst(s.x, s.y, "#c9e8ff", 8);
+          spawnFloat(s.x, s.y - 10, `+${gain}`, "#fff");
+        }
       }
     });
-    if (!hit) burst(player.x + player.face * 28, player.y - 40, "rgba(255,230,160,0.8)", 6);
-    updateHud();
+    if (hit) {
+      slashCd = 0.14;
+    } else {
+      // 헛손질은 오래 쉰다 — 마구 누르면 진다
+      slashCd = 0.6;
+      stats.whiffs += 1;
+      burst(player.x + player.face * 28, player.y - 40, "rgba(255,230,160,0.8)", 5);
+    }
   }
 
   function hurt() {
     if (invuln > 0) return;
     lives -= 1;
+    stats.hits += 1;
     invuln = 1.45;
     flash = 0.35;
     shake = 10;
     combo = 0;
+    healT = 0;
+    hudDirty = true;
+    lastArrival += 0.5; // 맞은 뒤엔 숨 돌릴 틈
     burst(player.x, player.y - 40, "#ff7eb6", 18);
     spawnFloat(player.x, player.y - 80, "아야!", "#ff9ec8");
     updateHud();
     if (lives <= 0) {
       state = "over";
       padEl.classList.remove("show");
-      if (score > best) {
-        best = score;
+      const final = Math.floor(score);
+      if (final > best) {
+        best = final;
         localStorage.setItem(BEST_KEY, String(best));
         document.getElementById("hud-best").textContent = String(best);
       }
@@ -426,11 +532,10 @@
       document.getElementById("rank-msg").textContent = "";
       document.getElementById("submit-btn").disabled = false;
       const st = getDifficulty();
-      document.getElementById("over-detail").textContent =
-        `${st.name} · 점수 ${score}점 · 최고 ${best}`;
+      document.getElementById("over-detail").textContent = `${st.name} · ${Math.floor(playTime)}초 버팀 · 점수 ${final}점 · 최고 ${best}`;
       showOverlay("over");
       if (window.TodayVisit) {
-        TodayVisit.compareAndShow("ninja-dodge", score, true, document.getElementById("over"));
+        TodayVisit.compareAndShow("ninja-dodge", final, true, document.getElementById("over"));
       }
     }
   }
@@ -442,7 +547,7 @@
     if (pointerX != null) {
       const dx = pointerX - player.x;
       if (Math.abs(dx) > 6) move = Math.sign(dx);
-      player.x += dx * Math.min(1, dt * 10);
+      player.x += dx * Math.min(1, dt * 12);
     } else {
       player.vx = move * 330;
       player.x += player.vx * dt;
@@ -450,16 +555,17 @@
     if (move) player.face = move;
 
     const wantCrouch = holdCrouch || keys.ArrowDown || keys.s || keys.S;
-    const wantJump =
-      jumpPressed || keys.ArrowUp || keys.w || keys.W || keys[" "];
+    const wantJump = jumpPressed || keys.ArrowUp || keys.w || keys.W || keys[" "];
 
-    if (wantJump && jumpArmed && player.onGround && !wantCrouch) {
+    // 짧게 누른 점프는 착지 직전이어도 잠깐 기억한다
+    if (jumpPressed) jumpBuffer = 0.12;
+    jumpBuffer = Math.max(0, jumpBuffer - dt);
+    if ((wantJump || jumpBuffer > 0) && player.onGround) {
       player.onGround = false;
-      player.jumpV = -520;
+      player.jumpV = -540;
       player.pose = "jump";
-      jumpArmed = false;
+      jumpBuffer = 0;
     }
-    if (!wantJump && player.onGround) jumpArmed = true;
     jumpPressed = false;
 
     if (!player.onGround) {
@@ -472,28 +578,51 @@
       } else {
         player.pose = "jump";
       }
-    } else if (wantCrouch) {
-      player.pose = "crouch";
-    } else {
-      player.pose = "idle";
     }
+    if (player.onGround) player.pose = wantCrouch ? "crouch" : "idle";
 
     player.x = Math.max(36, Math.min(W - 36, player.x));
   }
 
   function update(dt) {
-    if (state !== "play") return;
+    if (state !== "play") {
+      // 끝난 뒤에도 파편은 마저 떨어진다
+      particles.forEach((p) => {
+        p.t += dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 280 * dt;
+      });
+      particles = particles.filter((p) => p.t < p.life);
+      return;
+    }
     playTime += dt;
     const st = getDifficulty();
 
     moonGlow += dt;
     invuln = Math.max(0, invuln - dt);
     slashT = Math.max(0, slashT - dt);
+    slashCd = Math.max(0, slashCd - dt);
     flash = Math.max(0, flash - dt);
-    if (shake > 0) shake *= 0.86;
-    if (comboTimer > 0) {
-      comboTimer -= dt;
-      if (comboTimer <= 0) combo = 0;
+    tipT = Math.max(0, tipT - dt);
+    if (shake > 0) shake *= Math.pow(0.86, dt * 60);
+
+    timeScore += dt * multiplier();
+    if (timeScore >= 1) {
+      const whole = Math.floor(timeScore);
+      score += whole;
+      timeScore -= whole;
+    }
+
+    healT += dt;
+    if (healT >= HEAL_EVERY) {
+      healT = 0;
+      if (lives < MAX_LIVES) {
+        lives += 1;
+        hudDirty = true;
+        spawnFloat(player.x, player.y - 96, "하트 +1", "#ff9ec8");
+        burst(player.x, player.y - 60, "#ff9ec8", 14);
+      }
     }
 
     updatePlayer(dt);
@@ -508,19 +637,17 @@
       }
     });
 
-    spawnAcc += dt;
-    if (spawnAcc >= st.spawn) {
-      spawnAcc = 0;
-      const n = st.multi;
-      for (let i = 0; i < n; i += 1) queueWarning();
+    // 다음 묶음은 앞 묶음이 거의 다 지나갈 때 정한다 (플레이어 자리 기준)
+    if (plan.length === 0 && lastArrival - playTime < st.warn + 0.9) schedulePattern();
+    for (let i = plan.length - 1; i >= 0; i -= 1) {
+      if (playTime >= plan[i].warnAt) {
+        const w = plan.splice(i, 1)[0];
+        warnings.push(w);
+      }
     }
-
-    warnings.forEach((w) => {
-      w.t += dt;
-    });
     warnings = warnings.filter((w) => {
-      if (w.t >= w.life) {
-        fireWarning(w);
+      if (playTime >= w.launchAt) {
+        launch(w);
         return false;
       }
       return true;
@@ -533,26 +660,22 @@
       s.y += s.vy * dt;
       s.rot += s.spin * dt;
 
-      if (s.x < -60 || s.x > W + 60 || s.y > H + 60) {
+      if (invuln <= 0 && circleRect(s.x, s.y, s.r * 0.5, hb)) {
         s.alive = false;
-        combo += 1;
-        comboTimer = 1.4;
-        const gain = 8 + Math.min(20, combo);
-        score += gain;
-        spawnFloat(Math.max(40, Math.min(W - 40, s.x)), Math.max(80, s.y), `회피 +${gain}`, "#b8f0ff");
+        hurt();
         return;
       }
 
-      // near miss
-      const dist = Math.hypot(s.x - hb.x, s.y - hb.y);
-      if (dist < s.r + 28 && dist > s.r + 10 && Math.random() < 0.02) {
-        score += 2;
+      // 몸을 지나갔으면 회피 성공
+      const gone = s.lane === "top" ? s.y > GROUND - 10 : s.vx > 0 ? s.x > player.x + 24 : s.x < player.x - 24;
+      if (!s.passed && gone) {
+        s.passed = true;
+        combo += 1;
+        stats.dodged += 1;
+        const gain = addScore(10);
+        spawnFloat(player.x, player.y - 104, `회피 +${gain}`, "#b8f0ff");
       }
-
-      if (invuln <= 0 && circleRect(s.x, s.y, s.r * 0.6, hb)) {
-        s.alive = false;
-        hurt();
-      }
+      if (s.x < -60 || s.x > W + 60 || s.y > H + 60) s.alive = false;
     });
     shots = shots.filter((s) => s.alive);
 
@@ -569,6 +692,10 @@
     });
     floats = floats.filter((f) => f.t < f.life);
 
+    if (st.level !== lastHudLevel) {
+      lastHudLevel = st.level;
+      if (st.level > 1) spawnFloat(W / 2, 160, `${st.level}단계 · ${st.name}`, "#ffe9a8");
+    }
     updateHud();
   }
 
@@ -693,16 +820,6 @@
     });
   }
 
-  function drawSprite(img, x, y, w, h, flip) {
-    if (!img) return false;
-    ctx.save();
-    ctx.translate(x, y);
-    if (flip) ctx.scale(-1, 1);
-    ctx.drawImage(img, -w / 2, -h, w, h);
-    ctx.restore();
-    return true;
-  }
-
   function drawFallbackNinja() {
     const hb = hitbox();
     ctx.fillStyle = "#2a2448";
@@ -716,50 +833,59 @@
   }
 
   // 내 얼굴 위치: 스프라이트 상자 안의 [머리 중심 x, y, 반지름(가로 기준)] 비율
-  const FACE_HEAD = { idle: [0.26, 0.34, 0.16], crouch: [0.28, 0.47, 0.18], jump: [0.26, 0.39, 0.18] };
+  const FACE_HEAD = { idle: [0.26, 0.34, 0.16], crouch: [0.28, 0.5, 0.17], jump: [0.26, 0.39, 0.18] };
 
   function drawPlayer() {
+    // shadow
+    const air = clamp((GROUND - player.y) / 90, 0, 1);
+    ctx.fillStyle = `rgba(0,0,0,${0.28 - air * 0.12})`;
+    ctx.beginPath();
+    ctx.ellipse(player.x, GROUND + 6, 28 - air * 10, 7 - air * 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     const blink = invuln > 0 && Math.floor(invuln * 12) % 2 === 0;
     if (blink) return;
 
     let img = sprites.idle;
     let h = 96;
-    let w = 96;
     let y = player.y + 6;
     if (player.pose === "crouch") {
       img = sprites.crouch || sprites.idle;
-      h = 78;
-      w = 90;
-      y = player.y + 10;
+      h = 70;
+      y = player.y + 6;
     } else if (player.pose === "jump") {
       img = sprites.jump || sprites.idle;
-      h = 100;
-      w = 96;
+      h = 98;
+      y = player.y + 4;
     }
+    const w = img ? (h * img.naturalWidth) / img.naturalHeight : 90;
 
     if (slashT > 0) {
       ctx.save();
-      ctx.strokeStyle = "rgba(255, 220, 120, 0.85)";
-      ctx.lineWidth = 4;
+      const k = slashT / 0.2;
+      ctx.strokeStyle = `rgba(255, 220, 120, ${0.9 * k})`;
+      ctx.lineWidth = 3 + k * 5;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.arc(player.x, player.y - 40, 48, -0.9 * player.face, 0.9 * player.face);
+      ctx.arc(player.x, player.y - 40, 62 - k * 10, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    const ok = drawSprite(img, player.x, y, w, h, player.face < 0);
-    if (!ok) drawFallbackNinja();
-    else if (window.TodayFace) {
-      TodayFace.drawOnSprite(ctx, player.x - w / 2, y - h, w, h, FACE_HEAD[player.pose] || FACE_HEAD.idle, {
-        flipX: player.face < 0,
-      });
+    if (img) {
+      ctx.save();
+      ctx.translate(player.x, y);
+      if (player.face < 0) ctx.scale(-1, 1);
+      ctx.drawImage(img, -w / 2, -h, w, h);
+      ctx.restore();
+      if (window.TodayFace) {
+        TodayFace.drawOnSprite(ctx, player.x - w / 2, y - h, w, h, FACE_HEAD[player.pose] || FACE_HEAD.idle, {
+          flipX: player.face < 0,
+        });
+      }
+    } else {
+      drawFallbackNinja();
     }
-
-    // shadow
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.beginPath();
-    ctx.ellipse(player.x, GROUND + 14, player.pose === "jump" ? 18 : 28, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   function drawFallbackShuriken(x, y, r, gold, rot) {
@@ -788,7 +914,6 @@
   function drawShuriken(s) {
     const img = s.gold ? sprites.gold : sprites.shuriken;
     const size = s.r * 2.6;
-    // purple-gold motion trail like thumb
     ctx.save();
     ctx.globalAlpha = 0.35;
     const trail = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, size * 0.7);
@@ -811,40 +936,78 @@
     }
   }
 
+  function roundedRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  const LANE_LOOK = {
+    high: { color: "#6fd8ff", text: "숙여!" },
+    mid: { color: "#ff9d5c", text: "점프!" },
+    low: { color: "#ff7d7d", text: "점프!" },
+    top: { color: "#d7b3ff", text: "옆으로!" },
+  };
+
   function drawWarnings() {
     warnings.forEach((w) => {
-      const pulse = 0.45 + Math.sin(w.t * 18) * 0.35;
+      const look = LANE_LOOK[w.lane];
+      const k = clamp(1 - (w.launchAt - playTime) / w.warn, 0, 1);
+      const pulse = 0.72 + Math.sin(playTime * 16) * 0.28;
+      const color = w.gold ? "#ffd76a" : look.color;
+      const text = w.gold ? "베기!" : look.text;
       ctx.save();
-      ctx.globalAlpha = pulse;
-      if (w.dir === "left" || w.dir === "right") {
-        ctx.fillStyle = w.gold ? "#ffd76a" : "#ff6b9d";
-        const x = w.dir === "left" ? 8 : W - 8;
+      if (w.dir === "top") {
+        ctx.globalAlpha = 0.18 + k * 0.2;
+        ctx.fillStyle = color;
+        ctx.fillRect(w.x - 15, 0, 30, GROUND - 16);
+        ctx.globalAlpha = pulse;
         ctx.beginPath();
-        ctx.moveTo(x, w.y);
-        ctx.lineTo(x + (w.dir === "left" ? 16 : -16), w.y - 10);
-        ctx.lineTo(x + (w.dir === "left" ? 16 : -16), w.y + 10);
+        ctx.moveTo(w.x, 30);
+        ctx.lineTo(w.x - 12, 12);
+        ctx.lineTo(w.x + 12, 12);
         ctx.closePath();
         ctx.fill();
-        ctx.fillRect(w.dir === "left" ? 26 : W - 70, w.y - 2, 44, 4);
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = "#fff";
+        ctx.font = '13px "Jua", sans-serif';
+        ctx.textAlign = "center";
+        ctx.fillText(text, w.x, 46);
       } else {
-        ctx.fillStyle = w.gold ? "#ffd76a" : "#ff6b9d";
+        const left = w.dir === "left";
+        const y = LANE_Y[w.lane];
+        const x = left ? 4 : W - 4;
+        const sgn = left ? 1 : -1;
+        // 시간이 차오르는 막대: 다 차면 날아온다
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = color;
+        ctx.fillRect(left ? 0 : W - 96, y - 3, 96, 6);
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(left ? 0 : W - 96 * k, y - 3, 96 * k, 6);
+        ctx.globalAlpha = pulse;
         ctx.beginPath();
-        ctx.moveTo(w.x, 10);
-        ctx.lineTo(w.x - 10, 26);
-        ctx.lineTo(w.x + 10, 26);
+        ctx.moveTo(x + sgn * 22, y);
+        ctx.lineTo(x, y - 12);
+        ctx.lineTo(x, y + 12);
         ctx.closePath();
         ctx.fill();
+        // 글자
+        ctx.globalAlpha = 1;
+        ctx.font = '15px "Jua", sans-serif';
+        const tw = ctx.measureText(text).width + 14;
+        const tx = left ? 30 : W - 30 - tw;
+        const ty = y - 28;
+        ctx.fillStyle = "rgba(14,10,34,0.82)";
+        roundedRect(tx, ty, tw, 21, 10);
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.fillText(text, tx + tw / 2, ty + 16);
       }
-      // lane hint text
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = "#fff";
-      ctx.font = "11px Jua";
-      ctx.textAlign = "center";
-      const tip =
-        w.lane === "high" ? "숙여!" : w.lane === "low" ? "점프!" : w.gold ? "베기?" : "피하기";
-      const tx = w.dir === "left" ? 56 : w.dir === "right" ? W - 56 : w.x;
-      const ty = w.dir === "top" ? 40 : w.y - 14;
-      ctx.fillText(tip, tx, ty);
       ctx.restore();
     });
   }
@@ -871,17 +1034,31 @@
     floats.forEach((f) => {
       ctx.globalAlpha = Math.max(0, 1 - f.t / f.life);
       ctx.fillStyle = f.color;
-      ctx.font = "bold 16px Jua";
+      ctx.font = '16px "Jua", sans-serif';
       ctx.textAlign = "center";
       ctx.fillText(f.text, f.x, f.y);
     });
     ctx.globalAlpha = 1;
 
     if (combo > 1 && state === "play") {
-      ctx.fillStyle = "#ffd76a";
-      ctx.font = "bold 18px Jua";
+      const m = multiplier();
+      ctx.fillStyle = m > 1 ? "#ffd76a" : "#fff3c8";
+      ctx.font = '18px "Jua", sans-serif';
       ctx.textAlign = "center";
-      ctx.fillText(`COMBO x${combo}`, W / 2, 108);
+      ctx.fillText(m > 1 ? `${combo}콤보 · 점수 ×${m}` : `${combo}콤보`, W / 2, 108);
+    }
+
+    if (tipT > 0 && state === "play") {
+      ctx.globalAlpha = Math.min(1, tipT * 2);
+      ctx.font = '16px "Jua", sans-serif';
+      const tw = ctx.measureText(tip).width + 24;
+      ctx.fillStyle = "rgba(14,10,34,0.84)";
+      roundedRect(W / 2 - tw / 2, 214, tw, 30, 15);
+      ctx.fill();
+      ctx.fillStyle = "#fff3c8";
+      ctx.textAlign = "center";
+      ctx.fillText(tip, W / 2, 235);
+      ctx.globalAlpha = 1;
     }
 
     if (flash > 0) {
@@ -893,11 +1070,18 @@
   }
 
   function loop(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
-    update(dt);
+    accum += dt;
+    let guard = 0;
+    while (accum >= STEP && guard < 12) {
+      update(STEP);
+      accum -= STEP;
+      guard += 1;
+    }
+    if (accum > 0.1) accum = 0;
     draw();
-    raf = requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
   }
 
   function pointerPos(e) {
@@ -911,9 +1095,8 @@
 
   canvas.addEventListener("pointerdown", (e) => {
     if (state !== "play") return;
-    if (e.target.closest && e.target.closest(".pad")) return;
     const p = pointerPos(e);
-    if (p.y < H - 120) pointerX = p.x;
+    if (p.y < H - 96) pointerX = p.x;
   });
   canvas.addEventListener("pointermove", (e) => {
     if (state !== "play" || pointerX == null) return;
@@ -972,7 +1155,7 @@
   window.addEventListener("keydown", (e) => {
     keys[e.key] = true;
     if (state !== "play") return;
-    if (e.key === "z" || e.key === "Z" || e.key === "Enter") {
+    if (!e.repeat && (e.key === "z" || e.key === "Z" || e.key === "Enter")) {
       e.preventDefault();
       trySlash();
     }
@@ -1005,25 +1188,25 @@
       btn.disabled = false;
       return;
     }
-    const res = await window.TodayScores.submitScore("ninja-dodge", name, score);
+    const finalScore = Math.floor(score);
+    const res = await window.TodayScores.submitScore("ninja-dodge", name, finalScore);
     if (res.ok) {
       submitted = true;
       lastRank = { rankDay: res.rankDay || res.rank, rankWeek: res.rankWeek };
-      document.getElementById("rank-msg").textContent =
-        window.TodayScores.formatRankMessage
-          ? window.TodayScores.formatRankMessage(res)
-          : res.rank
-            ? `오늘 ${res.rank}위에 등록됐어요!`
-            : "등록 완료!";
+      document.getElementById("rank-msg").textContent = window.TodayScores.formatRankMessage
+        ? window.TodayScores.formatRankMessage(res)
+        : res.rank
+          ? `오늘 ${res.rank}위에 등록됐어요!`
+          : "등록 완료!";
       if (shareBtn) shareBtn.hidden = false;
       if (window.TodayGameRank && TodayGameRank.afterSubmit) {
         await TodayGameRank.afterSubmit({
           gameId: "ninja-dodge",
           gameTitle: "닌자 표창 피하기",
           name,
-          score,
+          score: finalScore,
           rankDay: lastRank.rankDay,
-          label: `${score.toLocaleString("ko-KR")}점`,
+          label: `${finalScore.toLocaleString("ko-KR")}점`,
         });
       }
     } else {
@@ -1038,7 +1221,7 @@
       const result = await window.TodayScores.shareRank({
         gameTitle: "닌자 표창 피하기",
         name,
-        score,
+        score: Math.floor(score),
         rankDay: lastRank.rankDay,
         rankWeek: lastRank.rankWeek,
         url: "https://www.todaygame.co.kr/games/ninja-dodge/",
@@ -1058,10 +1241,13 @@
   }
 
   makeLeaves();
+  hudDirty = true;
+  updateHud();
   loadAssets().then(() => {
     showOverlay("title");
     last = performance.now();
-    raf = requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
+    if (window.NinjaDodge) window.NinjaDodge.ready = true;
   });
 
   if (window.TodayPause) {
@@ -1076,10 +1262,67 @@
       resume() {
         if (state !== "paused") return false;
         state = "play";
-        if (typeof last !== "undefined") last = performance.now();
+        last = performance.now();
+        accum = 0;
         return true;
       },
     });
   }
 
+  // 자동 점검용 (게임 규칙 그대로 빠르게 돌린다)
+  window.NinjaDodge = {
+    ready: false,
+    STEP,
+    GROUND,
+    W,
+    LANE_Y,
+    update,
+    switchGap,
+    start: () => startGame(true),
+    trySlash,
+    keys,
+    shield: (sec) => {
+      invuln = sec;
+    },
+    hold: (on) => {
+      holdCrouch = on;
+    },
+    jump: () => {
+      jumpPressed = true;
+    },
+    moveTo: (x) => {
+      pointerX = x;
+    },
+    get state() {
+      return state;
+    },
+    get time() {
+      return playTime;
+    },
+    get score() {
+      return Math.floor(score);
+    },
+    get lives() {
+      return lives;
+    },
+    get combo() {
+      return combo;
+    },
+    get shots() {
+      return shots;
+    },
+    get warnings() {
+      return warnings;
+    },
+    get plan() {
+      return plan;
+    },
+    get player() {
+      return player;
+    },
+    get stats() {
+      return stats;
+    },
+    difficulty: getDifficulty,
+  };
 })();

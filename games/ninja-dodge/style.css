@@ -47,7 +47,7 @@ canvas {
   position: absolute;
   top: 10px;
   left: 10px;
-  right: 10px;
+  right: 62px;
   display: flex;
   justify-content: space-between;
   gap: 8px;
@@ -140,9 +140,10 @@ canvas {
 .pad-btn {
   border: 0;
   border-radius: 16px;
-  padding: 14px 8px;
+  padding: 20px 8px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 17px;
+  touch-action: none;
   color: #fff;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -300,4 +301,14 @@ canvas {
   text-decoration: none;
   font-size: 14px;
   margin-top: 4px;
+}
+
+/* 일시정지는 진행 막대 아래로 (머리줄을 가리지 않게) */
+.stage .today-pause-btn {
+  top: 86px;
+  left: 10px;
+}
+
+.stage .today-mute-btn {
+  top: 10px !important;
 }

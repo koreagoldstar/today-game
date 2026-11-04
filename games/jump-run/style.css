@@ -30,13 +30,13 @@ body {
 }
 
 .stage {
-  position: relative;
-  width: min(100vw, calc(100dvh * 0.557));
-  height: min(100dvh, calc(100vw / 0.557));
-  max-width: 420px;
-  border-radius: 18px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(100vw, calc(100dvh * 0.68), 460px);
+  transform: translateX(-50%);
   overflow: hidden;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
   background: var(--sky);
 }
 
@@ -48,9 +48,9 @@ canvas {
 
 .hud {
   position: absolute;
-  top: 10px;
+  top: max(10px, env(safe-area-inset-top));
   left: 10px;
-  right: 10px;
+  right: 62px;
   display: flex;
   justify-content: space-between;
   gap: 8px;
@@ -82,7 +82,7 @@ canvas {
 
 .goal-meter {
   position: absolute;
-  top: 72px;
+  top: calc(max(10px, env(safe-area-inset-top)) + 62px);
   left: 12px;
   right: 12px;
   height: 8px;
@@ -104,10 +104,10 @@ canvas {
 
 .hint {
   position: absolute;
-  bottom: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.86);
   color: var(--muted);
   border-radius: 999px;
   padding: 6px 14px;
@@ -136,7 +136,7 @@ canvas {
   background:
     radial-gradient(ellipse at 70% 8%, rgba(255, 230, 140, 0.55), transparent 42%),
     radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.45), transparent 40%),
-    linear-gradient(180deg, rgba(110, 200, 248, 0.92), rgba(200, 236, 170, 0.95) 70%, rgba(255, 244, 210, 0.97));
+    linear-gradient(180deg, rgba(110, 200, 248, 0.72), rgba(200, 236, 170, 0.86) 70%, rgba(255, 244, 210, 0.95));
 }
 
 .overlay.hidden {
@@ -267,4 +267,21 @@ a {
   color: var(--muted);
   text-decoration: none;
   font-size: 14px;
+}
+
+/* 일시정지는 진행 막대 아래로 */
+.stage .today-pause-btn {
+  top: calc(max(10px, env(safe-area-inset-top)) + 78px);
+  left: 10px;
+}
+
+#over {
+  justify-content: flex-start;
+  padding-top: max(56px, env(safe-area-inset-top));
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.stage .today-mute-btn {
+  top: max(10px, env(safe-area-inset-top)) !important;
 }
