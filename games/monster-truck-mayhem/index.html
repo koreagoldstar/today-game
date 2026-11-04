@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#14161f" />
+    <meta name="description" content="거대한 몬스터 트럭으로 장애물을 부수고, 자동차를 날리고, 화끈한 스턴트를 펼쳐라! 파괴할수록 짜릿해지는 3D 아케이드 액션 레이싱." />
+    <title>몬스터 트럭 대소동 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/monster-truck-mayhem/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="몬스터 트럭 대소동 · 오늘의 게임" />
+    <meta property="og:description" content="거대한 몬스터 트럭으로 장애물을 부수고, 자동차를 날리고, 화끈한 스턴트를 펼쳐라! 파괴할수록 짜릿해지는 3D 아케이드 액션 레이싱." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/monster-truck-mayhem/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/games/monster-truck-mayhem/assets/thumb-og.jpg?v=1" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@500;700;900&family=Russo+One&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="mt">
+    <main class="stage" id="stage">
+      <canvas id="game" aria-label="몬스터 트럭 대소동 게임 화면"></canvas>
+      <div class="speedlines" id="speedlines" aria-hidden="true"></div>
+      <div class="flash" id="flash" aria-hidden="true"></div>
+
+      <!-- 플레이 화면 -->
+      <div class="hud hidden" id="hud">
+        <div class="hud-left">
+          <span class="hud-mode" id="hud-mode">MAYHEM TOUR</span>
+          <b class="hud-stage" id="hud-stage">1-1</b>
+          <div class="hud-score"><small>SCORE</small><b id="hud-score">0</b></div>
+        </div>
+        <div class="hud-mid">
+          <div class="hud-time" id="hud-time">1:00</div>
+          <ul class="hud-missions" id="hud-missions"></ul>
+        </div>
+        <div class="hud-right">
+          <div class="hud-speed"><b id="hud-speed">0</b><small>km/h</small></div>
+          <div class="gauge" aria-label="부스터">
+            <span>BOOST</span>
+            <i><u id="hud-boost"></u></i>
+          </div>
+          <div class="gauge hp" aria-label="차체 상태">
+            <span>BODY</span>
+            <i><u id="hud-body"></u></i>
+          </div>
+        </div>
+      </div>
+      <div class="combo hidden" id="combo" aria-hidden="true">
+        <b id="combo-n">0</b><small>COMBO</small>
+        <i><u id="combo-bar"></u></i>
+      </div>
+      <div class="pops" id="pops" aria-hidden="true"></div>
+      <div class="bigword" id="bigword" aria-hidden="true"></div>
+      <div class="stuntword" id="stuntword" aria-hidden="true"></div>
+      <div class="tip" id="tip" role="status"></div>
+      <div class="banner hidden" id="banner" aria-hidden="true">
+        <span id="banner-mode">MAYHEM TOUR</span>
+        <b id="banner-name"></b>
+        <small id="banner-goal"></small>
+      </div>
+      <div class="count hidden" id="count" aria-hidden="true"></div>
+      <div class="keyhelp hidden" id="keyhelp" aria-hidden="true">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 운전</span>
+        <span><kbd>Space</kbd> 점프</span>
+        <span><kbd>Shift</kbd> 부스터</span>
+        <span><kbd>R</kbd> 다시 세우기</span>
+      </div>
+
+      <!-- 터치 조작 -->
+      <div class="touch hidden" id="touch">
+        <div class="wheel-zone" id="wheel-zone">
+          <div class="wheel" id="wheel" aria-label="운전대"><i class="spoke s1"></i><i class="spoke s2"></i><i class="spoke s3"></i><i class="hub"></i></div>
+        </div>
+        <div class="pad-zone">
+          <button type="button" class="tb tb-jump" id="tb-jump" aria-label="점프"><span>JUMP</span></button>
+          <button type="button" class="tb tb-boost" id="tb-boost" aria-label="부스터"><span>BOOST</span></button>
+          <button type="button" class="pedal brake" id="tb-brake" aria-label="브레이크와 후진"><span>BRAKE<br />REVERSE</span></button>
+          <button type="button" class="pedal gas" id="tb-gas" aria-label="가속"><span>DRIVE</span></button>
+        </div>
+        <button type="button" class="tb-reset" id="tb-reset" aria-label="다시 세우기">다시 세우기</button>
+      </div>
+
+      <!-- 첫 화면 -->
+      <section class="overlay title" id="title">
+        <div class="coin-chip title-coin"><i class="coin-i" aria-hidden="true"></i><b id="title-coins">0</b></div>
+        <header class="logo-box">
+          <h1 class="logo" aria-label="몬스터 트럭 대소동"><span class="l1">몬스터 트럭</span><span class="l2">대소동</span></h1>
+          <p class="logo-en">MONSTER TRUCK MAYHEM</p>
+          <p class="logo-sub">CRUSH EVERYTHING. MASTER THE CHAOS.</p>
+        </header>
+        <div class="title-actions">
+          <button type="button" class="btn-play" id="start-btn"><span class="pl">PLAY</span><small id="start-sub">1-1 첫 경기</small></button>
+          <button type="button" class="btn-garage" id="btn-garage"><span>GARAGE</span><small>트럭 · 업그레이드</small></button>
+        </div>
+        <nav class="mode-row" aria-label="게임 모드">
+          <button type="button" class="mode-btn m-tour" data-mode="tour"><b>MAYHEM TOUR</b><small>5개 월드 · 35 스테이지</small></button>
+          <button type="button" class="mode-btn m-dest" data-mode="destruction"><b>TOTAL DESTRUCTION</b><small>제한 시간 안에 다 부수기</small></button>
+          <button type="button" class="mode-btn m-stunt" data-mode="stunt"><b>STUNT MASTER</b><small>점프 · 공중 회전 · 착지</small></button>
+          <button type="button" class="mode-btn m-time" data-mode="time"><b>TIME ATTACK</b><small>지름길과 부스터로 최단 시간</small></button>
+          <button type="button" class="mode-btn m-set" id="btn-settings"><b>SETTINGS</b><small>그래픽 · 소리</small></button>
+        </nav>
+        <a class="home-link" href="/">← 오늘의 게임</a>
+      </section>
+
+      <!-- 스테이지 고르기 -->
+      <section class="overlay panel hidden" id="stages" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2 id="stages-title">MAYHEM TOUR</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b id="stages-coins">0</b></div>
+        </header>
+        <p class="panel-sub" id="stages-sub"></p>
+        <div class="world-tabs" id="world-tabs"></div>
+        <div class="world-card" id="world-card"></div>
+        <div class="stage-grid" id="stage-grid"></div>
+      </section>
+
+      <!-- 차고 -->
+      <section class="overlay garage hidden" id="garage" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>GARAGE</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b id="garage-coins">0</b></div>
+        </header>
+        <div class="garage-side">
+          <div class="truck-card">
+            <span class="truck-grade" id="truck-grade"></span>
+            <h3 id="truck-name"></h3>
+            <p class="truck-ko" id="truck-ko"></p>
+            <p class="truck-desc" id="truck-desc"></p>
+            <div class="stat-list" id="stat-list"></div>
+          </div>
+          <div class="up-list" id="up-list"></div>
+          <button type="button" class="btn-pick" id="truck-action"></button>
+        </div>
+        <div class="truck-row" id="truck-row"></div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="overlay panel small hidden" id="settings" data-today-home>
+        <header class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>SETTINGS</h2>
+          <span></span>
+        </header>
+        <div class="set-list">
+          <div class="set-row"><b>그래픽</b><div class="seg" id="set-quality"></div></div>
+          <div class="set-row"><b>효과음</b><div class="seg" id="set-sfx"></div></div>
+          <div class="set-row"><b>음악</b><div class="seg" id="set-music"></div></div>
+          <div class="set-row"><b>화면 흔들림</b><div class="seg" id="set-shake"></div></div>
+          <div class="set-help">
+            <h3>조작법</h3>
+            <p><b>PC</b> W/↑ 가속 · S/↓ 브레이크와 후진 · A/← D/→ 방향 · Space 점프 · Shift 부스터 · R 다시 세우기 · ESC 일시정지. 공중에서는 방향키로 트럭을 돌려요.</p>
+            <p><b>휴대폰</b> 왼쪽 운전대를 돌리고, 오른쪽 DRIVE · BRAKE 페달을 눌러요. JUMP · BOOST 버튼은 따로 있어요.</p>
+          </div>
+          <button type="button" class="btn-danger" id="set-reset">기록 전부 지우기</button>
+        </div>
+      </section>
+
+      <!-- 결과 -->
+      <section class="overlay result hidden" id="result" data-today-home>
+        <div class="res-card">
+          <p class="res-mode" id="res-mode"></p>
+          <h2 class="res-title" id="res-title">STAGE CLEAR!</h2>
+          <p class="res-why" id="res-why"></p>
+          <div class="res-stars" id="res-stars"><i></i><i></i><i></i></div>
+          <div class="res-total"><small>TOTAL SCORE</small><b id="res-score">0</b><em id="res-best" class="hidden">NEW BEST!</em></div>
+          <div class="res-grid">
+            <div><small>파괴</small><b id="res-destroyed">0</b></div>
+            <div><small>최고 콤보</small><b id="res-combo">0</b></div>
+            <div><small>스턴트 점수</small><b id="res-stunt">0</b></div>
+            <div><small>시간</small><b id="res-time">0:00</b></div>
+          </div>
+          <ul class="res-missions" id="res-missions"></ul>
+          <div class="res-coin"><i class="coin-i" aria-hidden="true"></i><b id="res-coins">+0</b><small id="res-coin-note"></small></div>
+          <p class="res-unlock hidden" id="res-unlock"></p>
+          <div class="res-rank hidden" id="res-rank"></div>
+          <div class="res-actions">
+            <button type="button" class="btn-next" id="res-next">NEXT</button>
+            <button type="button" class="btn-sub" id="res-retry">RETRY</button>
+            <button type="button" class="btn-sub" id="res-garage">GARAGE</button>
+            <button type="button" class="btn-sub" id="res-list">목록</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 불러오는 중 -->
+      <div class="veil hidden" id="veil" role="status"><b>경기장 정리하는 중…</b></div>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <p class="boot-logo">몬스터 트럭 대소동</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">엔진 예열하는 중…</p>
+        </div>
+      </div>
+      <div class="boot hidden" id="fallback" role="alert">
+        <div class="boot-box">
+          <p class="boot-logo">앗, 시작하지 못했어요</p>
+          <p class="load-t">이 브라우저나 기기는 3D 그래픽(WebGL2)을 쓸 수 없어요. 크롬 최신 버전에서 다시 열어 주세요.</p>
+          <a class="home-link inline" href="/">← 오늘의 게임으로</a>
+        </div>
+      </div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="몬스터 트럭 대소동 소개">
+  <h2>몬스터 트럭 대소동 소개</h2>
+  <p>거대한 몬스터 트럭으로 장애물을 부수고, 자동차를 날리고, 화끈한 스턴트를 펼쳐라! 파괴할수록 짜릿해지는 3D 아케이드 액션 레이싱입니다. 고철 경기장부터 폐허 도시, 화산, 얼음 벌판, 메가 스타디움까지 5개 월드 35개 스테이지와 월드별 보스 챌린지가 준비되어 있어요. 나무 상자, 폐차, 컨테이너, 유리, 폭발 드럼통 등 부서지는 물체가 재질마다 다르게 반응하고, 콤보와 공중 회전으로 점수가 폭발합니다.</p>
+  <h3>플레이 방법</h3>
+  <p>PC는 W/↑로 가속, S/↓로 브레이크와 후진, A/← D/→로 방향을 바꾸고 Space로 점프, Shift로 부스터를 씁니다. R은 다시 세우기, ESC는 일시정지예요. 공중에서 방향키를 누르면 트럭이 돌아 스턴트 점수를 얻어요. 휴대폰은 왼쪽 운전대를 돌리고 오른쪽 DRIVE · BRAKE 페달을 누르며, JUMP와 BOOST 버튼을 따로 눌러요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>게임 모드는 무엇이 있나요?</dt>
+    <dd>미션을 깨며 전진하는 메이헴 투어, 제한 시간 안에 부수는 토탈 디스트럭션, 점프와 공중 회전으로 점수를 내는 스턴트 마스터, 지름길과 부스터로 기록을 줄이는 타임 어택이 있어요.</dd>
+    <dt>트럭마다 뭐가 다른가요?</dt>
+    <dd>8종 모두 생김새와 성능이 달라요. 아이언 불은 무겁고 튼튼하고, 로켓 호그는 가볍고 높이 뛰며, 프로스트 바이트는 얼음에서 잘 달려요. 메가 스타디움 보스를 깨면 골든 크러셔를 받아요.</dd>
+    <dt>코인은 어디에 쓰나요?</dt>
+    <dd>스테이지를 깨면 코인을 받아요. 차고에서 새 트럭을 사고 엔진, 타이어, 서스펜션, 차체, 부스터를 다섯 단계까지 올릴 수 있어요.</dd>
+    <dt>별은 어떻게 받나요?</dt>
+    <dd>주 목표를 이루면 별 1개, 보너스 미션을 이룰 때마다 1개씩 더 받아 최대 3개예요.</dd>
+    <dt>트럭이 뒤집히거나 끼면 어떻게 하나요?</dt>
+    <dd>잠시 뒤 자동으로 다시 세워 줘요. 기다리기 싫으면 R 키나 다시 세우기 버튼을 누르세요.</dd>
+    <dt>휴대폰이 느려요.</dt>
+    <dd>SETTINGS에서 그래픽을 보통이나 낮음으로 바꾸면 빨라져요. 자동으로 두면 기기 성능에 맞춰 낮춰 줘요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>로그인 없이 지금 쓰는 브라우저에 저장돼요. 브라우저 데이터를 지우면 기록도 함께 지워져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

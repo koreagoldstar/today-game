@@ -107,10 +107,12 @@ module.exports = async function handler(req, res) {
     "chick-defense-new",
     "oneshot-elite",
     "penguin-delivery",
+    "monster-truck-mayhem",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "monster-truck-mayhem",
     "penguin-delivery",
     "oneshot-elite",
     "chick-defense-new",
