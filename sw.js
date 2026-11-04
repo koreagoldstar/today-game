@@ -1,14 +1,15 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v70`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v70`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v71`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v71`;
 // 방문자 기기에 쌓아 두는 파일 수 상한 (넘으면 오래된 것부터 지움)
 const RUNTIME_MAX = 150;
 // 음악 · 영상은 크고 브라우저가 따로 잘 기억하니 여기 담지 않음
 const NO_STORE = /\.(mp3|ogg|wav|m4a|mp4|webm)$/i;
 // 홈 화면을 그리는 데 필요한 파일. 미리 받아 두어 느린 인터넷에서도 홈이 바로 뜨게 한다.
 // index.html 의 ?v= 를 바꾸면 여기도 같이 바꾼다 (scripts/test-home-buttons.js 가 어긋나면 알려 준다).
+const FONT_CSS = "https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -34,7 +35,12 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(SHELL_CACHE).then(async (cache) => {
+      await cache.addAll(APP_SHELL);
+      await saveFontCss(cache, FONT_CSS).catch(() => {}); // 글꼴은 못 받아도 설치는 계속한다
+    })
+  );
   self.skipWaiting();
 });
 
@@ -104,20 +110,21 @@ async function serveHome(event) {
 /**
  * 구글 글꼴 CSS: 화면 그리기를 막는 파일이라 하루가 지나 다시 받을 때 느린 인터넷에서 홈이 늦게 뜬다.
  * 저장본을 바로 주고 뒤에서 새로 받아 둔다. 글꼴 파일 자체는 브라우저가 오래 기억하니 건드리지 않는다.
+ * 저장본이 없을 때는 페이지의 원래 요청을 그대로 보낸다. 저장용 요청은 브라우저 저장본을 못 써서
+ * 그것을 기다리면 화면이 오히려 늦어진다 (배포 직후 첫 방문이 왕복 1.5초 망에서 3.8초 걸렸다).
  */
+function saveFontCss(cache, key) {
+  return fetch(key, { mode: "cors", credentials: "omit" }).then((response) => {
+    if (response.status === 200) return cache.put(key, response);
+    return undefined;
+  });
+}
 async function serveFontCss(event) {
   const cache = await caches.open(SHELL_CACHE);
   const key = event.request.url;
   const cached = await cache.match(key);
-  const network = fetch(key, { mode: "cors", credentials: "omit" }).then(async (response) => {
-    if (response.status === 200) await cache.put(key, response.clone());
-    return response;
-  });
-  if (cached) {
-    event.waitUntil(network.catch(() => {}));
-    return cached;
-  }
-  return network.catch(() => fetch(event.request));
+  event.waitUntil(saveFontCss(cache, key).catch(() => {}));
+  return cached || fetch(event.request);
 }
 
 self.addEventListener("fetch", (event) => {

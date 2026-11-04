@@ -202,6 +202,8 @@ async function open(browser, g, { width = 390, height = 844, errors }) {
     .filter((u) => !/^https?:/.test(u))
     .map((u) => (u.startsWith("/") ? u : `/${u}`));
   const missing = needed.filter((u) => !shell.includes(u));
+  const fontCss = (swSource.match(/const FONT_CSS = "([^"]+)"/) || [])[1];
+  if (!fontCss || !homeHtml.includes(fontCss)) missing.push("글꼴 CSS 주소");
   check("H5", "홈 화면의 CSS · JS 를 서비스워커가 지금 버전으로 미리 받아 둠", needed.length > 5 && missing.length === 0, missing.length ? `빠짐 ${missing.join(", ")}` : `${needed.length}개`);
 
   await browser.close();
