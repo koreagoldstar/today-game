@@ -1,8 +1,8 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v68`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v68`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v69`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v69`;
 // 방문자 기기에 쌓아 두는 파일 수 상한 (넘으면 오래된 것부터 지움)
 const RUNTIME_MAX = 150;
 // 음악 · 영상은 크고 브라우저가 따로 잘 기억하니 여기 담지 않음
@@ -64,6 +64,29 @@ function store(request, response) {
     .catch(() => {});
 }
 
+/**
+ * 홈 화면: 저장본을 바로 주고 뒤에서 새로 받아 둔다.
+ * 홈은 SHELL_CACHE 의 "/" 한 곳에만 둔다. caches.match 는 먼저 만든 저장소부터 찾으므로
+ * 다른 저장소에 넣으면 새 화면을 받아도 계속 옛 화면이 나온다.
+ */
+async function serveHome(event) {
+  const cache = await caches.open(SHELL_CACHE);
+  const cached = await cache.match("/");
+  const network = fetch(event.request).then(async (response) => {
+    if (response.status === 200 && !response.redirected) await cache.put("/", response.clone());
+    return response;
+  });
+  if (cached && !cached.redirected) {
+    event.waitUntil(network.catch(() => {}));
+    return cached;
+  }
+  try {
+    return await network;
+  } catch (_) {
+    return (await caches.match("/offline.html")) || Response.error();
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -74,6 +97,13 @@ self.addEventListener("fetch", (event) => {
   if (NO_STORE.test(url.pathname) || request.headers.has("range")) return;
 
   if (request.mode === "navigate") {
+    // 홈으로 갈 때는 저장해 둔 화면을 바로 보여 주고 뒤에서 새로 받아 둔다.
+    // 새로고침은 최신을 원하는 것이니 (request.cache) 아래의 원래 길로 보낸다.
+    const toHome = (url.pathname === "/" || url.pathname === "/index.html") && !url.search;
+    if (toHome && request.cache !== "reload" && request.cache !== "no-cache" && request.cache !== "no-store") {
+      event.respondWith(serveHome(event));
+      return;
+    }
     event.respondWith(
       fetch(request)
         .then((response) => {

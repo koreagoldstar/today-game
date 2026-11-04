@@ -139,11 +139,16 @@
       home.hidden = true;
       home.style.display = "none";
       home.setAttribute("aria-hidden", "true");
-      // 첫 화면이 점수 줄을 덮고 있으면 (그대로 두면 집 버튼이 안 보임) 첫 화면 위로
+      // 첫 화면이 점수 줄을 덮고 있으면 (그대로 두면 집 버튼이 안 눌림) 첫 화면 위로
       const title = document.querySelector("#title");
-      if (title && titleOpen() && covered(home.parentNode)) {
-        if (brand.parentNode !== title) title.insertBefore(brand, title.firstChild);
-        return;
+      if (title && titleOpen()) {
+        // 이미 첫 화면 위에 있으면 다시 재지 않는다. 다시 재면 집 버튼 자신을 보고
+        // "안 덮였다"고 판단해 0.8초마다 점수 줄과 첫 화면을 오간다 (그동안 눌리지 않음).
+        if (brand.parentNode === title) return;
+        if (covered(home.parentNode)) {
+          title.insertBefore(brand, title.firstChild);
+          return;
+        }
       }
       if (brand.parentNode !== home.parentNode) home.parentNode.insertBefore(brand, home);
       return;

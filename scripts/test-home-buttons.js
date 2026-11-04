@@ -67,6 +67,8 @@ async function open(browser, g, { width = 390, height = 844, errors }) {
   /* ---------- H1: 모든 게임 첫 화면 ---------- */
   const bad = [];
   let okN = 0;
+  const unsteady = [];
+  let steadyN = 0;
   for (const g of games) {
     const p = await open(browser, g, { errors });
     const r = await p.evaluate(() => {
@@ -93,9 +95,34 @@ async function open(browser, g, { width = 390, height = 844, errors }) {
     const ok = r.houses >= 1 && r.pressable >= 1 && r.big >= 1 && r.nested === 0 && r.plain.length === 0;
     if (ok) okN++;
     else bad.push(`${g}(집 ${r.houses} · 눌림 ${r.pressable} · 40px+ ${r.big} · 겹친 링크 ${r.nested}${r.plain.length ? " · 그림 없는 홈 링크 " + r.plain.join("/") : ""})`);
+    // 점수 줄에 홈 링크가 있는 게임: 집 버튼이 자리를 오가며 눌렸다 안 눌렸다 하지 않는지 (2026-11 버그)
+    const steady = await p.evaluate(async () => {
+      if (!document.querySelector(".stage header.hud .home, .stage .hud > a.home, .app .home")) return null;
+      const brand = document.querySelector(".today-brand");
+      if (!brand) return null;
+      let moves = 0;
+      let off = 0;
+      let parent = brand.parentElement;
+      for (let i = 0; i < 20; i += 1) {
+        if (brand.parentElement !== parent) {
+          moves += 1;
+          parent = brand.parentElement;
+        }
+        const q = brand.getBoundingClientRect();
+        const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2);
+        if (!t || !(t === brand || brand.contains(t))) off += 1;
+        await new Promise((res) => setTimeout(res, 100));
+      }
+      return { moves, off };
+    });
+    if (steady) {
+      steadyN++;
+      if (steady.moves || steady.off) unsteady.push(`${g}(이동 ${steady.moves} · 안 눌림 ${steady.off}/20)`);
+    }
     await p.ctx.close();
   }
   check("H1", `모든 게임 첫 화면에 집 모양 홈 버튼 (보임 · 누를 수 있음 · 40px 이상) · 홈 글자 링크에도 집 그림 · 링크 겹침 없음`, bad.length === 0, `${okN}/${games.length}${bad.length ? " · 문제 " + bad.join(" | ") : ""}`);
+  check("H1b", "점수 줄에 홈 링크가 있는 게임: 첫 화면 집 버튼이 자리를 오가지 않고 계속 눌림", unsteady.length === 0, `${steadyN - unsteady.length}/${steadyN}${unsteady.length ? " · 문제 " + unsteady.join(" | ") : ""}`);
 
   /* ---------- H2: 스테이지 지도 · 목록 화면 (휴대폰 · PC) ---------- */
   const out = [];
