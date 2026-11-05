@@ -4,8 +4,8 @@
  * 트럭: 바퀴 4개 스프링-댐퍼 + 접지력 + 공중 자세 제어. 힘은 질량 1 당 가속도로 계산한다.
  * 물체: 상자 모양 강체. 쌓인 물체는 받침이 사라지면 떨어진다 (on / children).
  */
-import { OBJECTS, COMBO_WORDS, truckStats } from "./data.js";
-import { MU, MAT } from "./level.js";
+import { OBJECTS, COMBO_WORDS, truckStats } from "./data.js?v=2";
+import { MU, MAT } from "./level.js?v=2";
 
 export const STEP = 1 / 120;
 const G = 20;
@@ -377,7 +377,7 @@ export class Sim {
       vfNow = vf;
       const matMu = muSum * inv;
       const icy = matMu < 1;
-      const mu = matMu * d.grip * (icy ? d.iceGrip : 1);
+      const mu = matMu * d.grip * (icy ? d.iceGrip : 1) * (this.meta.assist ? (icy ? 1.4 : 1.12) : 1);
       const topNow = d.top * (this.boosting ? 1.34 : 1) * (this.damage >= 100 ? 0.9 : 1);
       let along = 0;
       if (input.throttle > 0) {
@@ -409,12 +409,14 @@ export class Sim {
       az += fp[2] * along + sp[2] * lat;
 
       // 조향은 몸통을 돌리는 것으로 (앞이 가벼워져도 안정적)
-      const speedK = clamp(Math.abs(vf) / 7, 0, 1);
-      const dir = vf >= -0.5 ? 1 : -1;
+      const speedK = clamp(Math.abs(vf) / 7, this.meta.assist && input.throttle > 0 ? 0.4 : 0, 1);
+      // 도우미: 벽에 튕겨 살짝 밀려날 때 조향이 뒤집히지 않게
+      const dir = vf >= (this.meta.assist && input.throttle > 0 ? -3 : -0.5) ? 1 : -1;
       const steerRate = -input.steer * 1.95 * d.turn * speedK * dir * (1 - 0.32 * clamp(Math.abs(vf) / d.top, 0, 1));
       const wUp = dot(this.w, up);
       const gain = 9 * clamp(mu, 0.35, 1.1) * (contacts / 4);
-      const tq = (steerRate - wUp) * gain;
+      // 벽에 닿아 있으면 벽을 따라 돌아 빠져나온다
+      const tq = (steerRate + (this.wallYaw || 0) - wUp) * gain;
       tx += up[0] * tq;
       ty += up[1] * tq;
       tz += up[2] * tq;
@@ -808,6 +810,7 @@ export class Sim {
         pz = z;
       }
     }
+    this.wallYaw = (this.wallYaw || 0) * 0.96;
     if (worst <= 0) return;
     const push = Math.min(worst, 0.5);
     this.pos[0] += nx * push;
@@ -817,16 +820,22 @@ export class Sim {
       this.vel[0] -= nx * vn * 1.25;
       this.vel[2] -= nz * vn * 1.25;
       const hard = -vn;
-      this.vel[0] *= 1 - Math.min(0.2, hard * 0.008);
-      this.vel[2] *= 1 - Math.min(0.2, hard * 0.008);
+      const easy = this.meta.assist;
+      // 도우미: 벽에 스쳐도 덜 느려지고, 벽을 따라 더 잘 돈다
+      const lose = Math.min(easy ? 0.08 : 0.2, hard * (easy ? 0.004 : 0.008));
+      this.vel[0] *= 1 - lose;
+      this.vel[2] *= 1 - lose;
       if (hard > 3 && this.hitCd <= 0) {
         this.hitCd = 0.18;
-        if (hard > 12) this.hurt(hard * 0.4);
+        if (hard > (easy ? 18 : 12)) this.hurt(hard * 0.4);
         this.emit("wall", { x: px, y: this.pos[1], z: pz, power: Math.min(1, hard / 22) });
       }
       // 벽을 따라가도록 몸을 살짝 돌린다
-      const side = fx * nz - fz * nx;
-      this.w[1] += side * Math.min(1.4, hard * 0.09);
+      const side = fz * nx - fx * nz;
+      // 느려졌을 때만: 빠를 때 세게 돌리면 반대쪽 벽으로 튕겨 나간다
+      const slowK = Math.max(0, 1 - Math.hypot(this.vel[0], this.vel[2]) / 9);
+      this.wallYaw = (Math.abs(side) < 0.2 ? (side >= 0 ? 0.2 : -0.2) : side) * 2.2 * slowK;
+      this.w[1] += side * Math.min(this.meta.assist ? 0.9 : 0.7, hard * (this.meta.assist ? 0.07 : 0.05));
     }
   }
 
@@ -1158,7 +1167,8 @@ export class Sim {
         const a = list[Math.min(list.length - 1, 4)];
         const fx = Math.sin(a.th);
         const fz = Math.cos(a.th);
-        const along = o.vx * fx + o.vz * fz;
+        // 레일 위에서 앞으로만 밀린다 (반대로 밀어 경기장 끝에 처박히면 깰 수 없게 된다)
+        const along = Math.max(0, o.vx * fx + o.vz * fz);
         o.vx = fx * along;
         o.vz = fz * along;
         o.wx = 0;

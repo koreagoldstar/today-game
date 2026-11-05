@@ -1,12 +1,12 @@
 /* 렌더러 · 카메라 · 시뮬레이션 동기화 · 이벤트 → 이펙트 · 소리 */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { Builder, MAT } from "./level.js";
-import { Sim, STEP, geyserOn } from "./sim.js";
-import { THEMES, buildLevel } from "./stages.js";
-import { TruckModel } from "./truckmodel.js";
-import { Debris, PropBatch } from "./props.js";
-import { FX } from "./fx.js";
-import { LOOKS, WorldView, themeEnv } from "./worldview.js";
+import { Builder, MAT } from "./level.js?v=2";
+import { Sim, STEP, geyserOn } from "./sim.js?v=2";
+import { THEMES, buildLevel } from "./stages.js?v=2";
+import { TruckModel } from "./truckmodel.js?v=2";
+import { Debris, PropBatch } from "./props.js?v=2";
+import { FX } from "./fx.js?v=2";
+import { LOOKS, WorldView, themeEnv } from "./worldview.js?v=2";
 
 const lerp = (a, b, k) => a + (b - a) * k;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -104,10 +104,11 @@ export class GameView {
     this.cine = null;
   }
 
-  startLevel(def, truckDef, upgrades) {
+  startLevel(def, truckDef, upgrades, opts = {}) {
     this.clearScene();
     const level = buildLevel(def);
-    const sim = new Sim(level, truckDef, upgrades, { time: def.time, main: def.main, bonus: def.bonus, endless: def.endless, extra: def.extra, id: def.id });
+    this.easyCam = !!opts.easyCam;
+    const sim = new Sim(level, truckDef, upgrades, { time: def.time, main: def.main, bonus: def.bonus, endless: def.endless, extra: def.extra, id: def.id, assist: !!opts.assist });
     this.buildScene(level, sim, truckDef, { theme: def.theme, seed: def.index + 1 });
     this.def = def;
     this.mode = "play";
@@ -685,9 +686,11 @@ export class GameView {
     this.camYaw = snap ? want : this.camYaw + wrap(want - this.camYaw) * Math.min(1, dt * rate);
     const big = (s.def.wb || 3.7) / 3.7;
     const air = s.air ? Math.min(1, s.airT * 1.2) : 0;
-    const dist = (lerp(8.6, 11, Math.min(1, sK)) + air * 2) * big * (narrow ? 1.16 : 1);
-    const hi = (4 + sK * 0.5 + air * 2.2) * big * (narrow ? 1.14 : 1);
-    const yaw = this.camYaw - s.steerVis * 0.26;
+    // 휴대폰: 조금 더 높고 뒤에서, 앞이 잘 보이게
+    const easy = this.easyCam ? 1 : 0;
+    const dist = (lerp(8.6, 11, Math.min(1, sK)) + air * 2 + easy * 1) * big * (narrow ? 1.16 : 1);
+    const hi = (4 + sK * 0.5 + air * 2.2 + easy * 0.9) * big * (narrow ? 1.14 : 1);
+    const yaw = this.camYaw - s.steerVis * (easy ? 0.14 : 0.26);
     const fx = Math.sin(yaw);
     const fz = Math.cos(yaw);
     const px = pos.x - fx * dist;
@@ -699,7 +702,7 @@ export class GameView {
     this.camPos.x += (px - this.camPos.x) * (snap ? 1 : Math.min(1, dt * 11));
     this.camPos.z += (pz - this.camPos.z) * (snap ? 1 : Math.min(1, dt * 11));
     this.camPos.y += (py - this.camPos.y) * k;
-    const ahead = narrow ? 7 : 6;
+    const ahead = (narrow ? 7 : 6) + easy * 2;
     const lx = pos.x + Math.sin(this.camYaw) * ahead;
     const lz = pos.z + Math.cos(this.camYaw) * ahead;
     const ly = pos.y + 1.2 - air * 0.5;

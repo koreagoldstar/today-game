@@ -2,7 +2,7 @@
  * 종류마다 InstancedMesh 하나: 수백 개를 그려도 가볍다. 색은 꼭짓점 색 + 인스턴스 색.
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { mergeGeos, roundedBox } from "./truckmodel.js";
+import { mergeGeos, roundedBox } from "./truckmodel.js?v=2";
 
 function tint(geo, color) {
   const g = geo.index ? geo.toNonIndexed() : geo;

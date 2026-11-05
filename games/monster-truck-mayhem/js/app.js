@@ -1,9 +1,10 @@
 /* 화면 · 저장 · 입력 · 보상. 게임 규칙은 sim, 그림은 view 에 있다 */
-import { MODES, TRUCKS, UPGRADES, UPGRADE_MAX, WORLDS, truckById, truckStats, upgradeCost } from "./data.js";
-import { LEVELS, levelsOf, missionText } from "./stages.js";
-import { Bot } from "./bot.js";
-import { Sfx } from "./sfx.js";
-import { GameView } from "./view.js";
+import { MODES, TRUCKS, UPGRADES, UPGRADE_MAX, WORLDS, truckById, truckStats, upgradeCost } from "./data.js?v=2";
+import { LEVELS, levelsOf, missionText } from "./stages.js?v=2";
+import { Bot } from "./bot.js?v=2";
+import { DriveAssist } from "./assist.js?v=2";
+import { Sfx } from "./sfx.js?v=2";
+import { GameView } from "./view.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString("ko-KR");
@@ -28,7 +29,7 @@ export function defaultSave() {
     trucks: { thunder: true },
     selected: "thunder",
     upgrades: {},
-    settings: { quality: "auto", sfx: true, music: true, shake: true },
+    settings: { quality: "auto", sfx: true, music: true, shake: true, autoGas: null, assist: null },
     total: { destroyed: 0, bestCombo: 0, bestStunt: 0 },
     seenHelp: false,
   };
@@ -66,6 +67,7 @@ export function sanitizeSave(raw) {
   if (raw.settings && typeof raw.settings === "object") {
     if (["auto", "high", "mid", "low"].includes(raw.settings.quality)) d.settings.quality = raw.settings.quality;
     for (const k of ["sfx", "music", "shake"]) if (typeof raw.settings[k] === "boolean") d.settings[k] = raw.settings[k];
+    for (const k of ["autoGas", "assist"]) if (typeof raw.settings[k] === "boolean") d.settings[k] = raw.settings[k];
   }
   if (raw.total && typeof raw.total === "object") {
     d.total.destroyed = num(raw.total.destroyed, 0, 1e9, 0);
@@ -161,6 +163,17 @@ class App {
 
   selectedDef() {
     return truckById(this.save.selected);
+  }
+
+  /** 정하지 않았으면 터치 기기에서만 켠다 */
+  autoGasOn() {
+    const v = this.save.settings.autoGas;
+    return v == null ? !!this.touchOn : v;
+  }
+
+  assistOn() {
+    const v = this.save.settings.assist;
+    return v == null ? !!this.touchOn : v;
   }
 
   upgradesOf(id) {
@@ -435,6 +448,12 @@ class App {
       }
     };
     const st = this.save.settings;
+    seg("set-gas", [[true, "켜기"], [false, "끄기"]], this.autoGasOn(), (v) => {
+      st.autoGas = v;
+    });
+    seg("set-assist", [[true, "켜기"], [false, "끄기"]], this.assistOn(), (v) => {
+      st.assist = v;
+    });
     seg("set-quality", [["auto", "자동"], ["high", "높음"], ["mid", "보통"], ["low", "낮음"]], st.quality, (v) => {
       st.quality = v;
       this.applyQuality();
@@ -483,8 +502,13 @@ class App {
     this.paused = false;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     const truck = this.selectedDef();
-    this.sim = this.view.startLevel(def, truck, this.upgradesOf(truck.id));
+    const assist = this.assistOn();
+    this.sim = this.view.startLevel(def, truck, this.upgradesOf(truck.id), { assist, easyCam: this.touchOn });
     this.view.ended = false;
+    this.helper = assist ? new DriveAssist(this.sim) : null;
+    this.steer = 0;
+    $("touch").classList.toggle("auto", this.autoGasOn());
+    $("hud-prog-box").classList.toggle("hidden", !!this.sim.level.noFinish);
     this.bot = /[?&]bot=1/.test(location.search) ? new Bot(this.sim) : null;
     this.show("play");
     $("combo").classList.add("hidden");
@@ -546,6 +570,12 @@ class App {
   updateHud() {
     const s = this.sim;
     $("hud-score").textContent = fmt(s.score);
+    if (!s.level.noFinish) $("hud-prog").style.transform = `scaleX(${Math.min(1, s.pi / Math.max(1, s.level.samples.length - 1)).toFixed(3)})`;
+    if (this.touchOn) {
+      $("wheel").style.transform = `rotate(${(this.steer * 1.25).toFixed(3)}rad)`;
+      $("chev-l").classList.toggle("on", this.steer < -0.15);
+      $("chev-r").classList.toggle("on", this.steer > 0.15);
+    }
     $("hud-speed").textContent = Math.round(s.speed * 4);
     $("hud-boost").style.transform = `scaleX(${s.boost.toFixed(3)})`;
     $("hud-boost").parentElement.parentElement.classList.toggle("on", s.boosting);
@@ -594,17 +624,28 @@ class App {
   readInput(dt) {
     const s = this.sim;
     const I = this.input;
-    const want = (I.right ? 1 : 0) - (I.left ? 1 : 0);
-    if (I.touchSteer != null) {
-      this.steer = I.touchSteer;
-    } else {
-      // 키보드는 살짝 부드럽게
-      const rate = want === 0 ? 9 : Math.sign(want) !== Math.sign(this.steer) ? 11 : 5.5;
-      this.steer += Math.max(-rate * dt, Math.min(rate * dt, want - this.steer));
+    // 터치도 키보드처럼 부드럽게 들어간다 (바로 끝까지 꺾이면 차가 휘청인다)
+    const want = I.touchSteer != null ? I.touchSteer : (I.right ? 1 : 0) - (I.left ? 1 : 0);
+    const rate = want === 0 ? 9 : Math.sign(want) !== Math.sign(this.steer) ? 11 : I.touchSteer != null ? 7 : 5.5;
+    this.steer += Math.max(-rate * dt, Math.min(rate * dt, want - this.steer));
+    s.input.steer = this.helper ? this.helper.steer(this.steer) : this.steer;
+    const brake = I.down || I.brake;
+    // 자동 가속: 땅에 있을 때만 (공중에서 누르고 있으면 앞으로 고꾸라진다)
+    s.input.throttle = I.up || I.gas || (this.autoGasOn() && !brake && s.contacts > 0) ? 1 : 0;
+    s.input.brake = brake ? 1 : 0;
+    // 도우미 + 자동 가속: 급한 굽이 앞에서 알아서 속도를 줄인다
+    if (this.helper && this.autoGasOn() && !brake && !I.boost) {
+      const c = this.helper.corner();
+      if (c !== 0) s.input.throttle = 0;
+      if (c > 0) s.input.brake = c;
+      // 코를 박고 멈추면 잠깐 후진
+      const back = this.helper.unstick(dt);
+      if (back) {
+        s.input.throttle = 0;
+        s.input.brake = 1;
+        s.input.steer = back;
+      }
     }
-    s.input.steer = this.steer;
-    s.input.throttle = I.up || I.gas ? 1 : 0;
-    s.input.brake = I.down || I.brake ? 1 : 0;
     s.input.boost = I.boost;
     s.input.jump = I.jump;
   }
@@ -825,26 +866,16 @@ class App {
     $("tb-reset").addEventListener("click", () => {
       if (this.sim && this.sim.state === "play") this.sim.recover("다시 세웠어요");
     });
-    // 운전대: 가운데를 기준으로 돌리는 각도
+    // 운전대: 돌릴 필요 없이 왼쪽 · 오른쪽을 누른다. 가운데서 멀수록 많이 꺾인다
     const zone = $("wheel-zone");
-    const wheel = $("wheel");
+    const wrap = $("wheel-wrap");
     let wid = null;
-    let a0 = 0;
-    let base = 0;
-    const center = () => {
-      const r = wheel.getBoundingClientRect();
-      return [r.left + r.width / 2, r.top + r.height / 2];
+    const readSteer = (e) => {
+      const r = wrap.getBoundingClientRect();
+      const v = (e.clientX - (r.left + r.width / 2)) / (r.width * 0.4);
+      const a = Math.abs(v);
+      I.touchSteer = Math.sign(v) * (a < 0.12 ? 0 : Math.min(1, (a - 0.12) / 0.88));
     };
-    const angleOf = (e) => {
-      const [cx, cy] = center();
-      return Math.atan2(e.clientX - cx, cy - e.clientY);
-    };
-    const MAX = 1.5;
-    const setW = (rad) => {
-      wheel.style.transform = `rotate(${rad}rad)`;
-      I.touchSteer = Math.max(-1, Math.min(1, rad / MAX));
-    };
-    let cur = 0;
     zone.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       if (wid != null) return;
@@ -854,34 +885,20 @@ class App {
       } catch (_) {
         /* 무시 */
       }
-      a0 = angleOf(e);
-      base = cur;
-      this.wheelSpring = false;
-      wheel.style.transition = "none";
+      readSteer(e);
     });
     zone.addEventListener("pointermove", (e) => {
-      if (e.pointerId !== wid) return;
-      let d = angleOf(e) - a0;
-      while (d > Math.PI) d -= Math.PI * 2;
-      while (d < -Math.PI) d += Math.PI * 2;
-      // 가운데에 너무 가까우면 각도가 튀지 않게
-      const [cx, cy] = center();
-      if (Math.hypot(e.clientX - cx, e.clientY - cy) < 14) return;
-      cur = Math.max(-MAX, Math.min(MAX, base + d * 1.25));
-      setW(cur);
+      if (e.pointerId === wid) readSteer(e);
     });
     const release = (e) => {
       if (e.pointerId !== wid) return;
       wid = null;
-      cur = 0;
-      wheel.style.transition = "transform .16s ease-out";
-      setW(0);
       I.touchSteer = null;
-      this.steer = 0;
     };
     zone.addEventListener("pointerup", release);
     zone.addEventListener("pointercancel", release);
     zone.addEventListener("lostpointercapture", release);
+    zone.addEventListener("contextmenu", (e) => e.preventDefault());
     // 터치가 처음 들어오면 터치 조작을 켠다
     window.addEventListener(
       "touchstart",
@@ -890,6 +907,7 @@ class App {
           this.touchOn = true;
           if (this.screen === "play") {
             $("touch").classList.remove("hidden");
+            $("touch").classList.toggle("auto", this.autoGasOn());
             $("keyhelp").classList.add("hidden");
           }
         }
@@ -1058,7 +1076,7 @@ class App {
         el.innerHTML = "<i>GO!</i>";
         this.sfx.count(true);
         setTimeout(() => el.classList.add("hidden"), 520);
-        if (this.def.id === "tour-1-1") this.showTip(this.touchOn ? "DRIVE 를 누르고 상자를 들이받아요!" : "W 또는 ↑ 를 누르고 상자를 들이받아요!", 3000);
+        if (this.def.id === "tour-1-1") this.showTip(this.touchOn ? (this.autoGasOn() ? "트럭은 알아서 달려요! 운전대 왼쪽 · 오른쪽을 눌러 방향만 잡아요" : "DRIVE 를 누르고 운전대 왼쪽 · 오른쪽으로 방향을 잡아요") : "W 또는 ↑ 를 누르고 상자를 들이받아요!", 3600);
       }
     }
     if (s.state === "play") {
@@ -1095,6 +1113,7 @@ export function startApp({ progress } = {}) {
     app,
     LEVELS,
     Bot,
+    DriveAssist,
     get sim() {
       return app.sim;
     },

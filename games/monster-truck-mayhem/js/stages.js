@@ -1,5 +1,5 @@
 /* 스테이지 설계. 투어 35 + 월드별 보스 챌린지 5 + 토탈 디스트럭션 5 + 스턴트 마스터 5 + 타임 어택 5 */
-import { Builder, MAT } from "./level.js";
+import { Builder, MAT } from "./level.js?v=2";
 
 export const THEMES = {
   scrap: { id: "scrap", mat: MAT.DIRT, rough: 0.14, outer: 3.4 },
@@ -629,6 +629,243 @@ add(4, "마지막 종합 챌린지", "부수고, 날고, 터뜨리고! 결승전
   b.go(30);
 });
 
+/* ---------- 코스 늘리기: 판 끝에 구간을 이어 붙여 길고 다채롭게 ---------- */
+const KITS = [
+  { soft: ["crate", "fence", "barrier"], low: "tires", wall: "tirewall", hard: "concrete", gap: "void" },
+  { soft: ["glass", "barrier", "sign"], low: "barrier", wall: "concrete", hard: "container", gap: "void" },
+  { soft: ["crate", "drum", "fence"], low: "drum", wall: "rock", hard: "rock", gap: "lava" },
+  { soft: ["snowman", "snowpile", "iceblock"], low: "snowpile", wall: "iceblock", hard: "iceblock", gap: "void" },
+  { soft: ["crate", "barrier", "fence"], low: "tires", wall: "tirewall", hard: "concrete", gap: "void" },
+];
+const here = (b) => b.s / b.K;
+const SEC = {
+  /** 크게 휘는 S자: 안쪽 선을 따라 부술 것이 놓인다 */
+  sweep(b, kit, f, a = 55) {
+    const s = here(b);
+    b.go(32, { turn: a * f });
+    b.go(46, { turn: -2 * a * f });
+    b.go(32, { turn: a * f });
+    line(b, kit.soft[0], s + 14, 4, 9, 4 * f);
+    b.put("cone", s + 40, 0);
+    line(b, kit.low, s + 52, 3, 8, -5 * f);
+    line(b, kit.soft[1], s + 86, 3, 9, 4 * f);
+  },
+  /** 빠른 좌우 연속: 폭이 좁아진다 */
+  chicane(b, kit, f) {
+    const s = here(b);
+    const w0 = b.w;
+    b.go(18, { turn: 42 * f, w: Math.max(16, w0 - 8) });
+    b.go(22, { turn: -84 * f });
+    b.go(22, { turn: 84 * f });
+    b.go(18, { turn: -42 * f, w: w0 });
+    b.put(kit.low, s + 18, -5 * f);
+    b.put(kit.low, s + 40, 5 * f);
+    b.put(kit.low, s + 62, -5 * f);
+    line(b, "cone", s + 28, 3, 6, 0);
+  },
+  /** 큰 언덕: 꼭대기에서 뜨고, 넘어가면 물체가 기다린다 */
+  hill(b, kit, f, h = 9) {
+    const s = here(b);
+    b.go(30, { dy: h });
+    b.go(12);
+    b.hump(s + 36, 0, { h: 1.3, l: 14, w: b.w + 6 });
+    b.go(30, { dy: -h, turn: 24 * f });
+    row(b, kit.soft[0], s + 62, { n: 5, gap: 3.6 });
+    b.go(10, { turn: -24 * f });
+  },
+  /** 작은 언덕 여러 개: 통통 튄다 */
+  roller(b, kit, f) {
+    const s = here(b);
+    for (let i = 0; i < 4; i += 1) {
+      b.go(13, { dy: 3.4, turn: 6 * f });
+      b.go(13, { dy: -3.4, turn: -6 * f });
+    }
+    b.put(kit.low, s + 26, 5 * f);
+    b.put(kit.low, s + 52, -5 * f);
+    b.put(kit.low, s + 78, 5 * f);
+  },
+  /** 부수는 골목: 부스터 판 + 줄지은 물체 */
+  alley(b, kit, f) {
+    const s = here(b);
+    b.pad(s + 5, 0);
+    b.go(62);
+    row(b, kit.soft[0], s + 18, { n: 6, gap: 3.4 });
+    row(b, kit.soft[1], s + 32, { n: 4, gap: 5 });
+    booms(b, s + 44, 5 * f, 3, 1.6);
+    row(b, kit.soft[0], s + 54, { n: 6, gap: 3.4, d0: -2 * f });
+  },
+  /** 차 벌판: 밟고 지나간다 */
+  cars(b, kit, f) {
+    const s = here(b);
+    b.go(30, { turn: 18 * f });
+    b.go(30, { turn: -18 * f });
+    for (let i = 0; i < 3; i += 1) carRow(b, s + 12 + i * 15, { n: 5, gap: 4.4, d0: (i - 1) * 2 * f });
+  },
+  /** 점프대 + 뛰어넘을 차 + 착지 뒤 벽 */
+  jump(b, kit, f, h = 4.2) {
+    const s = here(b);
+    b.go(66);
+    b.ramp(s + 6, 0, { h, l: 14, w: 14 });
+    carRow(b, s + 26, { n: 5, gap: 3 });
+    row(b, kit.soft[0], s + 54, { n: 7, gap: 3 });
+  },
+  /** 끊어진 길 점프 */
+  gapJump(b, kit, f, h = 3.8) {
+    const s = here(b);
+    b.go(62);
+    b.jumpGap(s + 6, 0, { h, l: 15, w: 18 }, 16, { kind: kit.gap, depth: kit.gap === "lava" ? 6 : 14 });
+    b.put("cone", s + 44, -4);
+    b.put("cone", s + 44, 4);
+  },
+  /** 두 갈래: 가운데 벽, 왼쪽은 폭탄 · 오른쪽은 차 */
+  split(b, kit, f) {
+    const s = here(b);
+    const w0 = b.w;
+    b.go(12, { w: w0 + 12 });
+    b.go(50);
+    b.go(12, { w: w0 });
+    line(b, kit.wall, s + 14, 5, 15, 0);
+    booms(b, s + 26, -9 * f, 3, 1.6);
+    b.pad(s + 16, 9 * f);
+    carRow(b, s + 36, { n: 2, gap: 4, d0: 9 * f });
+    carRow(b, s + 50, { n: 2, gap: 4, d0: 9 * f });
+    booms(b, s + 50, -9 * f, 3, 1.6);
+  },
+  /** 좁은 문: 단단한 벽 사이로 빠져나간다 */
+  gate(b, kit, f) {
+    const s = here(b);
+    const w0 = b.w;
+    b.go(14, { w: Math.max(15, w0 - 10) });
+    b.go(38, { turn: 22 * f });
+    b.go(14, { w: w0, turn: -22 * f });
+    row(b, kit.soft[1], s + 22, { n: 3, gap: 4 });
+    row(b, kit.soft[1], s + 44, { n: 3, gap: 4 });
+  },
+  /** 폭발 드럼 길 */
+  booms(b, kit, f) {
+    const s = here(b);
+    b.go(32, { turn: 26 * f });
+    b.go(32, { turn: -26 * f });
+    for (let i = 0; i < 7; i += 1) b.put("boom", s + 8 + i * 7, i % 2 ? 6 : -6);
+    row(b, kit.soft[0], s + 58, { n: 6, gap: 3.4 });
+  },
+  /** 화산: 불기둥 사이 */
+  geysers(b, kit, f) {
+    const s = here(b);
+    b.go(30, { turn: 20 * f });
+    b.go(30, { turn: -20 * f });
+    for (let i = 0; i < 6; i += 1) b.geyser(s + 8 + i * 8, i % 2 ? 6 : -6, { period: 3, on: 1, off: i * 0.5 });
+  },
+  /** 설원: 빙판 S자 */
+  ice(b, kit, f, a = 45) {
+    const s = here(b);
+    SEC.sweep(b, kit, f, a);
+    b.ice(s + 26, 100);
+  },
+  /** 설원: 눈덩이가 굴러온다 */
+  snowballs(b, kit, f) {
+    const s = here(b);
+    const tag = `ava-${Math.round(s)}`;
+    b.go(50, { dy: -7, turn: 16 * f });
+    b.go(20, { turn: -16 * f });
+    for (let i = 0; i < 4; i += 1) b.put("snowball", s + 44 + i * 5, -8 + i * 5, { tag });
+    b.trigger(s + 8, "wake", { tag, text: "눈덩이 조심!" });
+  },
+  /** 무너지는 다리 */
+  bridge(b, kit, f) {
+    const s = here(b);
+    b.go(58);
+    b.gap(s + 10, 26, { kind: kit.gap, depth: kit.gap === "lava" ? 6 : 16 });
+    b.bridge(s + 10, 26, { w: 10 });
+  },
+  /** 곧은 길에서 속도 내기 */
+  dash(b, kit, f) {
+    const s = here(b);
+    b.pad(s + 8, 4 * f);
+    b.pad(s + 34, -4 * f);
+    b.go(60);
+    line(b, "cone", s + 16, 4, 12, -8 * f);
+  },
+};
+/** 판별 추가 구간 (투어 35판 순서). "이름:값" 은 각도 · 높이 */
+const EXT = [
+  ["sweep:38", "alley", "sweep:34"],
+  ["cars", "sweep:44"],
+  ["roller", "jump:3.8", "sweep:44"],
+  ["sweep:46", "booms"],
+  ["hill:8", "sweep:44", "roller", "hill:10"],
+  ["chicane", "gate", "sweep:52"],
+  ["jump:4.4", "sweep:48", "jump:5"],
+  ["split", "chicane", "alley", "jump:4.6"],
+  ["sweep:48", "gate"],
+  ["alley", "sweep:52"],
+  ["sweep:46", "bridge", "chicane"],
+  ["split", "sweep:50"],
+  ["cars", "chicane", "cars"],
+  ["sweep:48", "gapJump:4", "gate"],
+  ["chicane", "sweep:62", "chicane", "gate"],
+  ["sweep:42", "gapJump:3.6"],
+  ["geysers", "sweep:48", "geysers"],
+  ["hill:10", "jump:5", "sweep:48"],
+  ["alley", "chicane", "hill:9", "sweep:46"],
+  ["sweep:46", "bridge", "gapJump:4"],
+  ["booms", "split", "sweep:54"],
+  ["hill:12", "geysers", "gapJump:4.4", "sweep:58"],
+  ["ice:40", "alley"],
+  ["alley", "ice:46"],
+  ["snowballs", "sweep:46"],
+  ["ice:42", "jump:4.4"],
+  ["cars", "ice:50"],
+  ["split", "sweep:50", "hill:9", "alley"],
+  ["ice:56", "chicane", "snowballs", "ice:50"],
+  ["sweep:52", "alley", "jump:5"],
+  ["booms", "chicane", "split"],
+  ["sweep:48", "roller", "jump:5.4", "sweep:50", "jump:6"],
+  ["split", "chicane", "alley"],
+  ["gate", "chicane", "sweep:58", "gate"],
+  ["chicane", "split", "gapJump:4.6", "sweep:58", "jump:5.4"],
+];
+function extendCourse(b, world, list, seed) {
+  const kit = KITS[world];
+  list.forEach((item, i) => {
+    const [name, v] = item.split(":");
+    const f = (seed + i) % 2 ? 1 : -1;
+    if (v) SEC[name](b, kit, f, Number(v));
+    else SEC[name](b, kit, f);
+  });
+  b.go(24);
+}
+/** 코스 길이 (미터) */
+function courseLength(def) {
+  const b = new Builder(THEMES[def.theme], def.opts || {});
+  def.build(b);
+  return b.s;
+}
+/** 길어진 만큼 시간과 목표를 맞춘다 */
+function fitToLength(def) {
+  const len = courseLength(def);
+  def.len = len;
+  def.time = Math.max(def.time, Math.ceil(len / 9.5) + 20);
+  const fit = (q) => {
+    if (q.k === "time") return { ...q, t: Math.ceil(len / 15) };
+    if (q.k === "score") return { ...q, n: Math.round((q.n * 1.5) / 100) * 100 };
+    if (q.k === "destroy" && !q.type) return { ...q, n: Math.round(q.n * 1.4) };
+    return q;
+  };
+  def.bonus = def.bonus.map(fit);
+}
+TOUR.forEach((d, i) => {
+  const inner = d.build;
+  d.build = (b) => {
+    // 원래 구간의 커브도 조금 더 또렷하게
+    b.turnK = 1.45;
+    inner(b);
+    b.turnK = 1;
+    extendCourse(b, d.world, EXT[i], i);
+  };
+  fitToLength(d);
+});
+
 /* ---------- 월드별 보스 챌린지 ---------- */
 const BOSS = [
   { mode: "boss", world: 0, name: "폐차 산 무너뜨리기", desc: "쌓아 올린 폐차 산의 아래를 쳐서 무너뜨려요!", time: 75, main: m.collapse, bonus: [{ k: "score", n: 9000 }, { k: "combo", n: 14 }], theme: "scrap", opts: {}, build(b) {
@@ -693,7 +930,7 @@ const BOSS = [
     b.openEnd();
     b.go(120);
     b.put("dumper", 34, 0, { tag: "dumper" });
-    b.zone(66, 0, 12);
+    b.zone(88, 0, 12);
     crateWall(b, 18, { n: 7, levels: 1, gap: 2.4 });
     row(b, "boom", 50, { n: 4, gap: 4 });
     b.pad(14, -6);
@@ -703,10 +940,31 @@ const BOSS = [
 ];
 for (const q of BOSS) q.bonus = q.bonus.filter(Boolean);
 
+/* ---------- 경기장 꾸미기: 둔덕과 구조물로 평지를 깬다 ---------- */
+function arenaDress(b, rx, rz, kit, seed = 1) {
+  const spots = [
+    [-0.62, -0.42, 0.5],
+    [0.6, -0.5, -0.4],
+    [-0.66, 0.5, 2.2],
+    [0.62, 0.56, -2.1],
+    [0.08, 0.72, 0.1],
+  ];
+  spots.forEach(([kx, kz, th], i) => {
+    const h = 1.5 + ((i * 7 + seed) % 4) * 0.35;
+    b.humpAt(kx * rx, kz * rz, th, { h, l: 16 + (i % 3) * 4, w: 18 + (i % 2) * 8 });
+  });
+  // 양옆 안쪽 벽: 돌아 들어가거나 뚫는다
+  for (let i = 0; i < 4; i += 1) {
+    b.putAt(kit.wall, -rx * 0.42, -rz * 0.14 + i * 7, { yaw: Math.PI / 2 });
+    b.putAt(kit.wall, rx * 0.42, -rz * 0.14 + i * 7, { yaw: Math.PI / 2 });
+  }
+}
+
 /* ---------- TOTAL DESTRUCTION: 넓은 경기장에서 전부 부수기 ---------- */
 const DESTRUCTION = [
   { world: 0, name: "고철장 전면전", desc: "90초 동안 눈에 보이는 건 다 부숴요!", time: 90, target: 7000, theme: "scrap", build(b) {
     b.arena(58, 58);
+    arenaDress(b, 58, 58, KITS[0], 1);
     scatter(b, "wreck", 22, 58, 58, 3);
     scatter(b, "boom", 14, 58, 58, 7);
     scatter(b, "tires", 14, 58, 58, 11);
@@ -721,6 +979,7 @@ const DESTRUCTION = [
   } },
   { world: 1, name: "도시 대청소", desc: "유리 · 간판 · 차 · 컨테이너까지 전부!", time: 90, target: 9000, theme: "city", build(b) {
     b.arena(56, 56);
+    arenaDress(b, 56, 56, KITS[1], 2);
     scatter(b, "glass", 26, 56, 56, 2);
     scatter(b, "sign", 10, 56, 56, 5);
     scatter(b, "wreck", 22, 56, 56, 8);
@@ -734,6 +993,7 @@ const DESTRUCTION = [
   } },
   { world: 2, name: "화산 대폭발", desc: "폭발 드럼통을 이어 터뜨려 점수를 폭발시켜요!", time: 75, target: 10000, theme: "volcano", build(b) {
     b.arena(54, 54);
+    arenaDress(b, 54, 54, KITS[2], 3);
     scatter(b, "boom", 40, 54, 54, 4);
     scatter(b, "rock", 14, 54, 54, 9);
     scatter(b, "wreck", 14, 54, 54, 16);
@@ -745,6 +1005,7 @@ const DESTRUCTION = [
   } },
   { world: 3, name: "빙판 대소동", desc: "미끄러운 얼음판에서 눈사람과 얼음을 박살내요.", time: 90, target: 8000, theme: "frozen", build(b) {
     b.arena(56, 56);
+    arenaDress(b, 56, 56, KITS[3], 4);
     b.stamps.push({ kind: "matAll", mat: MAT.ICE });
     scatter(b, "iceblock", 18, 56, 56, 6);
     scatter(b, "snowman", 26, 56, 56, 10);
@@ -755,6 +1016,7 @@ const DESTRUCTION = [
   } },
   { world: 4, name: "메가 스타디움 난투", desc: "모든 것을 부수는 궁극의 120초!", time: 120, target: 18000, theme: "stadium", build(b) {
     b.arena(64, 64);
+    arenaDress(b, 64, 64, KITS[4], 5);
     scatter(b, "wreck", 30, 64, 64, 2);
     scatter(b, "boom", 24, 64, 64, 6);
     scatter(b, "tirewall", 8, 64, 64, 10);
@@ -833,6 +1095,14 @@ const STUNT = [
 ].map((d) => ({ mode: "stunt", world: d.world, name: d.name, desc: d.desc, time: d.time, main: { k: "stuntScore", n: d.target }, bonus: [{ k: "stuntScore", n: Math.round(d.target * 1.7) }, { k: "air", t: 3 }], extra: 20, theme: d.theme, opts: {}, build: d.build }));
 
 /* ---------- TIME ATTACK: 부수면 느려진다. 지름길은 부숴야 열린다 ---------- */
+/* 타임 어택 코스 뒤쪽: 빠른 곡선과 언덕 */
+const TIME_EXT = [
+  ["dash", "sweep:50", "chicane"],
+  ["chicane", "dash", "sweep:58", "gate"],
+  ["dash", "hill:10", "sweep:52"],
+  ["ice:44", "dash", "sweep:54"],
+  ["chicane", "dash", "hill:10", "sweep:60"],
+];
 const TIME = [
   { world: 0, name: "고철장 일주", par: 38, theme: "scrap", opts: { w: 22 }, build(b) {
     b.go(70);
@@ -898,7 +1168,13 @@ const TIME = [
     b.go(50);
     b.go(30);
   } },
-].map((d) => ({ mode: "time", world: d.world, name: d.name, desc: "장애물을 피해 최단 시간! 콘크리트를 뚫으면 지름길이 열리기도 해요.", time: Math.round(d.par * 2), par: d.par, main: { k: "finish" }, bonus: [{ k: "time", t: d.par + 8 }, { k: "time", t: d.par }], theme: d.theme, opts: d.opts, build: d.build }));
+].map((d, i) => {
+  // 코스를 늘리고, 기준 시간은 길이로 정한다 (약 16m/s)
+  const inner = d.build;
+  const def = { ...d, build(b) { inner(b); extendCourse(b, d.world, TIME_EXT[i], i); } };
+  def.par = Math.round(courseLength(def) / 16);
+  return { mode: "time", world: d.world, name: d.name, desc: "장애물을 피해 최단 시간! 콘크리트를 뚫으면 지름길이 열리기도 해요.", time: Math.round(def.par * 2), par: def.par, main: { k: "finish" }, bonus: [{ k: "time", t: def.par + 8 }, { k: "time", t: def.par }], theme: d.theme, opts: d.opts, build: def.build };
+});
 
 /* ---------- 목록 ---------- */
 export const LEVELS = [...TOUR, ...BOSS, ...DESTRUCTION, ...STUNT, ...TIME].map((d, i) => {

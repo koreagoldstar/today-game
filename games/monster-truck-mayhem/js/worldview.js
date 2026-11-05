@@ -2,9 +2,9 @@
  * 모양은 Level 값만 읽는다. 물리에 영향을 주지 않는다.
  */
 import * as THREE from "/js/vendor/three-0.160.1.module.min.js";
-import { MAT } from "./level.js";
-import { mergeGeos } from "./truckmodel.js";
-import { B, C, GEO, moved, tint } from "./props.js";
+import { MAT } from "./level.js?v=2";
+import { mergeGeos } from "./truckmodel.js?v=2";
+import { B, C, GEO, moved, tint } from "./props.js?v=2";
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (v) => {
@@ -793,6 +793,8 @@ export class WorldView {
     scene.add(this.root);
     this.disposables = [];
     this.anim = [];
+    this.cull = [];
+    this.cullTick = 0;
     this.smokers = [];
     this.flames = [];
     this.rand = rng(seed * 7919 + level.samples.length * 13 + Math.round(level.length));
@@ -817,32 +819,49 @@ export class WorldView {
     return obj;
   }
 
+  /** 멀어지면 그리지 않을 물체로 등록 */
+  addCull(o, x, z, r) {
+    this.cull.push({ o, x, z, r });
+  }
+
   batch(geo, list, mat, { shadow = false, colors = null } = {}) {
     if (!list.length) return null;
     this.own(geo);
     this.own(mat);
-    const m = new THREE.InstancedMesh(geo, mat, list.length);
+    // 코스가 길어도 느려지지 않게 구역별로 나눈다: 화면 밖 · 안개 너머는 건너뛴다
+    const SIZE = 150;
+    const cells = new Map();
+    list.forEach((q, i) => {
+      const k = `${Math.floor(q.x / SIZE)},${Math.floor(q.z / SIZE)}`;
+      if (!cells.has(k)) cells.set(k, []);
+      cells.get(k).push([q, i]);
+    });
     const M = new THREE.Matrix4();
     const Q = new THREE.Quaternion();
     const P = new THREE.Vector3();
     const S = new THREE.Vector3();
     const E = new THREE.Euler();
-    list.forEach((q, i) => {
-      E.set(q.rx || 0, q.th || 0, q.rz || 0);
-      Q.setFromEuler(E);
-      P.set(q.x, q.y, q.z);
-      if (Array.isArray(q.s)) S.set(q.s[0], q.s[1], q.s[2]);
-      else S.setScalar(q.s || 1);
-      M.compose(P, Q, S);
-      m.setMatrixAt(i, M);
-      if (colors) m.setColorAt(i, new THREE.Color(colors(q, i)));
-    });
-    m.frustumCulled = false;
-    m.castShadow = shadow && this.quality >= 1;
-    m.receiveShadow = false;
-    this.disposables.push({ dispose: () => m.dispose() });
-    this.add(m);
-    return m;
+    for (const items of cells.values()) {
+      const m = new THREE.InstancedMesh(geo, mat, items.length);
+      items.forEach(([q, i], n) => {
+        E.set(q.rx || 0, q.th || 0, q.rz || 0);
+        Q.setFromEuler(E);
+        P.set(q.x, q.y, q.z);
+        if (Array.isArray(q.s)) S.set(q.s[0], q.s[1], q.s[2]);
+        else S.setScalar(q.s || 1);
+        M.compose(P, Q, S);
+        m.setMatrixAt(n, M);
+        if (colors) m.setColorAt(n, new THREE.Color(colors(q, i)));
+      });
+      m.computeBoundingSphere();
+      m.frustumCulled = true;
+      m.castShadow = shadow && this.quality >= 1;
+      m.receiveShadow = false;
+      this.disposables.push({ dispose: () => m.dispose() });
+      this.add(m);
+      this.addCull(m, m.boundingSphere.center.x, m.boundingSphere.center.z, m.boundingSphere.radius);
+    }
+    return true;
   }
 
   setupSky() {
@@ -896,8 +915,9 @@ export class WorldView {
     const rows = Math.ceil((nz - 1) / step) + 1;
     const used = new Int32Array(cols * rows).fill(-1);
     const cell = (i, j) => Math.min(i * step, nx - 1) + Math.min(j * step, nz - 1) * nx;
-    const quads = [];
-    const iceQ = [];
+    // 96m 칸으로 나눠 그린다
+    const TILE = Math.max(1, Math.round(96 / step));
+    const tiles = new Map();
     const lavaQ = [];
     let count = 0;
     const pos = [];
@@ -969,7 +989,15 @@ export class WorldView {
         const vc = vert(i, j + 1);
         const vd = vert(i + 1, j + 1);
         const ice = M[a] === MAT.ICE && M[d] === MAT.ICE;
-        (ice ? iceQ : quads).push(va, vc, vb, vb, vc, vd);
+        const key = ((i / TILE) | 0) + ((j / TILE) | 0) * 100000;
+        let t = tiles.get(key);
+        if (!t) {
+          t = { q: [], ice: [], lo: 1e9, hi: -1e9, ti: (i / TILE) | 0, tj: (j / TILE) | 0 };
+          tiles.set(key, t);
+        }
+        (ice ? t.ice : t.q).push(va, vc, vb, vb, vc, vd);
+        t.lo = Math.min(t.lo, H[a], H[b], H[c], H[d]);
+        t.hi = Math.max(t.hi, H[a], H[b], H[c], H[d]);
         if (M[a] === MAT.LAVA || M[b] === MAT.LAVA || M[c] === MAT.LAVA || M[d] === MAT.LAVA) lavaQ.push(i, j);
       }
     }
@@ -979,25 +1007,29 @@ export class WorldView {
       color: new THREE.BufferAttribute(new Float32Array(col), 3),
       uv: new THREE.BufferAttribute(new Float32Array(uv), 2),
     };
-    const makeGeo = (list) => {
-      const g = new THREE.BufferGeometry();
-      for (const k of Object.keys(attr)) g.setAttribute(k, attr[k]);
-      g.setIndex(list);
-      g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
-      return this.own(g);
-    };
     const tex = detailTextures(look.detail);
-    const ground = new THREE.Mesh(makeGeo(quads), this.own(new THREE.MeshStandardMaterial({ map: tex.map, normalMap: tex.normalMap, normalScale: new THREE.Vector2(0.9, 0.9), vertexColors: true, roughness: look.detail === "snow" ? 0.82 : look.detail === "asphalt" ? 0.8 : 0.96, metalness: 0, envMapIntensity: 0.4 })));
-    ground.receiveShadow = true;
-    ground.frustumCulled = false;
-    this.ground = ground;
-    this.add(ground);
-    if (iceQ.length) {
-      const iceT = detailTextures("snow");
-      const ice = new THREE.Mesh(makeGeo(iceQ), this.own(new THREE.MeshStandardMaterial({ map: iceT.map, normalMap: iceT.normalMap, normalScale: new THREE.Vector2(0.25, 0.25), vertexColors: true, roughness: 0.08, metalness: 0.15, envMapIntensity: 1.6 })));
-      ice.receiveShadow = true;
-      ice.frustumCulled = false;
-      this.add(ice);
+    const groundMat = this.own(new THREE.MeshStandardMaterial({ map: tex.map, normalMap: tex.normalMap, normalScale: new THREE.Vector2(0.9, 0.9), vertexColors: true, roughness: look.detail === "snow" ? 0.82 : look.detail === "asphalt" ? 0.8 : 0.96, metalness: 0, envMapIntensity: 0.4 }));
+    const iceT = detailTextures("snow");
+    const iceMat = this.own(new THREE.MeshStandardMaterial({ map: iceT.map, normalMap: iceT.normalMap, normalScale: new THREE.Vector2(0.25, 0.25), vertexColors: true, roughness: 0.08, metalness: 0.15, envMapIntensity: 1.6 }));
+    const span = TILE * step;
+    for (const t of tiles.values()) {
+      const cx = x0 + (t.ti + 0.5) * span;
+      const cz = z0 + (t.tj + 0.5) * span;
+      const cy = (t.lo + t.hi) / 2;
+      const r = Math.hypot(span * 0.75, span * 0.75, (t.hi - t.lo) / 2) + 2;
+      const part = (list, mat) => {
+        if (!list.length) return;
+        const g = new THREE.BufferGeometry();
+        for (const k of Object.keys(attr)) g.setAttribute(k, attr[k]);
+        g.setIndex(list);
+        g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), r);
+        const m = new THREE.Mesh(this.own(g), mat);
+        m.receiveShadow = true;
+        this.add(m);
+        this.addCull(m, cx, cz, r);
+      };
+      part(t.q, groundMat);
+      part(t.ice, iceMat);
     }
     // 먼 땅은 가장 낮은 곳보다 조금 아래
     let lo = 1e9;
@@ -1637,6 +1669,14 @@ void main(){vec3 b=vec3(80.,40.,80.);vec3 p=position+uV*uT*(.7+aR*.6);p.x+=sin(u
   /** 매 프레임. focus = 트럭 위치 */
   update(dt, time, camera, focus, fx) {
     for (const fn of this.anim) fn(dt, time);
+    // 안개 너머는 그리지 않는다
+    this.cullTick += 1;
+    if (this.cullTick % 6 === 1) {
+      const lim = this.look.far + 30;
+      const cx = camera.position.x;
+      const cz = camera.position.z;
+      for (const c of this.cull) c.o.visible = Math.hypot(c.x - cx, c.z - cz) - c.r < lim;
+    }
     this.skyMesh.position.copy(camera.position);
     this.farMesh.position.set(camera.position.x, this.baseY + 42, camera.position.z);
     this.farPlane.position.x = camera.position.x;

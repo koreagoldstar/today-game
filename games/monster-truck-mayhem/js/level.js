@@ -3,7 +3,7 @@
  * - 앞 방향 = (sinθ, 0, cosθ), 오른쪽 = (-cosθ, 0, sinθ). turn 양수 = 오른쪽.
  * - 격자 1m: H 높이, O 벽까지 거리(0 보다 크면 코스 밖), M 재질.
  */
-import { OBJECTS } from "./data.js";
+import { OBJECTS } from "./data.js?v=2";
 
 export const MAT = { DIRT: 0, ASPHALT: 1, SNOW: 2, ICE: 3, ROCK: 4, LAVA: 5, GRASS: 6, VOID: 7 };
 export const MU = [1.25, 1.5, 0.92, 0.34, 1.3, 1.2, 1.15, 1.2];
@@ -52,7 +52,7 @@ export class Builder {
     const y0 = this.y;
     const w0 = this.w;
     const w1 = w || this.w;
-    const dTh = -(turn * Math.PI) / 180 / n;
+    const dTh = -(turn * (this.turnK || 1) * Math.PI) / 180 / n;
     for (let i = 1; i <= n; i += 1) {
       this.th += dTh;
       this.x += Math.sin(this.th);

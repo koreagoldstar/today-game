@@ -15,7 +15,7 @@ function check(name, ok, info) {
   console.log(`${ok ? "PASS" : "FAIL"} ${name}${info !== undefined ? ` — ${typeof info === "string" ? info : JSON.stringify(info)}` : ""}`);
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const mod = (f) => import(pathToFileURL(path.join(__dirname, "..", "games", "monster-truck-mayhem", "js", f)).href);
+const mod = (f) => import(pathToFileURL(path.join(__dirname, "..", "games", "monster-truck-mayhem", "js", f)).href + "?v=2");
 
 /* ---------- 브라우저 없이: 판 · 물리 · 파괴 ---------- */
 async function headless() {
@@ -150,6 +150,195 @@ async function headless() {
       maxY = Math.max(maxY, x.pos[1] - x.level.height(x.pos[0], x.pos[2]));
     });
     check("절벽처럼 솟은 면은 벽으로 막힌다", maxY < 9, { maxY });
+  }
+
+  // 벽에 비스듬히 부딪혀도 달라붙지 않는다 (예전에는 회전 부호가 반대라 코를 박고 기어갔다)
+  {
+    const bd = new Builder(THEMES.scrap, { k: 1, w: 24 });
+    bd.go(500);
+    const q = new Sim(bd.bake(), TRUCKS[0], {}, { time: 100 });
+    run(q, 0.4);
+    q.begin();
+    q.input.throttle = 1;
+    run(q, 1.2);
+    q.input.steer = 1;
+    run(q, 0.9);
+    q.input.steer = 0;
+    const z0 = q.pos[2];
+    let slow = 0;
+    run(q, 3, (x) => {
+      if (x.speed < 6) slow += STEP;
+    });
+    check("벽에 비스듬히 부딪혀도 달라붙어 기어가지 않음", slow < 2 && q.pos[2] - z0 > 12 && q.speed > 8, { slow: +slow.toFixed(2), 전진: +(q.pos[2] - z0).toFixed(0) });
+  }
+
+  // 덤프트럭은 반대로 밀리지 않는다
+  {
+    const def = levelsOf("boss", 4)[0];
+    const q = new Sim(buildLevel(def), TRUCKS[0], {}, { time: 60, main: def.main, bonus: def.bonus });
+    run(q, 0.4);
+    q.begin();
+    const d = q.objects.find((o) => o.def.push);
+    const z0 = d.z;
+    q.pos[2] = d.z + 16;
+    q.q = [0, 1, 0, 0];
+    q.vel[2] = -22;
+    q.input.throttle = 1;
+    run(q, 3);
+    check("덤프트럭은 반대 방향으로 밀리지 않음 (판이 막히지 않게)", d.z >= z0 - 0.5, { z0, z: d.z });
+  }
+
+  /* 코스 */
+  {
+    const tours = levelsOf("tour");
+    const lens = tours.map((d) => d.len);
+    check("투어 코스가 충분히 길다 (700m 이상)", Math.min(...lens) >= 700, { 최소: Math.min(...lens), 최대: Math.max(...lens) });
+    const stats = LEVELS.filter((d) => d.mode === "tour" || d.mode === "time").map((def) => {
+      const f = new Builder(THEMES[def.theme], def.opts || {});
+      def.build(f);
+      const S = f.samples;
+      let over = false;
+      for (let i = 0; i < S.length && !over; i += 6) {
+        for (let j = i + 90; j < S.length; j += 6) {
+          if (Math.hypot(S[i].x - S[j].x, S[i].z - S[j].z) < (S[i].w + S[j].w) / 2 + 12) {
+            over = true;
+            break;
+          }
+        }
+      }
+      let bends = 0;
+      for (let i = 10; i < S.length; i += 10) if (Math.abs(S[i].th - S[i - 10].th) > 0.12) bends += 1;
+      return { id: def.id, over, bends };
+    });
+    check("코스가 자기 자신과 겹치지 않음", stats.every((q) => !q.over), stats.filter((q) => q.over).map((q) => q.id));
+    check("곧기만 한 코스가 없음 (굽은 구간 10곳 이상)", stats.every((q) => q.bends >= 10), stats.filter((q) => q.bends < 10).map((q) => `${q.id}:${q.bends}`));
+  }
+
+  /* 운전 도우미: 서툰 엄지를 흉내 내어 비교한다 */
+  {
+    const { DriveAssist } = await mod("assist.js");
+    const wrapA = (a) => {
+      let v = a;
+      while (v > Math.PI) v -= Math.PI * 2;
+      while (v < -Math.PI) v += Math.PI * 2;
+      return v;
+    };
+    const rngOf = (seed) => {
+      let v = seed >>> 0 || 1;
+      return () => {
+        v = (v * 1664525 + 1013904223) >>> 0;
+        return v / 4294967296;
+      };
+    };
+    const play = (def, easy, seed, hands = true) => {
+      const lvl = buildLevel(def);
+      const sim = new Sim(lvl, TRUCKS[0], {}, { time: def.time, main: def.main, bonus: def.bonus, assist: easy });
+      const help = easy ? new DriveAssist(sim) : null;
+      const r = rngOf(seed);
+      sim.begin();
+      let steer = 0;
+      let wanted = 0;
+      const queue = [];
+      let walls = 0;
+      let think = 0;
+      let t = 0;
+      const lim = (def.time + 5) * 120;
+      for (let i = 0; i < lim && sim.state === "play"; i += 1) {
+        t += STEP;
+        think -= STEP;
+        if (hands && think <= 0) {
+          // 0.2초마다 판단, 반응 0.3초 늦음, 가끔 헛손질
+          think = 0.2;
+          const a = lvl.samples[Math.min(lvl.samples.length - 1, sim.pi + 16)];
+          const heading = Math.atan2(sim.fwd[0], sim.fwd[2]);
+          const err = wrapA(Math.atan2(a.x - sim.pos[0], a.z - sim.pos[2]) - heading);
+          let v = Math.abs(err) > 0.2 ? -Math.sign(err) : 0;
+          if (r() < 0.1) v = r() < 0.5 ? 1 : -1;
+          queue.push([t + 0.3, v]);
+        }
+        while (queue.length && queue[0][0] <= t) wanted = queue.shift()[1];
+        const rate = wanted === 0 ? 9 : Math.sign(wanted) !== Math.sign(steer) ? 11 : 7;
+        steer += Math.max(-rate * STEP, Math.min(rate * STEP, wanted - steer));
+        sim.input.steer = help ? help.steer(steer) : steer;
+        sim.input.throttle = sim.contacts > 0 ? 1 : 0;
+        sim.input.brake = 0;
+        if (help) {
+          const c = help.corner();
+          if (c !== 0) sim.input.throttle = 0;
+          if (c > 0) sim.input.brake = c;
+          const back = help.unstick(STEP);
+          if (back) {
+            sim.input.throttle = 0;
+            sim.input.brake = 1;
+            sim.input.steer = back;
+          }
+        }
+        sim.step(STEP);
+        for (const e of sim.events) if (e.t === "wall") walls += 1;
+        sim.events.length = 0;
+      }
+      return { ok: !!(sim.result && sim.result.ok), walls, time: sim.time };
+    };
+    const ids = ["tour-1-1", "tour-1-6", "tour-2-7", "tour-3-4", "tour-4-1", "tour-5-5"];
+    const tot = { off: { ok: 0, walls: 0, time: 0, n: 0 }, on: { ok: 0, walls: 0, time: 0, n: 0 } };
+    for (const id of ids) {
+      const def = LEVELS.find((l) => l.id === id);
+      for (let k = 0; k < 2; k += 1) {
+        for (const [key, easy] of [["off", false], ["on", true]]) {
+          const q = play(def, easy, 11 + k * 37);
+          tot[key].ok += q.ok ? 1 : 0;
+          tot[key].walls += q.walls;
+          tot[key].time += q.time;
+          tot[key].n += 1;
+        }
+      }
+    }
+    const fmtT = (x) => ({ 완주: `${x.ok}/${x.n}`, 판당벽: +(x.walls / x.n).toFixed(1), 평균초: Math.round(x.time / x.n) });
+    check("도우미: 서툰 운전도 모두 완주", tot.on.ok === tot.on.n, fmtT(tot.on));
+    check("도우미: 벽 충돌이 절반 아래로", tot.on.walls < tot.off.walls * 0.5, { 끔: fmtT(tot.off), 켬: fmtT(tot.on) });
+    check("도우미: 더 빨리 완주", tot.on.time < tot.off.time * 0.8);
+    // 경기장(길이 없는 판)에서도 도우미가 멀쩡하다
+    for (const id of ["destruction-1-M", "stunt-1-M", "boss-1-B", "destruction-4-M"]) {
+      const def = LEVELS.find((l) => l.id === id);
+      const q = new Sim(buildLevel(def), TRUCKS[0], {}, { time: def.time, main: def.main, bonus: def.bonus, endless: def.endless, extra: def.extra, assist: true });
+      const h = new DriveAssist(q);
+      const r = rngOf(5);
+      q.begin();
+      let raw = 0;
+      let bad = false;
+      let far = 0;
+      for (let i = 0; i < 2400 && q.state === "play"; i += 1) {
+        if (i % 40 === 0) raw = r() < 0.4 ? 0 : r() < 0.5 ? 1 : -1;
+        q.input.steer = h.steer(raw);
+        q.input.throttle = q.contacts > 0 ? 1 : 0;
+        q.input.brake = 0;
+        const back = h.unstick(STEP);
+        if (back) {
+          q.input.throttle = 0;
+          q.input.brake = 1;
+          q.input.steer = back;
+        }
+        q.step(STEP);
+        q.events.length = 0;
+        if (!Number.isFinite(q.input.steer + q.pos[0] + q.pos[2])) bad = true;
+        far = Math.max(far, q.level.off(q.pos[0], q.pos[2]));
+      }
+      check(`도우미: ${id} 에서 값이 깨지지 않고 벽 안에 머문다`, !bad && far < 3 && q.stats.recover < 4, { far: +far.toFixed(1), recover: q.stats.recover, destroyed: q.stats.destroyed });
+    }
+    // 그래도 플레이어가 꺾으면 꺾인다 (혼자 다 하지 않는다)
+    const def0 = LEVELS.find((l) => l.id === "tour-1-1");
+    const q0 = new Sim(buildLevel(def0), TRUCKS[0], {}, { time: 100, assist: true });
+    const h0 = new DriveAssist(q0);
+    q0.begin();
+    run(q0, 2, (x) => {
+      x.input.throttle = 1;
+    });
+    const hd0 = Math.atan2(q0.fwd[0], q0.fwd[2]);
+    run(q0, 0.5, (x) => {
+      x.input.steer = h0.steer(1);
+    });
+    const hd1 = Math.atan2(q0.fwd[0], q0.fwd[2]);
+    check("도우미가 켜져 있어도 플레이어가 꺾는 대로 돈다", hd1 < hd0 - 0.15, { hd0, hd1 });
   }
 
   /* 트럭 8종 */
@@ -641,6 +830,14 @@ async function desktop(browser) {
   // 설정
   await page.click("#btn-settings");
   await sleep(120);
+  const pcDefault = await page.evaluate(() => ({ gas: MonsterTruck.app.autoGasOn(), help: MonsterTruck.app.assistOn(), segs: !!document.querySelector('#set-gas [data-v="true"]') && !!document.querySelector('#set-assist [data-v="true"]') }));
+  check("PC 는 자동 가속 · 도우미가 기본으로 꺼져 있고 설정에서 켤 수 있음", pcDefault.gas === false && pcDefault.help === false && pcDefault.segs, pcDefault);
+  await page.click('#set-assist [data-v="true"]');
+  await page.click('#set-gas [data-v="true"]');
+  const pcOn = await page.evaluate(() => JSON.parse(localStorage.getItem("monster-truck-mayhem-v1")).settings);
+  check("설정: 자동 가속 · 도우미 저장", pcOn.autoGas === true && pcOn.assist === true, pcOn);
+  await page.click('#set-assist [data-v="false"]');
+  await page.click('#set-gas [data-v="false"]');
   await page.click('#set-quality [data-v="low"]');
   await sleep(120);
   const q1 = await page.evaluate(() => ({ q: MonsterTruck.view.qualityName, pr: MonsterTruck.view.renderer.getPixelRatio() }));
@@ -685,15 +882,16 @@ async function touch(browser, viewport, label) {
       const r = document.getElementById(id).getBoundingClientRect();
       return { w: r.width, h: r.height, in: r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1, l: r.left, t: r.top, r: r.right, b: r.bottom };
     };
-    return { wheel: vis("wheel"), gas: vis("tb-gas"), brake: vis("tb-brake"), jump: vis("tb-jump"), boost: vis("tb-boost"), hud: vis("hud"), W: innerWidth, H: innerHeight, sw: document.documentElement.scrollWidth, shown: !document.getElementById("touch").classList.contains("hidden") };
+    return { wheel: vis("wheel-wrap"), brake: vis("tb-brake"), jump: vis("tb-jump"), boost: vis("tb-boost"), gasW: document.getElementById("tb-gas").getBoundingClientRect().width, auto: document.getElementById("touch").classList.contains("auto"), hud: vis("hud"), W: innerWidth, H: innerHeight, sw: document.documentElement.scrollWidth, shown: !document.getElementById("touch").classList.contains("hidden") };
   });
-  const need = ["wheel", "gas", "brake", "jump", "boost"];
+  const need = ["wheel", "brake", "jump", "boost"];
+  check(`${label}: 터치 기기는 자동 가속이 기본 (DRIVE 숨김)`, layout.auto && layout.gasW === 0, { auto: layout.auto, gasW: layout.gasW });
   check(`${label}: 터치 버튼이 모두 화면 안`, layout.shown && need.every((k) => layout[k].in), need.filter((k) => !layout[k].in));
   check(`${label}: 페달 · 버튼이 충분히 크다 (44px 이상)`, need.every((k) => layout[k].w >= 44 && layout[k].h >= 44), need.map((k) => `${k}:${Math.round(layout[k].w)}x${Math.round(layout[k].h)}`));
-  check(`${label}: 조작부가 위쪽 절반을 가리지 않음`, layout.gas.t > layout.H * 0.45 && layout.wheel.t > layout.H * 0.4, { gasTop: layout.gas.t, wheelTop: layout.wheel.t, H: layout.H });
+  check(`${label}: 조작부가 위쪽 절반을 가리지 않음`, layout.boost.t > layout.H * 0.4 && layout.wheel.t > layout.H * 0.4, { boostTop: layout.boost.t, wheelTop: layout.wheel.t, H: layout.H });
   check(`${label}: 가로 스크롤 없음`, layout.sw <= layout.W + 1, layout.sw);
   const overlap = (a, b) => !(a.r <= b.l || b.r <= a.l || a.b <= b.t || b.b <= a.t);
-  check(`${label}: 버튼끼리 겹치지 않음`, !overlap(layout.gas, layout.brake) && !overlap(layout.jump, layout.boost) && !overlap(layout.gas, layout.jump), null);
+  check(`${label}: 버튼끼리 겹치지 않음`, !overlap(layout.brake, layout.jump) && !overlap(layout.jump, layout.boost) && !overlap(layout.brake, layout.boost), layout);
   const fire = (sel, type, x, y, id = 11) =>
     page.evaluate(
       ([s, t, px, py, pid]) => {
@@ -703,39 +901,72 @@ async function touch(browser, viewport, label) {
       },
       [sel, type, x, y, id]
     );
-  await fire("#tb-gas", "pointerdown");
   await sleep(1000);
-  const a = await page.evaluate(() => ({ v: MonsterTruck.sim.vf, th: MonsterTruck.sim.input.throttle }));
-  check(`${label}: DRIVE 로 가속`, a.th === 1 && a.v > 6, a);
-  // 운전대 돌리기
+  const a = await page.evaluate(() => ({ v: MonsterTruck.sim.vf, th: MonsterTruck.sim.input.throttle, assist: !!MonsterTruck.app.helper, meta: MonsterTruck.sim.meta.assist }));
+  check(`${label}: 아무것도 안 눌러도 달린다`, a.v > 6, a);
+  check(`${label}: 터치 기기는 운전 도우미가 기본`, a.assist && a.meta === true, a);
+  // 운전대: 돌리지 않고 왼쪽 · 오른쪽을 누른다
   const w = layout.wheel;
   const cx = (w.l + w.r) / 2;
   const cy = (w.t + w.b) / 2;
-  await fire("#wheel-zone", "pointerdown", cx, w.t + 6, 22);
-  await fire("#wheel-zone", "pointermove", w.r - 6, cy, 22);
-  await sleep(180);
-  const b = await page.evaluate(() => ({ steer: MonsterTruck.sim.input.steer, rot: document.getElementById("wheel").style.transform }));
-  check(`${label}: 운전대를 오른쪽으로 돌림`, b.steer > 0.5 && /rotate/.test(b.rot), b);
-  await fire("#wheel-zone", "pointerup", w.r - 6, cy, 22);
-  await sleep(60);
-  const c = await page.evaluate(() => MonsterTruck.app.input.touchSteer);
-  check(`${label}: 손을 떼면 운전대가 돌아옴`, c === null, c);
+  const raw = () => page.evaluate(() => ({ steer: MonsterTruck.app.steer, rot: document.getElementById("wheel").style.transform, l: document.getElementById("chev-l").classList.contains("on"), r: document.getElementById("chev-r").classList.contains("on"), touch: MonsterTruck.app.input.touchSteer }));
+  await fire("#wheel-zone", "pointerdown", w.r - 4, cy, 22);
+  await sleep(320);
+  const b = await raw();
+  check(`${label}: 운전대 오른쪽을 누르면 오른쪽 (원을 안 그려도 됨)`, b.steer > 0.8 && b.r && /rotate/.test(b.rot), b);
+  await fire("#wheel-zone", "pointermove", w.l + 4, cy, 22);
+  await sleep(380);
+  const b2 = await raw();
+  check(`${label}: 그대로 밀어 왼쪽으로`, b2.steer < -0.8 && b2.l, b2);
+  await fire("#wheel-zone", "pointermove", cx, cy, 22);
+  await sleep(300);
+  const b3 = await raw();
+  check(`${label}: 가운데는 직진 (손이 조금 떨려도)`, Math.abs(b3.steer) < 0.1, b3);
+  await fire("#wheel-zone", "pointermove", cx + (w.r - w.l) * 0.1, cy, 22);
+  await sleep(200);
+  const b35 = await raw();
+  await fire("#wheel-zone", "pointerup", cx, cy, 22);
+  check(`${label}: 조금만 밀면 조금만 꺾인다`, b35.touch > 0 && b35.touch < 0.5, b35.touch);
+  await sleep(250);
+  const c = await raw();
+  check(`${label}: 손을 떼면 운전대가 돌아옴`, c.touch === null && Math.abs(c.steer) < 0.05, c);
+  // 조향이 바로 끝까지 가지 않는다 (휘청임 방지)
+  await fire("#wheel-zone", "pointerdown", w.r - 4, cy, 23);
+  await sleep(40);
+  const c2 = await raw();
+  await fire("#wheel-zone", "pointerup", w.r - 4, cy, 23);
+  check(`${label}: 조향이 부드럽게 들어간다`, c2.steer < 0.8, c2.steer);
   await fire("#tb-boost", "pointerdown", null, null, 33);
   await sleep(180);
   const d = await page.evaluate(() => MonsterTruck.sim.boosting);
   await fire("#tb-boost", "pointerup", null, null, 33);
   check(`${label}: BOOST 버튼`, d === true);
+  await page.waitForFunction(() => MonsterTruck.sim.contacts >= 3, null, { timeout: 6000 }).catch(() => {});
   await fire("#tb-jump", "pointerdown", null, null, 44);
   await sleep(200);
   const e = await page.evaluate(() => ({ c: MonsterTruck.sim.contacts, air: !!MonsterTruck.sim.air }));
   await fire("#tb-jump", "pointerup", null, null, 44);
   check(`${label}: JUMP 버튼`, e.air || e.c < 4, e);
-  await fire("#tb-gas", "pointerup");
   await fire("#tb-brake", "pointerdown", null, null, 55);
   await sleep(500);
-  const f = await page.evaluate(() => MonsterTruck.sim.input.brake);
+  const f = await page.evaluate(() => ({ b: MonsterTruck.sim.input.brake, th: MonsterTruck.sim.input.throttle }));
   await fire("#tb-brake", "pointerup", null, null, 55);
-  check(`${label}: BRAKE 페달`, f === 1, f);
+  check(`${label}: BRAKE 를 누르면 가속이 멈추고 브레이크`, f.b === 1 && f.th === 0, f);
+  await sleep(120);
+  // 벽에 코를 박아도 스스로 빠져나온다
+  const un = await page.evaluate(async () => {
+    const s = MonsterTruck.sim;
+    const a = MonsterTruck.app;
+    const before = s.stats.recover;
+    s.vel[0] = 0;
+    s.vel[1] = 0;
+    s.vel[2] = 0;
+    const h = a.helper;
+    h.slowT = 0.6;
+    await new Promise((r) => setTimeout(r, 120));
+    return { backed: h.backT > 0 || s.vf < 0, before };
+  });
+  check(`${label}: 멈춰 버리면 잠깐 후진해 빠져나온다`, un.backed === true, un);
   const pauseBtn = await page.evaluate(() => {
     const b2 = document.getElementById("today-pause-btn");
     return b2 && !b2.hidden;
@@ -754,6 +985,18 @@ async function touch(browser, viewport, label) {
     return { play: r.bottom <= innerHeight && r.top >= 0, modes: m.every((q) => q.bottom <= innerHeight + 1 && q.right <= innerWidth + 1 && q.height >= 28) };
   });
   check(`${label}: 첫 화면 버튼이 화면 안`, t.play && t.modes, t);
+  await page.evaluate(() => {
+    MonsterTruck.app.save.settings.autoGas = false;
+    MonsterTruck.start("tour-1-1");
+  });
+  await waitPlaying(page);
+  const manual = await page.evaluate(() => ({ w: document.getElementById("tb-gas").getBoundingClientRect().width, th: MonsterTruck.sim.input.throttle }));
+  check(`${label}: 자동 가속을 끄면 DRIVE 페달이 돌아온다`, manual.w > 40 && manual.th === 0, manual);
+  await fire("#tb-gas", "pointerdown", null, null, 66);
+  await sleep(500);
+  const man2 = await page.evaluate(() => MonsterTruck.sim.input.throttle);
+  await fire("#tb-gas", "pointerup", null, null, 66);
+  check(`${label}: DRIVE 페달로 가속`, man2 === 1, man2);
   check(`${label}: 오류 없음`, errors.length === 0, errors.slice(0, 4));
   await ctx.close();
 }

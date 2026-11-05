@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@500;700;900&family=Russo+One&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="style.css?v=2" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
   </head>
@@ -39,6 +39,7 @@
         </div>
         <div class="hud-mid">
           <div class="hud-time" id="hud-time">1:00</div>
+          <div class="hud-prog" id="hud-prog-box" aria-label="결승선까지 진행률"><u id="hud-prog"></u></div>
           <ul class="hud-missions" id="hud-missions"></ul>
         </div>
         <div class="hud-right">
@@ -77,7 +78,11 @@
       <!-- 터치 조작 -->
       <div class="touch hidden" id="touch">
         <div class="wheel-zone" id="wheel-zone">
-          <div class="wheel" id="wheel" aria-label="운전대"><i class="spoke s1"></i><i class="spoke s2"></i><i class="spoke s3"></i><i class="hub"></i></div>
+          <div class="wheel-wrap" id="wheel-wrap">
+            <div class="wheel" id="wheel" aria-label="운전대: 왼쪽 또는 오른쪽을 누르세요"><i class="spoke s2"></i><i class="spoke s3"></i><i class="hub"></i></div>
+            <i class="chev l" id="chev-l" aria-hidden="true"></i>
+            <i class="chev r" id="chev-r" aria-hidden="true"></i>
+          </div>
         </div>
         <div class="pad-zone">
           <button type="button" class="tb tb-jump" id="tb-jump" aria-label="점프"><span>JUMP</span></button>
@@ -152,6 +157,8 @@
           <span></span>
         </header>
         <div class="set-list">
+          <div class="set-row"><div><b>자동 가속</b><small>누르지 않아도 달려요. 방향만 잡으면 돼요</small></div><div class="seg" id="set-gas"></div></div>
+          <div class="set-row"><div><b>운전 도우미</b><small>길을 따라가고 벽을 피하도록 살짝 거들어요</small></div><div class="seg" id="set-assist"></div></div>
           <div class="set-row"><b>그래픽</b><div class="seg" id="set-quality"></div></div>
           <div class="set-row"><b>효과음</b><div class="seg" id="set-sfx"></div></div>
           <div class="set-row"><b>음악</b><div class="seg" id="set-music"></div></div>
@@ -159,7 +166,7 @@
           <div class="set-help">
             <h3>조작법</h3>
             <p><b>PC</b> W/↑ 가속 · S/↓ 브레이크와 후진 · A/← D/→ 방향 · Space 점프 · Shift 부스터 · R 다시 세우기 · ESC 일시정지. 공중에서는 방향키로 트럭을 돌려요.</p>
-            <p><b>휴대폰</b> 왼쪽 운전대를 돌리고, 오른쪽 DRIVE · BRAKE 페달을 눌러요. JUMP · BOOST 버튼은 따로 있어요.</p>
+            <p><b>휴대폰</b> 트럭은 알아서 달려요. 운전대의 왼쪽이나 오른쪽을 누르면 그쪽으로 돌아요. BRAKE 로 멈추거나 후진하고, JUMP · BOOST 는 오른쪽 버튼이에요.</p>
           </div>
           <button type="button" class="btn-danger" id="set-reset">기록 전부 지우기</button>
         </div>
@@ -217,13 +224,13 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script type="module" src="main.js?v=1"></script>
+    <script type="module" src="main.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="몬스터 트럭 대소동 소개">
   <h2>몬스터 트럭 대소동 소개</h2>
   <p>거대한 몬스터 트럭으로 장애물을 부수고, 자동차를 날리고, 화끈한 스턴트를 펼쳐라! 파괴할수록 짜릿해지는 3D 아케이드 액션 레이싱입니다. 고철 경기장부터 폐허 도시, 화산, 얼음 벌판, 메가 스타디움까지 5개 월드 35개 스테이지와 월드별 보스 챌린지가 준비되어 있어요. 나무 상자, 폐차, 컨테이너, 유리, 폭발 드럼통 등 부서지는 물체가 재질마다 다르게 반응하고, 콤보와 공중 회전으로 점수가 폭발합니다.</p>
   <h3>플레이 방법</h3>
-  <p>PC는 W/↑로 가속, S/↓로 브레이크와 후진, A/← D/→로 방향을 바꾸고 Space로 점프, Shift로 부스터를 씁니다. R은 다시 세우기, ESC는 일시정지예요. 공중에서 방향키를 누르면 트럭이 돌아 스턴트 점수를 얻어요. 휴대폰은 왼쪽 운전대를 돌리고 오른쪽 DRIVE · BRAKE 페달을 누르며, JUMP와 BOOST 버튼을 따로 눌러요.</p>
+  <p>PC는 W/↑로 가속, S/↓로 브레이크와 후진, A/← D/→로 방향을 바꾸고 Space로 점프, Shift로 부스터를 씁니다. R은 다시 세우기, ESC는 일시정지예요. 공중에서 방향키를 누르면 트럭이 돌아 스턴트 점수를 얻어요. 휴대폰은 트럭이 알아서 달려서, 운전대의 왼쪽이나 오른쪽을 눌러 방향만 잡으면 돼요. BRAKE로 멈추거나 후진하고, JUMP와 BOOST는 오른쪽 버튼을 눌러요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
     <dt>게임 모드는 무엇이 있나요?</dt>
@@ -236,6 +243,8 @@
     <dd>주 목표를 이루면 별 1개, 보너스 미션을 이룰 때마다 1개씩 더 받아 최대 3개예요.</dd>
     <dt>트럭이 뒤집히거나 끼면 어떻게 하나요?</dt>
     <dd>잠시 뒤 자동으로 다시 세워 줘요. 기다리기 싫으면 R 키나 다시 세우기 버튼을 누르세요.</dd>
+    <dt>휴대폰으로 운전하기 어려워요.</dt>
+    <dd>휴대폰에서는 자동 가속과 운전 도우미가 기본으로 켜져 있어요. 방향만 잡으면 길을 따라가고, 벽에 박혀도 스스로 빠져나와요. SETTINGS에서 끄고 직접 조작할 수도 있어요.</dd>
     <dt>휴대폰이 느려요.</dt>
     <dd>SETTINGS에서 그래픽을 보통이나 낮음으로 바꾸면 빨라져요. 자동으로 두면 기기 성능에 맞춰 낮춰 줘요.</dd>
     <dt>기록은 어디에 저장되나요?</dt>
@@ -243,6 +252,7 @@
   </dl>
 </section>
 <!-- seo:game:end -->
+
       <script src="/js/game-seo.js?v=1"></script>
   </body>
 </html>

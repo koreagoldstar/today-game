@@ -30,7 +30,7 @@ function webglOk() {
 progress(0.15);
 if (!webglOk()) fail(new Error("WebGL2 없음"));
 else
-  import("./js/app.js?v=1")
+  import("./js/app.js?v=2")
     .then(({ startApp }) => {
       progress(0.5, "경기장을 짓는 중…");
       return new Promise((res) => setTimeout(res, 30)).then(() => startApp({ progress }));

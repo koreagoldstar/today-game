@@ -97,6 +97,22 @@ export class Bot {
       } else if (this.target && this.target.x != null && this.target.state !== undefined) {
         tx = this.target.x;
         tz = this.target.z;
+        // 앞으로만 밀리는 덤프트럭: 앞질렀으면 옆으로 돌아 뒤로 간다
+        if (this.target.def.push) {
+          const a = lvl.samples[Math.min(lvl.samples.length - 1, 4)];
+          const fx = Math.sin(a.th);
+          const fz = Math.cos(a.th);
+          const dx = s.pos[0] - tx;
+          const dz = s.pos[2] - tz;
+          const along = dx * fx + dz * fz;
+          const lat = dx * fz - dz * fx;
+          if (along > -8) {
+            const side = lat >= 0 ? 1 : -1;
+            tx += -fx * 24 + fz * 7.5 * side;
+            tz += -fz * 24 - fx * 7.5 * side;
+            wantSpeed = 16;
+          }
+        }
       } else if (this.ramp) {
         tx = this.ramp.x;
         tz = this.ramp.z;
@@ -182,7 +198,7 @@ export class Bot {
     if (this.rampRun && !airborne) inp.boost = Math.abs(err) < 0.5 && s.boost > 0.05;
     inp.jump = false;
     // 끼었으면 사람처럼 잠깐 후진
-    if (!airborne && inp.throttle > 0 && s.speed < 2.2) this.slowT = (this.slowT || 0) + dt;
+    if (!airborne && inp.throttle > 0 && s.speed < 2.2 && !s.pushing) this.slowT = (this.slowT || 0) + dt;
     else this.slowT = Math.max(0, (this.slowT || 0) - dt * 2);
     if (this.slowT > 1) {
       this.slowT = 0;
