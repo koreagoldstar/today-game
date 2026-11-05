@@ -108,10 +108,12 @@ module.exports = async function handler(req, res) {
     "oneshot-elite",
     "penguin-delivery",
     "monster-truck-mayhem",
+    "bubble-sumo-kings",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "bubble-sumo-kings",
     "monster-truck-mayhem",
     "penguin-delivery",
     "oneshot-elite",

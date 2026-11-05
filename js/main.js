@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "bubble-sumo-kings",
+      title: "통통 동물 씨름왕",
+      tag: "물리 씨름 대전 · 8캐릭터 25경기",
+      href: "/games/bubble-sumo-kings/",
+      thumb: "/assets/thumbs/sm/bubble-sumo-kings.webp?v=1",
+      category: "sports",
+      added: "2026-11-05",
+    },
+    {
       id: "monster-truck-mayhem",
       title: "몬스터 트럭 대소동",
       tag: "3D 파괴 액션 레이싱 · 5월드 35스테이지",

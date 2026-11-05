@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffb648" />
+    <meta name="description" content="통통한 동물 친구들과 펼치는 짜릿한 씨름 대결! 밀고, 버티고, 돌진해서 상대를 경기장 밖으로 날려버려라!" />
+    <title>통통 동물 씨름왕 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/bubble-sumo-kings/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="통통 동물 씨름왕 · 오늘의 게임" />
+    <meta property="og:description" content="통통한 동물 친구들과 펼치는 짜릿한 씨름 대결! 밀고, 버티고, 돌진해서 상대를 경기장 밖으로 날려버려라!" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/bubble-sumo-kings/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/games/bubble-sumo-kings/assets/thumb-og.jpg?v=1" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="bs">
+    <main class="stage" id="stage">
+      <canvas id="game" aria-label="통통 동물 씨름왕 게임 화면"></canvas>
+      <div class="danger" id="danger" aria-hidden="true"></div>
+      <div class="flash" id="flash" aria-hidden="true"></div>
+
+      <!-- 경기 화면 -->
+      <div class="hud hidden" id="hud">
+        <div class="side p1">
+          <img class="hf" id="hf0" alt="" />
+          <div class="sb">
+            <div class="nm"><b id="hn0"></b><span class="pips" id="hp0"></span></div>
+            <div class="bar bal" aria-label="내 균형"><u id="hb0"></u></div>
+            <div class="bar spec" aria-label="내 기술 게이지"><u id="hs0"></u></div>
+          </div>
+        </div>
+        <div class="mid">
+          <b id="htime">30</b>
+          <small id="hinfo"></small>
+          <em id="hscore" class="hidden"></em>
+        </div>
+        <div class="side p2">
+          <img class="hf" id="hf1" alt="" />
+          <div class="sb">
+            <div class="nm"><b id="hn1"></b><span class="pips" id="hp1"></span></div>
+            <div class="bar bal" aria-label="상대 균형"><u id="hb1"></u></div>
+            <div class="bar spec" aria-label="상대 기술 게이지"><u id="hs1"></u></div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="quit-chip hidden" id="quit-chip">끝내기</button>
+
+      <!-- 튜토리얼 -->
+      <div class="coach hidden" id="coach">
+        <small id="coach-n">1 / 6</small>
+        <b id="coach-t"></b>
+        <button type="button" id="coach-skip">건너뛰기</button>
+      </div>
+
+      <!-- PC 키 안내 -->
+      <p class="keys hidden" id="keys">
+        <span><kbd>A</kbd><kbd>D</kbd> 이동</span>
+        <span><kbd>Space</kbd> 밀기</span>
+        <span><kbd>Shift</kbd> 꾹 돌진</span>
+        <span><kbd>S</kbd> 버티기</span>
+        <span><kbd>W</kbd> 피하기</span>
+        <span><kbd>E</kbd> 기술</span>
+      </p>
+
+      <!-- 휴대폰 조작 -->
+      <div class="touch hidden" id="touch">
+        <div class="pad" id="pad" role="group" aria-label="좌우 이동">
+          <span class="pad-l" id="pad-l" aria-hidden="true"></span>
+          <span class="pad-r" id="pad-r" aria-hidden="true"></span>
+        </div>
+        <div class="tbs">
+          <button type="button" class="tb push" id="tb-push"><b>밀기</b></button>
+          <button type="button" class="tb dash" id="tb-dash"><i id="tb-dash-fill"></i><b>돌진</b><small>꾹 → 떼기</small></button>
+          <button type="button" class="tb guard" id="tb-guard"><b>버티기</b></button>
+          <button type="button" class="tb dodge" id="tb-dodge"><b>피하기</b></button>
+          <button type="button" class="tb spec" id="tb-spec"><i id="tb-spec-fill"></i><b>기술</b></button>
+        </div>
+      </div>
+
+      <!-- 첫 화면 -->
+      <section class="overlay title" id="title">
+        <div class="coin-chip title-coin"><i class="coin-i" aria-hidden="true"></i><b id="title-coin">0</b></div>
+        <header class="logo">
+          <h1 aria-label="통통 동물 씨름왕"><span class="l1">통통 동물</span><span class="l2">씨름왕</span></h1>
+          <p class="logo-en">BUBBLE SUMO KINGS</p>
+        </header>
+        <div class="title-menu">
+          <button type="button" class="btn play" id="btn-play"><b>PLAY</b><small id="play-sub">첫 경기</small></button>
+          <div class="row modes">
+            <button type="button" class="btn m1" data-go="camp">챔피언십</button>
+            <button type="button" class="btn m2" data-go="survival">서바이벌</button>
+            <button type="button" class="btn m3" data-go="ta">타임어택</button>
+            <button type="button" class="btn m4" data-go="practice">연습</button>
+          </div>
+          <div class="row subs">
+            <button type="button" class="btn ghost" data-go="select">캐릭터 선택</button>
+            <button type="button" class="btn ghost" data-go="book">도감 · 업적<i class="dot hidden" id="book-dot"></i></button>
+            <button type="button" class="btn ghost" data-go="settings">설정</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 캐릭터 선택 -->
+      <section class="overlay panel hidden" id="select" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>캐릭터 선택</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b id="sel-coin">0</b></div>
+        </div>
+        <div class="sel-wrap">
+          <div class="sel-hero">
+            <canvas id="sel-cv" aria-label="선택한 캐릭터"></canvas>
+          </div>
+          <div class="sel-info">
+            <p class="sel-role" id="sel-role"></p>
+            <h3 id="sel-name"></h3>
+            <p class="sel-en" id="sel-en"></p>
+            <p class="sel-desc" id="sel-desc"></p>
+            <ul class="stats" id="sel-stats"></ul>
+            <p class="sel-skill" id="sel-skill"></p>
+            <div class="sel-act">
+              <button type="button" class="btn primary" id="sel-go"></button>
+              <p class="sel-lock" id="sel-lock"></p>
+            </div>
+          </div>
+          <div class="sel-list" id="sel-list"></div>
+          <div class="sel-cos">
+            <h4>꾸미기 <small>모습만 바뀌어요</small></h4>
+            <div class="cos-list" id="cos-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 챔피언십 -->
+      <section class="overlay panel hidden" id="camp" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>챔피언십</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b id="camp-coin">0</b></div>
+        </div>
+        <div class="world-tabs" id="world-tabs"></div>
+        <p class="world-sub" id="world-sub"></p>
+        <div class="stage-list" id="stage-list"></div>
+      </section>
+
+      <!-- 연습 -->
+      <section class="overlay panel small hidden" id="practice" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>연습</h2>
+          <span></span>
+        </div>
+        <p class="p-lead">기록도 패배도 없어요. 마음껏 밀어 보세요.</p>
+        <h4>상대</h4>
+        <div class="chips" id="pr-level"></div>
+        <h4>상대 캐릭터</h4>
+        <div class="chips faces" id="pr-opp"></div>
+        <h4>경기장</h4>
+        <div class="chips" id="pr-world"></div>
+        <div class="p-actions">
+          <button type="button" class="btn primary" id="pr-go">연습 시작</button>
+          <button type="button" class="btn ghost dark" id="pr-tut">조작 배우기 (튜토리얼)</button>
+        </div>
+      </section>
+
+      <!-- 도감 · 업적 · 도전 · 통계 -->
+      <section class="overlay panel hidden" id="book" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>도감 · 업적</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b id="book-coin">0</b></div>
+        </div>
+        <div class="book-tabs" id="book-tabs">
+          <button type="button" data-tab="daily" class="on">오늘의 도전</button>
+          <button type="button" data-tab="dex">도감</button>
+          <button type="button" data-tab="ach">업적</button>
+          <button type="button" data-tab="stats">통계</button>
+        </div>
+        <div class="book-body" id="book-body"></div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="overlay panel small hidden" id="settings" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back="title">← 뒤로</button>
+          <h2>설정</h2>
+          <span></span>
+        </div>
+        <div class="set-rows">
+          <label class="set-row"><span>효과음</span><input type="checkbox" id="set-sfx" /></label>
+          <label class="set-row"><span>배경 음악</span><input type="checkbox" id="set-music" /></label>
+          <label class="set-row"><span>소리 크기</span><input type="range" id="set-vol" min="0" max="100" step="5" /></label>
+          <label class="set-row"><span>효과 줄이기 (느린 기기)</span><input type="checkbox" id="set-low" /></label>
+        </div>
+        <div class="p-actions">
+          <button type="button" class="btn ghost dark" id="set-tut">튜토리얼 다시 하기</button>
+          <button type="button" class="btn ghost danger-btn" id="set-reset">기록 모두 지우기</button>
+        </div>
+      </section>
+
+      <!-- 결과 -->
+      <section class="overlay result hidden" id="result" data-today-home>
+        <div class="res-card">
+          <p class="res-tag" id="res-tag"></p>
+          <h2 id="res-title"></h2>
+          <p class="res-sub" id="res-sub"></p>
+          <ul class="res-rows" id="res-rows"></ul>
+          <div class="res-news" id="res-news"></div>
+          <div class="res-rank hidden" id="res-rank"></div>
+          <div class="res-btns">
+            <button type="button" class="btn primary" id="res-next"></button>
+            <button type="button" class="btn ghost dark" id="res-retry">다시 하기</button>
+            <button type="button" class="btn ghost dark" id="res-menu">메뉴</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <p class="boot-logo">통통 동물 씨름왕</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">씨름판 다지는 중…</p>
+        </div>
+      </div>
+      <div class="boot hidden" id="fallback" role="alert">
+        <div class="boot-box">
+          <p class="boot-logo">앗, 시작하지 못했어요</p>
+          <p class="load-t">새로고침해 보고, 그래도 안 되면 크롬 최신 버전으로 열어 주세요.</p>
+          <a class="home-link" href="/">← 오늘의 게임으로</a>
+        </div>
+      </div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <script src="/js/game-seo.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="통통 동물 씨름왕 소개">
+  <h2>통통 동물 씨름왕 소개</h2>
+  <p>통통한 동물 친구들과 펼치는 짜릿한 씨름 대결! 밀고, 버티고, 돌진해서 상대를 경기장 밖으로 날려버려라! 곰돌이, 토끼, 판다, 돼지, 오리, 고양이, 호랑이, 펭귄 8종이 저마다 다른 힘과 특수 기술로 맞붙는 2D 물리 액션 대전이에요. 한 경기 30~60초라 짧게 즐기기 좋고, 끝에서 간신히 버티다 뒤집는 역전이 자주 나와요.</p>
+  <h3>플레이 방법</h3>
+  <p>PC는 A/← D/→로 움직이고 Space로 밀기, Shift를 꾹 눌렀다 떼면 돌진, S/↓로 버티기, W/↑로 피하기, E로 특수 기술, ESC로 일시정지예요. 휴대폰은 왼쪽 화살표로 움직이고 오른쪽 버튼으로 밀기, 돌진, 버티기, 피하기, 기술을 써요. 처음 PLAY를 누르면 짧은 튜토리얼로 직접 해 보며 배워요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>게임 모드는 무엇이 있나요?</dt>
+    <dd>5개 경기장 25경기를 깨는 챔피언십, 계속 이어지는 상대를 이기는 서바이벌, 제한 시간에 많이 밀어내는 타임어택, 부담 없이 조작을 익히는 연습이 있어요.</dd>
+    <dt>끝에 몰리면 어떻게 하나요?</dt>
+    <dd>안쪽 방향키를 꾹 누르면 줄에 발이 걸려 버틸 수 있어요. 버티고 돌아오면 기술 게이지와 균형을 조금 돌려받아요. 돌진이나 기술로 뒤집는 역전도 노려 보세요.</dd>
+    <dt>한 방에 떨어지지 않나요?</dt>
+    <dd>균형이 남아 있으면 안쪽에서 한 번 맞았다고 밖으로 나가지 않아요. 맞을수록 균형이 줄어 잘 밀리게 되니, 균형 게이지를 잘 지켜야 해요.</dd>
+    <dt>캐릭터는 어떻게 얻나요?</dt>
+    <dd>곰돌이로 시작해요. 챔피언십을 깨면 합류하고, 코인으로 먼저 데려올 수도 있어요. 코인은 승리, 연승, 오늘의 도전, 업적에서 받아요.</dd>
+    <dt>꾸미기를 사면 더 강해지나요?</dt>
+    <dd>아니요. 왕관, 선글라스, 망토 같은 꾸미기는 모습만 바꿔요. 돈으로 사는 능력치는 없어요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>로그인 없이 지금 쓰는 브라우저에 저장돼요. 브라우저 데이터를 지우면 기록도 함께 지워져요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+  </body>
+</html>
