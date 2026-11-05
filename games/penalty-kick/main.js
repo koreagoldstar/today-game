@@ -23,7 +23,7 @@ function webglOk() {
 progress(0.1, "경기장 불을 켜는 중…");
 if (!webglOk()) fail(new Error("WebGL2 없음"));
 else
-  import("./js/app.js?v=1")
+  import("./js/app.js?v=2")
     .then(({ startApp }) => startApp({ progress }))
     .then(() => document.getElementById("boot").classList.add("hidden"))
     .catch(fail);

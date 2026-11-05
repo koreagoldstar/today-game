@@ -58,6 +58,53 @@ window.pk = {
   await page.waitForFunction(() => window.PenaltyHero, null, { timeout: 60000 });
   await page.evaluate(HELP);
 
+  console.log("\n[선수 모델]");
+  await page
+    .waitForFunction(
+      () => {
+        const m = window.PenaltyHero.kicker.M.face.map.image;
+        const d = m.getContext("2d").getImageData(m.width / 2 - 40, m.height * 0.45, 80, 60).data;
+        let lo = 255;
+        for (let i = 0; i < d.length; i += 4) lo = Math.min(lo, d[i]);
+        return lo < 120; // 눈썹 · 눈이 그려졌는가 (피부색만이면 밝다)
+      },
+      null,
+      { timeout: 20000 }
+    )
+    .catch(() => {});
+  const model = await page.evaluate(() => {
+    const G = window.PenaltyHero;
+    const K = G.kicker;
+    const m = K.M.face.map.image;
+    const d = m.getContext("2d").getImageData(m.width / 2 - 40, m.height * 0.45, 80, 60).data;
+    let lo = 255;
+    for (let i = 0; i < d.length; i += 4) lo = Math.min(lo, d[i]);
+    let tris = 0;
+    K.root.traverse((o) => {
+      if (o.isMesh && o.visible) tris += o.geometry.attributes.position.count / 3;
+    });
+    K.root.updateMatrixWorld(true);
+    const head = K.j.head.getWorldPosition(K.j.head.position.clone());
+    const foot = K.j.footL.getWorldPosition(K.j.head.position.clone());
+    const shirt = K.M.shirt.map.image.getContext("2d");
+    // 등 가운데 (u = 0.25)
+    const back = () => shirt.getImageData(200, 150, 110, 110).data.slice(0, 2000).join();
+    const kit0 = K.kit;
+    const n0 = K.number;
+    const before = back();
+    K.setNumber(7);
+    const after = back();
+    K.setKit({ shirt: 0x0000ff, trim: 0xffffff, shorts: 0, socks: 0, shoes: 0, number: "#fff" }, 3);
+    const c = shirt.getImageData(800, 300, 1, 1).data;
+    K.setKit(kit0, n0);
+    return { lo, tris: Math.round(tris), height: +(head.y - foot.y + 0.26 + 0.08).toFixed(2), changed: before !== after, blue: c[2] > 130 && c[0] < 90 };
+  });
+  check("얼굴 그림이 머리에 입혀진다", model.lo < 120, `가장 어두운 값 ${model.lo}`);
+  check("번호를 바꾸면 등 무늬가 바뀐다", model.changed);
+  check("팀 색이 유니폼에 칠해진다", model.blue);
+  check("키가 사람 비율이다 (1.6~1.95m)", model.height > 1.6 && model.height < 1.95, `${model.height}m`);
+  check("선수 한 명이 너무 무겁지 않다", model.tris < 15000, `${model.tris}개`);
+
   console.log("\n[공 물리]");
   const aim = await page.evaluate(() => {
     const G = window.PenaltyHero;

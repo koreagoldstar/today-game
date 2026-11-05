@@ -10,7 +10,7 @@ import { Engine, ATMOS } from "../../oneshot-elite/js/engine.js";
 import { Sfx } from "../../oneshot-elite/js/sfx.js";
 import { Particles, Trail, ArcDots } from "../../minigolf/js/props.js";
 import { buildStadium, buildGoal, Net, ballTexture, GOAL, SPOT, BALL_R } from "./scene.js";
-import { makePlayer, setPose, blendPose, runPose, aimArm, makeColliders, updateColliders, POSE, KITS } from "./people.js";
+import { makePlayer, setPose, blendPose, runPose, aimArm, makeColliders, updateColliders, POSE, KITS } from "./people.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const G = 9.8;
@@ -130,6 +130,11 @@ class Game {
     E.vmVisible = false;
     const { scene } = E;
     this.stadium = buildStadium(scene, quality);
+    // 카메라 쪽에서 비추는 빛: 플레이어가 보는 선수의 등이 어둡지 않게
+    const fill = new THREE.DirectionalLight(0xfff4e6, 1.15);
+    fill.position.set(3, 7, 30);
+    fill.target.position.set(0, 1, 6);
+    scene.add(fill, fill.target);
     buildGoal(scene);
     this.net = new Net(scene);
     this.sfx = new Sound();
@@ -364,7 +369,7 @@ class Game {
       GKp.setKit(KITS.keeper, 1);
       GKp.setFace(true);
     }
-    this.kick = { state: "idle", t: 0, phase: 0, sx: -1.55, sz: SPOT.z + 3.3, px: SPOT.x - 0.17, pz: SPOT.z + 0.62, release: false };
+    this.kick = { state: "idle", t: 0, phase: 0, sx: this.E.camera.aspect < 1 ? -0.85 : -1.7, sz: SPOT.z + (this.E.camera.aspect < 1 ? 1.6 : 1.75), px: SPOT.x - 0.17, pz: SPOT.z + 0.62, release: false };
     K.root.position.set(this.kick.sx, K.hipY, this.kick.sz);
     K.root.rotation.set(0, Math.atan2(this.kick.px - this.kick.sx, this.kick.pz - this.kick.sz), 0);
     setPose(K, POSE.stand);
@@ -1305,13 +1310,15 @@ class Game {
       this.lookGoal.set(0, 1.25, 1.6);
       this.camRate = 2;
     } else if (S === "aim" || S === "charge" || S === "strike" || S === "keepWait" || S === "keepRun") {
-      this.camGoal.set(0.45, portrait ? 2.5 : 2.15, 17.6);
-      this.lookGoal.set(0, portrait ? 2.55 : 1.75, 0);
+      // 가로 화면: 낮게 잡아 차는 선수의 온몸과 공, 골대가 함께 보인다
+      this.camGoal.set(portrait ? 0 : 0.45, portrait ? 2.5 : 1.75, 17.6);
+      this.lookGoal.set(0, portrait ? 2.55 : 0.9, 0);
       this.camRate = 3.2;
     } else if (S === "flight" || S === "keepFlight") {
       // 공을 따라 조금 밀고 들어감
       const z = Math.max(14.8, b.z + 5);
-      this.camGoal.set(b.x * 0.16 + 0.3, 2.3, z);
+      // 가로 화면은 조금 높게: 찬 선수의 머리가 앞을 가리지 않게
+      this.camGoal.set(b.x * 0.16 + 0.3, portrait ? 2.3 : 3, z);
       this.lookGoal.set(b.x * 0.35, 1.4 + b.y * 0.2, Math.min(b.z, 0));
       this.camRate = 2.2;
     } else if (S === "result") {
@@ -1323,7 +1330,8 @@ class Game {
         const fz = Math.cos(yaw);
         const back = portrait ? 6.6 : 4.6;
         this.camGoal.set(K.x + fx * back + 0.5, 1.5, K.z + fz * back);
-        this.lookGoal.set(K.x, 0.98, K.z);
+        // 얼굴이 GOAL 글자에 가리지 않게 선수를 화면 아래쪽으로
+        this.lookGoal.set(K.x, portrait ? 1.75 : 1.2, K.z);
         this.camRate = 5.5;
       } else if (t.type === "keep" && (t.touched || t.result === "catch") && t.resT > 0.55) {
         this.camGoal.set(GK.x * 0.65 + 0.6, 1.5, 5.4);
