@@ -3,98 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#7ec8ff" />
+    <meta name="theme-color" content="#5b3fa8" />
     <title>다른 그림 찾기</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="diff">
-    <div class="stage">
-      <div class="hud">
-        <div class="panel">
-          <span>STAGE <b id="hud-stage">1</b>/<b id="hud-total">50</b></span>
-          <span>찾은 차이 <b id="hud-found">0</b>/<b id="hud-need">3</b></span>
-        </div>
-        <div class="panel right">
-          <span>목숨 <b id="hud-lives">♥♥♥♥♥</b></span>
-          <span>시간 <b id="hud-time">0:00</b></span>
-        </div>
-      </div>
+    <div class="stage" id="stage">
+      <header class="top">
+        <div class="chip st">STAGE <b id="hud-stage">1</b><small>/50</small></div>
+        <div class="dots" id="dots" aria-label="찾은 차이"></div>
+        <div class="chip sc">SCORE <b id="hud-score">0</b></div>
+      </header>
+      <div class="timebar" aria-label="남은 시간"><i id="time-fill"></i><b id="time-txt">60</b></div>
 
       <div class="boards" id="boards">
-        <div class="board">
-          <div class="board-label">A</div>
-          <canvas id="left" width="480" height="360"></canvas>
-        </div>
-        <div class="board">
-          <div class="board-label">B</div>
-          <canvas id="right" width="480" height="360"></canvas>
-        </div>
+        <div class="board"><canvas id="left" aria-label="왼쪽 그림"></canvas></div>
+        <div class="board"><canvas id="right" aria-label="오른쪽 그림"></canvas></div>
       </div>
 
-      <div class="item-bar" id="item-bar" aria-label="아이템">
-        <button type="button" class="item-btn" id="item-hint" data-item="hint" disabled>
-          <span class="item-ico">💡</span>
-          <span class="item-name">힌트</span>
-          <b class="item-count" id="count-hint">0</b>
-        </button>
-        <button type="button" class="item-btn" id="item-reveal" data-item="reveal" disabled>
-          <span class="item-ico">🔍</span>
-          <span class="item-name">찾아주기</span>
-          <b class="item-count" id="count-reveal">0</b>
-        </button>
-        <button type="button" class="item-btn" id="item-heart" data-item="heart" disabled>
-          <span class="item-ico">❤️</span>
-          <span class="item-name">하트</span>
-          <b class="item-count" id="count-heart">0</b>
-        </button>
-        <button type="button" class="item-btn" id="item-shield" data-item="shield" disabled>
-          <span class="item-ico">🛡️</span>
-          <span class="item-name">실드</span>
-          <b class="item-count" id="count-shield">0</b>
-        </button>
+      <div class="tools">
+        <p class="status" id="hint">다른 곳을 찾아 눌러요!</p>
+        <button type="button" class="tool" id="item-hint"><span class="ico" aria-hidden="true">💡</span>힌트<b id="count-hint">3</b></button>
+        <button type="button" class="tool" id="item-time"><span class="ico" aria-hidden="true">⏰</span>+15초<b id="count-time">2</b></button>
       </div>
-      <p class="hint" id="hint">다른 곳을 찾아 눌러요!</p>
 
       <div class="overlay" id="title">
-        <div class="badge">SPOT</div>
-        <img class="title-art" src="assets/thumb.webp" alt="" />
+        <div class="badge">SPOT THE DIFFERENCE</div>
+        <canvas class="title-art" id="title-art" width="400" height="300" aria-hidden="true"></canvas>
         <h1>다른 그림 찾기</h1>
-        <p>벚꽃 공원 속 귀여운 소품들<br />다른 곳을 찾아요</p>
-        <div class="title-controls">
-          <span>📱 왼쪽·오른쪽 그림 아무 곳이나 탭</span>
-          <span>💡 힌트 · 🔍 찾아주기 · ❤️ 하트 · 🛡️ 실드</span>
-          <span>❌ 틀리면 목숨이 줄어요 (실드 있으면 1회 보호)</span>
+        <p>두 그림에서 다른 곳을 찾아 눌러요<br />틀리면 5초가 줄어요!</p>
+        <div class="btns">
+          <button type="button" class="btn" id="start-btn">1단계부터</button>
+          <button type="button" class="btn alt hidden" id="cont-btn">이어하기</button>
         </div>
-        <button type="button" class="btn" id="start-btn">시작!</button>
-        <a href="/">← 홈</a>
+        <a class="link" href="/">← 홈</a>
       </div>
 
       <div class="overlay hidden" id="clear">
-        <div class="badge soft">CLEAR</div>
-        <h1>스테이지 클리어!</h1>
+        <div class="badge">CLEAR!</div>
+        <h1 id="clear-title">스테이지 클리어!</h1>
+        <ul class="tally" id="clear-tally"></ul>
         <p id="clear-detail"></p>
         <button type="button" class="btn" id="next-btn">다음 단계</button>
       </div>
 
       <div class="overlay hidden" id="over">
-        <div class="badge">MISS</div>
-        <h1>목숨이 없어요</h1>
+        <div class="badge red">TIME UP</div>
+        <h1>시간이 끝났어요</h1>
         <p id="over-detail"></p>
-        <button type="button" class="btn" id="retry-btn">다시!</button>
-        <a href="/">← 홈</a>
+        <button type="button" class="btn" id="retry-btn">이 단계 다시!</button>
+        <a class="link" href="/">← 홈</a>
       </div>
 
       <div class="overlay hidden" id="allclear">
-        <div class="badge soft">ALL CLEAR</div>
-        <h1>전부 찾았어요!</h1>
+        <div class="badge">ALL CLEAR</div>
+        <h1>50단계 모두 찾았어요!</h1>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
-        <a href="/">← 홈</a>
+        <a class="link" href="/">← 홈</a>
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
@@ -104,17 +75,19 @@
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js"></script>
+    <script type="module" src="game.js?v=2"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="다른 그림 찾기 소개">
   <h2>다른 그림 찾기 소개</h2>
-  <p>두 그림 사이의 차이점을 찾는 50단계 구성의 관찰력 퍼즐 게임입니다.</p>
+  <p>오락실처럼 시간 안에 두 그림에서 다른 곳을 찾는 50단계 관찰력 게임입니다. 동물 마을 거리, 공원 소풍, 바닷가, 아늑한 방, 눈 오는 마을 장면에서 지붕 색, 굴뚝, 사과 하나, 모자, 커튼처럼 그림 속 물건이 조금씩 달라져요.</p>
   <h3>플레이 방법</h3>
-  <p>좌우 그림을 비교해 다른 부분을 클릭해서 찾아내세요.</p>
+  <p>두 그림 중 아무 쪽이나 다른 곳을 누르세요. 맞히면 빨간 동그라미가 생기고, 틀리면 5초가 줄어요. 막히면 힌트로 한 곳을 반짝이게 하거나 +15초로 시간을 늘릴 수 있습니다. 앞 단계는 큰 차이, 뒤로 갈수록 작은 차이가 나와요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
-    <dt>힌트 기능이 있나요?</dt>
-    <dd>막힐 때 사용할 수 있는 힌트 기능이 있을 수 있습니다.</dd>
+    <dt>점수는 어떻게 정해지나요?</dt>
+    <dd>찾은 차이마다 100점, 남은 시간 1초마다 10점이고, 한 번도 틀리지 않으면 300점을 더 받아요.</dd>
+    <dt>진행 상황이 저장되나요?</dt>
+    <dd>네, 깬 단계까지 이 기기에 저장되어 첫 화면에서 이어하기로 계속할 수 있어요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

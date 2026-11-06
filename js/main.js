@@ -740,7 +740,7 @@
       title: "다른 그림 찾기",
       tag: "찾기 · 50단계",
       href: "/games/diff/",
-      thumb: "/assets/thumbs/sm/diff.webp",
+      thumb: "/assets/thumbs/sm/diff.webp?v=2",
       category: "puzzle",
     },
     {

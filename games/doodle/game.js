@@ -28,27 +28,12 @@
     over: document.getElementById("over"),
   };
 
-  const sprites = { hero: null, pads: null };
-
-  function chromaKey(img) {
-    if (!img) return null;
-    const c = document.createElement("canvas");
-    c.width = img.naturalWidth || img.width;
-    c.height = img.naturalHeight || img.height;
-    const x = c.getContext("2d");
-    x.drawImage(img, 0, 0);
-    const data = x.getImageData(0, 0, c.width, c.height);
-    const d = data.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i];
-      const g = d[i + 1];
-      const b = d[i + 2];
-      if (r > 200 && b > 200 && g < 120) d[i + 3] = 0;
-      else if (r > 220 && g < 80 && b > 220) d[i + 3] = 0;
-    }
-    x.putImageData(data, 0, 0);
-    return c;
-  }
+  const sprites = { hero: null, pad: {} };
+  // 원본 그림(hero 1024², pads 1536x1024) 안에서 실제로 그려진 영역
+  const HERO_BOX = [115, 211, 791, 557];
+  const HERO_FACE = [0.67, 0.284, 0.168]; // 잘라 낸 개구리 기준 얼굴 위치 · 반지름
+  const PAD_BOX = { move: [51, 515, 445, 200], solid: [546, 514, 445, 201], spring: [1037, 463, 439, 343] };
+  const PAD_H = 24; // 발판 두께 (화면 단위)
 
   function loadImg(src) {
     return new Promise((resolve) => {
@@ -59,13 +44,65 @@
     });
   }
 
+  /** 큰 원본을 한 번만 필요한 크기로 줄여 둔다 (매 프레임 큰 그림을 줄이면 휴대폰이 느려짐) */
+  function cut(img, box, h) {
+    const k = (h * dpr) / box[3];
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(box[2] * k));
+    c.height = Math.max(1, Math.round(box[3] * k));
+    const x = c.getContext("2d");
+    x.imageSmoothingQuality = "high";
+    x.drawImage(img, box[0], box[1], box[2], box[3], 0, 0, c.width, c.height);
+    return c;
+  }
+
+  /** 초록 발판을 과자색으로: 부서지는 발판 */
+  function biscuit(src) {
+    const c = document.createElement("canvas");
+    c.width = src.width;
+    c.height = src.height;
+    const x = c.getContext("2d");
+    x.drawImage(src, 0, 0);
+    const data = x.getImageData(0, 0, c.width, c.height);
+    const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      d[i] = Math.min(255, g * 1.02 + 6);
+      d[i + 1] = Math.min(255, g * 0.66 + b * 0.08);
+      d[i + 2] = Math.min(255, r * 0.3 + b * 0.12);
+    }
+    x.putImageData(data, 0, 0);
+    // 금 간 자국
+    x.strokeStyle = "rgba(110,50,10,.75)";
+    x.lineWidth = Math.max(1.5, c.height * 0.05);
+    x.lineJoin = "round";
+    x.beginPath();
+    const w = c.width;
+    const h = c.height;
+    x.moveTo(w * 0.42, h * 0.12);
+    x.lineTo(w * 0.5, h * 0.4);
+    x.lineTo(w * 0.44, h * 0.62);
+    x.lineTo(w * 0.53, h * 0.88);
+    x.moveTo(w * 0.5, h * 0.4);
+    x.lineTo(w * 0.62, h * 0.48);
+    x.stroke();
+    return c;
+  }
+
   async function loadAssets() {
     const [hero, pads] = await Promise.all([
       loadImg("assets/hero.png"),
       loadImg("assets/pads.png"),
     ]);
-    sprites.hero = chromaKey(hero) || hero;
-    sprites.pads = chromaKey(pads) || pads;
+    if (hero) sprites.hero = cut(hero, HERO_BOX, 64);
+    if (pads) {
+      sprites.pad.solid = cut(pads, PAD_BOX.solid, PAD_H);
+      sprites.pad.move = cut(pads, PAD_BOX.move, PAD_H);
+      sprites.pad.spring = cut(pads, PAD_BOX.spring, PAD_H * (343 / 200));
+      sprites.pad.break = biscuit(sprites.pad.solid);
+    }
   }
 
   let state = "title";
@@ -84,6 +121,9 @@
   let flash = 0;
   let submitted = false;
   let facing = 1;
+  let debris = [];
+  let squash = 0; // 착지할 때 납작해졌다 펴진다
+  let tNow = 0;
 
   document.getElementById("hud-best").textContent = String(best);
   const nameInput = document.getElementById("player-name");
@@ -121,8 +161,8 @@
   }
 
   function makePlatform(y) {
-    const w = rand(58, 92);
     const type = pickType();
+    const w = type === "spring" ? 62 : rand(58, 92);
     return {
       x: rand(16, W - w - 16),
       y,
@@ -132,6 +172,7 @@
       vx: type === "move" ? (Math.random() < 0.5 ? -1 : 1) * rand(55, 110) : 0,
       alive: true,
       breaking: 0,
+      boing: 0,
     };
   }
 
@@ -147,6 +188,7 @@
       vx: 0,
       alive: true,
       breaking: 0,
+      boing: 0,
     });
     let y = H - 80;
     while (y > -H * 2) {
@@ -163,6 +205,8 @@
     submitted = false;
     facing = 1;
     particles = [];
+    debris = [];
+    squash = 0;
     player = {
       x: W / 2,
       y: H - 140,
@@ -193,14 +237,20 @@
 
   function bounce(mult = 1) {
     player.vy = JUMP * mult;
-    for (let i = 0; i < 6; i += 1) {
+    squash = 1;
+    const big = mult > 1.1;
+    for (let i = 0; i < (big ? 14 : 7); i += 1) {
+      const a = big ? (i / 14) * Math.PI * 2 : Math.PI + (i / 6) * Math.PI;
+      const sp = big ? rand(160, 260) : rand(60, 130);
       particles.push({
         x: player.x,
         y: player.y + player.h / 2,
-        vx: (Math.random() - 0.5) * 120,
-        vy: rand(40, 120),
-        life: 0.3 + Math.random() * 0.2,
-        color: ["#fff", "#9effd0", "#ffe27a", "#ff9ec4"][Math.floor(Math.random() * 4)],
+        vx: Math.cos(a) * sp,
+        vy: big ? Math.sin(a) * sp : rand(10, 60),
+        life: 0.35 + Math.random() * 0.25,
+        size: big ? rand(4, 7) : rand(4, 8),
+        star: big,
+        color: big ? ["#fff", "#ffe27a", "#ff9ec4", "#8ff0c8"][i % 4] : "rgba(255,255,255,.9)",
       });
     }
   }
@@ -235,6 +285,7 @@
     platforms.forEach((p) => {
       if (p.alive) highest = Math.min(highest, p.y);
     });
+    if (highest === Infinity) highest = cameraY + H; // 남은 발판이 없으면 화면 아래부터 (무한 반복 방지)
     while (highest > topNeeded) {
       highest -= platformGap();
       platforms.push(makePlatform(highest));
@@ -243,13 +294,25 @@
   }
 
   function update(dt) {
+    tNow += dt;
     if (flash > 0) flash -= dt;
+    squash = Math.max(0, squash - dt * 6);
     particles.forEach((p) => {
       p.life -= dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      p.vx *= 0.95;
+      p.vy *= 0.95;
     });
     particles = particles.filter((p) => p.life > 0);
+    debris.forEach((d) => {
+      d.life -= dt;
+      d.vy += GRAVITY * 0.6 * dt;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      d.rot += d.vr * dt;
+    });
+    debris = debris.filter((d) => d.life > 0);
 
     clouds.forEach((c) => {
       c.x += c.v * dt * 0.15;
@@ -290,8 +353,13 @@
       }
       if (p.breaking > 0) {
         p.breaking -= dt;
-        if (p.breaking <= 0) p.alive = false;
+        if (p.breaking <= 0) {
+          p.alive = false;
+          // 반으로 쪼개져 떨어진다
+          for (const side of [0, 1]) debris.push({ x: p.x + (side ? p.w * 0.75 : p.w * 0.25), y: p.y + PAD_H * 0.5, w: p.w / 2, side, vx: side ? 70 : -70, vy: -60, rot: 0, vr: side ? 4 : -4, life: 1 });
+        }
       }
+      if (p.boing > 0) p.boing -= dt;
     });
 
     // land on platforms only when falling
@@ -309,9 +377,10 @@
             player.vy = 0;
             if (p.type === "spring") {
               bounce(SPRING_JUMP / JUMP);
+              p.boing = 0.3;
             } else if (p.type === "break") {
               bounce(1);
-              p.breaking = 0.18;
+              p.breaking = 0.12;
             } else {
               bounce(1);
             }
@@ -337,61 +406,170 @@
     }
   }
 
+  // 높이(점수)에 따라 아침 → 노을 → 저녁 → 별 하늘
+  const SKY = [
+    [0, [58, 168, 255], [128, 210, 255], [214, 246, 255]],
+    [450, [72, 140, 255], [255, 166, 120], [255, 222, 150]],
+    [1000, [54, 52, 160], [150, 88, 210], [255, 150, 190]],
+    [1700, [12, 16, 60], [36, 28, 104], [84, 52, 150]],
+  ];
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  function skyAt(h) {
+    let i = 0;
+    while (i < SKY.length - 2 && h >= SKY[i + 1][0]) i += 1;
+    const A = SKY[i];
+    const B = SKY[i + 1];
+    const t = Math.max(0, Math.min(1, (h - A[0]) / (B[0] - A[0])));
+    return [1, 2, 3].map((k) => mix(A[k], B[k], t));
+  }
+  const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const STARS = Array.from({ length: 70 }, (_, i) => ({ x: (i * 97.3) % W, y: (i * 151.7) % H, s: 0.8 + ((i * 37) % 10) / 6, p: i }));
+
+  function cloud(x, y, k, fill, edge) {
+    const parts = [[0, 0, 30], [-30, 8, 21], [30, 7, 23], [-12, -14, 22], [14, -12, 20], [-48, 14, 13], [50, 14, 14]];
+    ctx.beginPath();
+    for (const [dx, dy, r] of parts) {
+      ctx.moveTo(x + dx * k + r * k, y + dy * k);
+      ctx.arc(x + dx * k, y + dy * k, r * k, 0, Math.PI * 2);
+    }
+    ctx.lineWidth = 4 * k;
+    ctx.strokeStyle = edge;
+    ctx.stroke();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    // 아래 그늘
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = "rgba(120,150,220,.18)";
+    ctx.fillRect(x - 70 * k, y + 8 * k, 140 * k, 30 * k);
+    ctx.restore();
+  }
+
   function drawSky() {
+    const h = Math.max(0, -cameraY) / 10;
+    const [top, mid, bot] = skyAt(h);
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#9ad8ff");
-    g.addColorStop(0.55, "#c8ecff");
-    g.addColorStop(1, "#e8fff4");
+    g.addColorStop(0, rgb(top));
+    g.addColorStop(0.55, rgb(mid));
+    g.addColorStop(1, rgb(bot));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
-    clouds.forEach((c) => {
-      const sy = ((c.y - cameraY * 0.2) % (H + 100) + H + 100) % (H + 100) - 40;
+    const night = Math.max(0, Math.min(1, (h - 800) / 700));
+    if (night > 0) {
+      for (const st of STARS) {
+        const sy = (((st.y - cameraY * 0.05) % H) + H) % H;
+        ctx.fillStyle = `rgba(255,255,255,${night * (0.45 + Math.sin(tNow * 2 + st.p) * 0.35)})`;
+        ctx.fillRect(st.x, sy, st.s * 1.6, st.s * 1.6);
+      }
+      // 큰 행성 하나
+      if (night > 0.6) {
+        const py = 150 + (((-cameraY * 0.03) % 900) + 900) % 900 - 300;
+        ctx.globalAlpha = (night - 0.6) * 2.5;
+        const pg = ctx.createRadialGradient(300, py - 12, 4, 310, py, 40);
+        pg.addColorStop(0, "#ffe2b0");
+        pg.addColorStop(1, "#e2708f");
+        ctx.fillStyle = pg;
+        ctx.beginPath();
+        ctx.arc(310, py, 34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,230,190,.8)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(310, py, 56, 13, -0.35, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    // 처음 땅: 사탕 언덕 (올라가면 아래로 사라진다)
+    const groundY = H - 26 + Math.max(0, -cameraY) * 0.35;
+    if (groundY < H + 140) {
+      ctx.fillStyle = "#ffb3d1";
+      ctx.strokeStyle = "#e0709c";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.ellipse(c.x, sy, 36 * c.s, 16 * c.s, 0, 0, Math.PI * 2);
-      ctx.ellipse(c.x - 22 * c.s, sy + 4, 20 * c.s, 12 * c.s, 0, 0, Math.PI * 2);
-      ctx.ellipse(c.x + 24 * c.s, sy + 3, 22 * c.s, 13 * c.s, 0, 0, Math.PI * 2);
+      ctx.moveTo(0, H + 200);
+      ctx.lineTo(0, groundY - 30);
+      ctx.quadraticCurveTo(70, groundY - 90, 150, groundY - 40);
+      ctx.quadraticCurveTo(250, groundY - 110, W, groundY - 50);
+      ctx.lineTo(W, H + 200);
+      ctx.closePath();
       ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#7fe0a8";
+      ctx.strokeStyle = "#2fa86c";
+      ctx.beginPath();
+      ctx.moveTo(0, H + 200);
+      ctx.lineTo(0, groundY);
+      ctx.quadraticCurveTo(120, groundY - 50, 220, groundY - 8);
+      ctx.quadraticCurveTo(320, groundY - 44, W, groundY - 10);
+      ctx.lineTo(W, H + 200);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // 막대사탕 나무
+      for (const [x, k, c] of [[46, 1, "#ff6fa5"], [338, 0.8, "#ffb43a"], [262, 0.65, "#8a7bff"]]) {
+        const by = groundY - 18 * k;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(x - 2.5 * k, by - 60 * k, 5 * k, 60 * k);
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(x, by - 72 * k, 18 * k, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 4 * k;
+        ctx.beginPath();
+        ctx.arc(x, by - 72 * k, 9 * k, 0.4, Math.PI * 1.7);
+        ctx.stroke();
+      }
+    }
+    // 구름: 멀리 · 가까이 두 겹
+    const cf = rgb(mix([255, 255, 255], [150, 140, 210], night));
+    const ce = rgb(mix([150, 195, 240], [90, 80, 160], night), 0.9);
+    clouds.forEach((c, i) => {
+      const far = i % 2 === 0;
+      const sp = far ? 0.12 : 0.32;
+      const sy = ((c.y - cameraY * sp) % (H + 140) + H + 140) % (H + 140) - 70;
+      ctx.globalAlpha = far ? 0.55 : 0.95;
+      cloud(c.x, sy, c.s * (far ? 0.55 : 0.85), cf, ce);
     });
+    ctx.globalAlpha = 1;
   }
 
   function drawPlatform(p) {
     if (!p.alive) return;
     const sy = worldToScreen(p.y);
-    if (sy < -40 || sy > H + 40) return;
-    const shake = p.breaking > 0 ? (Math.random() - 0.5) * 4 : 0;
+    if (sy < -60 || sy > H + 60) return;
+    const shake = p.breaking > 0 ? (Math.random() - 0.5) * 5 : 0;
     const x = p.x + shake;
-    const y = sy;
-
-    const colors = {
-      solid: { top: "#7dffc2", side: "#2fbf8a" },
-      move: { top: "#ff9ec4", side: "#e04f84" },
-      break: { top: "#ffb07a", side: "#e07840" },
-      spring: { top: "#ffe27a", side: "#e0a83a" },
-    };
-    const col = colors[p.type] || colors.solid;
-
-    ctx.fillStyle = col.side;
-    roundRect(x, y, p.w, p.h, 8);
-    ctx.fill();
-    ctx.fillStyle = col.top;
-    roundRect(x, y, p.w, p.h - 4, 8);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    roundRect(x + 6, y + 3, p.w - 12, 4, 3);
-    ctx.fill();
-
-    if (p.type === "spring") {
-      ctx.strokeStyle = "#c98a18";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x + p.w * 0.35, y + p.h);
-      ctx.lineTo(x + p.w * 0.35, y + p.h + 10);
-      ctx.moveTo(x + p.w * 0.65, y + p.h);
-      ctx.lineTo(x + p.w * 0.65, y + p.h + 10);
-      ctx.stroke();
+    const img = sprites.pad[p.type] || sprites.pad.solid;
+    if (!img) {
+      const colors = { solid: "#2fbf8a", move: "#e04f84", break: "#e07840", spring: "#e0a83a" };
+      ctx.fillStyle = colors[p.type] || colors.solid;
+      roundRect(x, sy, p.w, 16, 8);
+      ctx.fill();
+      return;
     }
+    // 그림자
+    ctx.fillStyle = "rgba(30,40,90,.18)";
+    ctx.beginPath();
+    ctx.ellipse(x + p.w / 2, sy + PAD_H + 6, p.w * 0.42, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (p.type === "spring") {
+      const k = p.boing > 0 ? 1 - Math.sin((p.boing / 0.3) * Math.PI) * 0.28 : 1;
+      const h = PAD_H * (343 / 200);
+      const top = sy + h * (1 - k) * 0.6;
+      ctx.drawImage(img, x, top, p.w, h * k + h * (1 - k) * 0.4);
+      return;
+    }
+    // 세 조각으로: 둥근 끝은 그대로, 가운데만 늘린다
+    const iw = img.width;
+    const ih = img.height;
+    const cap = iw * 0.3;
+    const capW = PAD_H * (cap / ih);
+    const mid = Math.max(0, p.w - capW * 2);
+    ctx.drawImage(img, 0, 0, cap, ih, x, sy, capW, PAD_H);
+    ctx.drawImage(img, cap, 0, iw - cap * 2, ih, x + capW, sy, mid, PAD_H);
+    ctx.drawImage(img, iw - cap, 0, cap, ih, x + capW + mid, sy, capW, PAD_H);
   }
 
   function roundRect(x, y, w, h, r) {
@@ -407,26 +585,24 @@
   function drawPlayer() {
     const sx = player.x;
     const sy = worldToScreen(player.y);
+    const feet = sy + player.h / 2;
+    // 납작해졌다 펴지고, 빠르게 오를 때는 길쭉하게
+    const rise = Math.max(0, Math.min(1, -player.vy / 900));
+    const kx = 1 + squash * 0.22 - rise * 0.08;
+    const ky = 1 - squash * 0.2 + rise * 0.1;
     ctx.save();
-    ctx.translate(sx, sy);
-    ctx.scale(facing, 1);
-    const pw = player.w;
-    const ph = player.h;
+    ctx.translate(sx, feet);
+    ctx.rotate(Math.max(-0.25, Math.min(0.25, player.vx / 1400)));
+    ctx.scale(facing * kx, ky);
     if (sprites.hero) {
-      ctx.drawImage(sprites.hero, -pw / 2, -ph / 2, pw, ph);
-      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -pw / 2, -ph / 2, pw, ph, [0.63, 0.36, 0.13]);
+      const pw = 72;
+      const ph = pw * (HERO_BOX[3] / HERO_BOX[2]);
+      ctx.drawImage(sprites.hero, -pw / 2, -ph, pw, ph);
+      if (window.TodayFace) TodayFace.drawOnSprite(ctx, -pw / 2, -ph, pw, ph, HERO_FACE);
     } else {
       ctx.fillStyle = "#6fd6b0";
       ctx.beginPath();
-      ctx.ellipse(0, 0, pw * 0.42, ph * 0.42, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(6, -4, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#333";
-      ctx.beginPath();
-      ctx.arc(7, -4, 2.5, 0, Math.PI * 2);
+      ctx.ellipse(0, -player.h / 2, player.w * 0.42, player.h * 0.42, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -436,27 +612,37 @@
     drawSky();
     platforms.forEach(drawPlatform);
 
+    debris.forEach((d) => {
+      const img = sprites.pad.break;
+      if (!img) return;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, d.life);
+      ctx.translate(d.x, worldToScreen(d.y));
+      ctx.rotate(d.rot);
+      const half = img.width / 2;
+      ctx.drawImage(img, d.side ? half : 0, 0, half, img.height, -d.w / 2, -PAD_H / 2, d.w, PAD_H);
+      ctx.restore();
+    });
+
     particles.forEach((p) => {
       const sy = worldToScreen(p.y);
-      ctx.globalAlpha = Math.max(0, p.life * 2.5);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2.5));
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(p.x, sy, 3, 0, Math.PI * 2);
+      if (p.star) {
+        const r = p.size;
+        for (let i = 0; i < 10; i += 1) {
+          const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+          const q = i % 2 ? r * 0.45 : r;
+          ctx.lineTo(p.x + Math.cos(a) * q, sy + Math.sin(a) * q);
+        }
+        ctx.closePath();
+      } else ctx.arc(p.x, sy, p.size * (0.5 + (1 - p.life) * 0.8), 0, Math.PI * 2);
       ctx.fill();
     });
     ctx.globalAlpha = 1;
 
     if (player) drawPlayer();
-
-    if (state === "play") {
-      ctx.fillStyle = "rgba(255,255,255,0.92)";
-      ctx.font = "bold 40px 'Bagel Fat One', Jua";
-      ctx.textAlign = "center";
-      ctx.strokeStyle = "rgba(40,80,70,0.22)";
-      ctx.lineWidth = 6;
-      ctx.strokeText(String(score), W / 2, 84);
-      ctx.fillText(String(score), W / 2, 84);
-    }
 
     if (flash > 0) {
       ctx.fillStyle = `rgba(255,255,255,${flash})`;
@@ -606,6 +792,33 @@
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
   });
+
+  // 점검용: ?test=1 이면 높이를 바로 바꿔 하늘 색을 확인할 수 있다
+  if (/[?&]test=1/.test(location.search)) {
+    window.DoodleTest = {
+      ready: () => !!sprites.hero && !!sprites.pad.break,
+      drop() {
+        player.y = cameraY + H + 60; // 화면 아래로: 다음 프레임에 끝
+      },
+      get state() {
+        return state;
+      },
+      get score() {
+        return score;
+      },
+      climb(h) {
+        cameraY = -h * 10;
+        player.y = cameraY + H * 0.5;
+        player.vy = JUMP;
+        platforms = [];
+        let y = cameraY + H;
+        while (y > cameraY - 40) {
+          platforms.push(makePlatform(y));
+          y -= platformGap();
+        }
+      },
+    };
+  }
 
   if (window.TodayPause) {
     TodayPause.mount({

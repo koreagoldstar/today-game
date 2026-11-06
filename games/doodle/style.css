@@ -61,27 +61,24 @@ canvas {
   pointer-events: auto;
   text-decoration: none;
   color: #fff;
-  background: rgba(30, 50, 70, 0.45);
-  backdrop-filter: blur(8px);
+  background: rgba(22, 34, 84, 0.85);
   border-radius: 12px;
   padding: 8px 10px;
   font-size: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .score-pill {
-  background: rgba(30, 50, 70, 0.45);
-  backdrop-filter: blur(8px);
+  background: rgba(22, 34, 84, 0.85);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   color: #fff;
   font-size: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 3px 0 rgba(10, 16, 50, 0.35);
 }
 
 .score-pill b {
   color: var(--lemon);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .score-pill.soft b {
@@ -90,15 +87,17 @@ canvas {
 
 .hint {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
   bottom: 10px;
+  transform: translateX(-50%);
   z-index: 3;
   margin: 0;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.92);
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: rgba(22, 34, 84, 0.7);
+  white-space: nowrap;
+  color: #fff;
   font-size: 13px;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
@@ -114,8 +113,8 @@ canvas {
   padding: 24px;
   text-align: center;
   background:
-    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.55), transparent 28%),
-    linear-gradient(180deg, rgba(126, 200, 255, 0.94), rgba(200, 255, 220, 0.96));
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.45), transparent 28%),
+    linear-gradient(180deg, rgba(58, 168, 255, 0.95), rgba(128, 210, 255, 0.95) 55%, rgba(170, 240, 205, 0.97));
 }
 
 .overlay.hidden {
@@ -145,13 +144,15 @@ h1 {
   font-family: "Bagel Fat One", "Jua", cursive;
   font-weight: 400;
   font-size: 34px;
-  color: #2db88a;
-  text-shadow: 0 3px 0 #fff;
+  color: #fff;
+  -webkit-text-stroke: 7px #1d6e9e;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 rgba(20, 60, 110, 0.35);
 }
 
 .overlay p {
   margin: 0;
-  color: var(--muted);
+  color: #17405e;
   line-height: 1.45;
 }
 
@@ -216,7 +217,7 @@ h1 {
 
 .link {
   margin-top: 6px;
-  color: var(--muted);
+  color: #17405e;
   text-decoration: none;
   font-size: 14px;
 }
