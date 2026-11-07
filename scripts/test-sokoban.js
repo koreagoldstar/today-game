@@ -294,6 +294,40 @@ function check(name, ok, extra = "") {
     check(`${name}: 오류 없음`, e2.length === 0, e2.slice(0, 2).join(" | "));
     await c2.close();
   }
+
+  console.log("\n[PC 화면]");
+  for (const [w, h] of [[1280, 720], [1920, 1080], [1024, 600]]) {
+    const c3 = await browser.newContext({ viewport: { width: w, height: h }, serviceWorkers: "block" });
+    const p3 = await c3.newPage();
+    await p3.route("**/api/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
+    await p3.goto(`${BASE}/games/sokoban/`);
+    await p3.waitForFunction(() => window.Sokoban);
+    const rows = [];
+    for (const st of [0, 23, 36, 49]) {
+      await p3.evaluate((i) => {
+        window.Sokoban.startStage(i);
+        window.Sokoban.skipIntro();
+      }, st);
+      await p3.waitForTimeout(150);
+      rows.push(
+        await p3.evaluate(() => {
+          const S = window.Sokoban.state;
+          const rect = (q) => document.querySelector(q).getBoundingClientRect();
+          const tools = rect(".tools");
+          const pad = rect(".pad");
+          const hud = rect("#hud");
+          const left = S.ox;
+          const right = S.ox + S.W * S.cell;
+          const bottom = S.oy + S.H * S.cell + S.cell * 0.2;
+          return { mid: Math.abs((left + right) / 2 - innerWidth / 2), clear: bottom <= Math.min(tools.top, pad.top) + 1 && S.oy - S.cell * 0.27 >= hud.bottom - 1, inside: left >= 0 && right <= innerWidth };
+        })
+      );
+    }
+    // 예전엔 PC 에서 판이 왼쪽에 붙고 아래 단추가 판을 가렸다
+    check(`PC ${w}x${h}: 판이 가운데에 있다`, rows.every((r) => r.mid <= 30), rows.map((r) => Math.round(r.mid)).join(","));
+    check(`PC ${w}x${h}: 판이 단추 · 점수판을 안 가리고 화면 안`, rows.every((r) => r.clear && r.inside), JSON.stringify(rows.find((r) => !(r.clear && r.inside)) || {}));
+    await c3.close();
+  }
   await browser.close();
   console.log(`\n결과: 통과 ${pass} · 실패 ${fail}`);
   process.exit(fail ? 1 : 0);

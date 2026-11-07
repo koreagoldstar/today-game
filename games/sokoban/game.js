@@ -26,9 +26,9 @@
   const WORLDS = [
     { name: "봄 정원", kind: "hedge", sky: ["#6fb9ec", "#c9ecff", "#f4fbe6"], hills: ["#9fd28e", "#79bb6d"], floor: ["#9ccf6c", "#8dc45f"], floorDot: "#7fb653", wallTop: ["#5fa94c", "#478f3d"], wallFront: ["#37762f", "#25561f"], crate: ["#d99a55", "#bd7c3c", "#8a5426"], lock: "#ffc93c", accent: "#ff7aa2", part: "petal", overall: "#3f7fd1" },
     { name: "통나무 숲", kind: "log", sky: ["#2f5d55", "#6d9d7a", "#c8d8a6"], hills: ["#3f6f53", "#2e5a44"], floor: ["#b5935f", "#a98854"], floorDot: "#927346", wallTop: ["#c19560", "#a57a48"], wallFront: ["#7a5432", "#573a20"], crate: ["#e0b070", "#c48f50", "#7f5a2e"], lock: "#ffe07a", accent: "#ffa94d", part: "leaf", overall: "#b5482f" },
-    { name: "사막 유적", kind: "stone", sky: ["#e98b4e", "#f6c489", "#fde8c4"], hills: ["#d9a768", "#c28d52"], floor: ["#ecd29c", "#e4c88f"], floorDot: "#cfae74", wallTop: ["#bb8a50", "#a2743f"], wallFront: ["#7d5630", "#5c3d20"], crate: ["#b98a55", "#9a6f40", "#5f4122"], lock: "#5fe0d0", accent: "#27b7a6", part: "sand", overall: "#1f8c8c" },
+    { name: "사막 유적", kind: "stone", sky: ["#e98b4e", "#f6c489", "#fde8c4"], hills: ["#d9a768", "#c28d52"], floor: ["#ecd29c", "#e4c88f"], floorDot: "#cfae74", wallTop: ["#bb8a50", "#a2743f"], wallFront: ["#7d5630", "#5c3d20"], crate: ["#e0794c", "#c25c34", "#6e2c14"], lock: "#5fe0d0", accent: "#27b7a6", part: "sand", overall: "#1f8c8c" },
     { name: "얼음 창고", kind: "ice", sky: ["#1f3f78", "#4f8ccf", "#bfe6f7"], hills: ["#a9d7ee", "#7fbbe0"], floor: ["#d7f0fa", "#c7e8f6"], floorDot: "#a5d6ec", wallTop: ["#9fdcf5", "#70bfe6"], wallFront: ["#3f8bc2", "#2a6697"], crate: ["#c58c58", "#a56f40", "#6b4524"], lock: "#ffe36b", accent: "#ff8e6e", part: "snow", overall: "#d8433f" },
-    { name: "네온 공장", kind: "neon", sky: ["#120a2e", "#2a1458", "#4a1f78"], hills: ["#1d1242", "#160d33"], floor: ["#2c2850", "#262245"], floorDot: "#3b3668", wallTop: ["#46407c", "#35306a"], wallFront: ["#1d1a40", "#121030"], crate: ["#7f90b4", "#5f7096", "#2a3350"], lock: "#3dffc2", accent: "#ff4fa8", part: "spark", overall: "#ff4fa8", neon: true },
+    { name: "네온 공장", kind: "neon", sky: ["#120a2e", "#2a1458", "#4a1f78"], hills: ["#1d1242", "#160d33"], floor: ["#2c2850", "#262245"], floorDot: "#3b3668", wallTop: ["#46407c", "#35306a"], wallFront: ["#1d1a40", "#121030"], crate: ["#ffb340", "#e0891c", "#6a3c0c"], lock: "#3dffc2", accent: "#ff4fa8", part: "spark", overall: "#ff4fa8", neon: true },
   ];
   const worldOf = (i) => WORLDS[Math.min(WORLDS.length - 1, Math.floor(i / 10))];
   const stageLabel = (i) => `${Math.floor(i / 10) + 1}-${(i % 10) + 1}`;
@@ -796,10 +796,11 @@
     if (!W) return;
     const top = $("hud").hidden ? 70 : Math.max($("hud").getBoundingClientRect().bottom, 92);
     const barEl = $("bar");
-    const land = VW > VH;
-    const bottom = barEl.hidden ? VH - 10 : land ? VH - 8 : barEl.getBoundingClientRect().top;
-    const leftPad = land ? 8 : 8;
-    const rightPad = land && !barEl.hidden ? barEl.getBoundingClientRect().width + 14 : 8;
+    const br = barEl.hidden ? null : barEl.getBoundingClientRect();
+    const side = !!br && br.height > br.width; // 눕힌 폰: 오른쪽 기둥
+    const bottom = !br ? VH - 10 : side ? VH - 8 : br.top + 4;
+    const leftPad = 8;
+    const rightPad = side ? br.width + 14 : 8;
     const availW = VW - leftPad - rightPad;
     const availH = bottom - top - 12;
     cell = Math.floor(Math.min(availW / W, availH / (H + DEPTH + 0.35)));
@@ -1091,23 +1092,67 @@
         g.stroke();
       }
     } else if (T.kind === "stone") {
-      g.strokeStyle = "rgba(90,60,25,0.42)";
-      g.lineWidth = Math.max(1, s * 0.02);
-      g.strokeRect(x + s * 0.09, topY + s * 0.09, s * 0.82, s * 0.82);
+      // 모래 낀 돌: 잔무늬만 (칸 경계가 안 보이게)
+      for (let i = 0; i < 7; i += 1) {
+        g.fillStyle = r() < 0.5 ? "rgba(255,235,190,0.22)" : "rgba(90,55,20,0.18)";
+        g.beginPath();
+        g.ellipse(x + r() * s, topY + r() * s, s * (0.05 + r() * 0.08), s * (0.02 + r() * 0.03), 0, 0, TAU);
+        g.fill();
+      }
     } else if (T.kind === "ice") {
-      g.fillStyle = "rgba(255,255,255,0.4)";
-      g.beginPath();
-      g.moveTo(x + s * 0.1, topY + s * 0.1);
-      g.lineTo(x + s * 0.55, topY + s * 0.1);
-      g.lineTo(x + s * 0.1, topY + s * 0.55);
-      g.closePath();
-      g.fill();
+      // 얼음 결: 가끔 긴 금
+      if (r() < 0.45) {
+        g.strokeStyle = "rgba(255,255,255,0.55)";
+        g.lineWidth = Math.max(1, s * 0.025);
+        g.beginPath();
+        const a = r() * s;
+        g.moveTo(x + a, topY);
+        g.lineTo(x + a + s * 0.25, topY + s * 0.45);
+        g.lineTo(x + a + s * 0.1, topY + s);
+        g.stroke();
+      }
+      g.fillStyle = "rgba(255,255,255,0.12)";
+      g.fillRect(x, topY + s * (0.2 + r() * 0.5), s, s * 0.08);
     } else {
-      g.strokeStyle = "rgba(80,230,255,0.75)";
-      g.lineWidth = Math.max(1, s * 0.022);
-      g.strokeRect(x + s * 0.14, topY + s * 0.14, s * 0.72, s * 0.72);
+      // 네온: 어두운 판 위 작은 점 조명
+      g.fillStyle = "rgba(120,110,200,0.35)";
+      for (let i = 0; i < 3; i += 1) {
+        g.beginPath();
+        g.arc(x + r() * s, topY + r() * s, Math.max(1, s * 0.025), 0, TAU);
+        g.fill();
+      }
     }
     g.restore();
+    // 바깥 테두리: 벽 덩어리 둘레만 (안쪽 칸 경계는 그리지 않음)
+    if (T.kind !== "hedge" && T.kind !== "log") {
+      const neon = T.kind === "neon";
+      g.strokeStyle = neon ? "rgba(90,235,255,0.9)" : T.kind === "ice" ? "rgba(255,255,255,0.75)" : "rgba(255,230,180,0.55)";
+      g.lineWidth = Math.max(1.2, s * (neon ? 0.04 : 0.03));
+      if (neon) {
+        g.shadowColor = "rgba(90,235,255,0.8)";
+        g.shadowBlur = s * 0.18;
+      }
+      const e = g.lineWidth / 2;
+      g.beginPath();
+      if (!nb.n) {
+        g.moveTo(x + (nb.w ? 0 : tl), topY + e);
+        g.lineTo(x + s - (nb.e ? 0 : tr), topY + e);
+      }
+      if (!nb.s) {
+        g.moveTo(x + (nb.w ? 0 : bl), topY + s - e);
+        g.lineTo(x + s - (nb.e ? 0 : br), topY + s - e);
+      }
+      if (!nb.w) {
+        g.moveTo(x + e, topY + (nb.n ? 0 : tl));
+        g.lineTo(x + e, topY + s - (nb.s ? 0 : bl));
+      }
+      if (!nb.e) {
+        g.moveTo(x + s - e, topY + (nb.n ? 0 : tr));
+        g.lineTo(x + s - e, topY + s - (nb.s ? 0 : br));
+      }
+      g.stroke();
+      g.shadowBlur = 0;
+    }
     // 윗 모서리 빛
     g.strokeStyle = "rgba(255,255,255,0.3)";
     g.lineWidth = Math.max(1, s * 0.025);
