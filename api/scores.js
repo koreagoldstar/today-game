@@ -106,6 +106,8 @@ module.exports = async function handler(req, res) {
     "monster-truck-mayhem",
     // 통통 동물 씨름왕: 서바이벌 · 타임어택 점수
     "bubble-sumo-kings",
+    // 인형뽑기 마스터: 타임어택 점수
+    "claw-master",
   ]);
   /** 점수가 낮을수록 좋은 게임 (반응속도 ms, 10초 맞추기 오차 ms, 제트스키 완주 기록 ms 등) */
   const LOWER_BETTER = new Set(["reaction", "10-second", "jetski-01", "jetski-02", "jetski-03", "jetski-04", "jetski-05", "jetski-06", "jetski-07", "jetski-08", "jetski-09", "jetski-10", "jetski-11", "jetski-12", "magnet-daily"]);

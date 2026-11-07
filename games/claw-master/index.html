@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff8fb8" />
+    <meta name="description" content="귀여운 봉제인형 12종을 진짜처럼 움직이는 집게로 뽑아 모으는 인형뽑기 게임! 집게 힘과 위치, 인형 무게가 그대로 계산돼요." />
+    <title>인형뽑기 마스터 · 오늘의 게임</title>
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/claw-master/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="인형뽑기 마스터 · 오늘의 게임" />
+    <meta property="og:description" content="귀여운 봉제인형 12종을 진짜처럼 움직이는 집게로 뽑아 모으는 인형뽑기 게임!" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/claw-master/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/games/claw-master/assets/thumb-og.jpg?v=1" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+  </head>
+  <body class="cm">
+    <main class="stage" id="stage">
+      <canvas id="game" aria-label="인형뽑기 기계"></canvas>
+      <div class="flash" id="flash" aria-hidden="true"></div>
+
+      <!-- 플레이 화면 -->
+      <div class="hud hidden" id="hud">
+        <div class="chip coin"><i class="coin-i" aria-hidden="true"></i><b id="hud-coin">0</b></div>
+        <div class="chip got"><small>획득</small><b id="hud-got">0</b></div>
+      </div>
+      <div class="chip goal hidden" id="hud-goal">자유 뽑기</div>
+      <div class="turn hidden" id="turn" aria-live="polite"><b id="turn-t">25</b><small id="turn-u">초</small></div>
+      <div class="coach hidden" id="coach"><span id="coach-t"></span><button type="button" id="coach-skip">건너뛰기</button></div>
+      <div class="ctrl hidden" id="ctrl">
+        <div class="pad" id="pad" role="group" aria-label="집게 옮기기">
+          <button type="button" class="pb up" data-d="up" aria-label="안쪽으로"><svg viewBox="0 0 24 24"><path d="M12 5l7 9H5z" /></svg><small>안쪽</small></button>
+          <button type="button" class="pb left" data-d="left" aria-label="왼쪽으로"><svg viewBox="0 0 24 24"><path d="M5 12l9-7v14z" /></svg></button>
+          <button type="button" class="pb right" data-d="right" aria-label="오른쪽으로"><svg viewBox="0 0 24 24"><path d="M19 12l-9 7V5z" /></svg></button>
+          <button type="button" class="pb down" data-d="down" aria-label="앞쪽으로"><svg viewBox="0 0 24 24"><path d="M12 19L5 10h14z" /></svg><small>앞쪽</small></button>
+        </div>
+        <button type="button" class="act" id="act"><b id="act-t">동전 넣기</b><small id="act-s">코인 2</small></button>
+      </div>
+      <p class="keys hidden" id="keys"><span><kbd>A</kbd><kbd>D</kbd> 좌우</span><span><kbd>W</kbd><kbd>S</kbd> 앞뒤</span><span><kbd>Space</kbd> 동전 · 내리기</span><span>기계 안을 마우스로 끌어도 돼요</span></p>
+
+      <!-- 첫 화면 -->
+      <section class="overlay title" id="title">
+        <div class="coin-chip t-coin"><i class="coin-i" aria-hidden="true"></i><b id="t-coin">0</b></div>
+        <div class="title-main">
+        <header class="logo">
+          <p class="logo-k">귀여운 봉제인형 12종</p>
+          <h1 aria-label="인형뽑기 마스터"><span>인형뽑기</span><span class="l2">마스터</span></h1>
+          <p class="logo-en">CLAW MASTER</p>
+        </header>
+        <div class="hero" id="hero" aria-hidden="true"></div>
+        <div class="menu">
+          <button type="button" class="btn big" id="play-btn"><b>자유 뽑기</b><small id="play-s">코인 2개로 한 번</small></button>
+          <div class="row">
+            <button type="button" class="btn m1" data-go="daily"><b>오늘의 도전</b><i class="dot hidden" id="daily-dot"></i></button>
+            <button type="button" class="btn m2" data-go="ta"><b>타임어택</b></button>
+            <button type="button" class="btn m3" data-go="rare"><b>희귀 인형 도전</b></button>
+          </div>
+          <div class="row">
+            <button type="button" class="btn ghost" data-go="col">컬렉션 <span id="col-pct">0%</span></button>
+            <button type="button" class="btn ghost" data-go="up">업그레이드</button>
+            <button type="button" class="btn ghost" data-go="set">설정</button>
+          </div>
+          <p class="machines" id="machines"></p>
+        </div>
+        </div>
+      </section>
+
+      <!-- 컬렉션 -->
+      <section class="overlay panel hidden" id="col" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back>← 뒤로</button>
+          <h2>컬렉션</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b class="coin-n">0</b></div>
+        </div>
+        <div class="col-top">
+          <div class="pct"><b id="col-n">0 / 12</b><i><u id="col-bar"></u></i></div>
+          <p class="stats" id="col-stats"></p>
+        </div>
+        <div class="tabs" id="col-tabs"></div>
+        <div class="grid" id="col-grid"></div>
+      </section>
+
+      <!-- 업그레이드 -->
+      <section class="overlay panel hidden" id="up" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back>← 뒤로</button>
+          <h2>업그레이드</h2>
+          <div class="coin-chip"><i class="coin-i" aria-hidden="true"></i><b class="coin-n">0</b></div>
+        </div>
+        <div class="ups" id="ups"></div>
+        <h3>집게 꾸미기 <small>모습만 바뀌어요</small></h3>
+        <div class="skins" id="skins"></div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="overlay panel small hidden" id="set" data-today-home>
+        <div class="panel-head">
+          <button type="button" class="back-btn" data-back>← 뒤로</button>
+          <h2>설정</h2>
+          <span></span>
+        </div>
+        <div class="set-rows">
+          <label class="set-row"><span>효과음</span><input type="checkbox" id="set-sfx" /></label>
+          <label class="set-row"><span>효과음 크기</span><input type="range" id="set-sfxv" min="0" max="100" step="5" /></label>
+          <label class="set-row"><span>배경 음악</span><input type="checkbox" id="set-music" /></label>
+          <label class="set-row"><span>배경 음악 크기</span><input type="range" id="set-musicv" min="0" max="100" step="5" /></label>
+          <label class="set-row"><span>진동 (휴대폰)</span><input type="checkbox" id="set-vib" /></label>
+        </div>
+        <div class="set-btns">
+          <button type="button" class="btn ghost" id="set-tut">조작 안내 다시 보기</button>
+          <button type="button" class="btn ghost danger" id="set-reset">기록 모두 지우기</button>
+        </div>
+      </section>
+
+      <!-- 모드 안내 -->
+      <section class="overlay card-wrap hidden" id="mode" data-today-home>
+        <div class="card">
+          <p class="card-k" id="mode-k"></p>
+          <h2 id="mode-t"></h2>
+          <div class="mode-art" id="mode-art"></div>
+          <p class="card-d" id="mode-d"></p>
+          <div class="card-btns">
+            <button type="button" class="btn big" id="mode-go">시작!</button>
+            <button type="button" class="btn ghost" data-back>메뉴</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 결과 -->
+      <section class="overlay card-wrap hidden" id="result" data-today-home>
+        <div class="card">
+          <p class="card-k" id="res-k"></p>
+          <h2 id="res-t"></h2>
+          <ul class="res-rows" id="res-rows"></ul>
+          <div class="res-got" id="res-got"></div>
+          <div class="res-rank hidden" id="res-rank"></div>
+          <div class="card-btns">
+            <button type="button" class="btn big" id="res-again">다시 도전</button>
+            <button type="button" class="btn ghost" id="res-col">컬렉션</button>
+            <button type="button" class="btn ghost" data-back>메뉴</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 인형 획득 -->
+      <div class="reveal hidden" id="reveal" role="dialog" aria-label="인형 획득">
+        <div class="rays" id="rays"></div>
+        <div class="rv-card" id="rv-card">
+          <p class="rv-new hidden" id="rv-new">NEW!</p>
+          <div class="rv-art" id="rv-art"></div>
+          <p class="rv-r" id="rv-r"></p>
+          <h2 id="rv-name"></h2>
+          <p class="rv-coin" id="rv-coin"></p>
+          <p class="rv-tap">눌러서 계속</p>
+        </div>
+      </div>
+
+      <!-- 인형 자세히 -->
+      <div class="modal hidden" id="detail" role="dialog">
+        <div class="md-card">
+          <div class="md-art" id="md-art"></div>
+          <p class="rv-r" id="md-r"></p>
+          <h2 id="md-name"></h2>
+          <p class="md-d" id="md-d"></p>
+          <p class="md-n" id="md-n"></p>
+          <button type="button" class="btn ghost" id="md-close">닫기</button>
+        </div>
+      </div>
+
+      <!-- 코인 충전 -->
+      <div class="modal hidden" id="refill" role="dialog">
+        <div class="md-card">
+          <h2>코인이 모자라요</h2>
+          <p class="md-d" id="rf-d"></p>
+          <button type="button" class="btn big" id="rf-get">무료 코인 받기</button>
+          <button type="button" class="btn ghost" id="rf-close">닫기</button>
+        </div>
+      </div>
+
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+
+      <div class="boot" id="boot" role="status">
+        <div class="boot-box">
+          <p class="boot-logo">인형뽑기 마스터</p>
+          <div class="load-bar"><b id="boot-bar"></b></div>
+          <p class="load-t" id="boot-t">인형 채우는 중…</p>
+        </div>
+      </div>
+      <div class="boot hidden" id="fallback" role="alert">
+        <div class="boot-box">
+          <p class="boot-logo">앗, 시작하지 못했어요</p>
+          <p class="load-t">새로고침해 보고, 그래도 안 되면 크롬 최신 버전으로 열어 주세요.</p>
+          <a class="home-link" href="/">← 오늘의 게임으로</a>
+        </div>
+      </div>
+    </main>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/scores.js"></script>
+    <script src="/js/retention.js"></script>
+    <script src="/js/game-rank.js"></script>
+    <script src="/js/pause.js?v=3"></script>
+    <script type="module" src="main.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="인형뽑기 마스터 소개">
+  <h2>인형뽑기 마스터 소개</h2>
+  <p>진짜 오락실 인형뽑기 기계처럼 집게를 움직여 봉제인형을 뽑아 모으는 게임입니다. 몽실곰, 딸기토끼, 꿀꿀돼지, 삐약오리 같은 일반 인형부터 판다콩, 냥이푸딩, 아기여우(희귀), 펭귄방울, 호랑이콩, 코알라몽(에픽), 유니콘슈(전설), 아기용용이(스페셜)까지 서로 다른 모양의 인형 12종이 있어요. 인형마다 무게와 모양이 달라서 머리가 큰 인형은 목에 걸리면 잘 들리고, 동글납작한 인형은 미끄러지고, 무거운 전설 인형은 집게 힘이 약하면 빠져나가요. 집게 발 세 개가 인형에 하나하나 닿고, 케이블에 매달린 집게가 흔들리고, 인형끼리 부딪혀 굴러가는 것을 모두 물리로 계산해서 실패에도 늘 이유가 보여요. 뽑은 인형은 도감에 모이고, 같은 인형을 또 뽑으면 보너스 코인을 받아요. 코인으로 집게 힘 · 안정성 · 속도 · 정밀도를 올리고, 핑크 · 골드 · 별빛 · 무지개 집게로 꾸밀 수 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>동전을 넣으면 25초 안에 집게를 옮길 수 있어요. 컴퓨터는 A · D 로 왼쪽 오른쪽, W · S 로 안쪽 앞쪽을 움직이고, Space 로 동전 넣기와 내리기를 해요. 마우스로 기계 안을 끌어도 집게가 그쪽으로 가요. 휴대폰은 왼쪽 아래 방향 버튼을 누르고 있는 동안 움직이고, 오른쪽 큰 버튼으로 내려요. 집게 아래 그림자가 내려갈 자리라서 그림자를 인형 머리 위에 맞추면 잘 잡혀요. 집게는 내려가서 닫히고, 들어 올린 뒤 왼쪽 아래 배출구로 옮겨 놓아요. Esc 는 일시정지예요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>게임 모드는 무엇이 있나요?</dt>
+    <dd>코인으로 하는 자유 뽑기, 날마다 목표가 바뀌는 오늘의 도전, 90초 동안 점수를 겨루는 타임어택, 정해진 희귀 인형을 5번 안에 노리는 희귀 인형 도전이 있어요. 타임어택 점수는 순위에 올릴 수 있어요.</dd>
+    <dt>실패가 운으로 정해지나요?</dt>
+    <dd>아니요. 성공과 실패를 정하는 난수는 없고, 집게 위치와 힘, 인형 무게와 모양, 둘레 인형에 따라 물리로 정해져요. 처음 인형 배치만 무작위예요.</dd>
+    <dt>코인이 모자라면 어떻게 하나요?</dt>
+    <dd>3분마다 무료 코인 15개를 받을 수 있고, 하루 첫 방문에도 코인을 받아요. 결제는 없어요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>코인, 도감, 업그레이드, 꾸미기, 설정은 이 기기의 브라우저에 저장돼요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

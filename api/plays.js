@@ -109,10 +109,12 @@ module.exports = async function handler(req, res) {
     "penguin-delivery",
     "monster-truck-mayhem",
     "bubble-sumo-kings",
+    "claw-master",
   ]);
 
   /** 콜드스타트/폴백 순서 */
   const SEED = [
+    "claw-master",
     "bubble-sumo-kings",
     "monster-truck-mayhem",
     "penguin-delivery",

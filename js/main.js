@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "claw-master",
+      title: "인형뽑기 마스터",
+      tag: "진짜 물리 인형뽑기 · 인형 12종 수집",
+      href: "/games/claw-master/",
+      thumb: "/assets/thumbs/sm/claw-master.webp?v=1",
+      category: "arcade",
+      added: "2026-11-08",
+    },
+    {
       id: "bubble-sumo-kings",
       title: "통통 동물 씨름왕",
       tag: "물리 씨름 대전 · 8캐릭터 25경기",
