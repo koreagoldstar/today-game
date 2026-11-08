@@ -43,8 +43,8 @@ async function open(browser, { width = 1280, height = 720, mobile = false, save 
   await page.goto(URL);
   await page.waitForFunction(() => window.ClawMaster && document.getElementById("boot").classList.contains("hidden"), null, { timeout: 30000 });
   await page.evaluate(async () => {
-    window.__sim = await import("/games/claw-master/js/sim.js?v=1");
-    window.__data = await import("/games/claw-master/js/data.js?v=1");
+    window.__sim = await import("/games/claw-master/js/sim.js?v=2");
+    window.__data = await import("/games/claw-master/js/data.js?v=2");
     // 사건 기록
     const A = window.ClawMaster;
     window.__ev = [];
@@ -186,8 +186,42 @@ const waitReady = (page, ms = 30000) => page.waitForFunction(() => window.ClawMa
     const base = Object.fromEntries(all.map((k) => [k, g[`${k}@1`]]));
     check("일반 인형은 잘 노리면 잡힘 (기본 힘 · 16번 중 평균 5번 이상)", common >= 5, JSON.stringify(base));
     check("등급 때문에 불가능한 인형 없음: 12종 모두 기본 힘으로 정확히 노리면 잡힘", all.every((k) => g[`${k}@1`] >= 1), JSON.stringify(base));
-    check("희귀 이상은 일반보다 정확해야 함 (평균 성공이 더 낮음)", rare < common, `일반 ${common.toFixed(1)} · 희귀 이상 ${rare.toFixed(1)} / 16`);
-    check("집게 힘 업그레이드로 희귀 인형이 확실히 쉬워짐", rareUp >= rare + 4, `${rare.toFixed(1)} → ${rareUp.toFixed(1)} / 16`);
+    void rare;
+    void rareUp;
+    // 실제 게임처럼 쌓인 기계에서: 그 인형을 맨 위에 얹고 머리를 노린다 (종류마다 10판 x 힘 2단계)
+    const onTop = await page.evaluate(() => {
+      const { Claw, STEP } = window.__sim;
+      const { MACHINES } = window.__data;
+      const out = {};
+      for (const kind of ["bear", "bunny", "pig", "duck", "panda", "cat", "fox", "penguin", "tiger", "koala", "unicorn", "dragon"]) {
+        for (const power of [1, 1.6]) {
+          let win = 0;
+          for (let seed = 1; seed <= 10; seed += 1) {
+            const s = new Claw({ seed: seed * 31 + 7, machine: MACHINES[0], power, force: [kind] });
+            const d = s.dolls.filter((q) => q.kind === kind).sort((a, b) => b.y - a.y)[0];
+            const top = d.sw.slice(0, 2).reduce((m, q) => (q[1] > m[1] ? q : m));
+            s.cx = s.hx = top[0];
+            s.cz = s.hz = top[2];
+            s.phase = "moving";
+            s.drop();
+            for (let i = 0; i < 240 * 22 && s.phase !== "idle"; i += 1) {
+              s.step(STEP, false);
+              for (const e of s.events) if (e.t === "prize" && e.kind === kind) win += 1;
+              s.events.length = 0;
+            }
+          }
+          out[`${kind}@${power}`] = win * 10;
+        }
+      }
+      return out;
+    });
+    const pAvg = (ks, p) => ks.reduce((a, k) => a + onTop[`${k}@${p}`], 0) / ks.length;
+    const pc = pAvg(COMMON, 1);
+    const pr = pAvg(RARE, 1);
+    const prUp = pAvg(RARE, 1.6);
+    check("쌓인 기계에서 일반 인형은 잘 노리면 비교적 쉽게 뽑힘 (맨 위 · 평균 40% 이상)", pc >= 40, JSON.stringify(Object.fromEntries(all.map((k) => [k, onTop[`${k}@1`]]))));
+    check("쌓인 기계에서 희귀 이상은 일반보다 어려움", pr < pc, `일반 ${pc.toFixed(0)}% · 희귀 이상 ${pr.toFixed(0)}%`);
+    check("집게 힘 업그레이드로 희귀 이상이 확실히 쉬워짐 (+10%p 이상)", prUp >= pr + 10, `${pr.toFixed(0)}% → ${prUp.toFixed(0)}%`);
     check("놓치는 이유가 물리로 보임 (미끄러짐 사건)", grab.slips > 0, `미끄러짐 ${grab.slips}번`);
     check("줄이 늘어나지 않음 (자연스러운 줄)", grab.maxCable < 0.8, `최대 ${grab.maxCable.toFixed(2)}cm`);
     check("집게를 닫을 때 인형이 튀어 오르지 않음", grab.bounce === 0, `${grab.bounce}번`);
@@ -223,7 +257,7 @@ const waitReady = (page, ms = 30000) => page.waitForFunction(() => window.ClawMa
       }
       return { win, n, wrongChute, pushed };
     });
-    check("더미 맨 위 인형: 가끔 성공 · 가끔 실패 (5~85%)", pile.win / pile.n >= 0.05 && pile.win / pile.n <= 0.85, `${pile.win}/${pile.n}`);
+    check("아무 기계에서나 맨 위 인형을 노리면 꽤 뽑히지만 늘은 아님 (30~85%)", pile.win / pile.n >= 0.3 && pile.win / pile.n <= 0.85, `${pile.win}/${pile.n}`);
     check("배출구로 들어간 인형만 획득 처리", pile.wrongChute === 0, `${pile.wrongChute}판 어긋남`);
     check("F. 더미에서 집으면 주변 인형도 밀리거나 굴러감 (16판 중 4판 이상)", pile.pushed >= 4, `${pile.pushed}/16판`);
 
@@ -345,7 +379,7 @@ const waitReady = (page, ms = 30000) => page.waitForFunction(() => window.ClawMa
     check("C. 귀만 잡으면 대부분 빠짐 (4번 중 1번 이하)", cWins <= 1, `${cWins}/4 · ${C[0].log.slice(-3).join(" / ")}`);
     check("D. 두 인형 사이: 튀거나 겹치지 않고 둘 다 기계 안 · 주변이 밀림", D.maxV < 300 && D.outside === 0 && D.n1 + D.prize.length === D.n0 && D.moved >= 1, `최대 ${D.maxV.toFixed(0)}cm/s · 움직인 인형 ${D.moved}`);
     check("E. 큰 판다를 가운데로 잡으면 들려 올라감", E.grab >= 1, E.log.join(" / "));
-    check("G. 수레를 갑자기 흔들면 인형이 늦게 따라오며 흔들림 · 순간이동 없음", span(G.relX) > 1 && G.jump < 1.2, `흔들림 ${span(G.relX).toFixed(2)}cm · 최대 걸음 ${G.jump.toFixed(2)}cm · ${G.prize.length ? "획득" : "떨어짐"}`);
+    check("G. 수레를 갑자기 흔들면 인형이 수레보다 늦게 따라오며 흔들림 · 순간이동 없음", span(G.swing) > 3 && G.jump < 1.2, `수레 기준 흔들림 ${span(G.swing).toFixed(2)}cm · 최대 걸음 ${G.jump.toFixed(2)}cm · ${G.prize.length ? "획득" : "떨어짐"}`);
     check("I. 빈 곳에서 닫으면 '잡기' 단계 없이 빈 집게로 돌아옴", !I.phases.includes("gripping") && !I.grab && !I.prize.length && I.log.some((l) => l.includes("빈 곳")), I.log.join(" / "));
     check("상황 점검 오류 없음", page.errors.length === 0, page.errors.slice(0, 2).join(" | "));
     await page.context().close();
@@ -808,10 +842,10 @@ const waitReady = (page, ms = 30000) => page.waitForFunction(() => window.ClawMa
     const r = await page.evaluate(() => {
       const f = window.__ft.slice().sort((a, b) => a - b);
       const s = window.ClawMaster.sim;
-      return { avg: f.reduce((a, b) => a + b, 0) / f.length, p95: f[Math.floor(f.length * 0.95)], n: s.dolls.length, out: s.dolls.filter((d) => Math.abs(d.x) > 51 || d.z < -1 || d.z > 61 || d.y < -2).length };
+      return { avg: f.reduce((a, b) => a + b, 0) / f.length, p95: f[Math.floor(f.length * 0.95)], n: s.dolls.length, messy: s.messy(), out: s.dolls.filter((d) => Math.abs(d.x) > 51 || d.z < -1 || d.z > 61 || d.y < -2).length };
     });
     check("연속 10판: 한 프레임 계산 평균 4ms 이하", r.avg < 4, `평균 ${r.avg.toFixed(2)}ms · p95 ${r.p95.toFixed(2)}ms · 성공 ${wins}/10`);
-    check("연속 10판: 인형이 줄면 새로 채워짐 · 밖으로 샌 인형 없음", r.n >= 10 && r.out === 0, JSON.stringify(r));
+    check("연속 10판: 어질러지거나 줄면 다시 정리 · 밖으로 샌 인형 없음", r.n >= 9 && r.messy < 3 && r.out === 0, JSON.stringify(r));
     check("성능 오류 없음", page.errors.length === 0, page.errors.slice(0, 3).join(" | "));
     await page.context().close();
   }

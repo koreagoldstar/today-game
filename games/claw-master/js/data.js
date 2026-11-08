@@ -43,7 +43,7 @@ export const MACHINES = [
     cost: 2,
     theme: { body: ["#ff8fb8", "#f25c96"], trim: "#ffd84a", back: ["#fff1d6", "#ffd9e6"], floor: ["#ffe3b0", "#f7c98a"], glow: "#fff4a8" },
     pool: [["bear", 5], ["bunny", 5], ["pig", 4], ["duck", 5], ["panda", 2.2], ["cat", 2.2], ["fox", 2.2], ["penguin", 1.1], ["tiger", 1.1], ["koala", 1.1], ["unicorn", 0.45], ["dragon", 0.25]],
-    count: 14,
+    count: 12,
   },
   { id: "sea", ko: "바닷속 보물 기계", open: false, soon: "바다 친구 인형이 준비 중이에요" },
   { id: "snow", ko: "눈꽃 마을 기계", open: false, soon: "눈사람 · 펭귄 인형이 준비 중이에요" },

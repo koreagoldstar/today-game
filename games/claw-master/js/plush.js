@@ -3,7 +3,7 @@
  *  물리 모양(data.js sph)과 같은 자리에 머리 · 몸을 그리고, 그 위에 귀 · 꼬리 · 장식을 얹는다.
  *  봉제 느낌: 말랑한 떡 모양 윤곽 + 부드러운 음영(위 빛 · 아래 그늘) + 천 결 + 바느질 + 반짝이는 큰 눈.
  */
-import { dollById } from "./data.js?v=1";
+import { dollById } from "./data.js?v=2";
 
 const TAU = Math.PI * 2;
 
