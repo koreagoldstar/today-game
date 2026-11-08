@@ -2,9 +2,9 @@
  * 인형뽑기 기계 그리기: 장난감 가게 배경 · 캐비닛 · 유리 · 레일 · 집게 · 인형 · 그림자.
  *  기계 안은 앞에서 본 원근: 뒤로 갈수록 작고 위에 있다.
  */
-import { BOX, CHUTE, RAIL_Y, PRONG, PHASE_KO } from "./sim.js?v=1";
-import { dollById } from "./data.js?v=1";
-import { drawPlush } from "./plush.js?v=1";
+import { BOX, CHUTE, RAIL_Y, PRONG, PHASE_KO } from "./sim.js?v=2";
+import { dollById } from "./data.js?v=2";
+import { drawPlush } from "./plush.js?v=2";
 
 const TAU = Math.PI * 2;
 const DEEP = 0.36; // 맨 뒤는 36% 작게 (원근을 세게 해서 앞뒤가 잘 보이게)

@@ -2,12 +2,12 @@
  * 인형뽑기 마스터 — 게임 본체: 화면 · 조작 · 모드 · 보상 · 저장
  *  물리는 sim.js, 기계 그림은 render.js, 인형 그림은 plush.js
  */
-import { DOLLS, dollById, RARITY, MACHINES, UPGRADES, SKINS, DAILY } from "./data.js?v=1";
-import { Claw, STEP, CHUTE, PHASE_KO } from "./sim.js?v=1";
-import { View } from "./render.js?v=1";
-import { plushIcon } from "./plush.js?v=1";
-import { FX } from "./fx.js?v=1";
-import { Sfx } from "./sfx.js?v=1";
+import { DOLLS, dollById, RARITY, MACHINES, UPGRADES, SKINS, DAILY } from "./data.js?v=2";
+import { Claw, STEP, CHUTE, PHASE_KO } from "./sim.js?v=2";
+import { View } from "./render.js?v=2";
+import { plushIcon } from "./plush.js?v=2";
+import { FX } from "./fx.js?v=2";
+import { Sfx } from "./sfx.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -561,10 +561,12 @@ class App {
       if (G.def.k === "streak" && G.streak >= G.def.n) G.win = true;
     }
     this.persist();
-    // 인형이 줄면 위에서 새로 떨어진다
-    if (this.sim.dolls.length < 10) {
-      this.sim.refill(13);
-      this.toast("새 인형이 들어왔어요!");
+    // 오락실 직원처럼: 인형이 많이 누웠거나 줄었으면 다시 가지런히 앉히고 채운다 (어질러진 기계는 잡기가 너무 어렵다)
+    const full = this.machine.count;
+    if (this.sim.messy() >= 3 || this.sim.dolls.length < full - 3) {
+      this.sim.restock(full);
+      this.faces = new Map();
+      this.toast(this.sim.dolls.length > 0 ? "인형을 가지런히 다시 놓았어요!" : "새 인형이 들어왔어요!");
     }
     const end = this.checkEnd();
     if (end) {

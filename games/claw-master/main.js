@@ -14,7 +14,7 @@ const fail = (e) => {
   document.getElementById("boot").classList.add("hidden");
   document.getElementById("fallback").classList.remove("hidden");
 };
-import("./js/app.js?v=1")
+import("./js/app.js?v=2")
   .then(({ startApp }) => {
     if (bar) bar.style.width = "75%";
     return startApp();

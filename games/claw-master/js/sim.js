@@ -5,7 +5,7 @@
  *  - 접촉은 순차 충격량(sequential impulse) 방식: 질량 · 마찰 · 반발 · 회전 · 관성이 모두 들어간다.
  *  성공과 실패를 정하는 난수는 없다. 처음 배치에만 씨앗 난수를 쓴다.
  */
-import { DOLLS, dollById } from "./data.js?v=1";
+import { DOLLS, dollById } from "./data.js?v=2";
 
 export const G = 980; // cm/s²
 export const STEP = 1 / 240;
@@ -19,7 +19,7 @@ const DENS = 0.0115;
 const HEAD_M = 50;
 const HUB_R = 4.6;
 export const PRONG = { L1: 13, L2: 8, hR: 7, hY: -2, bend: 75 * D2R, open: 42 * D2R, wide: 75 * D2R, closed: 3 * D2R, min: 0, r: 1.6, I: 900 };
-export const TAU = 105000; // 집게 힘 1.0 일 때 발 하나의 모터 힘 (토크)
+export const TAU = 157500; // 집게 힘 1.0 일 때 발 하나의 모터 힘 (토크). 쌓인 기계 맨 위 인형을 노리면 약 50% (2026-11-08 조정)
 // 봉제인형은 말랑하다: 집게 발이 이만큼까지는 스프링처럼 파고든다
 const SOFT = 2.2;
 const PLUSH_K = 7000;
@@ -154,21 +154,49 @@ export class Claw {
   }
 
   /** 위에서 떨어뜨려 쌓고, 가라앉을 때까지 미리 돌린다 (공중에 뜨거나 겹치지 않게) */
-  fill(n, settle = 3, force = []) {
-    for (let i = 0; i < n; i += 1) {
-      const x = -12 + this.rand() * 56;
-      const z = 9 + this.rand() * 44;
-      // 꼭 넣을 인형(도전 목표)은 마지막에 떨어뜨려 위쪽에 놓인다
-      const fi = i - (n - force.length);
-      const kind = fi >= 0 ? force[fi] : this.pickKind();
-      this.add(kind, x, 14 + (i % 5) * 16 + this.rand() * 4, z, (this.rand() - 0.5) * 0.6);
+  fill(n, settle = 3, force = [], given = null) {
+    // 오락실처럼 바닥에 줄 맞춰 앉혀 두고(앞뒤 3줄 x 좌우 3칸, 20cm 간격이라 벌린 발이 옆 인형에 덜 걸림),
+    // 남는 인형만 위에 얹는다. 아무렇게나 떨어뜨리면 대부분 눕거나 깔려 목이 안 보여 잡기가 너무 어렵다.
+    const slots = [];
+    for (const z of [12, 31, 50]) for (const x of [-7, 13, 33]) slots.push([x, z]);
+    for (let i = slots.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(this.rand() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
     }
+    // 꼭 넣을 인형(도전 목표)은 마지막에 위에 얹는다 (둘레 인형에 가려 못 노리는 일이 없게)
+    const kinds = given ? given.slice() : [];
+    while (kinds.length < n - force.length) kinds.push(this.pickKind());
+    kinds.push(...force);
+    kinds.forEach((kind, i) => {
+      if (i < slots.length) {
+        const [x, z] = slots[i];
+        const d = this.add(kind, x + (this.rand() - 0.5) * 3, 0, z + (this.rand() - 0.5) * 3, (this.rand() - 0.5) * 0.2);
+        d.y = 0.3 - Math.min(...d.sph.map((s) => s.oy - s.r)); // 바닥에 앉힘
+      } else this.add(kind, -4 + this.rand() * 44, 42 + this.rand() * 8, 18 + this.rand() * 26, (this.rand() - 0.5) * 0.6);
+    });
     const steps = Math.round(settle / STEP);
     for (let i = 0; i < steps; i += 1) this.step(STEP, true);
     // 높이 떨어뜨리다 배출구로 튄 인형이 있으면 뒤쪽에서 다시 채운다 (공짜 획득 X)
     if (this.dolls.length < n && this.refill(n)) for (let i = 0; i < steps; i += 1) this.step(STEP, true);
     this.turnPrizes = [];
     this.events.length = 0;
+  }
+
+  /** 어질러진 정도: 옆으로 누운 인형 수 */
+  messy() {
+    return this.dolls.filter((d) => Math.abs(Math.sin(d.a)) > 0.7).length;
+  }
+
+  /** 오락실 직원이 정리하듯: 지금 있는 인형들을 다시 줄 맞춰 앉히고 모자라면 채운다 */
+  restock(n) {
+    const kinds = this.dolls.map((d) => d.kind);
+    for (let i = kinds.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(this.rand() * (i + 1));
+      [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+    }
+    this.dolls = [];
+    while (kinds.length < n) kinds.push(this.pickKind());
+    this.fill(n, 2, [], kinds);
   }
 
   /** 기계에 인형이 적으면 뒤쪽 위에서 새로 떨어뜨린다 */
@@ -320,13 +348,15 @@ export class Claw {
     this.hx += this.hvx * dt;
     this.hy += this.hvy * dt;
     this.hz += this.hvz * dt;
+    // 발이 벌어지는 한계(멈춤쇠): 평소 42도 — 인형에 밀려도 더 안 벌어진다. 걸린 인형을 털 때만 75도
+    const maxA = (this.phase === "releasing" && this.stuck ? PRONG.wide : PRONG.open) + 0.02;
     for (const p of this.prongs) {
       p.a += p.av * dt;
       if (p.a < PRONG.min) {
         p.a = PRONG.min;
         if (p.av < 0) p.av = 0;
-      } else if (p.a > PRONG.wide + 0.02) {
-        p.a = PRONG.wide + 0.02;
+      } else if (p.a > maxA) {
+        p.a = Math.max(maxA, p.a - 2.4 * dt); // 크게 벌렸던 발은 모터 속도로 돌아온다 (순간이동 없이)
         if (p.av > 0) p.av = 0;
       }
     }
@@ -370,7 +400,8 @@ export class Claw {
         else this.slack = Math.max(0, this.slack - dt * 0.5);
         if (this.L >= L_MAX || this.slack > 0.1) {
           const power = Math.min(1, this.Lrate / 30);
-          this.L = Math.min(this.L, Math.hypot(this.hx - this.cx, this.hy - RAIL_Y, this.hz - this.cz) + 0.3);
+          // 실제 기계처럼 바닥에선 케이블이 느슨: 닫히는 동안 집게가 제 무게로 인형 사이로 6cm까지 내려앉는다
+          this.L = Math.min(L_MAX, Math.hypot(this.hx - this.cx, this.hy - RAIL_Y, this.hz - this.cz) + 6);
           this.Lrate = 0;
           want = 0;
           this.go("contact");
@@ -581,7 +612,7 @@ export class Claw {
             const n = [dx / dist, dy / dist, dz / dist];
             const p = [q[0] + n[0] * PRONG.r, q[1] + n[1] * PRONG.r, q[2] + n[2] * PRONG.r];
             // 발과 인형: 인형마다 · 부위마다 미끄러운 정도와 말랑한 정도가 다르다
-            const c = this.mk(d, null, { pi }, p, n, rr - dist, 0.72 * (d.def.fric || 1) * s[4]);
+            const c = this.mk(d, null, { pi }, p, n, rr - dist, 1.0 * (d.def.fric || 1) * s[4]);
             c.soft = true;
             c.softD = d.def.soft || SOFT;
             cs.push(c);
