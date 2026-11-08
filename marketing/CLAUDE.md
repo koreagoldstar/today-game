@@ -6,7 +6,8 @@
 ## 지금 상태
 
 - PHASE 1 승인 (2026-11-08, 결정 1~11 모두 제안대로).
-- **PHASE 2 (코어 뼈대) 진행 중.**
+- **PHASE 2 (코어 뼈대) 완료 보고 — 관리자 "다음" 대기.** `docs/REPORT_PHASE_2.md`. 시험: `cd marketing && npm test` (25개).
+- 다음: PHASE 3 게임 릴스 녹화 (2D 는 Actions, 3D 는 PC 녹화 재고 — ARCHITECTURE §11).
 
 ## 꼭 지킬 것 (지시서 요약)
 
@@ -42,7 +43,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | PHASE | 내용 | 상태 |
 |---|---|---|
 | 1 | 분석 · 설계 | 승인 (2026-11-08) |
-| 2 | 코어 뼈대 | 진행 중 |
+| 2 | 코어 뼈대 | 완료 보고 (시험 25/25) |
 | 3 | 게임 릴스 녹화 | - |
 | 4 | 편집 · 문구 · QC | - |
 | 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | - |

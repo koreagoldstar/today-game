@@ -1,0 +1,68 @@
+"use strict";
+/* 설정 — 편성표 · 게시 시각 · 채널별 하루 상한 · 검수 기준. 저장소 `settings` 에 덮어쓸 값만 둔다. */
+
+const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+const DEFAULTS = {
+  // 요일별 피드 편성 (지시서 §8). 데이터가 모자라면 뒤의 유형으로
+  schedule: {
+    mon: ["ranking", "reel"],
+    tue: ["reel"],
+    wed: ["quiz"],
+    thu: ["reel"],
+    fri: ["new-game", "reel"],
+    sat: ["reel"],
+    sun: ["quiz"],
+  },
+  story: ["fortune", "challenge"], // 매일 아침 스토리
+  postTimes: { feed: "19:00", story: "08:30" }, // 서울 시각
+  dailyCaps: { instagram: { feed: 1, story: 1 }, threads: { feed: 1 }, facebook: { feed: 1 }, youtube: { feed: 1 } },
+  channels: ["instagram"], // 기본으로 고르는 채널
+  approvalExpiryHours: 72,
+  publish: { maxAttempts: 3, backoffMinutes: 15 },
+  qc: { maxRedo: 2, reelSec: [15, 20], blackSec: 1, freezeSec: 2 },
+  ranking: { minEntriesPerGame: 5, maskNames: true },
+  // 허용 목록 — 관리자가 정한 것만 (지시서 §0). 비어 있으면 음원을 쓰는 결과물은 검수 불합격
+  allow: { audio: [], fonts: ["Pretendard"] },
+};
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function merge(base, over) {
+  if (!over || typeof over !== "object" || Array.isArray(over)) return over === undefined ? base : over;
+  const out = { ...base };
+  for (const [k, v] of Object.entries(over)) out[k] = base && typeof base[k] === "object" && !Array.isArray(base[k]) ? merge(base[k], v) : v;
+  return out;
+}
+
+/** 값 확인 — 틀리면 사람이 읽을 수 있는 이유로 throw */
+function validate(s) {
+  const bad = (m) => {
+    throw Object.assign(new Error(m), { code: "BAD_SETTINGS" });
+  };
+  for (const d of DAYS) if (!Array.isArray(s.schedule[d]) || !s.schedule[d].length) bad(`편성표 ${d} 가 비어 있습니다.`);
+  for (const [k, v] of Object.entries(s.postTimes)) if (!HHMM.test(v)) bad(`게시 시각 ${k} 는 HH:MM 형식이어야 합니다.`);
+  for (const [ch, caps] of Object.entries(s.dailyCaps)) for (const [slot, n] of Object.entries(caps)) if (!Number.isInteger(n) || n < 0 || n > 10) bad(`${ch} ${slot} 하루 상한은 0~10 입니다.`);
+  if (!Array.isArray(s.channels) || !s.channels.length) bad("채널을 하나 이상 골라야 합니다.");
+  if (!(s.approvalExpiryHours >= 1 && s.approvalExpiryHours <= 24 * 14)) bad("승인 기한은 1시간~14일 입니다.");
+  if (!(s.qc.maxRedo >= 0 && s.qc.maxRedo <= 2)) bad("다시 만들기는 0~2회 입니다.");
+  return s;
+}
+
+async function loadSettings(store) {
+  return validate(merge(DEFAULTS, (store && (await store.getJson("settings"))) || {}));
+}
+
+async function saveSettings(store, patch) {
+  const next = validate(merge(await loadSettings(store), patch));
+  await store.setJson("settings", next);
+  return next;
+}
+
+/** 서울 날짜 · 요일 */
+const KST = 9 * 3600 * 1000;
+const seoulDay = (t = Date.now()) => new Date(new Date(t).getTime() + KST).toISOString().slice(0, 10);
+const seoulWeekday = (t = Date.now()) => DAYS[new Date(new Date(t).getTime() + KST).getUTCDay()];
+const atSeoul = (day, hhmm) => new Date(`${day}T${hhmm}:00+09:00`).getTime();
+
+module.exports = { DEFAULTS, DAYS, merge, validate, loadSettings, saveSettings, seoulDay, seoulWeekday, atSeoul };
