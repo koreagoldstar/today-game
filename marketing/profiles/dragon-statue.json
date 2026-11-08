@@ -1,0 +1,19 @@
+{
+  "id": "dragon-statue",
+  "note": "three.js 3D — GPU 없는 러너에서 초당 1.8장 → 이 PC 에서 녹화해 재고로. 모험 1지역을 '다시 도전'과 같은 방식으로 시작 (입구 석상 퍼즐은 건너뜀)",
+  "path": "/games/dragon-statue/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 45,
+  "minFps": 24,
+  "ready": "window.DragonStatue && window.DragonStatue.mode === 'title'",
+  "player": "autopilot",
+  "autopilot": { "script": "scripts/dragon-autopilot.js", "export": "installBot", "arg": false },
+  "start": [{ "call": "window.DragonStatue.adv.start(0, { retry: true })", "waitMs": 1000 }],
+  "playing": "PLAYING",
+  "probe": "(() => { const A = window.DragonStatue.adv; const rs = A.rs || {}; return { state: A.state, score: rs.enemies || 0, hearts: A.hearts || 0, items: rs.crystals || 0 }; })()",
+  "scoreUnit": 1
+}

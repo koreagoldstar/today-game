@@ -1,0 +1,14 @@
+{
+  "id": "reaction",
+  "note": "DOM + 2D — GPU 없이 초당 60장 → GitHub Actions 에서 녹화. tools/game-reels 의 조종 코드 그대로",
+  "path": "/games/reaction/",
+  "needsGpu": false,
+  "runner": "actions",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 45,
+  "minFps": 20,
+  "ready": "!!document.getElementById('start-btn')",
+  "player": "reaction"
+}

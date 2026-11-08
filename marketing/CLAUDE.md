@@ -6,8 +6,9 @@
 ## 지금 상태
 
 - PHASE 1 승인 (2026-11-08, 결정 1~11 모두 제안대로).
-- **PHASE 2 (코어 뼈대) 완료 보고 — 관리자 "다음" 대기.** `docs/REPORT_PHASE_2.md`. 시험: `cd marketing && npm test` (25개).
-- 다음: PHASE 3 게임 릴스 녹화 (2D 는 Actions, 3D 는 PC 녹화 재고 — ARCHITECTURE §11).
+- PHASE 2 코어 뼈대 완료.
+- **PHASE 3 (게임 녹화) 완료 보고 — 관리자 "다음" 대기.** `docs/REPORT_PHASE_3.md`. 5/5 실제 녹화 성공. 시험: `cd marketing && npm test` (29개). 녹화: `node marketing/record.js [게임|--runner pc|actions]`.
+- 다음: PHASE 4 편집 + 문구 + QC (원본 클립 → 1080×1920 릴스).
 
 ## 꼭 지킬 것 (지시서 요약)
 
@@ -37,6 +38,8 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - Vercel Hobby: `api/` 함수 배포당 12개 (지금 7개). Blob 포함분을 넘으면 30일 동안 Blob 사용 불가.
 - 랭킹 닉네임에 나쁜 말 거르기가 없음. 주간 랭킹 기록이 거의 없음 (2026-W45 기준 1건).
 - 원래 폴더 `D:\프로젝트\오늘의게임` 에는 다른 작업의 커밋 안 된 변경이 있다 — 그 폴더에서 git 작업 금지.
+- 녹화: 화면 캡처는 `--force-device-scale-factor` 가 없으면 CSS 크기(404×720)로 온다. 3D 는 `--render cpu` 에서 초당 5장 미만 → 실패 처리됨(정상).
+- 녹화본(`out/clips/`)은 git 제외. 3D 원본은 45~62MB — 재고로 올릴 때 압축.
 
 ## PHASE 진행표
 
@@ -44,7 +47,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 |---|---|---|
 | 1 | 분석 · 설계 | 승인 (2026-11-08) |
 | 2 | 코어 뼈대 | 완료 보고 (시험 25/25) |
-| 3 | 게임 릴스 녹화 | - |
+| 3 | 게임 릴스 녹화 | 완료 보고 (5/5 녹화, 시험 29/29) |
 | 4 | 편집 · 문구 · QC | - |
 | 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | - |
 | 6 | Instagram 실제 연결 | - |

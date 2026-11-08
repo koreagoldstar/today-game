@@ -1,0 +1,19 @@
+{
+  "id": "sky-island",
+  "note": "three.js 3D — GPU 없는 러너에서 초당 2장 → 이 PC 에서 녹화해 재고로",
+  "path": "/games/sky-island/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 45,
+  "minFps": 24,
+  "ready": "window.SkyIsland && window.SkyIsland.state === 'title'",
+  "player": "autopilot",
+  "autopilot": { "script": "scripts/sky-autopilot.js", "export": "installBot", "arg": false },
+  "start": [{ "click": "#start-btn", "waitMs": 600 }],
+  "playing": "play",
+  "probe": "(() => { const g = window.SkyIsland; const r = g.run || {}; return { state: g.state, score: Math.round(g.score ? g.score() : 0), hearts: r.hearts || 0, items: r.orbs || 0 }; })()",
+  "scoreUnit": 100
+}

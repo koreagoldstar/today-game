@@ -1,0 +1,14 @@
+{
+  "id": "claw-master",
+  "note": "Canvas 2D — GPU 없이도 초당 38장 → GitHub Actions 에서 녹화. 실제 키 입력으로만 조준 · 내리기",
+  "path": "/games/claw-master/",
+  "needsGpu": false,
+  "runner": "actions",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 60,
+  "minFps": 20,
+  "ready": "window.ClawMaster && window.ClawMaster.screen === 'title'",
+  "player": "claw-master"
+}

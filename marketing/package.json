@@ -5,6 +5,10 @@
   "description": "TODAY GAME 홍보 자동화 (사이트 배포와 분리된 모듈)",
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test \"tests/*.test.js\""
+    "test": "node --test \"tests/*.test.js\"",
+    "record": "node record.js"
+  },
+  "dependencies": {
+    "playwright": "1.49.0"
   }
 }
