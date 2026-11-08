@@ -31,7 +31,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 
 ## 알아 둘 함정
 
-- 3D 게임(용암 서핑 · 하늘섬 · 드래곤 석상)은 GPU 없는 러너에서 초당 2~5장 → 그대로 녹화 불가 (ARCHITECTURE §3, 결정 1).
+- 3D 게임(용암 서핑 · 하늘섬 · 드래곤 석상)은 GPU 없는 러너에서 초당 2~5장 → 그대로 녹화 불가. 관리자 제안: **PC 가 켜져 있을 때 PC(GPU)로 녹화해 재고로 쌓기** (ARCHITECTURE §11). 셀프 호스트 러너는 공개 저장소라 쓰지 않음.
 - GitHub Actions 예약은 master 의 워크플로만 돈다. 공개 저장소는 60일 활동이 없으면 예약이 꺼진다.
 - Vercel Hobby: `api/` 함수 배포당 12개 (지금 7개). Blob 포함분을 넘으면 30일 동안 Blob 사용 불가.
 - 랭킹 닉네임에 나쁜 말 거르기가 없음. 주간 랭킹 기록이 거의 없음 (2026-W45 기준 1건).

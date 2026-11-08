@@ -22,7 +22,7 @@
 - `profiles/<game>.json` 5개: 뷰포트 · 시작 방법 · 조종 방식(봇 파일 · 옵션 god/noLava **false 고정**) · 원본 길이 40~60초.
 - 녹화기: (결정 2) CDP 화면 캡처 + 게임 소리 / 또는 `recordVideo`. `/api/**` 가짜 응답, `serviceWorkers: "block"`.
 - 인형뽑기 프로필을 새로 작성 (실제 키 입력: 방향키 · Space, 상태는 읽기만).
-- (결정 1) 3D 3개는 GPU 없는 조건(SwiftShader)에서 가상 시간 캡처를 시험 → 게임이 정상으로 흐르는지(봇이 끝까지 가는지, 게임 시간 = 영상 시간) 확인.
+- (결정 1 ④) 3D 3개는 이 PC(GPU)에서 녹화해 Redis · Blob 재고(`clip:*`)에 올리는 `marketing/pc/record-3d.js` + Windows 작업 스케줄러 등록(승인 필요). GitHub Actions 쪽은 재고가 있을 때만 3D 를 고름.
 - 완료: 5개 중 4개 이상 실제 녹화 성공 (실패는 원인 명시) · 녹화 전후 운영 Redis 키 값 비교로 통계 · 랭킹이 안 바뀜 확인 (읽기 전용 GET 비교).
 
 ## PHASE 4 — 편집 + 문구 + QC (C1 완성)
