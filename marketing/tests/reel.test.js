@@ -61,6 +61,20 @@ test("3D 녹화본 재고: 지문이 같고 안 쓴 최신 것만, 한 번 쓰�
   assert.equal(await takeClip(store, "lava-surfers", "NEW", "c5", now + 40 * 86400000), null);
 });
 
+test("게임 지문: 윈도(CRLF)와 리눅스(LF) 줄바꿈이 달라도 같은 값, 내용이 바뀌면 다른 값", () => {
+  const os = require("os");
+  const mk = (eol, extra = "") => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "mkt-hash-"));
+    fs.mkdirSync(path.join(root, "games", "demo", "js"), { recursive: true });
+    fs.writeFileSync(path.join(root, "games", "demo", "index.html"), ["<html>", "<body>", `hi${extra}`, "</html>"].join(eol));
+    fs.writeFileSync(path.join(root, "games", "demo", "js", "a.js"), ["const a = 1;", "export default a;"].join(eol));
+    fs.writeFileSync(path.join(root, "games", "demo", "img.bin"), Buffer.from([0, 13, 10, 255])); // 이진 파일은 그대로
+    return root;
+  };
+  assert.equal(gameHash(mk("\r\n"), "demo"), gameHash(mk("\n"), "demo"));
+  assert.notEqual(gameHash(mk("\n", "!"), "demo"), gameHash(mk("\n"), "demo"));
+});
+
 test("게임 지문: 같은 폴더는 같은 값, 이상한 id 거부", () => {
   const a = gameHash(ROOT, "reaction");
   assert.match(a, /^[0-9a-f]{16}$/);

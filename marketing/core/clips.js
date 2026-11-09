@@ -12,6 +12,11 @@ const crypto = require("crypto");
 const KEEP_SEC = 30 * 86400;
 const ID = /^[\w-]{4,80}$/;
 
+/** 텍스트 파일은 줄바꿈을 LF 로 맞춘다 — 윈도(CRLF) PC 와 리눅스(LF) 러너가 같은 게임에 같은 지문을 내게 (git 과 같은 판정: 앞 8000바이트에 NUL 이 없으면 텍스트) */
+function normalized(buf) {
+  return buf.subarray(0, 8000).includes(0) ? buf : Buffer.from(buf.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
+}
+
 /** 게임 폴더 내용의 지문 — 게임이 바뀌면 달라져서 옛 화면 클립을 쓰지 않게 */
 function gameHash(siteRoot, gameId) {
   if (!/^[\w-]+$/.test(gameId)) throw new Error(`게임 id 가 올바르지 않습니다: ${gameId}`);
@@ -21,7 +26,7 @@ function gameHash(siteRoot, gameId) {
     for (const name of fs.readdirSync(d).sort()) {
       const f = path.join(d, name);
       if (fs.statSync(f).isDirectory()) walk(f);
-      else h.update(path.relative(dir, f).replace(/\\/g, "/")).update(fs.readFileSync(f));
+      else h.update(path.relative(dir, f).replace(/\\/g, "/")).update(normalized(fs.readFileSync(f)));
     }
   })(dir);
   return h.digest("hex").slice(0, 16);
