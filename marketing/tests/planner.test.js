@@ -21,10 +21,11 @@ function ctxWith(contents = []) {
 }
 const made = (game, daysAgo, status = "PUBLISHED") => ({ source: { sourceType: "game", sourceId: game }, status, createdAt: new Date(NOW - daysAgo * DAY).toISOString(), dateKey: "2026-11-01" });
 
-test("GitHub Actions: GPU 가 필요한 3D 게임은 재고가 있을 때만 후보", async () => {
+test("GitHub Actions: PC 에서 녹화하는 게임(지금은 5개 모두)은 재고가 있을 때만 후보", async () => {
   const c = ctxWith();
   let ranked = await scoreGames(c, { now: NOW, runner: "actions" });
-  assert.deepEqual(ranked.filter((g) => g.eligible && g.score >= 0).map((g) => g.id).sort(), ["claw-master", "reaction"]);
+  assert.deepEqual(ranked.filter((g) => g.eligible && g.score >= 0).map((g) => g.id), [], "재고가 없으면 고를 게임 없음");
+  assert.equal((await planToday(c, { now: NOW, runner: "actions" })).plan, null);
   await addClip(c.store, { id: "lava-clip-1", gameId: "lava-surfers", url: "https://blob.test/l.mp4", gameHash: gameHash(ROOT, "lava-surfers"), recordedAt: new Date(NOW - 3600e3).toISOString(), durationSec: 46 });
   ranked = await scoreGames(c, { now: NOW, runner: "actions" });
   assert.ok(ranked.find((g) => g.id === "lava-surfers").score > 0);
@@ -47,10 +48,11 @@ test("최근 14일 안에 홍보한 게임은 뒤로 · 직전 게임은 제외 
 test("직전과 같은 게임은 다시 고르지 않음 (점수가 높아도)", async () => {
   const c = ctxWith([made("reaction", 30, "FAILED"), made("claw-master", 0.5, "READY_FOR_APPROVAL")]);
   await c.seed();
-  const ranked = await scoreGames(c, { now: NOW, runner: "actions" });
+  const ranked = await scoreGames(c, { now: NOW, runner: "pc" });
   assert.equal(ranked.find((g) => g.id === "claw-master").eligible, false);
-  const { plan } = await planToday(c, { now: NOW, runner: "actions" });
-  assert.equal(plan.sourceId, "reaction", "실패한 건 홍보한 것으로 치지 않음");
+  const { plan } = await planToday(c, { now: NOW, runner: "pc" });
+  assert.notEqual(plan.sourceId, "claw-master");
+  assert.equal(ranked.find((g) => g.id === "reaction").score, 130, "실패한 건 홍보한 것으로 치지 않음 (홍보한 적 없음 100 + 오래됨 30)");
 });
 
 test("하루 1개 · 승인 대기 상한", () => {

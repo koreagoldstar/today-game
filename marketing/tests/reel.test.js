@@ -20,7 +20,7 @@ test("녹화 프로필: 대상 5개 · 필수 값 · 실제 게임 폴더 · 원
     assert.equal(p.path, `/games/${p.id}/`);
     assert.ok(p.rawSec >= 40 && p.rawSec <= 60, `${p.id} rawSec`);
     assert.ok(["pc", "actions"].includes(p.runner), `${p.id} runner`);
-    assert.equal(p.runner === "pc", p.needsGpu === true, `${p.id}: GPU 가 필요한 게임은 PC 에서`);
+    if (p.needsGpu) assert.equal(p.runner, "pc", `${p.id}: GPU 가 필요한 게임은 PC 에서`);
     assert.ok(fs.existsSync(path.join(ROOT, "marketing/renderers/reel/players", `${p.player}.js`)), `${p.id} 조종 코드`);
   }
 });

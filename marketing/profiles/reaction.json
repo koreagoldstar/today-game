@@ -1,9 +1,9 @@
 {
   "id": "reaction",
-  "note": "DOM + 2D — GPU 없이 초당 60장 → GitHub Actions 에서 녹화. tools/game-reels 의 조종 코드 그대로",
+  "note": "DOM + 2D. 실제 GitHub 러너는 2배 해상도 캡처에 너무 느려서(인형뽑기 10.6장/초) 이 PC 에서 녹화해 재고로. tools/game-reels 의 조종 코드 그대로",
   "path": "/games/reaction/",
   "needsGpu": false,
-  "runner": "actions",
+  "runner": "pc",
   "viewport": { "width": 405, "height": 720 },
   "dpr": 2,
   "mobile": true,

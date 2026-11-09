@@ -1,9 +1,9 @@
 {
   "id": "claw-master",
-  "note": "Canvas 2D — GPU 없이도 초당 38장 → GitHub Actions 에서 녹화. 실제 키 입력으로만 조준 · 내리기",
+  "note": "Canvas 2D. 이 PC 의 SwiftShader 로는 초당 27장이었지만 실제 GitHub 러너(2026-11-09)에서는 10.6장 → 이 PC 에서 녹화해 재고로. 실제 키 입력으로만 조준 · 내리기",
   "path": "/games/claw-master/",
   "needsGpu": false,
-  "runner": "actions",
+  "runner": "pc",
   "viewport": { "width": 405, "height": 720 },
   "dpr": 2,
   "mobile": true,
