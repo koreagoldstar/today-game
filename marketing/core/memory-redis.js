@@ -63,6 +63,12 @@ function createFakeUpstash({ jitter = true } = {}) {
         const stop = Number(a[2]);
         return ids.slice(Number(a[1]), stop < 0 ? ids.length + stop + 1 : stop + 1);
       }
+      case "ZRANGEBYSCORE": {
+        const e = alive(a[0]);
+        if (!e) return [];
+        const num = (x) => (x === "+inf" ? Infinity : x === "-inf" ? -Infinity : Number(x));
+        return [...e.v.entries()].filter(([, s]) => s >= num(a[1]) && s <= num(a[2])).sort((x, y) => x[1] - y[1]).map((x) => x[0]);
+      }
       case "LPUSH": {
         const e = of(a[0], "l", () => []);
         e.v.unshift(...a.slice(1).reverse());

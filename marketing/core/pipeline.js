@@ -130,6 +130,14 @@ async function runFrom(ctx, id) {
     }
   } catch (e) {
     if (e instanceof Abort) return store.getContent(id);
+    if (e.code === "NO_DATA") {
+      // 자료가 모자람(주간 기록 부족 · 오늘 피드 없음 등) — 실패가 아니라 이번엔 건너뜀. 알림 없이 취소, 다음 유형으로
+      return store.updateContent(id, (d) => {
+        if (!MAKING.includes(d.status)) return false;
+        d.skipped = e.message;
+        transition(d, "CANCELLED", { by: "worker", note: `자료 부족: ${e.message}`, now: nowOf(ctx) });
+      });
+    }
     const failed = await store.updateContent(id, (d) => {
       if (!MAKING.includes(d.status)) return false;
       d.failure = { stage: d.status, reason: e.message };

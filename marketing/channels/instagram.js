@@ -212,6 +212,11 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
       const m = await call("GET", `/${postId}`, { fields: "id,permalink,media_product_type,timestamp" });
       return { ok: String(m.id) === String(postId), permalink: m.permalink || null, productType: m.media_product_type };
     },
+    /** 게시물에 첫 댓글 (퀴즈 정답) — 권한 instagram_business_manage_comments */
+    async comment(postId, text) {
+      const { call } = await session();
+      return { id: (await call("POST", `/${postId}/comments`, { message: String(text).slice(0, 2200) })).id };
+    },
     /** 실제로 주는 지표만. 하나라도 지원 안 되면 요청 전체가 오류일 수 있어 지표별로 다시 묻는다 */
     async insights(postId) {
       const { call } = await session();

@@ -72,8 +72,12 @@ function invalidate(doc, { by = "system", note = "변경", now = Date.now() } = 
   return doc;
 }
 
+/** 승인 대기가 hours 를 넘었거나, 그날만 맞는 콘텐츠(운세 · 챌린지: plan.validDay)의 날짜가 지났으면 true */
 function isExpired(doc, now = Date.now(), hours = 72) {
-  return doc.status === "READY_FOR_APPROVAL" && !!doc.readyAt && now - Date.parse(doc.readyAt) > hours * 3600 * 1000;
+  if (doc.status !== "READY_FOR_APPROVAL") return false;
+  const day = new Date(now + 9 * 3600e3).toISOString().slice(0, 10); // 서울 날짜
+  if (doc.plan && doc.plan.validDay && doc.plan.validDay < day) return true;
+  return !!doc.readyAt && now - Date.parse(doc.readyAt) > hours * 3600 * 1000;
 }
 
 module.exports = { STATES, MAKING, TERMINAL, NEXT, KO, TransitionError, canTransition, transition, approvalValid, invalidate, isExpired };

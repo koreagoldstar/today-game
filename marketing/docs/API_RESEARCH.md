@@ -17,7 +17,7 @@
 |---|---|
 | 로그인 방식 | **Instagram 로그인** (`graph.instagram.com`) 권장. Facebook 페이지 연결이 필요 없음. Facebook 로그인 방식(`graph.facebook.com`)도 있음 |
 | 계정 | Instagram **프로페셔널 계정**(비즈니스 · 크리에이터). 개인 계정은 불가 |
-| 권한 (Instagram 로그인) | `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights` (+ DM 을 하면 `instagram_business_manage_comments`). 옛 이름 `business_*` 는 2025-01-27 부터 사용 중지 |
+| 권한 (Instagram 로그인) | `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights` + 첫 댓글(퀴즈 정답) `instagram_business_manage_comments` — `POST graph.instagram.com/{media-id}/comments?message=` (라이브 영상에는 불가). 확인 2026-11-09: https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/reference/ig-media/comments. 옛 이름 `business_*` 는 2025-01-27 부터 사용 중지 |
 | 앱 검수 | 앱에 역할로 추가한 **우리 계정만** 쓰면 Standard Access 로 충분. 남의 계정까지 쓰려면 Advanced Access. 앱 검수 절차 이름은 문서에 없음 → PHASE 6 에서 실제로 확인 |
 | 토큰 | 짧은 토큰(1시간) → `GET graph.instagram.com/access_token?grant_type=ig_exchange_token` (앱 비밀값 필요, 서버에서만) → **장기 토큰 60일**. 갱신 `GET /refresh_access_token?grant_type=ig_refresh_token`: 발급 후 24시간 이상 · 만료 전 · 60일 안에 갱신하지 않으면 영구 만료 |
 | 게시 순서 | `POST /{ig-user-id}/media` (컨테이너) → `GET /{container}?fields=status_code` (EXPIRED · ERROR · FINISHED · IN_PROGRESS · PUBLISHED, **1분에 한 번씩 최대 5분** 확인 권장) → `POST /{ig-user-id}/media_publish` (`creation_id`) |

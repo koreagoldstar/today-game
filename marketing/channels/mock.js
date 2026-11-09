@@ -38,6 +38,10 @@ function createMockChannel(name, { caps = CAPS[name], failWith = null } = {}) {
     async verify(postId) {
       return { ok: String(postId).startsWith("mock-post-"), permalink: null, mock: true };
     },
+    async comment(postId, text) {
+      if (!posted.has(postId) || !String(text || "").trim()) throw Object.assign(new Error("모의 댓글 실패"), { kind: "INVALID" });
+      return { id: rid("mock-comment"), mock: true };
+    },
     async insights() {
       return []; // 모의 게시에는 지표가 없다 (지어내지 않음)
     },

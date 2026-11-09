@@ -44,6 +44,8 @@ function approvalText(doc, nextAt) {
     if (!c) continue;
     lines.push(`── ${CH_KO[ch] || ch} 문구 (${c.source || "-"}) ──`, c.title ? `제목: ${c.title}` : "", c.caption, (c.hashtags || []).join(" "), `링크: ${c.link || "-"}`, "");
   }
+  if (doc.render && doc.render.meta.comment) lines.push("── 게시 뒤 첫 댓글 ──", doc.render.meta.comment, "");
+  if (doc.render && doc.render.kind === "story") lines.push("ℹ️ 스토리는 문구가 게시되지 않습니다 (그림만).", "");
   lines.push("✍️ 인스타 문구를 고치려면 이 메시지에 답장으로 새 문구를 보내 주세요. 해시태그는 #으로 시작하는 마지막 줄에.");
   const text = lines.filter((l) => l !== "").join("\n");
   return text.length > 4000 ? text.slice(0, 3990) + "\n…(줄임)" : text;
@@ -63,13 +65,15 @@ function createTelegramClient({ token, fetchImpl = fetch }) {
     if (!data || !data.ok) throw Object.assign(new Error(`텔레그램 ${method} 실패: ${(data && data.description) || res.status}`), { tg: data });
     return data.result;
   }
-  async function sendFile(method, field, file, params) {
+  /** files: { 필드이름: 파일경로 } — sendVideo · sendPhoto · sendMediaGroup(attach://필드이름) */
+  async function sendFiles(method, files, params) {
     const form = new FormData();
     for (const [k, v] of Object.entries(params)) form.append(k, typeof v === "string" ? v : JSON.stringify(v));
-    form.append(field, await fs.openAsBlob(file), path.basename(file));
+    for (const [field, file] of Object.entries(files)) form.append(field, await fs.openAsBlob(file), path.basename(file));
     return call(method, null, form);
   }
-  return { call, sendFile };
+  const sendFile = (method, field, file, params) => sendFiles(method, { [field]: file }, params);
+  return { call, sendFile, sendFiles };
 }
 
 /**
@@ -84,11 +88,18 @@ function createTelegram({ store, approval, settings, token, chatId, fetchImpl, l
   const remember = (messageId, value) => store.setJson(`tg:msg:${messageId}`, value, { ex: 8 * 86400 });
 
   async function requestApproval(doc) {
-    const video = doc.render && doc.render.files.find((f) => f.role === "video");
+    const files = (doc.render && doc.render.files) || [];
+    const cap = `${doc.render && doc.render.meta.title} · ${doc.id} · 버전 ${doc.version}`.slice(0, 1024);
+    const video = files.find((f) => f.role === "video");
+    const pics = files.filter((f) => (f.role === "slide" || f.role === "image") && f.path && fs.existsSync(f.path)).slice(0, 10); // 앨범은 10장까지
     if (video && video.path && fs.existsSync(video.path) && fs.statSync(video.path).size <= 50 * 1024 * 1024) {
-      await tg.sendFile("sendVideo", "video", video.path, { chat_id: chat, caption: `${doc.render.meta.title} · ${doc.id} · 버전 ${doc.version}`.slice(0, 1024), supports_streaming: "true" });
+      await tg.sendFile("sendVideo", "video", video.path, { chat_id: chat, caption: cap, supports_streaming: "true" });
     } else if (video && video.url) {
       await send(`영상: ${video.url}`);
+    } else if (pics.length === 1) {
+      await tg.sendFile("sendPhoto", "photo", pics[0].path, { chat_id: chat, caption: cap });
+    } else if (pics.length > 1) {
+      await tg.sendFiles("sendMediaGroup", Object.fromEntries(pics.map((p, i) => [`p${i}`, p.path])), { chat_id: chat, media: pics.map((p, i) => ({ type: "photo", media: `attach://p${i}`, ...(i === 0 ? { caption: cap } : {}) })) });
     }
     const { nextSlot, slotCounts } = require("../core/approval");
     let nextAt = null;

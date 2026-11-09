@@ -16,7 +16,7 @@
 1. **인스타 계정을 프로페셔널로**: 인스타 앱 → 설정 → 계정 유형 및 도구 → 프로페셔널 계정으로 전환 (비즈니스 또는 크리에이터). 계정은 **공개**여야 함.
 2. **Meta 개발자 앱 만들기**: https://developers.facebook.com → 내 앱 → 앱 만들기 → 사용 사례 **기타** → 앱 유형 **비즈니스** → 이름 · 연락처 이메일.
 3. **Instagram 제품 추가**: 앱 대시보드에서 Instagram → 설정 → "Instagram 로그인으로 API 설정"이 자동으로 붙음.
-4. **계정 추가 · 토큰 만들기**: "액세스 토큰 생성" → 계정 추가 → 인스타 계정으로 로그인 → 권한 `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights` 를 허용 → 표시된 **토큰** 복사.
+4. **계정 추가 · 토큰 만들기**: "액세스 토큰 생성" → 계정 추가 → 인스타 계정으로 로그인 → 권한 `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`, `instagram_business_manage_comments`(퀴즈 정답 첫 댓글 — 없으면 게시는 되고 댓글만 빠짐) 를 허용 → 표시된 **토큰** 복사.
 5. **토큰 연결** (택1)
    - 저(Claude)에게 토큰을 알려 주면 이 PC 에서 연결합니다 (대화 기록에 남는다는 점만 주의).
    - 직접: PowerShell 에서 `$env:IG_NEW_TOKEN="토큰"; node marketing/run.js ig-connect` → 저장소에 **암호화**되어 들어감 (열쇠 `MKT_TOKEN_KEY` 는 이미 Secrets 에 있음).

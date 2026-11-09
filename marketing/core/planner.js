@@ -9,6 +9,7 @@ const path = require("path");
 const { listProfiles, loadProfile } = require("../renderers/reel/record");
 const { availableClips, gameHash } = require("./clips");
 const { readCatalog } = require("../sources/game");
+const { seoulDay, seoulWeekday } = require("./settings");
 
 const ROOT = path.resolve(__dirname, "../..");
 const DAY = 86400000;
@@ -53,9 +54,9 @@ async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNN
   return out.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
 }
 
-/** 오늘 새로 만들어도 되는지: 오늘 피드가 이미 있거나(하루 1개) 승인 대기가 상한만큼 쌓였으면 안 만든다 */
-function produceGate(list, settings, today) {
-  if (list.some((d) => d.dateKey === today && d.slot === "feed" && !["FAILED", "CANCELLED"].includes(d.status))) return { ok: false, reason: "오늘 피드 콘텐츠가 이미 있습니다" };
+/** 오늘 새로 만들어도 되는지: 오늘 그 자리(피드 · 스토리)가 이미 있거나(하루 1개) 승인 대기가 상한만큼 쌓였으면 안 만든다 */
+function produceGate(list, settings, today, slot = "feed") {
+  if (list.some((d) => d.dateKey === today && d.slot === slot && !["FAILED", "CANCELLED"].includes(d.status))) return { ok: false, reason: `오늘 ${slot === "story" ? "스토리" : "피드"} 콘텐츠가 이미 있습니다` };
   const waiting = list.filter((d) => d.status === "READY_FOR_APPROVAL").length;
   if (waiting >= settings.maxPending) return { ok: false, reason: `승인 대기가 ${waiting}개라 새로 만들지 않습니다 (상한 ${settings.maxPending})` };
   return { ok: true };
@@ -80,4 +81,52 @@ async function planToday(ctx, opts = {}) {
   };
 }
 
-module.exports = { planToday, scoreGames, produceGate };
+/* ---------- 요일 편성 (지시서 §8) ---------- */
+// 편성표 이름 → 만들 방법. daily: 그날만 맞는 콘텐츠 (다음 날로 미루지 않음)
+const TYPES = {
+  reel: { kind: "reel", renderer: "reel", sourceType: "game" },
+  "new-game": { kind: "reel", renderer: "reel", sourceType: "new-game" },
+  quiz: { kind: "carousel", renderer: "image", sourceType: "quiz" },
+  ranking: { kind: "image", renderer: "image", sourceType: "ranking" },
+  fortune: { kind: "story", renderer: "image", sourceType: "fortune", daily: true },
+  challenge: { kind: "story", renderer: "image", sourceType: "challenge", daily: true },
+  recycle: { kind: "story", renderer: "image", sourceType: "recycle" },
+};
+
+/** 기본 채널 중 이 형식을 받는 채널만 (스토리는 인스타만 등) */
+const channelsFor = (ctx, kind) => ctx.settings.channels.filter((ch) => !ctx.registry || !ctx.registry.has("channel", ch) || ctx.registry.get("channel", ch).capabilities().kinds.includes(kind));
+
+/**
+ * 한 자리(feed · story)의 후보 계획들 — 앞에서부터 시도하고, 자료가 모자라면(NO_DATA) 다음 것.
+ *  feed: 그 요일 편성표 순서 · story: settings.story 를 날마다 하나씩 돌려 가며
+ *  opts.types 로 유형을 직접 정할 수 있다 (관리자 지정 · 시험)
+ */
+async function planSlot(ctx, slot, opts = {}) {
+  const now = opts.now || Date.now();
+  const day = seoulDay(now);
+  let types = opts.types;
+  if (!types && slot === "story") {
+    const list = ctx.settings.story;
+    const n = Math.round(Date.parse(day) / DAY);
+    types = list.map((_, i) => list[(n + i) % list.length]);
+  }
+  if (!types) types = ctx.settings.schedule[seoulWeekday(now)];
+  const plans = [];
+  let ranked = [];
+  for (const name of types) {
+    const T = TYPES[name];
+    if (!T || (T.kind === "story") !== (slot === "story")) continue;
+    if (ctx.registry && !ctx.registry.has("source", T.sourceType)) continue; // 아직 없는 유형
+    const channels = channelsFor(ctx, T.kind);
+    if (!channels.length) continue;
+    const base = { slot, kind: T.kind, sourceType: T.sourceType, renderer: T.renderer, channels, ...(T.daily ? { validDay: day } : {}) };
+    if (name === "reel") {
+      const r = await planToday(ctx, opts);
+      ranked = r.ranked;
+      if (r.plan) plans.push({ ...base, sourceId: r.plan.sourceId, reason: r.plan.reason });
+    } else plans.push({ ...base, sourceId: name, reason: `편성: ${name} (${slot === "story" ? "스토리" : seoulWeekday(now)})` });
+  }
+  return { plans, ranked };
+}
+
+module.exports = { planToday, planSlot, scoreGames, produceGate, TYPES };

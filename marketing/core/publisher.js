@@ -24,7 +24,7 @@ const due = (doc, now) =>
   (doc.status === "SCHEDULED" || doc.status === "PUBLISHING") && approvalValid(doc) && !!doc.scheduledAt && Date.parse(doc.scheduledAt) <= now;
 
 function item(doc, ch) {
-  return { contentId: doc.id, version: doc.version, kind: doc.render.kind, files: doc.render.files, copy: doc.copy[ch], slot: doc.slot };
+  return { contentId: doc.id, version: doc.version, kind: doc.render.kind, files: doc.render.files, copy: doc.copy[ch], slot: doc.slot, comment: (doc.render.meta && doc.render.meta.comment) || null };
 }
 
 async function publishChannel(ctx, id, ch, now) {
@@ -78,6 +78,17 @@ async function publishChannel(ctx, id, ch, now) {
     if (!v || !v.ok) throw Object.assign(new Error("게시 뒤 다시 조회했지만 게시물을 찾지 못했습니다."), { kind: "VERIFY", retryable: true });
     await save({ status: "PUBLISHED", platformId: res.postId, permalink: v.permalink || null, publishedAt: new Date().toISOString(), mock: !!res.mock, error: null, nextTryAt: null });
     await store.setJson(idem, { platformId: res.postId, permalink: v.permalink || null, at: new Date().toISOString() }, { ex: 60 * 86400 });
+    // 첫 댓글(퀴즈 정답 등): 실패해도 게시는 된 것 — 기록만 남긴다
+    const it = item(doc, ch);
+    if (it.comment && typeof channel.comment === "function") {
+      try {
+        const c = await channel.comment(res.postId, it.comment);
+        await savePost({ commentId: c.id, commentError: null });
+      } catch (e) {
+        await savePost({ commentError: String(e.message || e).slice(0, 200) });
+        if (ctx.logger) await ctx.logger.warn(`${id} ${ch}: 첫 댓글 실패 (게시는 됨): ${e.message}`);
+      }
+    }
   } catch (e) {
     const { maxAttempts, backoffMinutes } = settings.publish;
     const attempts = post.attempts || 1;

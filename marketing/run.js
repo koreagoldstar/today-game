@@ -2,7 +2,8 @@
 "use strict";
 /*
  * 자동 실행 명령 (GitHub Actions · 이 PC 공용)
- *   node marketing/run.js produce [--force] [--game <id>]   매일 08:00 — 게임 고르기 → 녹화/재고 → 편집 → 문구 → 검수 → 승인 요청
+ *   node marketing/run.js produce [--force] [--slot story|feed] [--type quiz|ranking|…] [--game <id>]
+ *        매일 08:00 — 스토리(운세 · 챌린지 · 재활용 돌아가며) + 피드(요일 편성표) → 편집 → 문구 → 검수 → 승인 요청
  *   node marketing/run.js publish                            30분마다 — 텔레그램 답 처리 → 기한 지남 · 멈춘 제작 정리 → 승인 + 시각 지난 것만 게시
  *   node marketing/run.js redo                               관리자가 누른 "문구 다시 · 다시 제작" 처리
  *   node marketing/run.js status                             최근 콘텐츠 상태
@@ -37,7 +38,8 @@ async function setup() {
   const registry = createRegistry();
   const modes = registerChannels(registry, process.env, { store });
   const logger = createLogger(store);
-  registry.register("source", "game", require("./sources/game"));
+  for (const s of ["game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
+  registry.register("renderer", "image", require("./renderers/image"));
   registry.register("copywriter", "default", createCopywriter({ store, profileTags: (id) => (require("./renderers/reel/record").loadProfile(id).hashtags || []) }));
   if (process.env.BLOB_READ_WRITE_TOKEN) registry.register("media", "default", require("./media/blob").createBlobMedia());
   const approval = createApproval({ store, settings, registry });
@@ -57,31 +59,50 @@ function output(key, value) {
 
 const brief = (d) => `${d.id} ${KO[d.status] || d.status}${d.failure ? ` [${d.failure.stage}] ${d.failure.reason}` : ""}`;
 
+/** 한 자리(story · feed) 만들기: 후보를 앞에서부터, 자료가 모자라 취소되면(NO_DATA) 다음 후보 */
+async function produceSlot(ctx, slot) {
+  const { planSlot, produceGate, TYPES } = require("./core/planner");
+  const { store, settings } = ctx;
+  const gate = produceGate(await store.listContents(100), settings, seoulDay(), slot);
+  if (!gate.ok && !argv.includes("--force")) return { slot, skipped: gate.reason };
+  const type = opt("--type");
+  if (type && !TYPES[type]) throw new Error(`유형은 ${Object.keys(TYPES).join(" · ")} 중 하나입니다.`);
+  const game = opt("--game");
+  if (game && !/^[\w-]{1,60}$/.test(game)) throw new Error("게임 id 형식이 올바르지 않습니다.");
+  const { plans, ranked } = await planSlot(ctx, slot, type ? { types: [type] } : {});
+  if (ranked.length) console.log(`게임 순위: ${ranked.map((g) => `${g.id}(${g.eligible ? g.score : "제외"})`).join(" ")}`);
+  if (game && slot === "feed") plans.unshift({ slot: "feed", kind: "reel", sourceType: "game", sourceId: game, renderer: "reel", channels: settings.channels, reason: `관리자 지정: ${game}` });
+  const skipped = [];
+  for (const p of plans) {
+    const doc = await produce(ctx, p);
+    if (doc.status === "CANCELLED" && doc.skipped) {
+      skipped.push(`${p.sourceType}: ${doc.skipped}`);
+      continue;
+    }
+    return { slot, doc, skipped };
+  }
+  return { slot, skipped: skipped.length ? skipped.join(" / ") : "만들 수 있는 후보가 없습니다" };
+}
+
 async function runProduce() {
-  const { ctx, store, settings } = await setup();
-  const { planToday, produceGate } = require("./core/planner");
+  const { ctx, store } = await setup();
   ctx.registry.register("renderer", "reel", require("./renderers/reel"));
   const job = await store.jobStart("produce");
-  let result = null;
+  const only = opt("--slot");
+  const slots = ["story", "feed"].filter((s) => !only || s === only); // 스토리(08:30 게시)를 먼저 — 빨리 끝남
+  const results = [];
   try {
-    result = await store.withLock("produce", 3600, async () => {
-      const gate = produceGate(await store.listContents(100), settings, seoulDay());
-      if (!gate.ok && !argv.includes("--force")) return { skipped: gate.reason };
-      const { plan, ranked } = await planToday(ctx);
-      console.log(`게임 순위: ${ranked.map((g) => `${g.id}(${g.eligible ? g.score : "제외"})`).join(" ")}`);
-      const game = opt("--game");
-      if (game && !/^[\w-]{1,60}$/.test(game)) throw new Error("게임 id 형식이 올바르지 않습니다.");
-      const p = game ? { slot: "feed", kind: "reel", sourceType: "game", sourceId: game, renderer: "reel", channels: settings.channels, reason: `관리자 지정: ${game}` } : plan;
-      if (!p) return { skipped: "고를 수 있는 게임이 없습니다" };
-      return { doc: await produce(ctx, p) };
+    await store.withLock("produce", 3600, async () => {
+      for (const slot of slots) results.push(await produceSlot(ctx, slot));
     });
   } catch (e) {
     await store.jobEnd(job, { status: "FAILED", error: e.message });
     throw e;
   }
-  await store.jobEnd(job, { status: result.doc && result.doc.status === "FAILED" ? "FAILED" : "DONE", result: result.skipped || (result.doc && result.doc.id) });
-  console.log(result.skipped ? `건너뜀: ${result.skipped}` : `제작: ${brief(result.doc)}`);
-  if (result.doc && result.doc.status === "FAILED") process.exitCode = 1;
+  const failed = results.some((r) => r.doc && r.doc.status === "FAILED");
+  await store.jobEnd(job, { status: failed ? "FAILED" : "DONE", result: results.map((r) => `${r.slot}: ${r.doc ? r.doc.id : `건너뜀 (${r.skipped})`}`).join(" · ") });
+  for (const r of results) console.log(`${r.slot === "story" ? "스토리" : "피드"} ${r.doc ? `제작: ${brief(r.doc)}${r.skipped && r.skipped.length ? ` (앞 후보 건너뜀: ${r.skipped.join(" / ")})` : ""}` : `건너뜀: ${r.skipped}`}`);
+  if (failed) process.exitCode = 1;
 }
 
 async function runPublish() {

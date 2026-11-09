@@ -12,7 +12,7 @@ const GENRE_TAG = { arcade: "#아케이드게임", sports: "#스포츠게임", a
 const CLAIMS = /1위|일위|TOP\s*\d|탑\s*\d|랭킹|순위|최초|역대|최고의|무조건|100\s*%|만\s*명|천\s*명/i;
 
 const firstSentence = (s) => (String(s || "").match(/^.*?(?:[.!?]|다\.)(?=\s|$)/) || [String(s || "")])[0].trim();
-const factText = (f) => [f.title, f.tag, f.intro, f.how].join(" ");
+const factText = (f) => JSON.stringify(f); // 원본 사실 전부 (게임 소개 · 퀴즈 문항 · 랭킹 점수 · 운세 문구 …)
 
 /** 문구가 사실 규칙에 맞는지 — 틀리면 이유 목록 */
 function factProblems(text, facts) {
@@ -28,9 +28,47 @@ function hashtagsFor(facts, profileTags = []) {
   return [...new Set(["#오늘의게임", "#무료게임", "#웹게임", "#미니게임", ...profileTags, GENRE_TAG[facts.category]].filter(Boolean))].slice(0, 8);
 }
 
+const TYPE_TAGS = {
+  quiz: ["#상식퀴즈", "#퀴즈", "#상식", "#두뇌게임"],
+  ranking: ["#주간랭킹", "#게임랭킹", "#기록도전"],
+  fortune: ["#오늘의운세", "#운세"],
+  challenge: ["#오늘의챌린지", "#기록도전"],
+  recycle: [],
+};
+
+/** 게임이 아닌 유형의 첫 줄 후보 · 본문 (facts 에 있는 것만) */
+function typeLines(type, f, kind) {
+  const n = (f.questions || []).length;
+  if (type === "quiz") return { openers: [`오늘의 상식퀴즈 ${n}문제, 몇 개 맞힐 수 있을까요? 🧠`, `상식퀴즈 ${n}문제 도전! 🧠`, `옆으로 넘기며 푸는 상식퀴즈 ${n}문제 🧠`], body: ["정답은 첫 댓글에서 확인하세요.", "더 많은 문제는 오늘의 게임 상식퀴즈에서!"] };
+  if (type === "ranking") {
+    const g = (f.games || [])[0];
+    return { openers: [`지난주 TOP 기록 🏆 (${f.week})`, `${f.week} 주간 랭킹 🏆`], body: [...(f.games || []).map((x) => `${x.title} 1위 ${x.top[0].name} · ${x.top[0].text}`), g ? "내 기록으로 도전해 보세요!" : ""] };
+  }
+  if (type === "fortune") return { openers: [`${f.day} 오늘의 운세 🍀`], body: Object.values(f.items || {}).map((x) => `${x.emoji} ${x.title}: ${x.t}`) };
+  if (type === "challenge") return { openers: [`오늘의 챌린지: ${f.game} 🏆`], body: [f.participants ? `지금까지 ${f.participants}명 도전` : "", "오늘 하루만 열리는 기록 대결!"] };
+  if (type === "recycle") return { openers: [`${kind === "reel" ? "새 영상" : "새 게시물"}: ${f.title}`], body: ["프로필에서 확인해 보세요!"] };
+  return null;
+}
+
 /** 정해진 틀 문구 (AI 없이) */
 function templateCopy({ source, render, channels, recent = [], profileTags = [] }) {
   const f = source.facts;
+  const t = typeLines(source.sourceType, f, f.kind);
+  if (t) {
+    const first = t.openers.find((o) => !recent.includes(o)) || t.openers[t.openers.length - 1];
+    const body = t.body.filter(Boolean);
+    const tags = [...new Set(["#오늘의게임", ...TYPE_TAGS[source.sourceType], "#무료게임", "#웹게임", "#미니게임"])].slice(0, 8);
+    const kind = (render && render.kind) || "image";
+    const link = (ch) => utmLink(f.url || "/", { channel: ch, kind, sourceId: source.sourceId });
+    const out = {};
+    for (const ch of channels) {
+      if (ch === "instagram") out[ch] = { caption: [first, ...body, "프로필 링크에서 플레이!"].join("\n"), hashtags: tags, link: link(ch) };
+      else if (ch === "threads") out[ch] = { caption: [first, body[0]].filter(Boolean).join("\n"), hashtags: ["#오늘의게임"], link: link(ch) };
+      else if (ch === "facebook") out[ch] = { caption: [first, ...body, `바로 가기: ${link(ch)}`].join("\n"), hashtags: tags.slice(0, 3), link: link(ch) };
+      else if (ch === "youtube") out[ch] = { title: first.slice(0, 100), caption: [...body, link(ch)].join("\n"), hashtags: tags, link: link(ch) };
+    }
+    return out;
+  }
   const hook = (render && render.meta && render.meta.hook) || f.title;
   const openers = [`${hook} 🎮`, `${f.title}, 해 보셨나요? 🎮`, `${f.title} 한 판 어때요? 🎮`, `오늘의 게임 추천: ${f.title} 🎮`, `${f.tag} — ${f.title} 🎮`];
   const first = openers.find((o) => o && !recent.includes(o)) || openers[openers.length - 1];
@@ -61,6 +99,7 @@ function checkAi(copy, { source, channels, recent }) {
       continue;
     }
     bad.push(...factProblems(`${c.title || ""} ${c.caption}`, source.facts).map((x) => `${ch}: ${x}`));
+    if (source.sourceType === "quiz") for (const q of source.facts.questions || []) if (String(q.answer).length >= 2 && c.caption.includes(q.answer)) bad.push(`${ch}: 캡션에 정답 "${q.answer}"`);
     const first = c.caption.split("\n")[0].trim();
     if (recent.includes(first)) bad.push(`${ch}: 최근 문구와 첫 문장이 같음`);
     if (ch === "instagram") {
@@ -93,7 +132,8 @@ const SYSTEM = `당신은 웹 미니게임 사이트 "오늘의 게임"(todaygam
 - threads: 대화체 1~3문장. hashtags 0~1개.
 - facebook: 2~5줄, 끝에 주어진 링크를 그대로 넣어도 됨. hashtags 0~3개.
 - youtube: title 은 60자 이내, caption 은 설명 2~4줄 + 주어진 링크. hashtags 3~8개.
-최근 문구의 첫 문장과 같은 첫 문장은 쓰지 마세요.`;
+최근 문구의 첫 문장과 같은 첫 문장은 쓰지 마세요.
+type 별: game 은 게임 플레이 영상 소개, quiz 는 캐러셀 퀴즈(정답은 쓰지 말고 "정답은 첫 댓글" 로 안내), ranking 은 facts 의 점수 · 가린 닉네임 그대로(바꾸지 않음).`;
 
 /**
  * @param {{ store?, env?, client? }} o  client: 시험용으로 바꿔 끼울 수 있는 Claude 클라이언트
@@ -109,7 +149,7 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
 
   async function ask({ source, channels, recent, render }) {
     const links = Object.fromEntries(channels.map((ch) => [ch, utmLink(source.facts.url, { channel: ch, kind: render.kind, sourceId: source.sourceId })]));
-    const user = JSON.stringify({ facts: source.facts, hook: render.meta && render.meta.hook, kind: render.kind, channels, links, recentFirstLines: recent.slice(0, 20) });
+    const user = JSON.stringify({ type: source.sourceType, facts: source.facts, hook: render.meta && render.meta.hook, kind: render.kind, channels, links, recentFirstLines: recent.slice(0, 20) });
     const cacheKey = `copycache:${crypto.createHash("sha256").update(`${MODEL}\n${SYSTEM}\n${user}`).digest("hex").slice(0, 40)}`;
     if (store) {
       const hit = await store.getJson(cacheKey).catch(() => null);
@@ -134,13 +174,14 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
   return {
     model: api ? MODEL : null,
     async write({ source, render, channels, recent = [], ctx = {} }) {
-      const tags = profileTags(source.sourceId);
+      const tags = source.sourceType === "game" ? profileTags(source.sourceId) : [];
       const fallback = (reason) => {
         const out = templateCopy({ source, render, channels, recent, profileTags: tags });
         for (const c of Object.values(out)) Object.assign(c, { source: "template", note: reason || "" });
         return out;
       };
       if (!api) return fallback("AI 열쇠 없음 — 틀 문구");
+      if (render.kind === "story") return fallback("스토리는 문구가 게시되지 않아 틀 문구");
       try {
         const { copy, cached, links } = await ask({ source, channels, recent, render });
         const out = {};

@@ -147,11 +147,8 @@ async function createPainter(browser) {
   await ctx.route("https://fonts.reel.local/**", (r) => r.fulfill({ path: path.join(FONT_DIR, path.basename(new URL(r.request().url()).pathname)), contentType: "font/woff2" }));
   await ctx.route((u) => !/^(data|about|https:\/\/fonts\.reel\.local)/.test(u.href), (r) => r.abort());
   const overflow = [];
-  return {
-    overflow,
-    /** html → 투명 PNG. 글자가 칸을 넘으면 줄이고, 최소 크기에서도 넘으면 overflow 에 남긴다 */
-    async png(html, file, size = OUT) {
-      const p = await ctx.newPage();
+  const shoot = (type) => async (html, file, size = OUT) => {
+    const p = await ctx.newPage();
       await p.setViewportSize({ width: size.w, height: size.h });
       await p.setContent(html, { waitUntil: "load" });
       await p.evaluate(() => document.fonts.ready);
@@ -166,13 +163,28 @@ async function createPainter(browser) {
           }
           if (el.scrollWidth > box.width - 4) out.push(el.textContent);
         });
+        // 여러 줄 상자(.fit): 높이를 넘으면 글자를 줄이고, 그래도 넘으면 기록 (이미지 · 캐러셀)
+        document.querySelectorAll(".fit").forEach((el) => {
+          let fs = parseFloat(getComputedStyle(el).fontSize);
+          while (fs > 24 && el.scrollHeight > el.clientHeight + 2) {
+            fs -= 2;
+            el.style.fontSize = fs + "px";
+          }
+          if (el.scrollHeight > el.clientHeight + 2) out.push(el.textContent.trim().slice(0, 40));
+        });
         return out;
       });
       overflow.push(...cut);
-      await p.screenshot({ path: file, omitBackground: true });
+      await p.screenshot(type === "png" ? { path: file, omitBackground: true } : { path: file, type: "jpeg", quality: 90 });
       await p.close();
       return file;
-    },
+  };
+  return {
+    overflow,
+    /** html → 투명 PNG (영상 위 글자). 글자가 칸을 넘으면 줄이고, 최소 크기에서도 넘으면 overflow 에 남긴다 */
+    png: shoot("png"),
+    /** html → JPEG (인스타 이미지 · 캐러셀 · 스토리 — 인스타는 JPEG 만 받음) */
+    jpg: shoot("jpeg"),
     close: () => ctx.close(),
   };
 }

@@ -46,6 +46,12 @@ function createStore({ url = process.env.UPSTASH_REDIS_REST_URL || process.env.K
   /** 여러 명령 한 번에: batch([["SET", "a", 1], ["EXPIRE", "a", 60]]) */
   const batch = async (cmds) => (await call("/pipeline", cmds.map(([op, name, ...a]) => [op, key(name), ...a.map(String)]))).map(unwrap);
   const mget = async (names) => (names.length ? unwrap(await call("", ["MGET", ...names.map(key)])) : []);
+  /** 사이트 데이터는 읽기만 (GET), 허용한 키 모양만 — 주간 랭킹 (C5) */
+  const SITE_READ = /^todaygame:scores:[\w-]+:(day|week):[\w-]+$/;
+  const readSite = async (fullKey) => {
+    if (!SITE_READ.test(fullKey)) throw new Error(`읽을 수 없는 사이트 키: ${fullKey}`);
+    return unwrap(await call("", ["GET", fullKey]));
+  };
 
   const parse = (s) => {
     if (s == null) return null;
@@ -126,7 +132,7 @@ function createStore({ url = process.env.UPSTASH_REDIS_REST_URL || process.env.K
     ]);
   }
 
-  return { PREFIX, key, run, batch, mget, getJson, setJson, withLock, getContent, saveContent, listContents, updateContent, jobStart, jobEnd, log, parse };
+  return { PREFIX, key, run, batch, mget, readSite, getJson, setJson, withLock, getContent, saveContent, listContents, updateContent, jobStart, jobEnd, log, parse };
 }
 
 module.exports = { createStore, LockError, PREFIX };

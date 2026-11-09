@@ -12,6 +12,7 @@
 - **PHASE 5 (텔레그램 승인 · Mock 게시 · 자동 실행) 완료 보고 — 관리자 "다음" 대기.** 실제 Actions · 텔레그램 · Upstash · Blob 으로 제작 → 승인 → Mock 게시까지 확인 (2026-11-09). `docs/REPORT_PHASE_5.md`. 시험: `cd marketing && npm test` (53개). 실행: `node marketing/run.js produce|publish|redo|status`. 매일 자동 실행은 master 병합 뒤부터.
 - **2026-11-09 관리자: "11단계까지 멈추지 말고 계속, 끝나면 컴퓨터 끄기"** — 단계마다 멈추지 않음. 계정이 필요한 것은 Mock + "연결 대기", master 병합 · 운영 배포는 관리자.
 - PHASE 6 인스타 실제 연결: 코드 · 시험 완료(62/62), **관리자 Meta 연결 대기** (`docs/REPORT_PHASE_6.md`, `docs/CHANNEL_SETUP.md`). 연결: `IG_NEW_TOKEN=… node marketing/run.js ig-connect`.
+- PHASE 7 이미지 콘텐츠(퀴즈 캐러셀 · 운세 · 랭킹 · 챌린지 · 스토리 재활용) 완료 (`docs/REPORT_PHASE_7.md`, 시험 73/73). 시험 제작: `node marketing/make.js quiz fortune challenge ranking`. 자리별 제작: `run.js produce --slot story|feed --type <유형>`.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -51,6 +52,8 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 게임 지문(`core/clips.js gameHash`)은 텍스트 파일 줄바꿈을 LF 로 맞춰 계산 — 안 그러면 윈도 PC 와 리눅스 러너 값이 달라 재고를 못 씀.
 - 열쇠: GitHub Secrets 5개 (`UPSTASH_REDIS_REST_URL/TOKEN` · `TG_BOT_TOKEN` · `TG_ADMIN_CHAT_ID` · `BLOB_READ_WRITE_TOKEN`) + 이 PC `marketing/.env.local`. Blob 저장소 `todaygame-mkt-media`(iad1). **Vercel CLI 로 저장소를 만들면 원래 폴더 `.env.local` 에 사이트 Redis 열쇠를 넣으니 지울 것**.
 - 텔레그램은 폴링(getUpdates) — 웹훅을 켜면 getUpdates 가 멈춘다. 웹훅으로 바꿀 때 publish 쪽 폴링을 끌 것.
+- 랭킹은 **지난주** 기록 (월요일 게시). 점수 표시는 사이트 `js/rankable.js formatScore` 를 vm 으로 그대로 씀 — 단위를 직접 만들지 말 것.
+- 운세 · 챌린지 스토리는 `plan.validDay` — 그날만 게시, 날이 지나면 EXPIRED. 퀴즈 정답은 이미지 · 캡션이 아니라 첫 댓글.
 - `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
 ## PHASE 진행표
@@ -63,7 +66,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 4 | 편집 · 문구 · QC | 완료 보고 (실물 5개, 시험 40/40) |
 | 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | 완료 보고 (실제 Actions 로 제작→승인→Mock 게시, 시험 53/53) |
 | 6 | Instagram 실제 연결 | 코드 · 시험 완료, Meta 연결 대기 |
-| 7 | 이미지 계열 콘텐츠 | - |
+| 7 | 이미지 계열 콘텐츠 | 완료 (실물 4종 · 실제 텔레그램 사진 승인 요청, 시험 73/73) |
 | 8 | 신작 감지 · 추가 채널 | - |
 | 9 | 웹 관리자 | - |
 | 10 | 성과 · 고도화 | - |

@@ -37,6 +37,12 @@ const slotCap = (settings, doc) => Math.min(...doc.channels.map((ch) => (setting
 function nextSlot(settings, doc, counts, now = Date.now()) {
   const cap = slotCap(settings, doc);
   let day = seoulDay(now);
+  const only = doc.plan && doc.plan.validDay; // 그날만 맞는 콘텐츠: 그날 안에서만, 시각이 지났으면 10분 뒤
+  if (only) {
+    if (only !== day) throw new ActionError(`${only} 에만 맞는 콘텐츠라 지금은 올릴 수 없습니다.`);
+    if ((counts[day] || 0) >= cap) throw new ActionError(`오늘 ${doc.slot === "story" ? "스토리" : "피드"} 자리가 이미 찼습니다.`);
+    return new Date(Math.max(atSeoul(day, settings.postTimes[doc.slot]), now + 10 * 60000)).toISOString();
+  }
   for (let i = 0; i < 30; i++) {
     const at = atSeoul(day, settings.postTimes[doc.slot]);
     if (at >= now + 10 * 60000 && (counts[day] || 0) < cap) return new Date(at).toISOString();
@@ -51,6 +57,7 @@ function checkTime(settings, doc, counts, iso, now) {
   if (t < now + 60000) throw new ActionError("게시 시각은 지금부터 1분 뒤 이후로 정해 주세요.");
   if (t > now + 30 * 86400000) throw new ActionError("게시 시각은 30일 안으로 정해 주세요.");
   const day = seoulDay(t);
+  if (doc.plan && doc.plan.validDay && doc.plan.validDay !== day) throw new ActionError(`이 콘텐츠는 ${doc.plan.validDay} 에만 올릴 수 있습니다.`);
   const cap = slotCap(settings, doc);
   if ((counts[day] || 0) >= cap) throw new ActionError(`${day} ${doc.slot === "story" ? "스토리" : "피드"} 자리가 이미 찼습니다 (하루 ${cap}개).`);
   return new Date(t).toISOString();
@@ -137,6 +144,7 @@ function createApproval({ store, settings, registry, now = () => Date.now() }) {
         if (!list.length) throw new ActionError("채널을 하나 이상 골라 주세요.");
         for (const ch of list) {
           if (!registry.has("channel", ch)) throw new ActionError(`쓸 수 없는 채널: ${ch}`);
+          if (doc.render && !registry.get("channel", ch).capabilities().kinds.includes(doc.render.kind)) throw new ActionError(`${ch} 는 이 형식(${doc.render.kind})을 올릴 수 없습니다.`);
           if (!doc.copy || !doc.copy[ch]) throw new ActionError(`${ch} 문구가 없습니다. 문구 다시 만들기를 먼저 해 주세요.`);
         }
         doc.channels = list;
