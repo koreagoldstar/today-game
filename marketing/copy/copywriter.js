@@ -34,6 +34,7 @@ const TYPE_TAGS = {
   fortune: ["#오늘의운세", "#운세"],
   challenge: ["#오늘의챌린지", "#기록도전"],
   recycle: [],
+  "new-game": ["#신작게임", "#새게임"],
 };
 
 /** 게임이 아닌 유형의 첫 줄 후보 · 본문 (facts 에 있는 것만) */
@@ -46,6 +47,7 @@ function typeLines(type, f, kind) {
   }
   if (type === "fortune") return { openers: [`${f.day} 오늘의 운세 🍀`], body: Object.values(f.items || {}).map((x) => `${x.emoji} ${x.title}: ${x.t}`) };
   if (type === "challenge") return { openers: [`오늘의 챌린지: ${f.game} 🏆`], body: [f.participants ? `지금까지 ${f.participants}명 도전` : "", "오늘 하루만 열리는 기록 대결!"] };
+  if (type === "new-game") return { openers: [`NEW! 신작 게임 ${f.title} 🎉`, `새로 나온 게임: ${f.title} 🎉`, `오늘의 게임 신작 — ${f.title} 🎉`], body: [firstSentence(f.intro), f.tag, "오늘의 게임에서 무료로 바로 플레이할 수 있어요."] };
   if (type === "recycle") return { openers: [`${kind === "reel" ? "새 영상" : "새 게시물"}: ${f.title}`], body: ["프로필에서 확인해 보세요!"] };
   return null;
 }
@@ -57,7 +59,7 @@ function templateCopy({ source, render, channels, recent = [], profileTags = [] 
   if (t) {
     const first = t.openers.find((o) => !recent.includes(o)) || t.openers[t.openers.length - 1];
     const body = t.body.filter(Boolean);
-    const tags = [...new Set(["#오늘의게임", ...TYPE_TAGS[source.sourceType], "#무료게임", "#웹게임", "#미니게임"])].slice(0, 8);
+    const tags = [...new Set(["#오늘의게임", ...TYPE_TAGS[source.sourceType], ...profileTags, GENRE_TAG[f.category], "#무료게임", "#웹게임", "#미니게임"].filter(Boolean))].slice(0, 8);
     const kind = (render && render.kind) || "image";
     const link = (ch) => utmLink(f.url || "/", { channel: ch, kind, sourceId: source.sourceId });
     const out = {};
@@ -133,7 +135,7 @@ const SYSTEM = `당신은 웹 미니게임 사이트 "오늘의 게임"(todaygam
 - facebook: 2~5줄, 끝에 주어진 링크를 그대로 넣어도 됨. hashtags 0~3개.
 - youtube: title 은 60자 이내, caption 은 설명 2~4줄 + 주어진 링크. hashtags 3~8개.
 최근 문구의 첫 문장과 같은 첫 문장은 쓰지 마세요.
-type 별: game 은 게임 플레이 영상 소개, quiz 는 캐러셀 퀴즈(정답은 쓰지 말고 "정답은 첫 댓글" 로 안내), ranking 은 facts 의 점수 · 가린 닉네임 그대로(바꾸지 않음).`;
+type 별: game 은 게임 플레이 영상 소개, new-game 은 새로 나온 게임 소개(facts.added 날짜 외의 출시 주장 금지), quiz 는 캐러셀 퀴즈(정답은 쓰지 말고 "정답은 첫 댓글" 로 안내), ranking 은 facts 의 점수 · 가린 닉네임 그대로(바꾸지 않음).`;
 
 /**
  * @param {{ store?, env?, client? }} o  client: 시험용으로 바꿔 끼울 수 있는 Claude 클라이언트
@@ -174,7 +176,12 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
   return {
     model: api ? MODEL : null,
     async write({ source, render, channels, recent = [], ctx = {} }) {
-      const tags = source.sourceType === "game" ? profileTags(source.sourceId) : [];
+      let tags = [];
+      if (source.sourceType === "game" || source.sourceType === "new-game") {
+        try {
+          tags = profileTags(source.sourceId);
+        } catch (_) {} // 신작은 녹화 프로필이 없을 수 있음
+      }
       const fallback = (reason) => {
         const out = templateCopy({ source, render, channels, recent, profileTags: tags });
         for (const c of Object.values(out)) Object.assign(c, { source: "template", note: reason || "" });

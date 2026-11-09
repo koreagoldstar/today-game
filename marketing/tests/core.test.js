@@ -88,13 +88,17 @@ test("설정: 기본값 통과, 잘못된 값 거부", () => {
   assert.deepEqual(merge(DEFAULTS, { allow: { audio: ["a.mp3"] } }).allow, { audio: ["a.mp3"], fonts: ["Pretendard"] });
 });
 
-test("채널: 기본 mock, live 인데 어댑터가 없으면 멈춘다", () => {
+test("채널: 기본 mock, live 는 관리자가 켤 때만 (토큰을 저장소에 두는 채널은 저장소가 필요)", () => {
   const r = createRegistry();
   const modes = registerChannels(r, {});
   assert.deepEqual(Object.values(modes), ["mock", "mock", "mock", "mock"]);
   assert.equal(r.get("channel", "instagram").mock, true);
   assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_INSTAGRAM: "live" }), /저장소가 필요/);
-  assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_YOUTUBE: "live" }), /아직 구현되지 않았습니다/);
+  assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_THREADS: "live" }), /저장소가 필요/);
+  const live = createRegistry();
+  registerChannels(live, { CHANNEL_MODE_YOUTUBE: "live", CHANNEL_MODE_FACEBOOK: "live" });
+  assert.equal(live.get("channel", "youtube").mock, false);
+  assert.equal(live.get("channel", "facebook").mock, false);
   assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_THREADS: "on" }), /mock 또는 live/);
 });
 

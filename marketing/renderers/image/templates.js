@@ -101,4 +101,11 @@ function recycleStory(f, coverDataUrl) {
 <div style="position:absolute;top:1530px;left:0;right:0;text-align:center"><div class="fit" style="height:80px;font-size:60px;font-weight:900">${f.kind === "reel" ? "새 영상" : "새 게시물"}: ${esc(f.title)}</div><div style="font-size:42px;margin-top:10px;color:#6b5a70">프로필에서 보고, 오늘의 게임에서 플레이!</div></div>`);
 }
 
-module.exports = { FEED, STORY, quizSlides, fortuneStory, rankingImage, challengeStory, recycleStory };
+/* ---------- C4 신작 (썸네일 + 사이트 설명, 피드 이미지) ---------- */
+function newGameImage(f, thumbDataUrl) {
+  return page(FEED, "pop", `<div style="position:absolute;top:150px;left:0;right:0;text-align:center"><span style="display:inline-block;padding:10px 34px;border-radius:999px;background:#ff4f8b;color:#fff;font-size:44px;font-weight:900">NEW 신작 게임</span></div>
+<div style="position:absolute;top:250px;left:240px;width:600px;height:600px;border-radius:48px;overflow:hidden;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.16)"><img src="${thumbDataUrl}" style="width:100%;height:100%;object-fit:cover"></div>
+<div style="position:absolute;top:890px;left:70px;right:70px;text-align:center"><div class="fit" style="height:100px;font-size:76px;font-weight:900">${esc(f.title)}</div>${f.tag ? `<div class="fit" style="height:56px;font-size:38px;color:#6b5a70;margin-top:8px">${esc(f.tag)}</div>` : ""}<div style="font-size:44px;margin-top:26px">오늘의 게임에서 <span class="accent">무료로 바로 플레이</span></div></div>`);
+}
+
+module.exports = { FEED, STORY, newGameImage, quizSlides, fortuneStory, rankingImage, challengeStory, recycleStory };

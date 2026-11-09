@@ -124,6 +124,17 @@ async function planSlot(ctx, slot, opts = {}) {
       const r = await planToday(ctx, opts);
       ranked = r.ranked;
       if (r.plan) plans.push({ ...base, sourceId: r.plan.sourceId, reason: r.plan.reason });
+    } else if (name === "new-game") {
+      // 신작: 녹화할 수 있으면 릴스 (Actions 에서는 PC 재고가 있을 때만), 아니면 썸네일 + 설명 이미지
+      const { fresh } = await ctx.registry.get("source", "new-game").detect({ store: ctx.store });
+      const id = fresh[0];
+      if (!id) continue;
+      let reel = listProfiles().includes(id);
+      const runner = opts.runner || process.env.MKT_RUNNER || "pc";
+      if (reel && runner === "actions" && loadProfile(id).runner === "pc") reel = (await availableClips(ctx.store, id, gameHash(ROOT, id), now)).length > 0;
+      const kind = reel ? "reel" : "image";
+      const ch = channelsFor(ctx, kind);
+      if (ch.length) plans.push({ ...base, kind, renderer: reel ? "reel" : "image", channels: ch, sourceId: id, reason: `신작 감지: ${id} (${reel ? "릴스" : "썸네일 이미지"})${fresh.length > 1 ? ` · 대기 신작 ${fresh.length - 1}개` : ""}` });
     } else plans.push({ ...base, sourceId: name, reason: `편성: ${name} (${slot === "story" ? "스토리" : seoulWeekday(now)})` });
   }
   return { plans, ranked };

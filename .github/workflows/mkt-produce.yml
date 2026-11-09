@@ -42,6 +42,15 @@ jobs:
       MKT_TOKEN_KEY: ${{ secrets.MKT_TOKEN_KEY }}
       INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
       CHANNEL_MODE_INSTAGRAM: ${{ vars.CHANNEL_MODE_INSTAGRAM || 'mock' }}
+      CHANNEL_MODE_THREADS: ${{ vars.CHANNEL_MODE_THREADS || 'mock' }}
+      CHANNEL_MODE_FACEBOOK: ${{ vars.CHANNEL_MODE_FACEBOOK || 'mock' }}
+      CHANNEL_MODE_YOUTUBE: ${{ vars.CHANNEL_MODE_YOUTUBE || 'mock' }}
+      FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+      FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+      YOUTUBE_PRIVACY: ${{ vars.YOUTUBE_PRIVACY || 'public' }}
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4

@@ -41,7 +41,7 @@ function latestClip(game) {
   const store = createStore({ url: mem.url, token: mem.token, fetchImpl: mem.fetchImpl });
   const registry = createRegistry();
   registerChannels(registry, {});
-  for (const s of ["game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
+  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
   registry.register("renderer", "reel", require("./renderers/reel"));
   registry.register("renderer", "image", require("./renderers/image"));
   // 주간 랭킹은 사이트 Redis 를 읽기만 (GET) — 열쇠가 있으면 실제 기록, 없으면 자료 부족으로 건너뜀
@@ -55,16 +55,27 @@ function latestClip(game) {
   console.log(`문구: ${copy.model ? `AI (${copy.model})` : "틀 문구 (LLM_API_KEY 없음)"} · 저장소: 메모리\n`);
 
   const summary = [];
-  const { TYPES } = require("./core/planner");
+  const { TYPES, planSlot } = require("./core/planner");
   for (const g of games) {
-    const T = g !== "reel" && TYPES[g];
-    const plan = T
+    // new-game:<id> — 그 게임만 빼고 기준 목록을 만들어 "신작"으로 감지되는지 시험
+    if (typeof g === "string" && g.startsWith("new-game:")) {
+      const id = g.slice(9);
+      const ng = require("./sources/new-game");
+      await store.run("SADD", "seen:games", ...ng.promotable().filter((x) => x !== id));
+      const { plans } = await planSlot(ctx, "feed", { types: ["new-game"] });
+      if (!plans.length) throw new Error(`${id}: 신작으로 감지되지 않았습니다.`);
+      console.log(`감지: ${plans[0].reason}`);
+      games.splice(games.indexOf(g) + 1, 0, plans[0]);
+      continue;
+    }
+    const T = typeof g === "string" && g !== "reel" && TYPES[g];
+    const plan = typeof g === "object" ? g : T
       ? { slot: T.kind === "story" ? "story" : "feed", kind: T.kind, sourceType: T.sourceType, sourceId: g, renderer: T.renderer, channels: settings.channels, reason: "시험 제작" }
       : { slot: "feed", kind: "reel", sourceType: "game", sourceId: g, renderer: "reel", template: opt("--template"), channels: settings.channels, clipFile: argv.includes("--latest") ? latestClip(g) : null, reason: "시험 제작" };
     const t0 = Date.now();
     const d = await produce(ctx, plan);
     const bad = (d.qc && d.qc.checks.filter((c) => !c.ok)) || [];
-    console.log(`\n${g}: ${d.status}  (${Math.round((Date.now() - t0) / 1000)}초, 다시 만들기 ${d.redoCount || 0}번)`);
+    console.log(`\n${typeof g === "object" ? `신작 ${g.sourceId}` : g}: ${d.status}  (${Math.round((Date.now() - t0) / 1000)}초, 다시 만들기 ${d.redoCount || 0}번)`);
     if (d.failure) console.log(`  실패: [${d.failure.stage}] ${d.failure.reason}`);
     if (d.render) {
       for (const f of d.render.files) console.log(`  ${f.role}: ${path.relative(path.join(__dirname, ".."), f.path)}`);
@@ -74,7 +85,7 @@ function latestClip(game) {
     if (d.skipped) console.log(`  건너뜀 (자료 부족): ${d.skipped}`);
     if (d.qc) console.log(`  검수: ${d.qc.passed ? "통과" : "불합격"} (${d.qc.checks.length}항목${bad.length ? `, 실패 ${bad.map((c) => c.reason).join(" / ")}` : ""})`);
     if (d.copy && d.copy.instagram) console.log(`  인스타 문구 (${d.copy.instagram.source}):\n    ${d.copy.instagram.caption.replace(/\n/g, "\n    ")}\n    ${d.copy.instagram.hashtags.join(" ")}`);
-    summary.push({ game: g, status: d.status, redo: d.redoCount || 0, failure: d.failure, files: d.render && d.render.files.map((f) => path.relative(path.join(__dirname, ".."), f.path)), meta: d.render && d.render.meta, qc: d.qc, copy: d.copy });
+    summary.push({ game: typeof g === "object" ? g.sourceId : g, status: d.status, redo: d.redoCount || 0, failure: d.failure, files: d.render && d.render.files.map((f) => path.relative(path.join(__dirname, ".."), f.path)), meta: d.render && d.render.meta, qc: d.qc, copy: d.copy });
   }
   fs.mkdirSync(path.join(__dirname, "out"), { recursive: true });
   fs.writeFileSync(path.join(__dirname, "out", "make-summary.json"), JSON.stringify(summary, null, 2));

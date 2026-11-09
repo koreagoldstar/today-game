@@ -15,7 +15,7 @@ const CAPS = {
   },
   threads: {
     kinds: ["text", "image", "reel", "carousel"],
-    caption: { maxChars: 500, maxHashtags: 1 }, // 글자 수 · 태그 수는 미확인 — PHASE 8 에서 문서 확인
+    caption: { maxChars: 500, maxHashtags: 1 }, // 글 500자 · 주제 태그 1개 (2026-11-10 문서 확인)
     video: { minSec: 0, maxSec: 300, maxBytes: 1024 * 1024 * 1024, codecs: ["h264", "hevc"], audio: "aac", fps: [23, 60] },
     image: { formats: ["jpeg", "png"], maxBytes: 8 * 1024 * 1024 },
     carousel: { maxItems: 20 },

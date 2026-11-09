@@ -40,6 +40,7 @@
 | 주소 | 문서 예시는 `https://graph.threads.com/v1.0/` |
 | 게시 순서 | `POST /{threads-user-id}/threads` (`media_type` = TEXT · IMAGE · VIDEO) → **평균 30초 기다린 뒤** `POST /{threads-user-id}/threads_publish` (`creation_id`) |
 | 권한 | `threads_basic`, `threads_content_publish` (성과는 `threads_manage_insights` — 미확인) |
+| 처리 상태 · 기타 (2026-11-10) | 컨테이너 상태 `GET /{container}?fields=status,error_message` (IN_PROGRESS · FINISHED · ERROR · EXPIRED · PUBLISHED — 상태 값은 문서 요약에 없어 Instagram 과 같은 방식으로 구현, 실제 연결 때 확인). `link_attachment` 는 TEXT 만, `topic_tag` 1~50자 (마침표 · & 금지), 2025-12-22 부터 링크 5개 초과 글은 실패. 토큰 갱신 `GET /refresh_access_token?grant_type=th_refresh_token` |
 | 한도 | 24시간에 **250건** (캐러셀은 1건) |
 | 캐러셀 | 2~20장 (이미지 · 영상 섞기 가능) |
 | 이미지 | JPEG 또는 PNG · 8MB · 가로 320~1440px · 비율 10:1 이하 |
@@ -55,7 +56,8 @@
 | 권한 | `pages_show_list`, `pages_read_engagement`, `pages_manage_posts` + 페이지 토큰 (페이지에서 `CREATE_CONTENT` 가능한 사용자) |
 | 규격 | 9:16, 1080×1920 권장(최소 540×960), **3~90초**, 24~60fps, MP4 권장 |
 | 한도 | 24시간에 **30건** |
-| 링크 게시물 | 피드 링크 게시는 이번 조사에서 문서를 읽지 않음 → **미확인** |
+| 링크 게시물 | 피드 링크 게시는 이번 조사에서 문서를 읽지 않음 → **미확인** (그래서 Facebook 은 릴스만) |
+| 올리기 세부 (2026-11-10) | `POST rupload.facebook.com/video-upload/v27.0/{video_id}` 헤더 `Authorization: OAuth {페이지 토큰}` + `file_url` (공개 주소, robots.txt 가 `facebookexternalhit` 허용, 인증 주소 불가). 상태 `GET /{video_id}?fields=status` → `video_status` · `publishing_phase.status` |
 
 ## 4. YouTube Shorts (선택)
 
@@ -67,6 +69,7 @@
 | 할당량 | 문서: "Video Uploads 할당량 묶음에서 1단위", "하루 100회" (2026년에 바뀐 방식으로 보임) |
 | Shorts | 따로 된 API 없음. 세로 짧은 영상을 올리면 YouTube 가 Shorts 로 분류 (분류 기준 길이는 **미확인**) |
 | 검수 안 된 API 프로젝트 | **문서와 다른 자료가 서로 다름.** 공식 페이지를 요약한 결과는 "비공개로 제한되지 않는다", 2026년 중반 외부 자료 여러 곳은 "2020-07-28 이후 만든 미검수 프로젝트는 비공개로 고정, 검수(audit) 필요". PHASE 8 에서 공식 문서 원문으로 다시 확인. 제한이 있으면 "비공개로 올린 뒤 관리자가 공개 전환" 으로 안내 |
+| 다시 확인 (2026-11-10) | videos.insert 공식 문서 원문: "Videos uploaded from unverified API projects are not restricted to private viewing mode." · 할당량 "Video Uploads 묶음 1단위, 하루 100회". 이어 올리기는 `POST …/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status` → `Location` 으로 PUT (https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol). 지표는 `videos.list part=statistics` (공개 수치)만 |
 
 ## 5. 텔레그램 (승인 경로)
 

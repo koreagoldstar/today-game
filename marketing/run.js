@@ -7,6 +7,8 @@
  *   node marketing/run.js publish                            30분마다 — 텔레그램 답 처리 → 기한 지남 · 멈춘 제작 정리 → 승인 + 시각 지난 것만 게시
  *   node marketing/run.js redo                               관리자가 누른 "문구 다시 · 다시 제작" 처리
  *   node marketing/run.js status                             최근 콘텐츠 상태
+ *   node marketing/run.js channels                           채널별 연결 상태 (mock · live)
+ *   node marketing/run.js ig-connect | threads-connect       토큰 연결 (IG_NEW_TOKEN · THREADS_NEW_TOKEN 환경 변수로)
  * 필요한 환경 변수: UPSTASH_REDIS_REST_URL · UPSTASH_REDIS_REST_TOKEN (없으면 멈춤)
  *   선택: TG_BOT_TOKEN · TG_ADMIN_CHAT_ID (없으면 콘솔 알림) · BLOB_READ_WRITE_TOKEN · LLM_API_KEY · CHANNEL_MODE_*
  * 공개 저장소라 Actions 로그는 누구나 본다 → 문구 · 미디어 주소 · 토큰은 찍지 않는다.
@@ -38,7 +40,7 @@ async function setup() {
   const registry = createRegistry();
   const modes = registerChannels(registry, process.env, { store });
   const logger = createLogger(store);
-  for (const s of ["game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
+  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
   registry.register("renderer", "image", require("./renderers/image"));
   registry.register("copywriter", "default", createCopywriter({ store, profileTags: (id) => (require("./renderers/reel/record").loadProfile(id).hashtags || []) }));
   if (process.env.BLOB_READ_WRITE_TOKEN) registry.register("media", "default", require("./media/blob").createBlobMedia());
@@ -114,6 +116,7 @@ async function runPublish() {
     const { refreshInstagram } = require("./channels/instagram");
     const notify = (event, extra) => ctx.registry.get("notifier", "default").notify(event, { id: "instagram" }, extra);
     console.log(`인스타 토큰: ${JSON.stringify(await refreshInstagram(store, { notify }))}`);
+    if ((await store.getJson("channel:threads")) !== null) console.log(`Threads 토큰: ${JSON.stringify(await require("./channels/threads").refreshThreads(store, { notify }))}`);
   }
   const r = await publishDue(ctx);
   await store.jobEnd(job, { result: r });
@@ -151,7 +154,20 @@ async function runIgStatus() {
   console.log(JSON.stringify(await ctx.registry.get("channel", "instagram").health()));
 }
 
-const COMMANDS = { produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
+/** Threads 연결: 장기 토큰을 환경 변수 THREADS_NEW_TOKEN 으로 */
+async function runThreadsConnect() {
+  const { store } = await setup();
+  const r = await require("./channels/threads").connectThreads(store, process.env.THREADS_NEW_TOKEN);
+  console.log(`Threads 연결됨: @${r.username} · 만료 ${r.expiresAt.slice(0, 10)} (60일 추정)`);
+}
+
+/** 모든 채널 상태 (연결 · 토큰 · 모드) */
+async function runChannels() {
+  const { ctx } = await setup();
+  for (const name of ctx.registry.names("channel")) console.log(`${name}: ${JSON.stringify(await ctx.registry.get("channel", name).health())}`);
+}
+
+const COMMANDS = { "threads-connect": runThreadsConnect, channels: runChannels, produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
 if (!COMMANDS[cmd]) {
   console.error(`명령: ${Object.keys(COMMANDS).join(" | ")}`);
   process.exit(2);

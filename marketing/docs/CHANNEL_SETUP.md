@@ -30,9 +30,28 @@
 - 토큰은 60일. 시스템이 만료 7일 전부터 매일 갱신을 시도하고, 실패하거나 만료되면 텔레그램으로 알립니다. 60일 동안 갱신하지 못하면 영구 만료 → 4~5번을 다시.
 - 게시 한도: 24시간에 100건(문서 안에 50건이라는 곳도 있어 게시 전에 실제 남은 수를 확인함).
 
-## 3. Threads · Facebook 페이지 · YouTube (선택) — Mock
+## 3. Threads · Facebook 페이지 · YouTube (선택) — 코드 완료 · 연결 대기 (Mock)
 
-PHASE 8 에서 Mock 어댑터를 만들고, 쓰기로 정한 채널만 연결합니다. 필요한 것: Threads — Meta 앱에 Threads 제품 · `threads_basic` · `threads_content_publish`; Facebook — 페이지 토큰 · `pages_manage_posts`; YouTube — Google Cloud OAuth · `youtube.upload` (미검수 프로젝트는 비공개 업로드일 수 있음).
+실제 어댑터 코드 · 시험(가짜 플랫폼 서버)은 PHASE 8 에서 끝났습니다. **쓰기로 정한 채널만** 아래처럼 연결하고 GitHub 저장소 → Settings → Secrets and variables → Actions → **Variables** 에 `CHANNEL_MODE_{채널}=live` 를 넣으면 켜집니다. 넣지 않으면 계속 Mock (아무것도 올라가지 않음).
+
+**Threads** (`channels/threads.js`, 24시간 250건, 글 500자, 주제 태그 1개)
+1. developers.facebook.com → 앱 → 제품 추가 → **Threads API** → 권한 `threads_basic`, `threads_content_publish` (성과를 보려면 `threads_manage_insights`).
+2. Threads 계정으로 로그인해 **장기 토큰(60일)** 을 받습니다.
+3. 이 PC 에서: `THREADS_NEW_TOKEN=받은토큰 node marketing/run.js threads-connect` → 토큰은 암호화해서 저장소에만 (`channel:threads`), 만료 7일 전부터 자동 갱신, 실패하면 텔레그램.
+4. Variables 에 `CHANNEL_MODE_THREADS=live`.
+
+**Facebook 페이지 릴스** (`channels/facebook.js`, 릴스만 · 3~90초 · 24시간 30건)
+1. 같은 Meta 앱에 **Facebook 로그인** → 권한 `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
+2. 그래프 API 탐색기에서 페이지 관리자 계정으로 사용자 토큰 → 장기 토큰 → `/me/accounts` 의 **페이지 토큰**(만료 없음)과 **페이지 id**.
+3. Secrets: `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN`. Variables: `CHANNEL_MODE_FACEBOOK=live`.
+
+**YouTube Shorts** (`channels/youtube.js`, 영상만, 하루 100회)
+1. Google Cloud 콘솔 → 새 프로젝트 → **YouTube Data API v3** 사용 → OAuth 동의 화면(외부, 게시 상태 "프로덕션" — "테스트" 상태면 갱신 토큰이 7일 뒤 만료) → OAuth 클라이언트 ID(데스크톱 앱).
+2. 범위 `https://www.googleapis.com/auth/youtube.upload` + `https://www.googleapis.com/auth/youtube.readonly` 로 한 번 로그인해 **갱신 토큰(refresh token)** 을 받습니다 (OAuth Playground 등).
+3. Secrets: `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`. Variables: `CHANNEL_MODE_YOUTUBE=live`. 처음엔 Variables `YOUTUBE_PRIVACY=private` 로 시험해도 됩니다 (워크플로에 추가 필요).
+4. 공식 문서(2026-11-10): "미검수 API 프로젝트에서 올린 영상도 비공개로 제한되지 않는다". 그래도 처음 몇 개는 채널에서 공개 상태를 확인하세요.
+
+확인: `node marketing/run.js channels` — 채널마다 mock/live · 연결 상태.
 
 ## 4. 저장소 · 미디어 — 연결됨
 
