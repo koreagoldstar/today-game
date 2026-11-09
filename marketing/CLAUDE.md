@@ -13,6 +13,7 @@
 - **2026-11-09 관리자: "11단계까지 멈추지 말고 계속, 끝나면 컴퓨터 끄기"** — 단계마다 멈추지 않음. 계정이 필요한 것은 Mock + "연결 대기", master 병합 · 운영 배포는 관리자.
 - PHASE 6 인스타 실제 연결: 코드 · 시험 완료(62/62), **관리자 Meta 연결 대기** (`docs/REPORT_PHASE_6.md`, `docs/CHANNEL_SETUP.md`). 연결: `IG_NEW_TOKEN=… node marketing/run.js ig-connect`.
 - PHASE 7 이미지 콘텐츠(퀴즈 캐러셀 · 운세 · 랭킹 · 챌린지 · 스토리 재활용) 완료 (`docs/REPORT_PHASE_7.md`, 시험 73/73). 시험 제작: `node marketing/make.js quiz fortune challenge ranking`. 자리별 제작: `run.js produce --slot story|feed --type <유형>`.
+- PHASE 8 신작 감지(C4) · Threads · Facebook 페이지 릴스 · YouTube Shorts 어댑터 완료 — 채널은 관리자 연결 대기 (`docs/REPORT_PHASE_8.md`, 시험 80/80). 신작 시험: `node marketing/make.js new-game:<id>`. 채널 상태: `run.js channels`.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -54,6 +55,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 텔레그램은 폴링(getUpdates) — 웹훅을 켜면 getUpdates 가 멈춘다. 웹훅으로 바꿀 때 publish 쪽 폴링을 끌 것.
 - 랭킹은 **지난주** 기록 (월요일 게시). 점수 표시는 사이트 `js/rankable.js formatScore` 를 vm 으로 그대로 씀 — 단위를 직접 만들지 말 것.
 - 운세 · 챌린지 스토리는 `plan.validDay` — 그날만 게시, 날이 지나면 EXPIRED. 퀴즈 정답은 이미지 · 캡션이 아니라 첫 댓글.
+- 신작 감지는 첫 실행 때 기준 목록만 저장 (`seen:games`). 기준을 지우면 다음 실행이 다시 기준만 만든다 (기존 게임 전부 신작 아님).
 - `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
 ## PHASE 진행표
@@ -67,7 +69,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | 완료 보고 (실제 Actions 로 제작→승인→Mock 게시, 시험 53/53) |
 | 6 | Instagram 실제 연결 | 코드 · 시험 완료, Meta 연결 대기 |
 | 7 | 이미지 계열 콘텐츠 | 완료 (실물 4종 · 실제 텔레그램 사진 승인 요청, 시험 73/73) |
-| 8 | 신작 감지 · 추가 채널 | - |
+| 8 | 신작 감지 · 추가 채널 | 완료 (실제 Actions 로 스토리 · 릴스, 채널 3개는 연결 대기, 시험 80/80) |
 | 9 | 웹 관리자 | - |
 | 10 | 성과 · 고도화 | - |
 | 11 | 통합 · 문서 · 병합 준비 | - |
