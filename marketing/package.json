@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.6.0",
+    "@vercel/blob": "2.4.0",
     "playwright": "1.65.0",
     "pretendard": "1.3.9"
   }

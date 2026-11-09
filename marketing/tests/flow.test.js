@@ -86,10 +86,12 @@ test("게시 시각 · 채널을 바꿔도 승인이 무효", async () => {
   assert.equal(t.version, 2);
   const again = await approval.approve(doc.id, { version: 2, scheduledAt: "2026-11-09T21:00:00+09:00", ...WHO });
   assert.equal(again.version, 2, "승인 자체는 버전을 바꾸지 않음");
-  await assert.rejects(() => approval.setChannels(doc.id, { version: 2, channels: ["instagram", "threads"], ...WHO }), /threads 문구가 없습니다/);
-  const ch = await approval.setChannels(doc.id, { version: 2, channels: ["instagram"], ...WHO });
+  await assert.rejects(() => approval.setChannels(doc.id, { version: 2, channels: ["instagram", "tiktok"], ...WHO }), /쓸 수 없는 채널/);
+  // 문구는 모든 채널 것을 미리 만들어 두므로 채널을 바꿔도 바로 다시 승인할 수 있다
+  const ch = await approval.setChannels(doc.id, { version: 2, channels: ["instagram", "threads"], ...WHO });
   assert.equal(ch.status, "READY_FOR_APPROVAL");
   assert.equal(ch.version, 3);
+  assert.deepEqual(ch.channels, ["instagram", "threads"]);
 });
 
 test("같은 게시를 두 번 · 동시에 돌려도 플랫폼에는 한 번만 올라간다", async () => {

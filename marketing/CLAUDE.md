@@ -8,8 +8,8 @@
 - PHASE 1 승인 (2026-11-08, 결정 1~11 모두 제안대로).
 - PHASE 2 코어 뼈대 완료.
 - PHASE 3 게임 녹화 완료 (5/5). 녹화: `node marketing/record.js [게임|--runner pc|actions]`.
-- **PHASE 4 (편집 · 문구 · 검수) 완료 보고 — 관리자 "다음" 대기.** `docs/REPORT_PHASE_4.md`. 실물 릴스 5개 검수 통과. 시험 제작: `node marketing/make.js <게임…> --latest`. 시험: `cd marketing && npm test` (40개).
-- 다음: PHASE 5 텔레그램 승인 + Instagram Mock + GitHub Actions 자동 실행 (열쇠 · 작업 스케줄러 승인 필요).
+- PHASE 4 편집 · 문구 · 검수 완료. 시험 제작: `node marketing/make.js <게임…> --latest`.
+- **PHASE 5 (텔레그램 승인 · Mock 게시 · 자동 실행): Mock 검증 완료, Actions 실제 실행은 열쇠 · push 승인 대기.** `docs/REPORT_PHASE_5.md` 맨 아래 "관리자 조치". 시험: `cd marketing && npm test` (52개). 실행: `node marketing/run.js produce|publish|redo|status`.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -44,6 +44,9 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 녹화본(`out/clips/`)은 git 제외. 3D 원본은 45~62MB — 재고로 올릴 때 압축.
 - 같은 게임을 다시 녹화하면 거의 같은 장면 (봇 · 게임이 결정적) — 다시 홍보할 때 다양성 대책 필요.
 - 3D 봇 상태 이름: 클리어 · 체크포인트만 "성공", 게임 오버 · respawn 은 "실패", 보스 등장 등은 자막 없음 (`players/autopilot.js`).
+- 워크플로의 `push` 트리거(feature/marketing · `[mkt-run]`)는 시험용 — **master 병합 전에 지운다**.
+- 텔레그램은 폴링(getUpdates) — 웹훅을 켜면 getUpdates 가 멈춘다. 웹훅으로 바꿀 때 publish 쪽 폴링을 끌 것.
+- `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
 ## PHASE 진행표
 
@@ -53,7 +56,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 2 | 코어 뼈대 | 완료 보고 (시험 25/25) |
 | 3 | 게임 릴스 녹화 | 완료 보고 (5/5 녹화, 시험 29/29) |
 | 4 | 편집 · 문구 · QC | 완료 보고 (실물 5개, 시험 40/40) |
-| 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | - |
+| 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | Mock 완료 (52/52), Actions 실행은 열쇠 대기 |
 | 6 | Instagram 실제 연결 | - |
 | 7 | 이미지 계열 콘텐츠 | - |
 | 8 | 신작 감지 · 추가 채널 | - |

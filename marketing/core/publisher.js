@@ -106,7 +106,7 @@ async function publishContent(ctx, id, now) {
   if (!claimed) return null;
   for (const ch of doc.channels) await publishChannel(ctx, id, ch, now);
 
-  return store.updateContent(id, (d) => {
+  const after = await store.updateContent(id, (d) => {
     const st = d.channels.map((ch) => d.posts[ch].status);
     if (st.every((s) => s === "PUBLISHED" || s === "FAILED")) {
       if (st.includes("PUBLISHED")) transition(d, "PUBLISHED", { by: "publisher", note: st.includes("FAILED") ? "일부 채널 실패" : "" });
@@ -116,6 +116,8 @@ async function publishContent(ctx, id, now) {
       }
     } else if (d.status === "PUBLISHING") transition(d, "SCHEDULED", { by: "publisher", note: "남은 채널은 다음 실행에서" });
   });
+  if (after.status === "PUBLISHED") await notify(ctx, "published", after);
+  return after;
 }
 
 /** 30분마다 실행: 만료 정리 · 멈춘 제작 정리 · 게시. 동시에 두 개가 돌지 않게 잠근다 */

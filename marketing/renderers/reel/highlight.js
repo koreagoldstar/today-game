@@ -8,7 +8,8 @@
 const HOOK_S = 2.2; // 첫 문구가 떠 있는 시간
 const CTA_S = 2.2; // 마지막 엔딩 시간
 
-function pickHighlight({ events, duration }, motion, { min = 15, max = 20, target = 18 } = {}) {
+/** avoid: 같은 게임에서 최근에 쓴 구간 [[시작, 끝]…] — 봇 · 게임이 결정적이라 다시 녹화해도 장면이 같아서, 겹치면 감점 */
+function pickHighlight({ events, duration }, motion, { min = 15, max = 20, target = 18, avoid = [] } = {}) {
   const startEv = events.find((e) => e.type === "start");
   const playFrom = startEv ? Math.max(0, startEv.t - 0.3) : 0;
   if (duration - playFrom < min) return null;
@@ -29,6 +30,7 @@ function pickHighlight({ events, duration }, motion, { min = 15, max = 20, targe
     const m = motion(s, s + len);
     score += Math.min(1.5, m * 3);
     if (s - playFrom < 1.5) score += 0.3; // 시작하자마자 움직임이 보이게
+    for (const [a, b] of avoid) score -= 6 * (Math.max(0, Math.min(b, s + len) - Math.max(a, s)) / len);
     if (!best || score > best.score) best = { start: +s.toFixed(2), end: +(s + len).toFixed(2), score: +score.toFixed(2), motion: +m.toFixed(3) };
   }
   if (!best) return null;

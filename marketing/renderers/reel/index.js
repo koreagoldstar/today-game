@@ -34,6 +34,19 @@ function readClip(file) {
   return { file: abs, meta };
 }
 
+/** PC 가 올린 3D 녹화본 하나를 꺼내(사용함 표시) 내려받는다 — 게임 지문이 지금 사이트와 같은 것만 */
+async function stockClip(store, gameId, contentId, out) {
+  const { takeClip, gameHash } = require("../../core/clips");
+  const c = await takeClip(store, gameId, gameHash(ROOT, gameId), contentId);
+  if (!c) throw new Error(`${gameId}: 3D 녹화본 재고가 없습니다 (PC 를 켜면 채워집니다).`);
+  const file = path.join(out, "clips", "stock", `${c.id}.mp4`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const res = await fetch(c.url);
+  if (!res.ok) throw new Error(`${gameId}: 녹화본을 내려받지 못함 (HTTP ${res.status})`);
+  fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+  return { file, meta: { ...c, ok: true } };
+}
+
 async function recentOf(store, field, genre) {
   if (!store) return [];
   return (await store.listContents(10)).map((d) => d.render && d.render.meta).filter((m) => m && (!genre || m.genre === genre)).map((m) => m[field]).filter(Boolean);
@@ -48,9 +61,10 @@ module.exports = {
     const out = path.join(ROOT, "marketing", "out");
     const log = ctx.logger ? (m) => ctx.logger.info(m) : () => {};
 
-    // 1) 원본 클립
+    // 1) 원본 클립: 지정한 파일 → (GitHub Actions 의 3D 게임) PC 가 올린 재고 → 지금 녹화
     let clip;
     if (doc.plan.clipFile) clip = readClip(doc.plan.clipFile);
+    else if (process.env.MKT_RUNNER === "actions" && profile.runner === "pc") clip = await stockClip(store, profile.id, doc.id, out);
     else {
       const meta = await recordGame(profile, { outDir: path.join(out, "clips"), render: ctx.render, log });
       if (!meta.ok) throw new Error(`녹화 실패 (${meta.stage}): ${meta.reason}`);
@@ -59,7 +73,10 @@ module.exports = {
 
     // 2) 하이라이트 15~20초
     const [min, max] = settings.qc.reelSec;
-    const hl = pickHighlight({ events: clip.meta.events, duration: clip.meta.durationSec }, motionFn(motionSeries(clip.file)), { min, max, target: Math.min(max, 18) });
+    const avoid = store
+      ? (await store.listContents(30)).filter((d) => d.id !== doc.id && d.source && d.source.sourceId === source.sourceId && d.render && d.render.meta.highlight).map((d) => [d.render.meta.highlight.start, d.render.meta.highlight.end])
+      : [];
+    const hl = pickHighlight({ events: clip.meta.events, duration: clip.meta.durationSec }, motionFn(motionSeries(clip.file)), { min, max, target: Math.min(max, 18), avoid });
     if (!hl) throw new Error("하이라이트 구간을 찾지 못했습니다 (플레이 시간이 너무 짧음).");
 
     // 3) 템플릿 · 문구 (같은 장르에서 최근에 쓴 것은 피함)

@@ -76,9 +76,12 @@
 |---|---|
 | 웹훅 보안 | `setWebhook` 의 `secret_token`(1~256자, A-Z a-z 0-9 _ -) → 모든 웹훅 요청에 헤더 `X-Telegram-Bot-Api-Secret-Token` 으로 옴 |
 | 답장 받기 | `Message.reply_to_message` 로 어떤 메시지에 대한 답장인지 알 수 있음 (문구 직접 수정에 사용) |
-| 파일 크기 | 봇이 보내는 영상 50MB 까지라는 자료가 많지만 **공식 문서 해당 부분은 미확인** (문서가 58만 자라 이번에 끝까지 못 읽음) |
-| 버튼 데이터 | `callback_data` 1~64바이트로 알려져 있음 → **미확인**, PHASE 5 에서 확인 |
-| 묶음 보내기 | `sendMediaGroup` 최대 10개로 알려져 있음 → **미확인** |
+| 파일 크기 (2026-11-09 확인) | sendVideo · sendDocument "up to 50 MB". 직접 올리기(multipart) 사진 10MB · 그 밖 50MB, 주소로 보내기 사진 5MB · 그 밖 20MB. 봇이 내려받기 20MB |
+| 버튼 데이터 (확인) | `callback_data` "1-64 bytes". 누르면 `answerCallbackQuery` 를 부를 때까지 진행 표시 |
+| 묶음 보내기 (확인) | `sendMediaGroup` "2-10 items" |
+| 글자 수 (확인) | 본문 1~4096자, 캡션 0~1024자 |
+| ForceReply (확인) | 받는 쪽에 "답장" 입력창을 띄움 → 반려 사유 · 문구 수정 받기에 사용 |
+| getUpdates (확인) | offset = 받은 최대 update_id + 1 로 부르면 그 앞은 확인 처리. 서버 보관 **24시간**. **웹훅이 설정돼 있으면 동작 안 함** → 30분 폴링 방식(결정 3)은 24시간 안이라 안전 |
 
 ## 6. 실행 · 저장 환경
 
