@@ -20,7 +20,8 @@ const DEFAULTS = {
   channels: ["instagram"], // 기본으로 고르는 채널
   approvalExpiryHours: 72,
   publish: { maxAttempts: 3, backoffMinutes: 15 },
-  qc: { maxRedo: 2, reelSec: [15, 20], blackSec: 1, freezeSec: 2 },
+  // minMotion: 게임 영역이 움직인 장면 비율 하한 (반응 게임처럼 기다리는 화면이 게임인 경우가 있어 낮게 — 완전히 멈춘 2초는 freezeSec 이 잡는다)
+  qc: { maxRedo: 2, reelSec: [15, 20], blackSec: 1, freezeSec: 2, minMotion: 0.2 },
   ranking: { minEntriesPerGame: 5, maskNames: true },
   // 허용 목록 — 관리자가 정한 것만 (지시서 §0). 비어 있으면 음원을 쓰는 결과물은 검수 불합격
   allow: { audio: [], fonts: ["Pretendard"] },
@@ -46,6 +47,8 @@ function validate(s) {
   if (!Array.isArray(s.channels) || !s.channels.length) bad("채널을 하나 이상 골라야 합니다.");
   if (!(s.approvalExpiryHours >= 1 && s.approvalExpiryHours <= 24 * 14)) bad("승인 기한은 1시간~14일 입니다.");
   if (!(s.qc.maxRedo >= 0 && s.qc.maxRedo <= 2)) bad("다시 만들기는 0~2회 입니다.");
+  if (!(s.qc.minMotion >= 0.05 && s.qc.minMotion <= 0.9)) bad("움직임 하한은 0.05~0.9 입니다.");
+  if (!(s.qc.reelSec[0] >= 3 && s.qc.reelSec[0] <= s.qc.reelSec[1] && s.qc.reelSec[1] <= 90)) bad("릴스 길이 범위가 올바르지 않습니다.");
   return s;
 }
 

@@ -15,5 +15,7 @@
   "start": [{ "call": "window.DragonStatue.adv.start(0, { retry: true })", "waitMs": 1000 }],
   "playing": "PLAYING",
   "probe": "(() => { const A = window.DragonStatue.adv; const rs = A.rs || {}; return { state: A.state, score: rs.enemies || 0, hearts: A.hearts || 0, items: rs.crystals || 0 }; })()",
-  "scoreUnit": 1
+  "scoreUnit": 1,
+  "hooks": ["석상을 지나 모험 출발!", "보석을 모으며 전진", "드래곤을 만나러 간다"],
+  "hashtags": ["#모험게임", "#3D게임"]
 }

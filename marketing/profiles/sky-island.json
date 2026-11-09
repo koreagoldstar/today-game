@@ -15,5 +15,7 @@
   "start": [{ "click": "#start-btn", "waitMs": 600 }],
   "playing": "play",
   "probe": "(() => { const g = window.SkyIsland; const r = g.run || {}; return { state: g.state, score: Math.round(g.score ? g.score() : 0), hearts: r.hearts || 0, items: r.orbs || 0 }; })()",
-  "scoreUnit": 100
+  "scoreUnit": 100,
+  "hooks": ["구름 위 섬을 건너라!", "점프 타이밍이 생명", "꼭대기까지 갈 수 있을까?"],
+  "hashtags": ["#점프게임", "#3D게임"]
 }

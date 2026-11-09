@@ -10,5 +10,7 @@
   "rawSec": 60,
   "minFps": 20,
   "ready": "window.ClawMaster && window.ClawMaster.screen === 'title'",
-  "player": "claw-master"
+  "player": "claw-master",
+  "hooks": ["이 인형, 뽑을 수 있을까?", "진짜 물리 인형뽑기", "집게를 맞춰 내려라!"],
+  "hashtags": ["#인형뽑기", "#인형뽑기게임"]
 }

@@ -10,5 +10,7 @@
   "rawSec": 45,
   "minFps": 20,
   "ready": "!!document.getElementById('start-btn')",
-  "player": "reaction"
+  "player": "reaction",
+  "hooks": ["초록불에 바로 탭!", "반응속도 테스트", "몇 ms 나올까?"],
+  "hashtags": ["#반응속도", "#반응속도테스트"]
 }

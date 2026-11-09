@@ -9,7 +9,7 @@ const { DEFAULTS, merge, validate } = require("../core/settings");
 const { createRegistry } = require("../core/registry");
 const { registerChannels } = require("../channels");
 const { utmLink } = require("../core/links");
-const { createFakeUpstash } = require("./fake-upstash");
+const { createFakeUpstash } = require("../core/memory-redis");
 
 const doc = (status) => ({ id: "t-1", status, version: 1, history: [] });
 

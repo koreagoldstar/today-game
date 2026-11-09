@@ -64,7 +64,12 @@ function create(profile) {
         if (s.score > last.score) io.mark("score", `+${Math.round(s.score - last.score)}`, Math.min(3, 1 + (s.score - last.score) / (profile.scoreUnit || 100)));
         if (s.hearts < last.hearts) io.mark("near", "부딪힘", 2);
         if (s.items > last.items) io.mark("combo", "획득", 1.5);
-        if (s.state !== last.state) io.mark(s.state === profile.playing ? "start" : "clear", s.state, s.state === profile.playing ? 0 : 2.5);
+        // 상태 이름으로만 판단: 클리어 · 체크포인트 = 성공, 게임 오버 = 실패, 그 밖(일시정지 등)은 자막 없이
+        if (s.state !== last.state) {
+          if (s.state === profile.playing) io.mark("start", s.state, 0);
+          else if (/over|fail|dead|caught|respawn|fall/i.test(s.state)) io.mark("fail", s.state, 2);
+          else if (/clear|result|checkpoint|goal|win/i.test(s.state)) io.mark("clear", s.state, 2.5);
+        }
         last = s;
       }
     },
