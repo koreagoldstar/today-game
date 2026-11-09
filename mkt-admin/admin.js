@@ -250,6 +250,8 @@
       });
       const pending = h("input", { type: "number", min: 1, max: 14, value: s.maxPending });
       const repeat = h("input", { type: "number", min: 0, max: 90, value: s.repeatDays });
+      const track = h("input", { type: "checkbox" });
+      track.checked = !!s.trackClicks;
       const split = (v) => v.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean);
       view.append(
         h("section", { class: "card" }, [
@@ -261,13 +263,14 @@
           h("div", { class: "actions" }, [h("label", {}, ["피드 시각", feedT]), h("label", {}, ["스토리 시각", storyT])]),
           h("div", { class: "actions" }, [h("span", { class: "meta", text: "기본 채널:" }), ...chBoxes]),
           h("div", { class: "actions" }, [h("label", {}, ["승인 대기 상한", pending]), h("label", {}, ["같은 게임 다시 홍보 간격(일)", repeat])]),
+          h("div", { class: "actions" }, [h("label", {}, [track, "사이트 클릭 세기 (링크가 /api/mkt-go 를 거침 — 운영에 배포한 뒤에만 켜세요)"])]),
           h("div", { class: "actions" }, [
             h("button", {
               class: "btn primary",
               type: "button",
               text: "저장",
               onclick: async () => {
-                const patch = { schedule: Object.fromEntries(days.map(([d, inp]) => [d, split(inp.value)])), story: split(story.value), postTimes: { feed: feedT.value, story: storyT.value }, channels: chBoxes.map((l) => l.firstChild).filter((x) => x.checked).map((x) => x.value), maxPending: Number(pending.value), repeatDays: Number(repeat.value) };
+                const patch = { schedule: Object.fromEntries(days.map(([d, inp]) => [d, split(inp.value)])), story: split(story.value), postTimes: { feed: feedT.value, story: storyT.value }, channels: chBoxes.map((l) => l.firstChild).filter((x) => x.checked).map((x) => x.value), maxPending: Number(pending.value), repeatDays: Number(repeat.value), trackClicks: track.checked };
                 try {
                   await call("POST", { action: "settings", patch });
                   toast("편성표를 저장했습니다.");

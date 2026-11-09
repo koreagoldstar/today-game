@@ -25,6 +25,8 @@ const DEFAULTS = {
   maxPending: 3, // 승인 대기가 이만큼 쌓이면 새로 만들지 않음 (비용 · 혼동 방지)
   repeatDays: 14, // 이 기간 안에 홍보한 게임은 뒤로
   excludeGames: [], // 홍보하지 않을 게임 id (웹 관리자 "게임별 설정")
+  trackClicks: false, // 링크를 /api/mkt-go 로 거쳐 클릭 세기 — api/mkt-go.js 를 운영에 배포한 뒤에만 켤 것
+  weights: { max: 2, min: 0.5 }, // 성과(조회 수) 가중치 범위 — 게임 고르기 점수에 곱함
   publish: { maxAttempts: 3, backoffMinutes: 15 },
   // minMotion: 게임 영역이 움직인 장면 비율 하한 (반응 게임처럼 기다리는 화면이 게임인 경우가 있어 낮게 — 완전히 멈춘 2초는 freezeSec 이 잡는다)
   qc: { maxRedo: 2, reelSec: [15, 20], blackSec: 1, freezeSec: 2, minMotion: 0.2 },
@@ -55,6 +57,7 @@ function validate(s) {
   if (!Array.isArray(s.excludeGames) || s.excludeGames.some((g) => !/^[\w-]{1,60}$/.test(g))) bad("홍보 제외 게임 목록이 올바르지 않습니다.");
   for (const [k, v] of Object.entries(s.postTimes)) if (!HHMM.test(v)) bad(`게시 시각 ${k} 는 HH:MM 형식이어야 합니다.`);
   for (const [ch, caps] of Object.entries(s.dailyCaps)) for (const [slot, n] of Object.entries(caps)) if (!Number.isInteger(n) || n < 0 || n > 10) bad(`${ch} ${slot} 하루 상한은 0~10 입니다.`);
+  if (typeof s.trackClicks !== "boolean") bad("클릭 세기는 켜기/끄기입니다.");
   if (!Array.isArray(s.channels) || !s.channels.length || s.channels.some((c) => !CHANNELS.includes(c))) bad("채널을 하나 이상 골라야 합니다 (instagram · threads · facebook · youtube).");
   if (!(s.approvalExpiryHours >= 1 && s.approvalExpiryHours <= 24 * 14)) bad("승인 기한은 1시간~14일 입니다.");
   if (!(Number.isInteger(s.maxPending) && s.maxPending >= 1 && s.maxPending <= 14)) bad("승인 대기 상한은 1~14 입니다.");

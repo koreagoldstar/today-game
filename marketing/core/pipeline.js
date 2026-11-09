@@ -108,7 +108,7 @@ async function runFrom(ctx, id) {
       }
       if (doc.status === "COPYWRITING") {
         const recent = await recentFirstLines(store, id);
-        const copy = checkCopy(await registry.get("copywriter", doc.plan.copywriter || "default").write({ source: doc.source, render: doc.render, channels: [...new Set([...doc.channels, ...registry.names("channel")])], recent, ctx }), doc.channels); // 모든 채널 문구를 미리 — 텔레그램에서 채널을 바꿔도 바로 승인 가능
+        const copy = checkCopy(await registry.get("copywriter", doc.plan.copywriter || "default").write({ source: doc.source, render: doc.render, contentId: id, channels: [...new Set([...doc.channels, ...registry.names("channel")])], recent, ctx }), doc.channels); // 모든 채널 문구를 미리 — 텔레그램에서 채널을 바꿔도 바로 승인 가능
         doc = await advance(ctx, id, "COPYWRITING", "QC", { copy, redo: null });
       }
       const qc = await runQc(doc, ctx);

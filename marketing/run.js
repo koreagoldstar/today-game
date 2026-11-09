@@ -8,6 +8,7 @@
  *   node marketing/run.js redo                               관리자가 누른 "문구 다시 · 다시 제작" 처리
  *   node marketing/run.js status                             최근 콘텐츠 상태
  *   node marketing/run.js channels                           채널별 연결 상태 (mock · live)
+ *   node marketing/run.js weekly [--monday YYYY-MM-DD]       주간 요약 (보통은 publish 가 월요일에 자동으로)
  *   node marketing/run.js ig-connect | threads-connect       토큰 연결 (IG_NEW_TOKEN · THREADS_NEW_TOKEN 환경 변수로)
  * 필요한 환경 변수: UPSTASH_REDIS_REST_URL · UPSTASH_REDIS_REST_TOKEN (없으면 멈춤)
  *   선택: TG_BOT_TOKEN · TG_ADMIN_CHAT_ID (없으면 콘솔 알림) · BLOB_READ_WRITE_TOKEN · LLM_API_KEY · CHANNEL_MODE_*
@@ -26,6 +27,7 @@ const { createApproval } = require("./core/approval");
 const { produce, runQueued } = require("./core/pipeline");
 const { publishDue } = require("./core/publisher");
 const { writeSnapshot } = require("./core/snapshot");
+const insights = require("./core/insights");
 const { KO } = require("./core/state");
 const { registerChannels } = require("./channels");
 const { createCopywriter } = require("./copy/copywriter");
@@ -118,8 +120,13 @@ async function runPublish() {
     const notify = (event, extra) => ctx.registry.get("notifier", "default").notify(event, { id: "instagram" }, extra);
     console.log(`인스타 토큰: ${JSON.stringify(await refreshInstagram(store, { notify }))}`);
     if ((await store.getJson("channel:threads")) !== null) console.log(`Threads 토큰: ${JSON.stringify(await require("./channels/threads").refreshThreads(store, { notify }))}`);
+    console.log(`팔로워: ${JSON.stringify(await insights.recordFollowers(ctx))}`);
   }
   const r = await publishDue(ctx);
+  // 성과: 게시 1 · 3 · 7일 뒤 지표 (실제 게시만), 월요일엔 지난주 요약을 텔레그램으로
+  console.log(`지표 수집: ${JSON.stringify(await insights.collectInsights(ctx).catch((e) => ({ error: e.message })))}`);
+  const weekly = await insights.weeklyReport(ctx).catch((e) => console.log(`주간 요약 실패: ${e.message}`));
+  if (weekly) await ctx.registry.get("notifier", "default").notify("weekly", { id: "weekly" }, { text: weekly.text }).catch(() => {});
   await writeSnapshot(ctx).catch((e) => console.log(`관리자 화면 자료 저장 실패: ${e.message}`));
   await store.jobEnd(job, { result: r });
   console.log(`게시: ${JSON.stringify(r)}`);
@@ -163,13 +170,27 @@ async function runThreadsConnect() {
   console.log(`Threads 연결됨: @${r.username} · 만료 ${r.expiresAt.slice(0, 10)} (60일 추정)`);
 }
 
+/** 주간 요약 직접 보내기: --monday YYYY-MM-DD (그 월요일 기준 지난주). 이미 보낸 주는 저장된 요약만 보여 줌 */
+async function runWeekly() {
+  const { ctx, store } = await setup();
+  const day = opt("--monday");
+  if (day && !/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error("--monday 는 YYYY-MM-DD 입니다.");
+  const r = await insights.weeklyReport(ctx, day ? Date.parse(`${day}T09:00:00+09:00`) : Date.now());
+  if (!r) {
+    console.log(`보내지 않음 (월요일이 아니거나 이미 보낸 주). 저장된 요약: ${JSON.stringify(await store.getJson("report:weekly"))}`);
+    return;
+  }
+  await ctx.registry.get("notifier", "default").notify("weekly", { id: "weekly" }, { text: r.text });
+  console.log(`보냄 (${r.week}):\n${r.text}`);
+}
+
 /** 모든 채널 상태 (연결 · 토큰 · 모드) */
 async function runChannels() {
   const { ctx } = await setup();
   for (const name of ctx.registry.names("channel")) console.log(`${name}: ${JSON.stringify(await ctx.registry.get("channel", name).health())}`);
 }
 
-const COMMANDS = { "threads-connect": runThreadsConnect, channels: runChannels, produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
+const COMMANDS = { weekly: runWeekly, "threads-connect": runThreadsConnect, channels: runChannels, produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
 if (!COMMANDS[cmd]) {
   console.error(`명령: ${Object.keys(COMMANDS).join(" | ")}`);
   process.exit(2);

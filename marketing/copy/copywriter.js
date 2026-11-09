@@ -53,7 +53,7 @@ function typeLines(type, f, kind) {
 }
 
 /** 정해진 틀 문구 (AI 없이) */
-function templateCopy({ source, render, channels, recent = [], profileTags = [] }) {
+function templateCopy({ source, render, channels, recent = [], profileTags = [], linkOpts = {} }) {
   const f = source.facts;
   const t = typeLines(source.sourceType, f, f.kind);
   if (t) {
@@ -61,7 +61,7 @@ function templateCopy({ source, render, channels, recent = [], profileTags = [] 
     const body = t.body.filter(Boolean);
     const tags = [...new Set(["#오늘의게임", ...TYPE_TAGS[source.sourceType], ...profileTags, GENRE_TAG[f.category], "#무료게임", "#웹게임", "#미니게임"].filter(Boolean))].slice(0, 8);
     const kind = (render && render.kind) || "image";
-    const link = (ch) => utmLink(f.url || "/", { channel: ch, kind, sourceId: source.sourceId });
+    const link = (ch) => utmLink(f.url || "/", { channel: ch, kind, sourceId: source.sourceId, ...linkOpts });
     const out = {};
     for (const ch of channels) {
       if (ch === "instagram") out[ch] = { caption: [first, ...body, "프로필 링크에서 플레이!"].join("\n"), hashtags: tags, link: link(ch) };
@@ -80,7 +80,7 @@ function templateCopy({ source, render, channels, recent = [], profileTags = [] 
   const how = how0.length <= 60 && !/^컴퓨터/.test(how0) ? how0 : "";
   const tags = hashtagsFor(f, profileTags);
   const kind = (render && render.kind) || "reel";
-  const link = (ch) => utmLink(f.url, { channel: ch, kind, sourceId: source.sourceId });
+  const link = (ch) => utmLink(f.url, { channel: ch, kind, sourceId: source.sourceId, ...linkOpts });
   const out = {};
   for (const ch of channels) {
     if (ch === "instagram") out[ch] = { caption: [first, intro, how, "오늘의 게임에서 무료로 바로 플레이할 수 있어요.", "프로필 링크에서 플레이!"].filter(Boolean).join("\n"), hashtags: tags, link: link(ch) };
@@ -149,8 +149,8 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
     api = new Anthropic({ apiKey: key });
   }
 
-  async function ask({ source, channels, recent, render }) {
-    const links = Object.fromEntries(channels.map((ch) => [ch, utmLink(source.facts.url, { channel: ch, kind: render.kind, sourceId: source.sourceId })]));
+  async function ask({ source, channels, recent, render, linkOpts }) {
+    const links = Object.fromEntries(channels.map((ch) => [ch, utmLink(source.facts.url, { channel: ch, kind: render.kind, sourceId: source.sourceId, ...linkOpts })]));
     const user = JSON.stringify({ type: source.sourceType, facts: source.facts, hook: render.meta && render.meta.hook, kind: render.kind, channels, links, recentFirstLines: recent.slice(0, 20) });
     const cacheKey = `copycache:${crypto.createHash("sha256").update(`${MODEL}\n${SYSTEM}\n${user}`).digest("hex").slice(0, 40)}`;
     if (store) {
@@ -175,7 +175,8 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
 
   return {
     model: api ? MODEL : null,
-    async write({ source, render, channels, recent = [], ctx = {} }) {
+    async write({ source, render, channels, recent = [], ctx = {}, contentId = null }) {
+      const linkOpts = { track: !!(ctx.settings && ctx.settings.trackClicks), contentId };
       let tags = [];
       if (source.sourceType === "game" || source.sourceType === "new-game") {
         try {
@@ -183,14 +184,14 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
         } catch (_) {} // 신작은 녹화 프로필이 없을 수 있음
       }
       const fallback = (reason) => {
-        const out = templateCopy({ source, render, channels, recent, profileTags: tags });
+        const out = templateCopy({ source, render, channels, recent, profileTags: tags, linkOpts });
         for (const c of Object.values(out)) Object.assign(c, { source: "template", note: reason || "" });
         return out;
       };
       if (!api) return fallback("AI 열쇠 없음 — 틀 문구");
       if (render.kind === "story") return fallback("스토리는 문구가 게시되지 않아 틀 문구");
       try {
-        const { copy, cached, links } = await ask({ source, channels, recent, render });
+        const { copy, cached, links } = await ask({ source, channels, recent, render, linkOpts });
         const out = {};
         for (const ch of channels) {
           const c = copy[ch] || {};

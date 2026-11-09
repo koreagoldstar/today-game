@@ -18,6 +18,7 @@ const USED = ["READY_FOR_APPROVAL", "APPROVED", "SCHEDULED", "PUBLISHING", "PUBL
 async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNNER || "pc" } = {}) {
   const { store, settings } = ctx;
   const contents = await store.listContents(200);
+  const weights = require("./insights").performanceWeights(contents, settings); // 실제 조회 수가 있는 게임만
   const games = contents.filter((d) => d.source && d.source.sourceType === "game");
   const lastAt = {};
   for (const d of games) if (USED.includes(d.status)) lastAt[d.source.sourceId] = Math.max(lastAt[d.source.sourceId] || 0, Date.parse(d.createdAt));
@@ -52,6 +53,10 @@ async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNN
       reasons.push("신작");
     }
     score += Math.min(30, since === Infinity ? 30 : since);
+    if (weights[id]) {
+      score *= weights[id];
+      reasons.push(`성과 x${weights[id]}`);
+    }
     const eligible = !(last && last.source.sourceId === id); // 직전과 같은 게임 금지
     if (!eligible) reasons.push("직전과 같은 게임");
     out.push({ id, score: +score.toFixed(2), eligible, reasons });

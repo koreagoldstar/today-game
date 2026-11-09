@@ -115,6 +115,7 @@ function createTelegram({ store, approval, settings, token, chatId, fetchImpl, l
   const notifier = {
     async notify(event, doc, extra = {}) {
       if (!doc) return;
+      if (event === "weekly") return send(extra.text);
       if (event === "token_expired") return send(`🔑 인스타그램 토큰이 만료되었습니다 (@${extra.username}). Meta 앱에서 새 토큰을 받아 다시 연결해 주세요. 그때까지 게시는 멈춥니다.`);
       if (event === "token_refresh_failed") return send(`🔑 인스타그램 토큰 갱신 실패 (@${extra.username}, ${extra.daysLeft}일 남음)\n${extra.error}\n만료 전에 다시 연결해 주세요.`);
       const title = (doc.render && doc.render.meta.title) || (doc.plan && doc.plan.sourceId) || doc.id;
@@ -217,7 +218,7 @@ function createTelegram({ store, approval, settings, token, chatId, fetchImpl, l
 /** 열쇠가 없을 때: 콘솔에만 알림 (공개 저장소 로그라 문구 · 주소는 찍지 않음) */
 const consoleNotifier = {
   async notify(event, doc) {
-    console.log(`[알림 · 텔레그램 미연결] ${event} ${doc ? `${doc.id} ${KO[doc.status] || doc.status}` : ""}`);
+    console.log(`[알림 · 텔레그램 미연결] ${event} ${doc ? `${doc.id} ${KO[doc.status] || doc.status || ""}` : ""}`);
   },
 };
 

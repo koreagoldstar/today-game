@@ -153,6 +153,13 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
       const m = await call("GET", `/${postId}`, { fields: "id,permalink,media_type,timestamp" });
       return { ok: String(m.id) === String(postId), permalink: m.permalink || null };
     },
+    /** 팔로워 수 (threads_manage_insights 가 있을 때) */
+    async followers() {
+      const { call, uid } = await session();
+      const r = await call("GET", `/${uid}/threads_insights`, { metric: "followers_count" });
+      const x = (r.data || [])[0];
+      return Number(x && (x.total_value ? x.total_value.value : x.values && x.values[0] && x.values[0].value));
+    },
     async insights(postId) {
       const { call } = await session();
       const r = await call("GET", `/${postId}/insights`, { metric: METRICS.join(",") });

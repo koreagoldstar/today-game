@@ -92,6 +92,10 @@ function create({ env = process.env, fetchImpl = fetch, sleep = (ms) => new Prom
       const r = await graph("GET", `/${postId}/video_insights`, {});
       return (r.data || []).map((x) => ({ metric: x.name, value: x.values && x.values[0] ? x.values[0].value : null })).filter((x) => typeof x.value === "number");
     },
+    async followers() {
+      need();
+      return Number((await graph("GET", `/${page}`, { fields: "followers_count" })).followers_count);
+    },
     async health() {
       if (!/^\d+$/.test(page) || !token) return { ok: false, mode: "live", reason: "페이지 연결 안 됨" };
       try {

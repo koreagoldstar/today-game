@@ -103,6 +103,12 @@ function create({ env = process.env, fetchImpl = fetch } = {}) {
       const s = ((r.items || [])[0] || {}).statistics || {};
       return [["views", s.viewCount], ["likes", s.likeCount], ["comments", s.commentCount]].filter(([, v]) => v != null).map(([metric, v]) => ({ metric, value: Number(v) }));
     },
+    /** 구독자 수 (채널이 숨겼으면 없음) */
+    async followers() {
+      const r = await get("/channels", { part: "statistics", mine: "true" });
+      const s = ((r.items || [])[0] || {}).statistics || {};
+      return s.hiddenSubscriberCount ? NaN : Number(s.subscriberCount);
+    },
     async health() {
       try {
         const r = await get("/channels", { part: "snippet", mine: "true" });

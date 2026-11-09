@@ -157,7 +157,7 @@ function createAdmin({ store, env = process.env, now = () => Date.now() }) {
     }
     if (action === "settings") {
       const patch = body.patch || {};
-      const allowed = ["schedule", "story", "postTimes", "dailyCaps", "channels", "approvalExpiryHours", "maxPending", "repeatDays"];
+      const allowed = ["schedule", "story", "postTimes", "dailyCaps", "channels", "approvalExpiryHours", "maxPending", "repeatDays", "trackClicks"];
       const bad = Object.keys(patch).filter((k) => !allowed.includes(k));
       if (bad.length) throw new ActionError(`바꿀 수 없는 설정: ${bad.join(", ")}`);
       try {

@@ -15,6 +15,7 @@
 - PHASE 7 이미지 콘텐츠(퀴즈 캐러셀 · 운세 · 랭킹 · 챌린지 · 스토리 재활용) 완료 (`docs/REPORT_PHASE_7.md`, 시험 73/73). 시험 제작: `node marketing/make.js quiz fortune challenge ranking`. 자리별 제작: `run.js produce --slot story|feed --type <유형>`.
 - PHASE 8 신작 감지(C4) · Threads · Facebook 페이지 릴스 · YouTube Shorts 어댑터 완료 — 채널은 관리자 연결 대기 (`docs/REPORT_PHASE_8.md`, 시험 80/80). 신작 시험: `node marketing/make.js new-game:<id>`. 채널 상태: `run.js channels`.
 - PHASE 9 웹 관리자 완료 — 운영 배포 안 함 (`docs/REPORT_PHASE_9.md`, 시험 85/85). 이 PC 시험: `node marketing/admin-dev.js` (운영 저장소는 읽기만, 키는 `out/admin-dev-key.txt`). 배포 전: Vercel `MKT_ADMIN_KEY` · `.vercelignore` 수정 승인 필요.
+- PHASE 10 성과(1·3·7일 지표 · 팔로워 · 주간 요약 · 가중치) · 클릭 세기(`api/mkt-go.js`, 설정 trackClicks 기본 꺼짐) 완료 (`docs/REPORT_PHASE_10.md`, 시험 89/89). 주간 요약 직접: `run.js weekly --monday YYYY-MM-DD`.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -60,6 +61,8 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 설정은 **바꾼 값만** 저장 (`saveSettings`). 전체를 저장하면 기본값 변경이 운영에 안 먹는다.
 - 웹 관리자 · 텔레그램은 같은 `core/approval.js` — 동시에 눌러도 잠금 + 버전으로 한 번만.
 - `.vercelignore` 에 `marketing/out` 이 없으면 배포 때 녹화 파일(수 GB)이 올라간다 — 관리자 승인 받고 추가할 것.
+- `trackClicks` 는 `api/mkt-go.js` 운영 배포 뒤에만 켤 것 (켜면 문구 링크가 /api/mkt-go 로 바뀜, 배포 전이면 404).
+- 지표는 실제 게시만 (posts[ch].mock 이면 건너뜀) — 모의 게시에 숫자를 만들지 않는다.
 - `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
 ## PHASE 진행표
@@ -75,5 +78,5 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 7 | 이미지 계열 콘텐츠 | 완료 (실물 4종 · 실제 텔레그램 사진 승인 요청, 시험 73/73) |
 | 8 | 신작 감지 · 추가 채널 | 완료 (실제 Actions 로 스토리 · 릴스, 채널 3개는 연결 대기, 시험 80/80) |
 | 9 | 웹 관리자 | 완료 (이 PC 에서 실데이터 복사본으로 확인, 운영 배포 전, 시험 85/85) |
-| 10 | 성과 · 고도화 | - |
+| 10 | 성과 · 고도화 | 완료 (실제 텔레그램 주간 요약, 실제 지표는 채널 연결 뒤, 시험 89/89) |
 | 11 | 통합 · 문서 · 병합 준비 | - |
