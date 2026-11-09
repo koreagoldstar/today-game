@@ -9,7 +9,8 @@
 - PHASE 2 코어 뼈대 완료.
 - PHASE 3 게임 녹화 완료 (5/5). 녹화: `node marketing/record.js [게임|--runner pc|actions]`.
 - PHASE 4 편집 · 문구 · 검수 완료. 시험 제작: `node marketing/make.js <게임…> --latest`.
-- **PHASE 5 (텔레그램 승인 · Mock 게시 · 자동 실행): Mock 검증 완료, Actions 실제 실행은 열쇠 · push 승인 대기.** `docs/REPORT_PHASE_5.md` 맨 아래 "관리자 조치". 시험: `cd marketing && npm test` (52개). 실행: `node marketing/run.js produce|publish|redo|status`.
+- **PHASE 5 (텔레그램 승인 · Mock 게시 · 자동 실행) 완료 보고 — 관리자 "다음" 대기.** 실제 Actions · 텔레그램 · Upstash · Blob 으로 제작 → 승인 → Mock 게시까지 확인 (2026-11-09). `docs/REPORT_PHASE_5.md`. 시험: `cd marketing && npm test` (53개). 실행: `node marketing/run.js produce|publish|redo|status`. 매일 자동 실행은 master 병합 뒤부터.
+- 다음: PHASE 6 Instagram 실제 연결 (Meta 앱 · 프로페셔널 계정 필요).
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -44,7 +45,10 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 녹화본(`out/clips/`)은 git 제외. 3D 원본은 45~62MB — 재고로 올릴 때 압축.
 - 같은 게임을 다시 녹화하면 거의 같은 장면 (봇 · 게임이 결정적) — 다시 홍보할 때 다양성 대책 필요.
 - 3D 봇 상태 이름: 클리어 · 체크포인트만 "성공", 게임 오버 · respawn 은 "실패", 보스 등장 등은 자막 없음 (`players/autopilot.js`).
-- 워크플로의 `push` 트리거(feature/marketing · `[mkt-run]`)는 시험용 — **master 병합 전에 지운다**.
+- 워크플로의 `push` 트리거(feature/marketing · `[mkt-run]` · `marketing/**` 가 바뀐 커밋만 — 빈 커밋은 안 돔)는 시험용 — **master 병합 전에 지운다**.
+- **녹화는 5개 게임 모두 이 PC(GPU)** — 실제 GitHub 러너는 2배 캡처가 초당 10.6장이라 기준 미달. Actions 는 재고로 편집 · 게시만. 재고 채우기: `node marketing/pc/record-stock.js` (작업 스케줄러 등록은 자동 모드에서 막혀 관리자가 `pc/install-task.ps1` 직접 실행).
+- 게임 지문(`core/clips.js gameHash`)은 텍스트 파일 줄바꿈을 LF 로 맞춰 계산 — 안 그러면 윈도 PC 와 리눅스 러너 값이 달라 재고를 못 씀.
+- 열쇠: GitHub Secrets 5개 (`UPSTASH_REDIS_REST_URL/TOKEN` · `TG_BOT_TOKEN` · `TG_ADMIN_CHAT_ID` · `BLOB_READ_WRITE_TOKEN`) + 이 PC `marketing/.env.local`. Blob 저장소 `todaygame-mkt-media`(iad1). **Vercel CLI 로 저장소를 만들면 원래 폴더 `.env.local` 에 사이트 Redis 열쇠를 넣으니 지울 것**.
 - 텔레그램은 폴링(getUpdates) — 웹훅을 켜면 getUpdates 가 멈춘다. 웹훅으로 바꿀 때 publish 쪽 폴링을 끌 것.
 - `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
@@ -56,7 +60,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 2 | 코어 뼈대 | 완료 보고 (시험 25/25) |
 | 3 | 게임 릴스 녹화 | 완료 보고 (5/5 녹화, 시험 29/29) |
 | 4 | 편집 · 문구 · QC | 완료 보고 (실물 5개, 시험 40/40) |
-| 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | Mock 완료 (52/52), Actions 실행은 열쇠 대기 |
+| 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | 완료 보고 (실제 Actions 로 제작→승인→Mock 게시, 시험 53/53) |
 | 6 | Instagram 실제 연결 | - |
 | 7 | 이미지 계열 콘텐츠 | - |
 | 8 | 신작 감지 · 추가 채널 | - |

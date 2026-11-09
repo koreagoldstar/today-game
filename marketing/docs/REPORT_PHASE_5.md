@@ -2,7 +2,8 @@
 
 날짜 2026-11-09 · 브랜치 `feature/marketing` · **기존 파일 수정 0개** (새 파일: `marketing/**`, `.github/workflows/mkt-*.yml`)
 
-**상태: Mock 으로 끝까지 검증 완료 · GitHub Actions 실제 실행은 "열쇠 · push 승인 대기"** (지시서 §13: 외부 계정이 없으면 Mock 으로 끝까지 검증하고 live 연결 대기로 표시)
+**상태: 완료 조건 모두 확인** — 시험(가짜 서버) + **실제 GitHub Actions · 실제 텔레그램 · 실제 Upstash · Blob 으로 제작 → 승인 → 예약 → 인스타 Mock 게시까지 한 번 끝까지 돌림** (2026-11-09 21:37~22:31 KST, 아래 실행 기록). 인스타그램 실제 게시는 PHASE 6.
+남은 것: GitHub 예약(cron)은 master 에 있어야 돌므로 **매일 자동 실행은 master 병합 뒤**부터 (지금까지는 `[mkt-run]` push 로 실행). PC 를 실제로 끈 상태로 시험하지는 않음 — 제작 · 게시는 GitHub 서버에서만 돌았고 PC 는 녹화본 재고만 미리 올림.
 
 ## 만든 것
 
@@ -51,9 +52,22 @@
 - 21:30 KST Actions 제작: 게임 5개 모두 "제외" → 원인: 게임 지문이 윈도(CRLF) · 리눅스(LF) 줄바꿈에 따라 달라짐 → LF 기준으로 고침
 - 21:37 KST Actions 제작 성공: 인형뽑기 (PC GPU 녹화본 59.5장/초) → 편집 · 검수 25항목 통과 · Blob 업로드 · 텔레그램 승인 요청 (77초)
 - 21:52 KST 관리자가 텔레그램에서 승인 → 게시 작업 실행
-- 22:31 KST 게시 작업 실행 (예약 22:30 지남)
+- 21:53 KST Actions 게시 작업: 텔레그램 버튼 3번 입력 → 승인 1번만 기록 (`telegram:breakbug`, 나머지는 "승인 대기 상태 아님"으로 거부) → 22:30 예약
+  (시험 동안만 피드 게시 시각을 22:30 으로 바꿨다가 끝난 뒤 19:00 으로 되돌림)
+- 22:31 KST Actions 게시 작업: `published: ["2026-11-09-feed-6a5fa8"]` — 인스타 Mock 컨테이너 → 게시 → 다시 조회, 상태 PUBLISHED, 텔레그램 "게시 완료 (모의)" 알림
+- 전체 기록: PLANNED → COLLECTING → RENDERING → COPYWRITING → QC → READY_FOR_APPROVAL(21:37) → APPROVED · SCHEDULED(21:53) → PUBLISHING · PUBLISHED(22:31)
 
-## 관리자 조치 필요
+연결하면서 생긴 일
+- Vercel CLI 로 Blob 저장소를 만들 때 원래 폴더 `D:\프로젝트\오늘의게임\.env.local` 에 사이트 Redis 열쇠(`KV_*` · `REDIS_URL`)가 자동으로 들어감 → 바로 지워 원래대로(`VERCEL_OIDC_TOKEN` 만) 되돌림
+- 이 PC 작업 스케줄러 등록은 자동 모드 권한 규칙(지속 설정)에 막힘 → 관리자가 `pc/install-task.ps1` 직접 실행 필요
+- 봇 토큰을 대화창에 붙여 받음 → 대화 기록에 남음. 원하면 @BotFather `/revoke` 후 GitHub Secret `TG_BOT_TOKEN` 만 바꾸면 됨
+- Actions 로그에 의존 패키지의 `url.parse()` 경고(DEP0169)가 나옴 — 동작에는 영향 없음
+
+## 관리자 조치 필요 (2026-11-09 갱신)
+
+- 1~4 는 끝남 (봇 @todaygamebot · Secrets 5개 · 브랜치 push · Blob 저장소 · 재고 8개). 남은 것: 작업 스케줄러 등록(직접), (선택) `LLM_API_KEY`, (PHASE 6) Meta 앱 · 인스타 프로페셔널 계정.
+
+아래는 처음 요청한 내용 (기록):
 
 1. **텔레그램 봇 만들기**: 텔레그램에서 @BotFather → `/newbot` → 받은 토큰. 그리고 그 봇에게 아무 말이나 한 번 보내 주세요 (그래야 대화방 id 를 알 수 있음).
 2. **GitHub Secrets 넣기** (`koreagoldstar/today-game` → Settings → Secrets and variables → Actions): `UPSTASH_REDIS_REST_URL` · `UPSTASH_REDIS_REST_TOKEN` (사이트와 같은 Redis — 마케팅은 `todaygame:mkt:*` 키만 씀), `TG_BOT_TOKEN`, `TG_ADMIN_CHAT_ID`. 원하시면 제가 Vercel 환경 변수에서 값을 화면에 띄우지 않고 GitHub Secret 으로 옮길 수 있음.
