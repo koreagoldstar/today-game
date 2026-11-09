@@ -104,6 +104,8 @@ function createTelegram({ store, approval, settings, token, chatId, fetchImpl, l
   const notifier = {
     async notify(event, doc, extra = {}) {
       if (!doc) return;
+      if (event === "token_expired") return send(`🔑 인스타그램 토큰이 만료되었습니다 (@${extra.username}). Meta 앱에서 새 토큰을 받아 다시 연결해 주세요. 그때까지 게시는 멈춥니다.`);
+      if (event === "token_refresh_failed") return send(`🔑 인스타그램 토큰 갱신 실패 (@${extra.username}, ${extra.daysLeft}일 남음)\n${extra.error}\n만료 전에 다시 연결해 주세요.`);
       const title = (doc.render && doc.render.meta.title) || (doc.plan && doc.plan.sourceId) || doc.id;
       if (event === "ready") return requestApproval(doc);
       if (event === "failed") return send(`⚠️ 제작 실패 — ${title}\n${doc.id}\n단계: ${(doc.failure && doc.failure.stage) || "-"}\n사유: ${(doc.failure && doc.failure.reason) || "-"}\n게시 후보에서 뺐습니다.`);

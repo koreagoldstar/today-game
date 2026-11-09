@@ -93,7 +93,8 @@ test("채널: 기본 mock, live 인데 어댑터가 없으면 멈춘다", () => 
   const modes = registerChannels(r, {});
   assert.deepEqual(Object.values(modes), ["mock", "mock", "mock", "mock"]);
   assert.equal(r.get("channel", "instagram").mock, true);
-  assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_INSTAGRAM: "live" }), /아직 구현되지 않았습니다/);
+  assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_INSTAGRAM: "live" }), /저장소가 필요/);
+  assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_YOUTUBE: "live" }), /아직 구현되지 않았습니다/);
   assert.throws(() => registerChannels(createRegistry(), { CHANNEL_MODE_THREADS: "on" }), /mock 또는 live/);
 });
 

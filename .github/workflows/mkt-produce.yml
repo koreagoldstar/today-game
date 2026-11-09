@@ -39,6 +39,8 @@ jobs:
       TG_ADMIN_CHAT_ID: ${{ secrets.TG_ADMIN_CHAT_ID }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      MKT_TOKEN_KEY: ${{ secrets.MKT_TOKEN_KEY }}
+      INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
       CHANNEL_MODE_INSTAGRAM: ${{ vars.CHANNEL_MODE_INSTAGRAM || 'mock' }}
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:

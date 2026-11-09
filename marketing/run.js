@@ -35,7 +35,7 @@ async function setup() {
   const store = createStore();
   const settings = await loadSettings(store);
   const registry = createRegistry();
-  const modes = registerChannels(registry);
+  const modes = registerChannels(registry, process.env, { store });
   const logger = createLogger(store);
   registry.register("source", "game", require("./sources/game"));
   registry.register("copywriter", "default", createCopywriter({ store, profileTags: (id) => (require("./renderers/reel/record").loadProfile(id).hashtags || []) }));
@@ -88,6 +88,12 @@ async function runPublish() {
   const { ctx, store, telegram } = await setup();
   const job = await store.jobStart("publish");
   if (telegram) console.log(`텔레그램: ${JSON.stringify(await telegram.processUpdates())}`);
+  // 하루 한 번: 인스타 토큰 만료 확인 · 7일 전부터 갱신 (실패하면 텔레그램)
+  if (await store.setJson(`ig:checked:${seoulDay()}`, 1, { nx: true, ex: 2 * 86400 })) {
+    const { refreshInstagram } = require("./channels/instagram");
+    const notify = (event, extra) => ctx.registry.get("notifier", "default").notify(event, { id: "instagram" }, extra);
+    console.log(`인스타 토큰: ${JSON.stringify(await refreshInstagram(store, { notify }))}`);
+  }
   const r = await publishDue(ctx);
   await store.jobEnd(job, { result: r });
   console.log(`게시: ${JSON.stringify(r)}`);
@@ -109,7 +115,22 @@ async function runStatus() {
   for (const d of await store.listContents(20)) console.log(brief(d));
 }
 
-const COMMANDS = { produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus };
+/** 인스타 계정 연결: 토큰은 명령 인자가 아니라 환경 변수 IG_NEW_TOKEN 으로 (프로세스 목록 · 로그에 안 남게) */
+async function runIgConnect() {
+  const { store } = await setup();
+  const { connectInstagram } = require("./channels/instagram");
+  const r = await connectInstagram(store, process.env.IG_NEW_TOKEN);
+  console.log(`연결됨: @${r.username} (${r.accountType}) · 만료 ${r.expiresAt.slice(0, 10)}${r.expiresEstimated ? " (60일 추정)" : ""}`);
+}
+
+async function runIgStatus() {
+  const { store, ctx } = await setup();
+  const { instagramStatus } = require("./channels/instagram");
+  console.log(JSON.stringify(await instagramStatus(store)));
+  console.log(JSON.stringify(await ctx.registry.get("channel", "instagram").health()));
+}
+
+const COMMANDS = { produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
 if (!COMMANDS[cmd]) {
   console.error(`명령: ${Object.keys(COMMANDS).join(" | ")}`);
   process.exit(2);

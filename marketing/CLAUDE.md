@@ -10,7 +10,8 @@
 - PHASE 3 게임 녹화 완료 (5/5). 녹화: `node marketing/record.js [게임|--runner pc|actions]`.
 - PHASE 4 편집 · 문구 · 검수 완료. 시험 제작: `node marketing/make.js <게임…> --latest`.
 - **PHASE 5 (텔레그램 승인 · Mock 게시 · 자동 실행) 완료 보고 — 관리자 "다음" 대기.** 실제 Actions · 텔레그램 · Upstash · Blob 으로 제작 → 승인 → Mock 게시까지 확인 (2026-11-09). `docs/REPORT_PHASE_5.md`. 시험: `cd marketing && npm test` (53개). 실행: `node marketing/run.js produce|publish|redo|status`. 매일 자동 실행은 master 병합 뒤부터.
-- 다음: PHASE 6 Instagram 실제 연결 (Meta 앱 · 프로페셔널 계정 필요).
+- **2026-11-09 관리자: "11단계까지 멈추지 말고 계속, 끝나면 컴퓨터 끄기"** — 단계마다 멈추지 않음. 계정이 필요한 것은 Mock + "연결 대기", master 병합 · 운영 배포는 관리자.
+- PHASE 6 인스타 실제 연결: 코드 · 시험 완료(62/62), **관리자 Meta 연결 대기** (`docs/REPORT_PHASE_6.md`, `docs/CHANNEL_SETUP.md`). 연결: `IG_NEW_TOKEN=… node marketing/run.js ig-connect`.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -61,7 +62,7 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 3 | 게임 릴스 녹화 | 완료 보고 (5/5 녹화, 시험 29/29) |
 | 4 | 편집 · 문구 · QC | 완료 보고 (실물 5개, 시험 40/40) |
 | 5 | 텔레그램 승인 · Mock 게시 · 자동 실행 | 완료 보고 (실제 Actions 로 제작→승인→Mock 게시, 시험 53/53) |
-| 6 | Instagram 실제 연결 | - |
+| 6 | Instagram 실제 연결 | 코드 · 시험 완료, Meta 연결 대기 |
 | 7 | 이미지 계열 콘텐츠 | - |
 | 8 | 신작 감지 · 추가 채널 | - |
 | 9 | 웹 관리자 | - |

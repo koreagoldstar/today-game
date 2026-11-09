@@ -14,7 +14,7 @@ function channelMode(name, env = process.env) {
   return v;
 }
 
-function registerChannels(registry, env = process.env) {
+function registerChannels(registry, env = process.env, { store = null } = {}) {
   const modes = {};
   for (const name of Object.keys(CAPS)) {
     modes[name] = channelMode(name, env);
@@ -24,7 +24,7 @@ function registerChannels(registry, env = process.env) {
     }
     const file = path.join(__dirname, `${name}.js`);
     if (!fs.existsSync(file)) throw new Error(`${name} 실제 연결(live)은 아직 구현되지 않았습니다. CHANNEL_MODE_${name.toUpperCase()}=mock 으로 두세요.`);
-    registry.register("channel", name, require(file).create(env));
+    registry.register("channel", name, require(file).create({ env, store }));
   }
   return modes;
 }

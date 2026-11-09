@@ -72,7 +72,7 @@ async function publishChannel(ctx, id, ch, now) {
   };
 
   try {
-    let res = resuming && channel.resume ? await channel.resume(post) : null;
+    let res = resuming && channel.resume ? await channel.resume(post, item(doc, ch)) : null;
     if (!res) res = await channel.publish(item(doc, ch), { save });
     const v = await channel.verify(res.postId);
     if (!v || !v.ok) throw Object.assign(new Error("게시 뒤 다시 조회했지만 게시물을 찾지 못했습니다."), { kind: "VERIFY", retryable: true });
