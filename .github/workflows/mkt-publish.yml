@@ -1,15 +1,11 @@
 # 홍보 자동화 — 30분마다: 텔레그램 답(승인 · 반려 · 수정) 처리 → 기한 지남 · 멈춘 제작 정리 → "승인 + 시각 지남 + 미게시" 만 게시
 # 예약은 master 에 있을 때만 돈다. 붐빌 때 늦을 수 있다 (게시 시각 ± 수십 분).
-# 시험: feature/marketing 에 커밋 메시지 [mkt-run] 으로 push 하면 한 번 돈다 — master 병합 전에 push 트리거는 지운다.
 name: mkt-publish
 
 on:
   schedule:
     - cron: "13,43 * * * *"
   workflow_dispatch: {}
-  push:
-    branches: [feature/marketing]
-    paths: ["marketing/**", ".github/workflows/mkt-*.yml"]
 
 concurrency:
   group: mkt-publish
@@ -20,7 +16,6 @@ permissions:
 
 jobs:
   publish:
-    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[mkt-run]')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:

@@ -1,6 +1,5 @@
 # 홍보 자동화 — 매일 08:00(서울) 쯤 오늘의 콘텐츠를 만들어 텔레그램으로 승인 요청 (게시는 하지 않음)
 # 예약(schedule)은 기본 브랜치(master)에 있을 때만 돈다. GitHub 예약은 붐빌 때 몇 분~수십 분 늦을 수 있다.
-# 시험(결정 8): feature/marketing 에 커밋 메시지에 [mkt-run] 을 넣어 push 하면 한 번 돈다 — master 병합 전에 push 트리거는 지운다.
 name: mkt-produce
 
 on:
@@ -15,9 +14,6 @@ on:
         description: "오늘 이미 있어도 만들기"
         type: boolean
         default: false
-  push:
-    branches: [feature/marketing]
-    paths: ["marketing/**", ".github/workflows/mkt-*.yml"]
 
 concurrency:
   group: mkt-produce
@@ -28,7 +24,6 @@ permissions:
 
 jobs:
   produce:
-    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[mkt-run]')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
