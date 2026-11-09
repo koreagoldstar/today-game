@@ -121,6 +121,7 @@ async function runPublish() {
     console.log(`인스타 토큰: ${JSON.stringify(await refreshInstagram(store, { notify }))}`);
     if ((await store.getJson("channel:threads")) !== null) console.log(`Threads 토큰: ${JSON.stringify(await require("./channels/threads").refreshThreads(store, { notify }))}`);
     console.log(`팔로워: ${JSON.stringify(await insights.recordFollowers(ctx))}`);
+    console.log(`오래된 미디어 정리: ${JSON.stringify(await require("./core/cleanup").cleanupMedia(ctx).catch((e) => ({ error: e.message })))}`);
   }
   const r = await publishDue(ctx);
   // 성과: 게시 1 · 3 · 7일 뒤 지표 (실제 게시만), 월요일엔 지난주 요약을 텔레그램으로

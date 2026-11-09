@@ -112,7 +112,8 @@ const channelsFor = (ctx, kind) => ctx.settings.channels.filter((ch) => !ctx.reg
  *  opts.types 로 유형을 직접 정할 수 있다 (관리자 지정 · 시험)
  */
 async function planSlot(ctx, slot, opts = {}) {
-  const now = opts.now || Date.now();
+  const now = opts.now || (ctx.now ? ctx.now() : Date.now());
+  opts = { ...opts, now };
   const day = seoulDay(now);
   let types = opts.types;
   if (!types && slot === "story") {

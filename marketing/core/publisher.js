@@ -68,7 +68,7 @@ async function publishChannel(ctx, id, ch, now) {
   // 플랫폼 id 를 받으면 바로 콘텐츠와 idempotency 키 둘 다에 남긴다
   const save = async (patch) => {
     await savePost(patch);
-    if (patch.platformId) await store.setJson(idem, { platformId: patch.platformId, at: new Date().toISOString() }, { ex: 60 * 86400 });
+    if (patch.platformId) await store.setJson(idem, { platformId: patch.platformId, at: new Date(now).toISOString() }, { ex: 60 * 86400 });
   };
 
   try {
@@ -76,8 +76,8 @@ async function publishChannel(ctx, id, ch, now) {
     if (!res) res = await channel.publish(item(doc, ch), { save });
     const v = await channel.verify(res.postId);
     if (!v || !v.ok) throw Object.assign(new Error("게시 뒤 다시 조회했지만 게시물을 찾지 못했습니다."), { kind: "VERIFY", retryable: true });
-    await save({ status: "PUBLISHED", platformId: res.postId, permalink: v.permalink || null, publishedAt: new Date().toISOString(), mock: !!res.mock, error: null, nextTryAt: null });
-    await store.setJson(idem, { platformId: res.postId, permalink: v.permalink || null, at: new Date().toISOString() }, { ex: 60 * 86400 });
+    await save({ status: "PUBLISHED", platformId: res.postId, permalink: v.permalink || null, publishedAt: new Date(now).toISOString(), mock: !!res.mock, error: null, nextTryAt: null });
+    await store.setJson(idem, { platformId: res.postId, permalink: v.permalink || null, at: new Date(now).toISOString() }, { ex: 60 * 86400 });
     // 첫 댓글(퀴즈 정답 등): 실패해도 게시는 된 것 — 기록만 남긴다
     const it = item(doc, ch);
     if (it.comment && typeof channel.comment === "function") {
@@ -93,7 +93,7 @@ async function publishChannel(ctx, id, ch, now) {
     const { maxAttempts, backoffMinutes } = settings.publish;
     const attempts = post.attempts || 1;
     const retry = e.retryable !== false && attempts < maxAttempts;
-    const error = { kind: e.kind || "UNKNOWN", code: e.code || null, message: String(e.message || e).slice(0, 300), at: new Date().toISOString() };
+    const error = { kind: e.kind || "UNKNOWN", code: e.code || null, message: String(e.message || e).slice(0, 300), at: new Date(now).toISOString() };
     await savePost({
       status: retry ? "PENDING" : "FAILED",
       error,
@@ -111,7 +111,7 @@ async function publishContent(ctx, id, now) {
   const doc = await store.updateContent(id, (d) => {
     if (!due(d, now)) return false; // 다시 읽어 보니 조건이 안 맞음 (그사이 수정 · 취소)
     claimed = true;
-    if (d.status === "SCHEDULED") transition(d, "PUBLISHING", { by: "publisher" });
+    if (d.status === "SCHEDULED") transition(d, "PUBLISHING", { by: "publisher", now });
     for (const ch of d.channels) d.posts[ch] = d.posts[ch] || { status: "PENDING", attempts: 0 };
   });
   if (!claimed) return null;
@@ -120,12 +120,12 @@ async function publishContent(ctx, id, now) {
   const after = await store.updateContent(id, (d) => {
     const st = d.channels.map((ch) => d.posts[ch].status);
     if (st.every((s) => s === "PUBLISHED" || s === "FAILED")) {
-      if (st.includes("PUBLISHED")) transition(d, "PUBLISHED", { by: "publisher", note: st.includes("FAILED") ? "일부 채널 실패" : "" });
+      if (st.includes("PUBLISHED")) transition(d, "PUBLISHED", { by: "publisher", note: st.includes("FAILED") ? "일부 채널 실패" : "", now });
       else {
         d.failure = { stage: "PUBLISH", reason: d.channels.map((ch) => `${ch}: ${(d.posts[ch].error || {}).message}`).join(" / ") };
-        transition(d, "FAILED", { by: "publisher" });
+        transition(d, "FAILED", { by: "publisher", now });
       }
-    } else if (d.status === "PUBLISHING") transition(d, "SCHEDULED", { by: "publisher", note: "남은 채널은 다음 실행에서" });
+    } else if (d.status === "PUBLISHING") transition(d, "SCHEDULED", { by: "publisher", note: "남은 채널은 다음 실행에서", now });
   });
   if (after.status === "PUBLISHED") await notify(ctx, "published", after);
   return after;
@@ -140,14 +140,14 @@ async function publishDue(ctx) {
       const out = { expired: [], interrupted: [], published: [], pending: [], failed: [] };
       for (const d of await store.listContents(200)) {
         if (isExpired(d, now, settings.approvalExpiryHours)) {
-          await store.updateContent(d.id, (x) => (isExpired(x, now, settings.approvalExpiryHours) ? void transition(x, "EXPIRED", { by: "publisher", note: `승인 대기 ${settings.approvalExpiryHours}시간 지남` }) : false));
+          await store.updateContent(d.id, (x) => (isExpired(x, now, settings.approvalExpiryHours) ? void transition(x, "EXPIRED", { by: "publisher", note: `승인 대기 ${settings.approvalExpiryHours}시간 지남`, now }) : false));
           out.expired.push(d.id);
           await notify(ctx, "expired", d);
         } else if (MAKING.includes(d.status) && !d.redo && now - Date.parse(d.updatedAt) > STALE_MAKING_MS) {
           await store.updateContent(d.id, (x) => {
             if (!MAKING.includes(x.status) || x.redo) return false;
             x.failure = { stage: x.status, reason: "작업 서버가 중간에 멈춤" };
-            transition(x, "FAILED", { by: "publisher", note: "작업 중단" });
+            transition(x, "FAILED", { by: "publisher", note: "작업 중단", now });
           });
           out.interrupted.push(d.id);
         } else if (due(d, now)) {

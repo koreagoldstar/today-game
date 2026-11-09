@@ -75,6 +75,10 @@ function createFakeUpstash({ jitter = true } = {}) {
         const num = (x) => (x === "+inf" ? Infinity : x === "-inf" ? -Infinity : Number(x));
         return [...e.v.entries()].filter(([, s]) => s >= num(a[1]) && s <= num(a[2])).sort((x, y) => x[1] - y[1]).map((x) => x[0]);
       }
+      case "ZREM": {
+        const e = alive(a[0]);
+        return e ? a.slice(1).reduce((n, m) => n + (e.v.delete(String(m)) ? 1 : 0), 0) : 0;
+      }
       case "LPUSH": {
         const e = of(a[0], "l", () => []);
         e.v.unshift(...a.slice(1).reverse());

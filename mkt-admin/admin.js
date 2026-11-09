@@ -102,6 +102,7 @@
     const cover = d.files.find((f) => f.role === "cover");
     if (video) box.append(h("video", { src: video.url, controls: true, preload: "metadata", playsinline: true, poster: cover ? cover.url : null }));
     for (const f of d.files.filter((x) => x.role === "slide" || x.role === "image")) box.append(h("img", { src: f.url, alt: `${f.role} ${f.w || ""}x${f.h || ""}`, loading: "lazy" }));
+    if (d.mediaRemovedAt) return h("p", { class: "note", text: "저장 공간 때문에 파일은 30일 뒤 지웠습니다 (게시물은 플랫폼에 그대로)." });
     return d.files.length ? box : h("p", { class: "note", text: "미리 볼 파일이 없습니다 (공개 주소가 없는 콘텐츠)." });
   }
 

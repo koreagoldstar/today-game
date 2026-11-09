@@ -191,7 +191,7 @@ test("운세 스토리 · 스토리 재활용: 1080x1920 한 장, 재활용은 �
   assert.equal(fo.plan.validDay, undefined, "plan 을 직접 줄 때는 그대로");
 
   const coverFile = path.join(ROOT, "games/basketball-shootout/assets/court.jpg");
-  await base.store.saveContent({ id: "2026-11-08-feed-aaaaaa", slot: "feed", dateKey: "2026-11-08", status: "PUBLISHED", createdAt: "2026-11-08T00:00:00Z", updatedAt: "2026-11-08T10:05:00Z", source: { sourceType: "game", facts: { url: "/games/demo/" } }, render: { kind: "reel", meta: { title: "데모 게임" }, files: [{ role: "cover", url: "https://media.test/cover.jpg" }] } });
+  await base.store.saveContent({ id: "2026-11-08-feed-aaaaaa", slot: "feed", dateKey: "2026-11-08", status: "PUBLISHED", createdAt: "2026-11-08T00:00:00Z", updatedAt: "2026-11-08T10:05:00Z", posts: { instagram: { status: "PUBLISHED", publishedAt: "2026-11-08T10:05:00Z" } }, source: { sourceType: "game", facts: { url: "/games/demo/" } }, render: { kind: "reel", meta: { title: "데모 게임" }, files: [{ role: "cover", url: "https://media.test/cover.jpg" }] } });
   base.ctx.fetchImpl = async (url) => {
     assert.equal(url, "https://media.test/cover.jpg");
     return { ok: true, arrayBuffer: async () => fs.readFileSync(coverFile) };
