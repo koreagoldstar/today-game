@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <title>홍보 관리 | 오늘의 게임</title>
+    <link rel="stylesheet" href="admin.css?v=1" />
+  </head>
+  <body>
+    <!-- 잠금 화면 -->
+    <main class="login" id="login" hidden>
+      <form class="login-card" id="login-form" autocomplete="on">
+        <p class="kicker">TODAY GAME</p>
+        <h1>홍보 관리</h1>
+        <p class="lead">관리자만 들어올 수 있어요.</p>
+        <label class="field">
+          <span>관리자 키</span>
+          <input id="key" name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="btn primary" id="login-btn">들어가기</button>
+        <p class="msg" id="login-msg" role="alert"></p>
+        <p class="hint">한 번 들어오면 이 기기에서 7일 동안 기억해요.</p>
+      </form>
+    </main>
+
+    <div class="app" id="app" hidden>
+      <header class="top">
+        <div>
+          <h1>홍보 관리</h1>
+          <p class="sub" id="sub">불러오는 중…</p>
+        </div>
+        <div class="top-actions">
+          <button type="button" class="btn" id="refresh-btn">새로고침</button>
+          <button type="button" class="btn ghost" id="logout-btn">나가기</button>
+        </div>
+      </header>
+      <nav class="tabs" id="tabs" aria-label="메뉴">
+        <a href="#overview">오늘 현황</a>
+        <a href="#pending">승인 대기 <b id="n-pending"></b></a>
+        <a href="#scheduled">게시 일정</a>
+        <a href="#published">게시 완료</a>
+        <a href="#failed">실패 내역</a>
+        <a href="#games">게임별 설정</a>
+        <a href="#schedule">편성표</a>
+        <a href="#channels">채널 연결</a>
+        <a href="#insights">성과</a>
+        <a href="#logs">로그</a>
+      </nav>
+      <p class="toast" id="toast" role="status" hidden></p>
+      <main class="view" id="view"></main>
+    </div>
+    <script src="admin.js?v=1"></script>
+  </body>
+</html>

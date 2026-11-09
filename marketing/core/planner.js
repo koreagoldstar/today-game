@@ -24,7 +24,12 @@ async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNN
   const last = games.find((d) => !["FAILED", "CANCELLED"].includes(d.status));
   const catalog = Object.fromEntries(readCatalog().map((g) => [g.id, g]));
   const out = [];
+  const excluded = settings.excludeGames || [];
   for (const id of listProfiles()) {
+    if (excluded.includes(id)) {
+      out.push({ id, score: -1, eligible: false, reasons: ["관리자가 홍보 제외"] });
+      continue;
+    }
     const p = loadProfile(id);
     const reasons = [];
     if (runner === "actions" && p.runner === "pc") {
@@ -126,7 +131,7 @@ async function planSlot(ctx, slot, opts = {}) {
       if (r.plan) plans.push({ ...base, sourceId: r.plan.sourceId, reason: r.plan.reason });
     } else if (name === "new-game") {
       // 신작: 녹화할 수 있으면 릴스 (Actions 에서는 PC 재고가 있을 때만), 아니면 썸네일 + 설명 이미지
-      const { fresh } = await ctx.registry.get("source", "new-game").detect({ store: ctx.store });
+      const fresh = (await ctx.registry.get("source", "new-game").detect({ store: ctx.store })).fresh.filter((g) => !(ctx.settings.excludeGames || []).includes(g));
       const id = fresh[0];
       if (!id) continue;
       let reel = listProfiles().includes(id);

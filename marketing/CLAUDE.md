@@ -14,6 +14,7 @@
 - PHASE 6 인스타 실제 연결: 코드 · 시험 완료(62/62), **관리자 Meta 연결 대기** (`docs/REPORT_PHASE_6.md`, `docs/CHANNEL_SETUP.md`). 연결: `IG_NEW_TOKEN=… node marketing/run.js ig-connect`.
 - PHASE 7 이미지 콘텐츠(퀴즈 캐러셀 · 운세 · 랭킹 · 챌린지 · 스토리 재활용) 완료 (`docs/REPORT_PHASE_7.md`, 시험 73/73). 시험 제작: `node marketing/make.js quiz fortune challenge ranking`. 자리별 제작: `run.js produce --slot story|feed --type <유형>`.
 - PHASE 8 신작 감지(C4) · Threads · Facebook 페이지 릴스 · YouTube Shorts 어댑터 완료 — 채널은 관리자 연결 대기 (`docs/REPORT_PHASE_8.md`, 시험 80/80). 신작 시험: `node marketing/make.js new-game:<id>`. 채널 상태: `run.js channels`.
+- PHASE 9 웹 관리자 완료 — 운영 배포 안 함 (`docs/REPORT_PHASE_9.md`, 시험 85/85). 이 PC 시험: `node marketing/admin-dev.js` (운영 저장소는 읽기만, 키는 `out/admin-dev-key.txt`). 배포 전: Vercel `MKT_ADMIN_KEY` · `.vercelignore` 수정 승인 필요.
 - 설치: `cd marketing && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci` (Pretendard · Claude SDK · playwright 1.65 — 크롬은 시스템 것을 씀).
 
 ## 꼭 지킬 것 (지시서 요약)
@@ -56,6 +57,9 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 랭킹은 **지난주** 기록 (월요일 게시). 점수 표시는 사이트 `js/rankable.js formatScore` 를 vm 으로 그대로 씀 — 단위를 직접 만들지 말 것.
 - 운세 · 챌린지 스토리는 `plan.validDay` — 그날만 게시, 날이 지나면 EXPIRED. 퀴즈 정답은 이미지 · 캡션이 아니라 첫 댓글.
 - 신작 감지는 첫 실행 때 기준 목록만 저장 (`seen:games`). 기준을 지우면 다음 실행이 다시 기준만 만든다 (기존 게임 전부 신작 아님).
+- 설정은 **바꾼 값만** 저장 (`saveSettings`). 전체를 저장하면 기본값 변경이 운영에 안 먹는다.
+- 웹 관리자 · 텔레그램은 같은 `core/approval.js` — 동시에 눌러도 잠금 + 버전으로 한 번만.
+- `.vercelignore` 에 `marketing/out` 이 없으면 배포 때 녹화 파일(수 GB)이 올라간다 — 관리자 승인 받고 추가할 것.
 - `@vercel/blob` 은 2.4.0 고정 (2.8.2 는 zod 보안 경고).
 
 ## PHASE 진행표
@@ -70,6 +74,6 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 | 6 | Instagram 실제 연결 | 코드 · 시험 완료, Meta 연결 대기 |
 | 7 | 이미지 계열 콘텐츠 | 완료 (실물 4종 · 실제 텔레그램 사진 승인 요청, 시험 73/73) |
 | 8 | 신작 감지 · 추가 채널 | 완료 (실제 Actions 로 스토리 · 릴스, 채널 3개는 연결 대기, 시험 80/80) |
-| 9 | 웹 관리자 | - |
+| 9 | 웹 관리자 | 완료 (이 PC 에서 실데이터 복사본으로 확인, 운영 배포 전, 시험 85/85) |
 | 10 | 성과 · 고도화 | - |
 | 11 | 통합 · 문서 · 병합 준비 | - |

@@ -25,6 +25,7 @@ const { loadSettings, seoulDay } = require("./core/settings");
 const { createApproval } = require("./core/approval");
 const { produce, runQueued } = require("./core/pipeline");
 const { publishDue } = require("./core/publisher");
+const { writeSnapshot } = require("./core/snapshot");
 const { KO } = require("./core/state");
 const { registerChannels } = require("./channels");
 const { createCopywriter } = require("./copy/copywriter");
@@ -119,6 +120,7 @@ async function runPublish() {
     if ((await store.getJson("channel:threads")) !== null) console.log(`Threads 토큰: ${JSON.stringify(await require("./channels/threads").refreshThreads(store, { notify }))}`);
   }
   const r = await publishDue(ctx);
+  await writeSnapshot(ctx).catch((e) => console.log(`관리자 화면 자료 저장 실패: ${e.message}`));
   await store.jobEnd(job, { result: r });
   console.log(`게시: ${JSON.stringify(r)}`);
   const queued = (await store.listContents(100)).filter((d) => d.redo).length;

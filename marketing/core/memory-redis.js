@@ -38,6 +38,12 @@ function createFakeUpstash({ jitter = true } = {}) {
         data.set(a[0], { t: "s", v: String(a[1]), exp: ex > 0 ? Date.now() + Number(a[ex + 1]) * 1000 : 0 });
         return "OK";
       }
+      case "INCR": {
+        const e = alive(a[0]);
+        const n = (e && e.t === "s" ? Number(e.v) : 0) + 1;
+        data.set(a[0], { t: "s", v: String(n), exp: e ? e.exp : 0 });
+        return n;
+      }
       case "DEL":
         return a.reduce((n, k) => n + (data.delete(k) ? 1 : 0), 0);
       case "MGET":
