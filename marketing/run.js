@@ -187,13 +187,23 @@ async function runWeekly() {
   console.log(`보냄 (${r.week}):\n${r.text}`);
 }
 
+/** 관리자가 이 PC 에서 승인: approve <콘텐츠 id> --version N [--at ISO] [--by 이름] (텔레그램 · 웹과 같은 규칙) */
+async function runApprove() {
+  const { approval } = await setup();
+  const id = argv[1];
+  const version = Number(opt("--version"));
+  if (!id || !Number.isInteger(version)) throw new Error("approve <콘텐츠 id> --version <보고 승인한 버전> [--at ISO]");
+  const d = await approval.approve(id, { version, by: opt("--by") || "admin", via: "cli", ...(opt("--at") ? { scheduledAt: opt("--at") } : {}) });
+  console.log(`승인: ${brief(d)} · 게시 예정 ${d.scheduledAt} · 채널 ${d.channels.join(", ")}`);
+}
+
 /** 모든 채널 상태 (연결 · 토큰 · 모드) */
 async function runChannels() {
   const { ctx } = await setup();
   for (const name of ctx.registry.names("channel")) console.log(`${name}: ${JSON.stringify(await ctx.registry.get("channel", name).health())}`);
 }
 
-const COMMANDS = { weekly: runWeekly, "threads-connect": runThreadsConnect, channels: runChannels, produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
+const COMMANDS = { approve: runApprove, weekly: runWeekly, "threads-connect": runThreadsConnect, channels: runChannels, produce: runProduce, publish: runPublish, redo: runRedo, status: runStatus, "ig-connect": runIgConnect, "ig-status": runIgStatus };
 if (!COMMANDS[cmd]) {
   console.error(`명령: ${Object.keys(COMMANDS).join(" | ")}`);
   process.exit(2);

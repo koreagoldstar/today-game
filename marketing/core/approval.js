@@ -65,7 +65,8 @@ function checkTime(settings, doc, counts, iso, now) {
 
 function createApproval({ store, settings, registry, now = () => Date.now() }) {
   const who = ({ by, via }) => {
-    if (!by || !["telegram", "web"].includes(via)) throw new ActionError("누가 · 어디서 했는지가 없습니다.");
+    // cli: 관리자가 이 PC 에서 직접 (run.js approve) — 자동 실행(Actions)에는 이 명령이 없다
+    if (!by || !["telegram", "web", "cli"].includes(via)) throw new ActionError("누가 · 어디서 했는지가 없습니다.");
     return `${via}:${by}`;
   };
 
