@@ -9,7 +9,26 @@
 - 토큰을 바꾸려면: @BotFather → `/revoke` → 새 토큰을 `TG_BOT_TOKEN` 에 넣기
 - 주의: 웹훅을 켜면 지금 방식(30분마다 getUpdates)이 멈춥니다.
 
-## 2. Instagram (필수) — 연결 대기
+## 2. Instagram (필수) — **연결됨 (2026-11-11, @todaygame.co.kr)** · 실제 게시는 아직 꺼짐
+
+**실제로 연결한 방법 (2026-11-11).** Meta 화면이 바뀌어 새 앱은 "Instagram 로그인" 방식을 못 쓰고 **통합 로그인**만 됩니다.
+- 앱 `todaygame` (ID 1618903263253543, 개발 모드) → 비즈니스 포트폴리오 **Todaygame** (ID 1687376526515967, 비즈니스 인증 안 됨)에 연결.
+- 앱 기본 설정: 연락처 이메일 · 개인정보처리방침 `/privacy/` · 약관 `/terms/` · 데이터 삭제 안내 `/privacy/`. 비어 있으면 토큰 팝업이 "사용할 수 없는 기능"으로 막힌다.
+- 비즈니스 포트폴리오 → 설정 → Instagram 계정에 **@todaygame.co.kr 추가**. 브라우저 인스타가 다른 계정으로 로그인돼 있으면 그 계정이 추가되니 먼저 전환할 것. @no.1_goldstar 도 들어가 있음.
+- 앱 역할 → **Instagram 테스터 todaygame.co.kr** (인스타에서 수락).
+- Instagram → API setup with Unified login → 구성 "Instagram API(통합 로그인)"(템플릿, ID 5000960026797202).
+  - 시스템 사용자 토큰, **만료 없음**.
+  - 권한: instagram_basic · content_publish · manage_comments · manage_messages · ads_management · ads_read.
+  - **instagram_manage_insights 없음 → 게시물 지표는 "제공 안 됨"**.
+- 토큰 생성(팝업 — 사람이 직접 클릭) → 광고 계정은 선택하지 않음 → 복사 → `run.js ig-connect --ig-user 17841430682077359` (토큰은 `IG_NEW_TOKEN` 환경 변수로).
+  - 토큰은 `graph.facebook.com` 용(`EAA…`)입니다. 어댑터가 `mode: facebook` 으로 저장하고 같은 IG 엔드포인트를 그 주소로 부릅니다.
+- 확인 (2026-11-11):
+  - `ig-status` 연결 · 만료 없음.
+  - `health` 팔로워 4.
+  - **게시 한도 조회 200 (0/100)**.
+  - 계정 지표는 권한 없음(#10).
+
+아래 1~7은 처음 계획한 "Instagram 로그인" 방식입니다. 예전 앱이면 이 방식도 됩니다.
 
 공식 문서: https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/create-a-meta-app-with-instagram (2026-11-09 확인)
 

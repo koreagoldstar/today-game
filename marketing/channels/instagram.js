@@ -12,6 +12,8 @@ const { CAPS } = require("./caps");
 const { encrypt, decrypt } = require("../core/secret");
 
 const HOST = "https://graph.instagram.com";
+// 2026-11 Meta 새 앱은 "통합 로그인" — 비즈니스용 Facebook 로그인의 시스템 사용자 토큰(만료 없음)으로 graph.facebook.com 에서 같은 IG 엔드포인트를 쓴다
+const FB_HOST = "https://graph.facebook.com";
 const DAY = 86400000;
 const METRICS = ["views", "reach", "likes", "comments", "saved", "shares", "total_interactions"];
 
@@ -28,10 +30,10 @@ function classify(status, err) {
   return Object.assign(new Error(msg), { kind, code, subcode: sub, status, retryable: ["RATE_LIMIT", "NETWORK", "UNKNOWN"].includes(kind) });
 }
 
-function api({ token, fetchImpl = fetch, version = process.env.INSTAGRAM_API_VERSION || "v27.0" }) {
+function api({ token, fetchImpl = fetch, version = process.env.INSTAGRAM_API_VERSION || "v27.0", host = HOST }) {
   return async function call(method, path, params = {}) {
     const qs = new URLSearchParams({ ...params, access_token: token });
-    const url = path.startsWith("/refresh_access_token") || path.startsWith("/access_token") ? `${HOST}${path}?${qs}` : method === "GET" ? `${HOST}/${version}${path}?${qs}` : `${HOST}/${version}${path}`;
+    const url = path.startsWith("/refresh_access_token") || path.startsWith("/access_token") ? `${host}${path}?${qs}` : method === "GET" ? `${host}/${version}${path}?${qs}` : `${host}/${version}${path}`;
     let res;
     try {
       res = await fetchImpl(url, method === "GET" ? {} : { method, headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: qs.toString() });
@@ -47,9 +49,19 @@ function api({ token, fetchImpl = fetch, version = process.env.INSTAGRAM_API_VER
 /* ---------------- 토큰 (연결 · 상태 · 갱신) ---------------- */
 
 /** 관리자가 Meta 앱 대시보드에서 받은 토큰을 확인해 암호화 저장. 비즈니스 · 크리에이터 계정만 */
-async function connectInstagram(store, token, { env = process.env, fetchImpl, now = Date.now() } = {}) {
+async function connectInstagram(store, token, { env = process.env, fetchImpl, now = Date.now(), igUserId = env.IG_USER_ID } = {}) {
   let tok = String(token || "").trim();
   if (!tok) throw new Error("토큰이 비어 있습니다.");
+  // 통합 로그인(시스템 사용자) 토큰: graph.facebook.com 에서 그 IG 계정을 읽을 수 있어야 함. 만료 없음 → 갱신 안 함
+  if (/^EAA/.test(tok) || igUserId) {
+    if (!/^\d+$/.test(String(igUserId || ""))) throw new Error("Facebook 그래프(통합 로그인) 토큰입니다. 인스타 계정 id 를 함께 주세요 (IG_USER_ID — 앱 대시보드 \"액세스 토큰 생성\" 표의 숫자).");
+    const fb = api({ token: tok, fetchImpl, host: FB_HOST });
+    const me = await fb("GET", "/me", { fields: "id,name" });
+    const ig = await fb("GET", `/${igUserId}`, { fields: "id,username" });
+    const rec = { mode: "facebook", host: FB_HOST, userId: String(ig.id), username: ig.username, accountType: "PROFESSIONAL", systemUser: me.name || null, tokenEnc: encrypt(tok, env), connectedAt: new Date(now).toISOString(), refreshedAt: new Date(now).toISOString(), expiresAt: null, neverExpires: true, expiresEstimated: false, status: "ok", error: null };
+    await store.setJson("channel:instagram", rec);
+    return { ...rec, tokenEnc: undefined };
+  }
   let expiresIn = null;
   if (env.INSTAGRAM_APP_SECRET) {
     // 짧은 토큰(1시간)이면 장기 토큰(60일)으로 바꾼다. 이미 장기 토큰이면 실패하므로 그대로 쓴다
@@ -80,13 +92,14 @@ async function connectInstagram(store, token, { env = process.env, fetchImpl, no
 async function instagramStatus(store, now = Date.now()) {
   const r = await store.getJson("channel:instagram");
   if (!r) return { connected: false };
-  return { connected: true, username: r.username, accountType: r.accountType, expiresAt: r.expiresAt, expiresEstimated: r.expiresEstimated, daysLeft: Math.floor((Date.parse(r.expiresAt) - now) / DAY), status: r.status, error: r.error, refreshedAt: r.refreshedAt };
+  return { connected: true, mode: r.mode || "instagram", username: r.username, accountType: r.accountType, expiresAt: r.expiresAt, neverExpires: !!r.neverExpires, expiresEstimated: r.expiresEstimated, daysLeft: r.neverExpires ? null : Math.floor((Date.parse(r.expiresAt) - now) / DAY), status: r.status, error: r.error, refreshedAt: r.refreshedAt };
 }
 
 /** 만료 7일 전부터 갱신 (발급 24시간 뒤부터 가능). 결과 { action: none|refreshed|failed|expired } */
 async function refreshInstagram(store, { env = process.env, fetchImpl, now = Date.now(), notify = async () => {} } = {}) {
   const r = await store.getJson("channel:instagram");
   if (!r) return { action: "none", reason: "연결 안 됨" };
+  if (r.neverExpires) return { action: "none", reason: "만료 없는 토큰 (통합 로그인 시스템 사용자)" };
   const left = Date.parse(r.expiresAt) - now;
   if (left <= 0) {
     await store.setJson("channel:instagram", { ...r, status: "expired", error: "토큰 만료" });
@@ -117,8 +130,8 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
   async function session() {
     const r = await store.getJson("channel:instagram");
     if (!r) throw Object.assign(new Error("인스타그램 계정이 연결되지 않았습니다 (node marketing/run.js ig-connect)."), { kind: "TOKEN", retryable: false });
-    if (r.status === "expired" || Date.parse(r.expiresAt) <= Date.now()) throw Object.assign(new Error("인스타그램 토큰이 만료되었습니다. 다시 연결해 주세요."), { kind: "TOKEN", retryable: false });
-    return { call: api({ token: decrypt(r.tokenEnc, env), fetchImpl }), uid: r.userId };
+    if (r.status === "expired" || (!r.neverExpires && Date.parse(r.expiresAt) <= Date.now())) throw Object.assign(new Error("인스타그램 토큰이 만료되었습니다. 다시 연결해 주세요."), { kind: "TOKEN", retryable: false });
+    return { call: api({ token: decrypt(r.tokenEnc, env), fetchImpl, host: r.host || HOST }), uid: r.userId, mode: r.mode || "instagram" };
   }
 
   async function waitFinished(call, id) {
@@ -239,9 +252,9 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
       const st = await instagramStatus(store);
       if (!st.connected) return { ok: false, mode: "live", reason: "계정 연결 안 됨" };
       try {
-        const { call } = await session();
-        const me = await call("GET", "/me", { fields: "user_id,username,account_type,followers_count" });
-        return { ok: true, mode: "live", username: me.username, accountType: me.account_type, followers: me.followers_count, daysLeft: st.daysLeft };
+        const { call, uid, mode } = await session();
+        const me = mode === "facebook" ? await call("GET", `/${uid}`, { fields: "id,username,followers_count" }) : await call("GET", "/me", { fields: "user_id,username,account_type,followers_count" });
+        return { ok: true, mode: "live", login: mode, username: me.username, accountType: me.account_type || st.accountType, followers: me.followers_count, daysLeft: st.daysLeft };
       } catch (e) {
         return { ok: false, mode: "live", reason: `${e.kind}: ${e.message}`, daysLeft: st.daysLeft };
       }
@@ -249,4 +262,4 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
   };
 }
 
-module.exports = { create, classify, connectInstagram, refreshInstagram, instagramStatus, finalCaption, METRICS };
+module.exports = { FB_HOST, create, classify, connectInstagram, refreshInstagram, instagramStatus, finalCaption, METRICS };

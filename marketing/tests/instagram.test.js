@@ -157,3 +157,31 @@ test("토큰 갱신: 7일 넘게 남으면 그대로 · 7일 안이면 갱신 ·
   const ch = ig.create({ env: ENV, store: bad.store, fetchImpl: bad.meta.fetchImpl, sleep: async () => {} });
   await assert.rejects(() => ch.publish(reelItem), (e) => e.kind === "TOKEN" && e.retryable === false);
 });
+
+test("통합 로그인(시스템 사용자 토큰): graph.facebook.com 으로 연결 · 만료 없음 · 갱신 안 함 · 게시도 같은 주소", async () => {
+  const mem = createFakeUpstash({ jitter: false });
+  const store = createStore({ url: mem.url, token: mem.token, fetchImpl: mem.fetchImpl });
+  const hosts = new Set();
+  const meta = fakeMeta();
+  const fetchImpl = async (url, init = {}) => {
+    const u = new URL(url);
+    hosts.add(u.host);
+    if (u.pathname.endsWith("/me")) return { ok: true, status: 200, json: async () => ({ id: "9001", name: "todaygame System User" }) };
+    if (u.pathname.endsWith("/1784") && !init.method) return { ok: true, status: 200, json: async () => ({ id: "1784", username: "todaygame.co.kr", followers_count: 4 }) };
+    return meta.fetchImpl(url, init);
+  };
+  await assert.rejects(ig.connectInstagram(store, "EAAXfake", { env: ENV, fetchImpl }), /IG_USER_ID/);
+  const r = await ig.connectInstagram(store, "EAAXfake", { env: ENV, fetchImpl, igUserId: "1784" });
+  assert.equal(r.mode, "facebook");
+  assert.equal(r.neverExpires, true);
+  assert.equal(r.username, "todaygame.co.kr");
+  assert.ok(!JSON.stringify(await store.getJson("channel:instagram")).includes("EAAXfake"), "토큰은 암호문으로만");
+  assert.equal((await ig.refreshInstagram(store, { env: ENV, fetchImpl, now: Date.now() + 400 * DAY })).action, "none", "만료 없는 토큰은 갱신 안 함");
+  assert.equal((await ig.instagramStatus(store)).daysLeft, null);
+  const ch = ig.create({ env: ENV, store, fetchImpl, sleep: async () => {} });
+  assert.equal((await ch.publish(reelItem)).postId, "m-900");
+  assert.deepEqual([...hosts], ["graph.facebook.com"], "모든 요청이 graph.facebook.com");
+  const h = await ch.health();
+  assert.equal(h.ok, true);
+  assert.equal(h.login, "facebook");
+});

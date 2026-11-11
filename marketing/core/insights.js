@@ -28,18 +28,22 @@ async function collectInsights(ctx, now = Date.now()) {
       const due = CHECKS.filter((k) => age >= k && !done[k]);
       if (!due.length) continue;
       let metrics;
+      let unavailable = null;
       try {
         metrics = await channel.insights(p.platformId);
       } catch (e) {
         if (logger) await logger.warn(`${d.id} ${ch} 지표 수집 실패: ${e.message}`);
-        continue;
+        if (e.kind !== "PERMISSION") continue; // 일시 오류는 다음 실행에서 다시
+        // 권한이 없으면(예: 통합 로그인 구성에 instagram_manage_insights 없음) 다시 물어도 같음 → 그 시점은 "제공 안 됨"으로 기록
+        metrics = [];
+        unavailable = String(e.message).slice(0, 200);
       }
       const at = new Date(now).toISOString();
       await store.updateContent(d.id, (x) => {
         x.insights = x.insights || {};
         const cur = x.insights[ch] || { checkpoints: {} };
-        for (const k of due) cur.checkpoints[k] = { at, metrics };
-        Object.assign(cur, { metrics, at });
+        for (const k of due) cur.checkpoints[k] = { at, metrics, ...(unavailable ? { unavailable } : {}) };
+        Object.assign(cur, { metrics, at, unavailable });
         x.insights[ch] = cur;
       });
       out.push({ id: d.id, channel: ch, days: due, metrics: metrics.length });

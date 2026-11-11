@@ -153,8 +153,10 @@ async function runStatus() {
 async function runIgConnect() {
   const { store } = await setup();
   const { connectInstagram } = require("./channels/instagram");
-  const r = await connectInstagram(store, process.env.IG_NEW_TOKEN);
-  console.log(`연결됨: @${r.username} (${r.accountType}) · 만료 ${r.expiresAt.slice(0, 10)}${r.expiresEstimated ? " (60일 추정)" : ""}`);
+  // 통합 로그인(시스템 사용자) 토큰이면 인스타 계정 id 도: --ig-user <숫자> 또는 IG_USER_ID
+  const igUserId = opt("--ig-user") || process.env.IG_USER_ID;
+  const r = await connectInstagram(store, process.env.IG_NEW_TOKEN, igUserId ? { igUserId } : {});
+  console.log(`연결됨: @${r.username} (${r.accountType}) · ${r.neverExpires ? `만료 없음 (통합 로그인 · 시스템 사용자 ${r.systemUser || ""})` : `만료 ${r.expiresAt.slice(0, 10)}${r.expiresEstimated ? " (60일 추정)" : ""}`}`);
 }
 
 async function runIgStatus() {
