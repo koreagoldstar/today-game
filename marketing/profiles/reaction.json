@@ -1,0 +1,16 @@
+{
+  "id": "reaction",
+  "note": "DOM + 2D. 실제 GitHub 러너는 2배 해상도 캡처에 너무 느려서(인형뽑기 10.6장/초) 이 PC 에서 녹화해 재고로. tools/game-reels 의 조종 코드 그대로",
+  "path": "/games/reaction/",
+  "needsGpu": false,
+  "runner": "pc",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 45,
+  "minFps": 20,
+  "ready": "!!document.getElementById('start-btn')",
+  "player": "reaction",
+  "hooks": ["초록불에 바로 탭!", "반응속도 테스트", "몇 ms 나올까?"],
+  "hashtags": ["#반응속도", "#반응속도테스트"]
+}

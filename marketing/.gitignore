@@ -1,0 +1,6 @@
+# 비밀값 · 결과물 · 설치물 (저장소에 올리지 않음)
+.env
+.env.local
+out/
+node_modules/
+!.env.example

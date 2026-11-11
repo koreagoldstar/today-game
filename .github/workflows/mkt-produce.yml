@@ -1,0 +1,66 @@
+# 홍보 자동화 — 매일 08:00(서울) 쯤 오늘의 콘텐츠를 만들어 텔레그램으로 승인 요청 (게시는 하지 않음)
+# 예약(schedule)은 기본 브랜치(master)에 있을 때만 돈다. GitHub 예약은 붐빌 때 몇 분~수십 분 늦을 수 있다.
+name: mkt-produce
+
+on:
+  schedule:
+    - cron: "7 23 * * *" # 08:07 KST (정각은 붐벼서 피함)
+  workflow_dispatch:
+    inputs:
+      game:
+        description: "게임 지정 (비우면 자동 선정)"
+        required: false
+      force:
+        description: "오늘 이미 있어도 만들기"
+        type: boolean
+        default: false
+
+concurrency:
+  group: mkt-produce
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      MKT_RUNNER: actions
+      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+      TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+      TG_ADMIN_CHAT_ID: ${{ secrets.TG_ADMIN_CHAT_ID }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      MKT_TOKEN_KEY: ${{ secrets.MKT_TOKEN_KEY }}
+      INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+      CHANNEL_MODE_INSTAGRAM: ${{ vars.CHANNEL_MODE_INSTAGRAM || 'mock' }}
+      CHANNEL_MODE_THREADS: ${{ vars.CHANNEL_MODE_THREADS || 'mock' }}
+      CHANNEL_MODE_FACEBOOK: ${{ vars.CHANNEL_MODE_FACEBOOK || 'mock' }}
+      CHANNEL_MODE_YOUTUBE: ${{ vars.CHANNEL_MODE_YOUTUBE || 'mock' }}
+      FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+      FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+      YOUTUBE_PRIVACY: ${{ vars.YOUTUBE_PRIVACY || 'public' }}
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: marketing/package-lock.json
+      - name: FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: 설치
+        working-directory: marketing
+        run: npm ci --no-audit --no-fund
+      - name: 오늘의 콘텐츠 만들기
+        env:
+          GAME: ${{ inputs.game }} # 입력값은 명령에 직접 끼우지 않고 환경 변수로 (명령 주입 방지)
+          FORCE: ${{ inputs.force }}
+        run: node marketing/run.js produce ${FORCE:+$([ "$FORCE" = "true" ] && echo --force)} ${GAME:+--game "$GAME"}

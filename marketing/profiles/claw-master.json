@@ -1,0 +1,16 @@
+{
+  "id": "claw-master",
+  "note": "Canvas 2D. 이 PC 의 SwiftShader 로는 초당 27장이었지만 실제 GitHub 러너(2026-11-09)에서는 10.6장 → 이 PC 에서 녹화해 재고로. 실제 키 입력으로만 조준 · 내리기",
+  "path": "/games/claw-master/",
+  "needsGpu": false,
+  "runner": "pc",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 60,
+  "minFps": 20,
+  "ready": "window.ClawMaster && window.ClawMaster.screen === 'title'",
+  "player": "claw-master",
+  "hooks": ["이 인형, 뽑을 수 있을까?", "진짜 물리 인형뽑기", "집게를 맞춰 내려라!"],
+  "hashtags": ["#인형뽑기", "#인형뽑기게임"]
+}
