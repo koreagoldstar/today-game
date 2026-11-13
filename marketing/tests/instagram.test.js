@@ -102,6 +102,10 @@ test("오류 구분: 토큰 · 권한 · 한도 · 미디어 처리 · 요청 �
   assert.equal(k(400, { code: 190 }), "TOKEN");
   assert.equal(k(403, { code: 10 }), "PERMISSION");
   assert.equal(k(400, { code: 200 }), "PERMISSION");
+  const blocked = ig.classify(400, { code: 200, error_subcode: 5258005, message: "API access blocked." });
+  assert.equal(blocked.kind, "BLOCKED", "2026-11-13 실제: 관리자 로그아웃 때 차단 → 다시 로그인하면 풀림");
+  assert.equal(blocked.retryable, true);
+  assert.match(blocked.message, /다시 로그인/);
   assert.equal(k(400, { code: 4 }), "RATE_LIMIT");
   assert.equal(k(429, {}), "RATE_LIMIT");
   assert.equal(k(400, { code: 9004 }), "MEDIA");
