@@ -22,6 +22,11 @@ function classify(status, err) {
   const sub = err && Number(err.error_subcode);
   const msg = (err && (err.error_user_msg || err.message)) || `HTTP ${status}`;
   let kind = "UNKNOWN";
+  // 2026-11-13 실제: Meta 가 관리자 Facebook 계정을 로그아웃(보안 확인)시키자 모든 요청이 code 200 · subcode 5258005 "API access blocked".
+  // 관리자가 다시 로그인하자 바로 풀림 → 영구 권한 문제가 아니므로 다시 시도하고, 할 일을 알려 준다
+  if (sub === 5258005 || /API access blocked/i.test(msg)) {
+    return Object.assign(new Error(`Meta 가 API 를 잠시 막음 — 관리자 Facebook 계정에 다시 로그인(보안 확인)하면 풀립니다 (${msg})`), { kind: "BLOCKED", code, subcode: sub, status, retryable: true });
+  }
   if ([190, 102, 463, 467].includes(code)) kind = "TOKEN";
   else if (code === 10 || code === 3 || (code >= 200 && code <= 299)) kind = "PERMISSION";
   else if ([4, 17, 32, 613, 80002].includes(code) || status === 429) kind = "RATE_LIMIT";

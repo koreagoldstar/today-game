@@ -10,6 +10,15 @@
 | Vercel (사이트와 같은 배포) | 웹 관리자 `/mkt-admin/` · `api/mkt-admin` · 클릭 세기 `api/mkt-go` | 관리자가 배포할 때 |
 
 > GitHub 예약 실행은 붐빌 때 몇 분~수십 분 늦을 수 있습니다. 게시 시각은 "그 시각 이후 첫 실행"입니다. 공개 저장소는 60일 동안 활동이 없으면 예약이 꺼지므로, 꺼지면 Actions 화면에서 다시 켭니다.
+>
+> **실제 운영 (2026-11-11~13):** 30분마다 예약한 게시가 실제로는 4~8시간마다만 돌았습니다. 그래서 **Upstash QStash 예약이 GitHub 워크플로를 직접 깨웁니다** (workflow_dispatch, 2026-11-13 설정).
+> - 예약 두 개: 게시는 매시 13 · 43분, 제작은 매일 23:07 UTC.
+> - 설정 · 확인: `node marketing/pc/qstash-setup.js check | create | test | list`.
+> - 필요한 값 (이 PC `marketing/.env.local`):
+>   - `GH_DISPATCH_TOKEN`: GitHub 세분화 토큰. 이 저장소만, Actions 읽기 · 쓰기. 만료되면 다시 만들어 `save` → `create`.
+>   - `QSTASH_TOKEN`
+>   - `QSTASH_URL`: 이 계정은 `https://qstash-us-east-1.upstash.io`.
+> - GitHub 자체 예약도 그대로 둡니다. 겹쳐도 잠금 · 하루 상한 때문에 두 번 게시되지 않습니다.
 
 ## 1. 저장소 · 병합
 
