@@ -17,7 +17,8 @@ const DEFAULTS = {
     sat: ["reel"],
     sun: ["quiz"],
   },
-  story: ["fortune", "challenge", "recycle"], // 매일 아침 스토리 — 날마다 하나씩 돌아가며 (자료가 없으면 다음 것)
+  // 매일 아침 스토리 — 날마다 하나씩 돌아가며 (자료가 없으면 다음 것). recycle(올린 피드 다시 쓰기)은 관리자 요청으로 기본에서 뺌 (2026-11-15)
+  story: ["fortune", "challenge"],
   postTimes: { feed: "19:00", story: "08:30" }, // 서울 시각
   dailyCaps: { instagram: { feed: 1, story: 1 }, threads: { feed: 1 }, facebook: { feed: 1 }, youtube: { feed: 1 } },
   channels: ["instagram"], // 기본으로 고르는 채널

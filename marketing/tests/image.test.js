@@ -94,11 +94,11 @@ test("편성: 월=랭킹→릴스, 수=퀴즈 캐러셀, 금=신작은 Source �
   assert.deepEqual(fri.plans.map((p) => p.sourceType), ["game"]);
   const s1 = await planSlot(base.ctx, "story", at("2026-11-09T08:10:00+09:00"));
   const s2 = await planSlot(base.ctx, "story", at("2026-11-10T08:10:00+09:00"));
-  assert.equal(s1.plans.length, 3);
+  assert.equal(s1.plans.length, 2);
+  assert.ok(!s1.plans.some((p) => p.sourceType === "recycle"), "이미 올린 피드를 다시 쓰는 재활용은 기본에서 뺌");
   assert.notEqual(s1.plans[0].sourceType, s2.plans[0].sourceType, "날마다 다른 유형부터");
   assert.ok(s1.plans.every((p) => p.kind === "story" && p.slot === "story" && p.channels.join() === "instagram"), "스레드는 스토리를 못 받음");
   assert.equal(s1.plans.find((p) => p.sourceType === "fortune").validDay, "2026-11-09");
-  assert.equal(s1.plans.find((p) => p.sourceType === "recycle").validDay, undefined);
   const s = validate(merge(DEFAULTS, {}));
   assert.equal(produceGate([{ dateKey: "2026-11-09", slot: "feed", status: "READY_FOR_APPROVAL" }], s, "2026-11-09", "story").ok, true, "피드가 있어도 스토리는 따로");
   assert.equal(produceGate([{ dateKey: "2026-11-09", slot: "story", status: "SCHEDULED" }], s, "2026-11-09", "story").ok, false);

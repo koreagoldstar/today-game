@@ -10,14 +10,21 @@ const { listProfiles, loadProfile } = require("../renderers/reel/record");
 const { availableClips, gameHash } = require("./clips");
 const { readCatalog } = require("../sources/game");
 const { seoulDay, seoulWeekday } = require("./settings");
+const { postedGameId } = require("./state");
 
 const ROOT = path.resolve(__dirname, "../..");
 const DAY = 86400000;
 const USED = ["READY_FOR_APPROVAL", "APPROVED", "SCHEDULED", "PUBLISHING", "PUBLISHED"]; // 실제로 홍보에 쓰였거나 쓰일 것
 
+/** 이미 실제 채널에 올린 게임 — 최근 콘텐츠 + 게시할 때 남긴 영구 기록(posted:games) */
+async function postedGames(store, contents) {
+  return new Set([...contents.map(postedGameId).filter(Boolean), ...((await store.run("SMEMBERS", "posted:games")) || [])]);
+}
+
 async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNNER || "pc" } = {}) {
   const { store, settings } = ctx;
   const contents = await store.listContents(200);
+  const posted = await postedGames(store, contents);
   const weights = require("./insights").performanceWeights(contents, settings); // 실제 조회 수가 있는 게임만
   const games = contents.filter((d) => d.source && d.source.sourceType === "game");
   const lastAt = {};
@@ -29,6 +36,10 @@ async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNN
   for (const id of listProfiles()) {
     if (excluded.includes(id)) {
       out.push({ id, score: -1, eligible: false, reasons: ["관리자가 홍보 제외"] });
+      continue;
+    }
+    if (posted.has(id)) {
+      out.push({ id, score: -1, eligible: false, reasons: ["이미 게시함"] });
       continue;
     }
     const p = loadProfile(id);
@@ -137,7 +148,8 @@ async function planSlot(ctx, slot, opts = {}) {
       if (r.plan) plans.push({ ...base, sourceId: r.plan.sourceId, reason: r.plan.reason });
     } else if (name === "new-game") {
       // 신작: 녹화할 수 있으면 릴스 (Actions 에서는 PC 재고가 있을 때만), 아니면 썸네일 + 설명 이미지
-      const fresh = (await ctx.registry.get("source", "new-game").detect({ store: ctx.store })).fresh.filter((g) => !(ctx.settings.excludeGames || []).includes(g));
+      const posted = await postedGames(ctx.store, await ctx.store.listContents(200));
+      const fresh = (await ctx.registry.get("source", "new-game").detect({ store: ctx.store })).fresh.filter((g) => !(ctx.settings.excludeGames || []).includes(g) && !posted.has(g));
       const id = fresh[0];
       if (!id) continue;
       let reel = listProfiles().includes(id);
