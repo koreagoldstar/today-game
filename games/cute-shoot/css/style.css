@@ -326,3 +326,82 @@ h1 {
     font-size: 26px;
   }
 }
+
+/* hud_out — 정보 줄은 게임 화면 밖 위에 (일시정지 · 소리 버튼도 이 줄 안): 휴대폰에서 게임을 가리지 않게 */
+.stage {
+  --hud-h: 66px;
+  display: flex;
+  flex-direction: column;
+  width: min(100vw, 420px, calc((100dvh - var(--hud-h)) * 0.5571));
+  height: auto;
+  max-width: 420px;
+}
+.stage > canvas#game {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 390 / 700;
+}
+.stage > .hud {
+  position: relative;
+  inset: auto;
+  order: -1;
+  flex: 0 0 var(--hud-h);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  background: linear-gradient(180deg,#bfe6ff,#9fd8ff);
+}
+.stage > .hud > .panel {
+  min-width: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.stage > .hud > .panel:last-of-type {
+  margin-left: auto;
+}
+/* 정보 줄 2줄: 위 = 일시정지 · 점수/파워 · 소리, 아래 = 단계 · 보스 · 생명 */
+.stage {
+  --hud-h: 80px;
+}
+.stage > .hud {
+  flex-wrap: wrap;
+  align-content: center;
+  row-gap: 4px;
+  padding: 4px 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.stage > .hud > .panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(74, 53, 69, 0.42);
+  white-space: nowrap;
+}
+.stage > .hud > .panel:last-of-type {
+  order: 5;
+  flex: 1 0 100%;
+  margin-left: 0;
+  justify-content: center;
+  padding: 2px 10px;
+}
+.stage > .hud > .today-mute-btn {
+  margin-left: auto;
+}
+.stage > .hud .panel > [style],
+.stage > .hud .power-meter,
+.stage > .hud .panel .lives {
+  margin-top: 0 !important;
+}
+.stage > .hud .value {
+  font-size: 15px;
+}
+.stage > .hud .power-meter {
+  width: 56px;
+}
+/* 게임 안 소리 버튼은 숨김: 오른쪽 위 소리 버튼(사이트 공용)이 효과음까지 함께 끔 */
+.stage > .sound-btn {
+  display: none;
+}

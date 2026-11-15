@@ -328,3 +328,13 @@ canvas {
   font-size: 14px;
   margin-top: 4px;
 }
+
+/* hud_in — 일시정지 · 소리 버튼은 정보 줄 안에 (점수 글자 · 게임 화면을 가리지 않게) */
+.stage > .hud {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+}
+.stage > .hud > .panel.right {
+  margin-left: auto;
+}

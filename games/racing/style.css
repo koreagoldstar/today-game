@@ -349,3 +349,9 @@ body:not(.in-play) .controls {
     height: 58px;
   }
 }
+
+/* hud_in — 일시정지 · 소리 버튼은 정보 줄 안에 (점수 글자 · 게임 화면을 가리지 않게) */
+.stage > .hud {
+  align-items: center;
+  gap: 6px;
+}

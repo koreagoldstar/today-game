@@ -27,6 +27,7 @@
 }
 .today-pause-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(61,42,69,.18)}
 .today-pause-btn[hidden]{display:none!important}
+.today-pause-btn.is-inline{position:static;top:auto;left:auto;flex:0 0 auto}
 .today-pause-overlay{
   position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;
@@ -87,7 +88,12 @@
         e.stopPropagation();
         toggle();
       });
-      root.appendChild(btn);
+      // 게임이 자리를 마련해 두면 (data-pause-slot) 그 안에 놓는다: 게임 화면 위에 뜨지 않게
+      const slot = document.querySelector("[data-pause-slot]");
+      if (slot) {
+        btn.classList.add("is-inline");
+        slot.insertBefore(btn, slot.firstChild);
+      } else root.appendChild(btn);
     }
     if (!overlay) {
       overlay = document.createElement("div");

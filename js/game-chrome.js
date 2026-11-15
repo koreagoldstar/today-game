@@ -97,6 +97,12 @@
       if (muteBtn.parentNode !== speak.parentNode) speak.parentNode.insertBefore(muteBtn, speak);
       return;
     }
+    // 게임이 자리를 마련해 두면 (data-mute-slot) 그 안에: 게임 화면 위에 뜨지 않게
+    const slot = document.querySelector("[data-mute-slot]");
+    if (slot) {
+      if (muteBtn.parentNode !== slot) slot.appendChild(muteBtn);
+      return;
+    }
     const heroTop = document.querySelector(".hero-top");
     if (heroTop && !isGamePage()) {
       if (muteBtn.parentNode !== heroTop) heroTop.appendChild(muteBtn);
@@ -288,9 +294,20 @@
 
   window.TodayChrome = { mount, sync: paintMute };
 
+  /** 친구 도전장 (모든 게임 공용) */
+  function loadDuel() {
+    if (!isGamePage() || window.TodayDuel || document.querySelector('script[data-today-duel="1"]')) return;
+    const s = document.createElement("script");
+    s.src = "/js/duel.js?v=1";
+    s.async = true;
+    s.setAttribute("data-today-duel", "1");
+    document.head.appendChild(s);
+  }
+
   function boot() {
     mount();
     countVisit();
+    loadDuel();
   }
 
   if (document.readyState === "loading") {

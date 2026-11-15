@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Nunito:wght@600;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
@@ -26,7 +26,7 @@
       <div class="stage">
         <canvas id="game" width="390" height="700"></canvas>
 
-        <div class="hud" id="hud" aria-hidden="true">
+        <header class="hud" id="hud" aria-hidden="true" data-pause-slot>
           <div class="panel">
             <div class="label">SCORE</div>
             <div class="value" id="hud-score">0</div>
@@ -40,7 +40,7 @@
             <div class="label" style="margin-top: 4px">LIFE · NEXT <span id="hud-survive">12s</span></div>
             <div class="lives" id="hud-lives"></div>
           </div>
-        </div>
+        </header>
 
         <div class="touch-hint" id="touch-hint">화면을 드래그해서 이동해요</div>
         <button type="button" class="sound-btn" id="sound-btn" aria-label="소리 켜기/끄기" title="소리">🔊</button>
@@ -92,13 +92,13 @@
     </div>
 
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
     <script src="/js/ad-boards.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="js/ads.js?v=7"></script>
     <script src="/js/my-face.js?v=3"></script>
 

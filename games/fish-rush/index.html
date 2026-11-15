@@ -6,14 +6,14 @@
     <meta name="theme-color" content="#0a4a5c" />
     <title>황금 낚시</title>
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="fish-rush">
     <div class="stage">
       <canvas id="game" width="390" height="700"></canvas>
-      <div class="hud">
+      <header class="hud" data-pause-slot>
         <div class="panel">
           <span>STAGE <b id="hud-stage">1</b></span>
           <span>총점 <b id="hud-score">0</b></span>
@@ -22,7 +22,7 @@
           <span>목표 <b id="hud-goal">0</b></span>
           <span class="timer"><b id="hud-time">60</b>초</span>
         </div>
-      </div>
+      </header>
       <div class="goal-meter"><i id="goal-fill"></i></div>
       <div class="cash-chip"><span>₩</span><b id="hud-cash">0</b></div>
       <div class="hint" id="hint">탭해서 낚싯바늘 던지기</div>
@@ -61,12 +61,12 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="game.js"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="황금 낚시 소개">

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
@@ -16,7 +16,7 @@
     <div class="stage">
       <canvas id="game" width="390" height="700"></canvas>
 
-      <div class="hud">
+      <header class="hud" data-pause-slot>
         <div class="panel">
           <span>웨이브 <b id="hud-wave">1</b></span>
           <span>점수 <b id="hud-score">0</b></span>
@@ -25,7 +25,7 @@
           <span>최고 <b id="hud-best">0</b></span>
           <div class="lives" id="hud-lives"></div>
         </div>
-      </div>
+      </header>
 
       <div class="buffs" id="buffs" aria-hidden="true">
         <div class="buff" id="buff-rapid" title="연사">⚡</div>
@@ -60,12 +60,12 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="/js/my-face.js?v=3"></script>
 
     <script src="game.js?v=face1"></script>

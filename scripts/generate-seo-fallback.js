@@ -16,8 +16,8 @@ if (!match) throw new Error("GAMES array not found in js/main.js");
 const GAMES = Function(`"use strict"; return (${match[1]});`)();
 
 const CATEGORIES = [
-  { id: "rhythm", title: "리듬 · 음악", desc: "비트에 맞춰 톡톡" },
-  { id: "sports", title: "스포츠 · 레이싱", desc: "공 치고 달리고" },
+  { id: "adult", title: "어른이용 게임", desc: "출근길 · 점심시간 · 퇴근 후 한 판" },
+  { id: "sports", title: "스포츠 · 리듬", desc: "공 치고 달리고 비트 타고" },
   { id: "action", title: "액션 · 슈팅", desc: "손맛 있게 쏘고 피하는 게임" },
   { id: "puzzle", title: "퍼즐 · 두뇌", desc: "생각하고 맞추는 게임" },
   { id: "arcade", title: "아케이드 · 캐치", desc: "짧게 중독되는 캐주얼" },

@@ -220,3 +220,18 @@ h1 {
   text-decoration: none;
   font-size: 14px;
 }
+
+/* 소리 버튼은 '다음' 칸 왼쪽, 정보 줄 높이에 (그릇 모서리를 가리지 않게) */
+.app > .today-mute-btn {
+  top: 16px !important;
+  right: 98px !important;
+}
+/* 일시정지는 정보 줄 맨 왼쪽에 (점수 칸과 겹치지 않게) */
+.app > .hud {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+}
+.app > .hud > .panel.right {
+  margin-left: auto;
+}

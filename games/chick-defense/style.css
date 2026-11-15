@@ -451,3 +451,67 @@ canvas {
 .hint.hidden {
   display: none;
 }
+
+/* hud_out — 정보 줄은 게임 화면 밖 위에 (일시정지 · 소리 버튼도 이 줄 안): 휴대폰에서 게임을 가리지 않게 */
+.stage {
+  --hud-h: 60px;
+  display: flex;
+  flex-direction: column;
+  width: min(100vw, 420px, calc((100dvh - var(--hud-h)) * 0.5571));
+  height: auto;
+  max-width: 420px;
+}
+.stage > canvas#game {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 390 / 700;
+}
+.stage > .hud {
+  position: relative;
+  inset: auto;
+  order: -1;
+  flex: 0 0 var(--hud-h);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  background: linear-gradient(180deg,#3f7a26,#4f9530);
+}
+.stage > .hud > .panel {
+  min-width: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.stage > .hud > .panel:last-of-type {
+  margin-left: auto;
+}
+/* 웨이브 막대는 정보 줄 아래 끝에 */
+.stage > .wave-meter {
+  top: calc(var(--hud-h) - 9px);
+}
+/* 타워 고르는 줄도 게임 화면 밖 아래에 (길 끝 둥지를 가리지 않게). 숨길 때도 자리는 남겨 화면이 출렁이지 않게 */
+.stage {
+  --foot-h: 84px;
+  width: min(100vw, 420px, calc((100dvh - var(--hud-h) - var(--foot-h)) * 0.5571));
+}
+.stage > .shop {
+  position: relative;
+  inset: auto;
+  order: 1;
+  flex: 0 0 var(--foot-h);
+  align-items: center;
+  padding: 0 8px;
+  background: linear-gradient(180deg, #4f9530, #3f7a26);
+}
+.stage > .shop.hidden {
+  display: flex;
+  visibility: hidden;
+}
+.stage > .shop .tower-btn {
+  padding: 4px 6px 5px;
+}
+.stage > .shop .tower-btn .ico-img {
+  width: 32px;
+  height: 32px;
+}

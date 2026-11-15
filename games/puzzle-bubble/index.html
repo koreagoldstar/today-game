@@ -8,14 +8,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="puzzle-bubble" data-face="1">
     <div class="stage">
       <canvas id="game" width="390" height="620"></canvas>
-      <div class="hud">
+      <!-- 정보 줄은 게임 화면 위에 따로 (일시정지 · 소리 버튼도 이 줄 안에): 구슬을 가리지 않게 -->
+      <header class="hud" data-pause-slot>
         <div class="panel">
           <span>STAGE <b id="hud-stage">1</b></span>
           <span>남은 <b id="hud-left">0</b></span>
@@ -23,7 +24,7 @@
         <div class="panel right">
           <span>점수 <b id="hud-score">0</b></span>
         </div>
-      </div>
+      </header>
 
       <div class="overlay" id="title">
         <img class="hero-art" src="assets/thumb.webp" alt="" width="200" height="200" />
@@ -62,12 +63,12 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="/js/my-face.js?v=3"></script>
 
     <script src="game.js?v=face2"></script>

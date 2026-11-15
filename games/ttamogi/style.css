@@ -233,10 +233,12 @@ canvas {
 }
 
 @media (hover: none), (max-width: 900px) {
+  /* 휴대폰: 방향 버튼을 판 위에 띄우지 않고 판 아래에 놓는다 (판을 가리지 않게) */
   .controls {
     display: flex;
-    right: 8px;
-    bottom: 8px;
+    position: static;
+    padding: 10px 0 12px;
+    background: linear-gradient(180deg, #1a2030, #241a36);
   }
 
   .ctrl {

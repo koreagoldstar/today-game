@@ -221,3 +221,38 @@ h1 {
   text-decoration: none;
   font-size: 14px;
 }
+
+/* hud_out — 정보 줄은 게임 화면 밖 위에 (일시정지 · 소리 버튼도 이 줄 안): 휴대폰에서 게임을 가리지 않게 */
+.stage {
+  --hud-h: 60px;
+  display: flex;
+  flex-direction: column;
+  width: min(100vw, 420px, calc((100dvh - var(--hud-h)) * 0.5571));
+  height: auto;
+  max-width: 420px;
+}
+.stage > canvas#game {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 390 / 700;
+}
+.stage > .hud {
+  position: relative;
+  inset: auto;
+  order: -1;
+  flex: 0 0 var(--hud-h);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  background: var(--sky);
+}
+.stage > .hud > .panel {
+  min-width: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.stage > .hud > .panel:last-of-type {
+  margin-left: auto;
+}

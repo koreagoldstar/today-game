@@ -569,3 +569,26 @@ a {
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
   }
 }
+
+/* 일시정지 · 소리 버튼은 맨 위 정보 줄 양 끝에 (판정선 · 줄을 가리지 않게) */
+.stage > .hud {
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.stage > .hud > .today-pause-btn,
+.stage > .hud > .today-mute-btn {
+  position: static;
+}
+.stage > .hud > .today-pause-btn {
+  padding: 0 9px;
+  font-size: 12px;
+}
+.stage > .hud > .song-chip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

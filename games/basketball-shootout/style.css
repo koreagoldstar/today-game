@@ -209,3 +209,12 @@ canvas { display: block; width: 100%; height: 100%; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+
+/* 일시정지 · 소리 버튼은 점수판 양 끝 칸에 (TIME 글자를 가리지 않게) */
+.stage > .hud {
+  grid-template-columns: auto 56px 1fr 56px auto;
+}
+.stage > .hud > .today-pause-btn {
+  padding: 0 9px;
+  font-size: 12px;
+}

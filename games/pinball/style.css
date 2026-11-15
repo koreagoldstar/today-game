@@ -390,3 +390,14 @@ canvas {
     font-size: 12.5px;
   }
 }
+
+/* 일시정지는 맨 위 줄 집 버튼 옆에 (핀볼대 테두리를 가리지 않게) */
+.stage > .hud > .today-brand {
+  order: -2;
+}
+.stage > .hud > .today-pause-btn {
+  order: -1;
+  flex: 0 0 auto;
+  padding: 0 9px;
+  font-size: 12px;
+}

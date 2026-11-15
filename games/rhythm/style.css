@@ -484,3 +484,51 @@ a {
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
   }
 }
+
+/* hud_in — 일시정지 · 소리 버튼은 정보 줄 안에 (점수 글자 · 게임 화면을 가리지 않게) */
+.stage > .hud {
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 5px;
+}
+.stage > .hud > .today-pause-btn {
+  padding: 0 9px;
+  font-size: 12px;
+}
+.stage > .hud > .panel {
+  min-width: 0;
+  flex-wrap: nowrap;
+  padding: 6px 8px;
+}
+.stage > .hud .song-name {
+  max-width: none;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.15;
+  font-size: 12px;
+}
+.stage > .hud .mode-pill {
+  align-self: flex-start;
+  margin: 0;
+}
+.stage > .hud > .combo-burst {
+  min-width: 0;
+}
+.stage > .hud > .combo-burst em {
+  font-size: 26px;
+}
+.stage > .hud > .combo-burst span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.stage > .hud .lives {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+}
+.stage > .hud .life {
+  width: 8px;
+  height: 8px;
+}

@@ -110,6 +110,10 @@ module.exports = async function handler(req, res) {
     "monster-truck-mayhem",
     "bubble-sumo-kings",
     "claw-master",
+    "ideal-worldcup",
+    "balance-game",
+    "sudoku",
+    "freecell",
   ]);
 
   /** 콜드스타트/폴백 순서 */

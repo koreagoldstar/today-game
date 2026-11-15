@@ -466,14 +466,17 @@ window.crossBot = function (stage) {
         const mute = document.querySelector(".today-mute-btn");
         const pause = document.querySelector(".today-pause-btn");
         const pads = [...document.querySelectorAll(".pad-btn")];
+        // 일시정지 · 음소거가 점수판 줄 안에 들어가 있으므로, 점수 칸 하나하나와 겹치는지 본다
+        const chips = [...document.querySelectorAll("#hud .chip")];
+        const parts = chips.length ? chips : [hud];
         return {
           sharp: Math.abs(c.width - Math.round(cv.width * devicePixelRatio)) <= 1 && Math.abs(c.height - Math.round(cv.height * devicePixelRatio)) <= 1,
           buf: `${c.width}x${c.height}`,
           css: `${Math.round(cv.width)}x${Math.round(cv.height)}`,
           hud: inside(hud),
           pads: pads.every(inside),
-          hudMute: overlap(hud, mute),
-          hudPause: overlap(hud, pause),
+          hudMute: parts.some((p) => overlap(p, mute)),
+          hudPause: parts.some((p) => overlap(p, pause)),
           overflow: document.documentElement.scrollWidth > innerWidth + 1,
         };
       });

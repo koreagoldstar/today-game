@@ -391,3 +391,38 @@ body {
     width: min(100%, calc(76dvh * 0.5), 440px);
   }
 }
+
+/* 맨 위 줄: 집 버튼은 줄 안에, 점수 칸은 오른쪽 (소리 버튼 자리는 비워 둠) — 서로 겹치지 않게 */
+.top {
+  padding-right: 52px;
+}
+.top > .today-brand {
+  position: static;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 44px;
+}
+.top > .scores {
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+.top .score-box {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+/* 일시정지는 제목 줄 왼쪽 빈자리에 */
+.hero-bit {
+  position: relative;
+}
+.hero-bit > .today-pause-btn.is-inline {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* 게임판은 화면 높이에 맞춰: 위 정보(약 210px) + 아래 조작 버튼(약 120px)까지 한 화면에 (휴대폰에서 버튼이 잘리지 않게) */
+.board-wrap {
+  width: min(100%, 440px, calc((100dvh - 330px) * 0.5));
+}

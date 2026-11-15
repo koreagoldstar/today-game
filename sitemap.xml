@@ -4,6 +4,10 @@
   <url><loc>https://www.todaygame.co.kr/rankings/</loc><priority>0.8</priority></url>
   <url><loc>https://www.todaygame.co.kr/fame/</loc><priority>0.6</priority></url>
 
+  <url><loc>https://www.todaygame.co.kr/games/ideal-worldcup/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/balance-game/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/sudoku/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/freecell/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/claw-master/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/bubble-sumo-kings/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/monster-truck-mayhem/</loc><priority>0.7</priority></url>

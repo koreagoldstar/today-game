@@ -705,3 +705,21 @@ a {
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
   }
 }
+
+/* 일시정지 · 소리 버튼은 콤보 줄 양 끝에 (판정선 · 줄을 가리지 않게) */
+.statusbar {
+  align-items: center;
+  gap: 8px;
+}
+.statusbar > .today-pause-btn,
+.statusbar > .today-mute-btn {
+  position: static;
+  flex: 0 0 auto;
+}
+.statusbar > .today-pause-btn {
+  padding: 0 9px;
+  font-size: 12px;
+}
+.statusbar > .score {
+  margin-left: auto;
+}

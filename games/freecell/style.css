@@ -1,0 +1,254 @@
+/* 게임 중: 카지노 테이블 녹색 펠트 */
+body.is-play {
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 250, 220, 0.16), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 5px),
+    radial-gradient(130% 90% at 50% 10%, #2fae74, #16774c 55%, #0b3f29);
+  background-attachment: fixed;
+}
+
+body.is-play::before {
+  background: radial-gradient(90% 80% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.35));
+  opacity: 1;
+}
+
+.fc-intro ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 7px;
+  color: var(--ad-sub);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.fc-intro li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.fc-intro li::before {
+  content: "♠";
+  position: absolute;
+  left: 0;
+  color: #16774c;
+}
+
+.fc-intro li:nth-child(2)::before {
+  content: "♥";
+  color: #e0303f;
+}
+
+.fc-intro b {
+  color: var(--ad-accent-deep);
+}
+
+.fc-pick {
+  display: flex;
+  gap: 8px;
+}
+
+.fc-pick input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ad-on);
+  font: inherit;
+  font-size: 16px;
+}
+
+.fc-pick input::placeholder {
+  color: var(--ad-on-sub);
+}
+
+.fc-pick .ad-btn {
+  flex: 0 0 auto;
+}
+
+.fc-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e9fff3;
+  font-weight: 700;
+  font-size: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fc-time {
+  padding: 2px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 214, 102, 0.35);
+  font-family: "Jua", sans-serif;
+  font-size: 22px;
+  color: #fff6d6;
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-table {
+  position: relative;
+  width: 100%;
+  min-height: 60vh;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.fc-slot,
+.fc-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cw, 60px);
+  height: var(--ch, 84px);
+  border-radius: calc(var(--cw, 60px) * 0.12);
+}
+
+.fc-slot {
+  appearance: none;
+  padding: 0;
+  border: 1.5px dashed rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.14);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.35);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 무늬 칸: 금테 + 큰 무늬 */
+.fc-found {
+  border: 1.5px solid rgba(255, 214, 102, 0.55);
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18));
+  color: rgba(255, 246, 214, 0.45);
+  font-size: calc(var(--cw, 60px) * 0.55);
+}
+
+.fc-cell {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.fc-colbase {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+}
+
+.fc-slot.target,
+.fc-card.target-card {
+  box-shadow: 0 0 0 3px #ffe066, 0 0 18px rgba(255, 224, 102, 0.8);
+}
+
+/* 카드 */
+.fc-card {
+  background: linear-gradient(170deg, #fffefa, #f6f0e2);
+  border: 1px solid rgba(40, 30, 20, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 3px 6px rgba(0, 20, 10, 0.35);
+  color: #232036;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.12s;
+  overflow: hidden;
+}
+
+.fc-card.red {
+  color: #d62a3a;
+}
+
+.fc-card.sel {
+  box-shadow: 0 0 0 3px #ffd766, 0 0 16px rgba(255, 215, 102, 0.7), 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fc-card.buried {
+  box-shadow: none;
+}
+
+.fc-corner {
+  position: absolute;
+  left: 5%;
+  top: 2%;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 1px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 900;
+  font-size: calc(var(--cw, 60px) * 0.33);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.fc-corner b {
+  font-size: 0.85em;
+  font-weight: 400;
+}
+
+.fc-big {
+  position: absolute;
+  right: 7%;
+  bottom: 5%;
+  font-size: calc(var(--cw, 60px) * 0.62);
+  line-height: 1;
+}
+
+/* J · Q · K: 색 액자 안 큰 글자 */
+.fc-face {
+  left: 18%;
+  right: 12%;
+  top: 34%;
+  bottom: 7%;
+  display: grid;
+  place-items: center;
+  border-radius: calc(var(--cw, 60px) * 0.08);
+  border: 1.5px solid currentColor;
+  background: linear-gradient(170deg, #e8eaff, #c9ceff);
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: calc(var(--cw, 60px) * 0.42);
+}
+
+.fc-card.red .fc-face {
+  background: linear-gradient(170deg, #ffe8eb, #ffc4cc);
+}
+
+.fc-tools {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.fc-tools .ad-btn {
+  font-size: 15px;
+  padding: 11px 6px;
+}
+
+/* 완성 */
+.fc-done-emoji {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #fff, #d6f3e3);
+  box-shadow: 0 0 0 5px #ffd766, 0 0 0 10px rgba(255, 215, 102, 0.3), 0 14px 30px rgba(10, 70, 40, 0.25);
+  font-size: 60px;
+  line-height: 1;
+}
+
+.fc-done h2 {
+  margin: 12px 0 4px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 38px;
+}
+
+.fc-done-time {
+  margin: 0 0 6px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 32px;
+  color: var(--ad-accent-deep);
+}

@@ -5,8 +5,8 @@
 
   /** @type {{ id: string, title: string, desc: string }[]} */
   const CATEGORIES = [
-    { id: "rhythm", title: "리듬 · 음악", desc: "비트에 맞춰 톡톡" },
-    { id: "sports", title: "스포츠 · 레이싱", desc: "공 치고 달리고" },
+    { id: "adult", title: "어른이용 게임", desc: "출근길 · 점심시간 · 퇴근 후 한 판", pin: true },
+    { id: "sports", title: "스포츠 · 리듬", desc: "공 치고 달리고 비트 타고" },
     { id: "action", title: "액션 · 슈팅", desc: "손맛 있게 쏘고 피하는 게임" },
     { id: "puzzle", title: "퍼즐 · 두뇌", desc: "생각하고 맞추는 게임" },
     { id: "arcade", title: "아케이드 · 캐치", desc: "짧게 중독되는 캐주얼" },
@@ -29,6 +29,42 @@
 
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
+    {
+      id: "ideal-worldcup",
+      title: "이상형 월드컵",
+      tag: "야식 · 점심 · 여행지 16강",
+      href: "/games/ideal-worldcup/",
+      thumb: "/assets/thumbs/sm/ideal-worldcup.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
+    {
+      id: "balance-game",
+      title: "오늘의 밸런스 게임",
+      tag: "매일 10문제 · 친구 궁합",
+      href: "/games/balance-game/",
+      thumb: "/assets/thumbs/sm/balance-game.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
+    {
+      id: "sudoku",
+      title: "스도쿠",
+      tag: "오늘의 퍼즐 · 3단계 난이도",
+      href: "/games/sudoku/",
+      thumb: "/assets/thumbs/sm/sudoku.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
+    {
+      id: "freecell",
+      title: "프리셀",
+      tag: "카드게임 · 게임 번호 32000",
+      href: "/games/freecell/",
+      thumb: "/assets/thumbs/sm/freecell.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
     {
       id: "claw-master",
       title: "인형뽑기 마스터",
@@ -181,7 +217,7 @@
       tag: "반응속도 · 10문제",
       href: "/games/color-reaction/",
       thumb: "/assets/thumbs/color-reaction.svg",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "bomb-dodge",
@@ -217,7 +253,7 @@
       tag: "대결 · 체력전",
       href: "/games/rhythm-battle/",
       thumb: "/assets/thumbs/sm/rhythm-battle.webp",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "neon-runner",
@@ -226,7 +262,7 @@
       tag: "점프 · 슬라이드",
       href: "/games/neon-runner/",
       thumb: "/assets/thumbs/sm/neon-runner.webp",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "mirror-rhythm",
@@ -234,7 +270,7 @@
       tag: "양손 · 대칭",
       href: "/games/mirror-rhythm/",
       thumb: "/assets/thumbs/sm/mirror-rhythm.webp",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "wisdom-quiz",
@@ -433,7 +469,7 @@
       tag: "반사 · ms 기록",
       href: "/games/reaction/",
       thumb: "/assets/thumbs/sm/reaction.webp",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "wordle",
@@ -581,7 +617,7 @@
       tag: "대국 · AI",
       href: "/games/omok/",
       thumb: "/assets/thumbs/sm/omok.webp",
-      category: "puzzle",
+      category: "adult",
     },
     {
       id: "ninja-dodge",
@@ -615,7 +651,7 @@
       tag: "양손 탭 · 20곡",
       href: "/games/dual-pad/",
       thumb: "/assets/thumbs/dual-pad.svg",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "slide-beat",
@@ -623,7 +659,7 @@
       tag: "가로 레인 · 20곡",
       href: "/games/slide-beat/",
       thumb: "/assets/thumbs/slide-beat.svg",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "beat-tap",
@@ -631,7 +667,7 @@
       tag: "원버튼 네온 리듬 · 20곡",
       href: "/games/beat-tap/",
       thumb: "/assets/thumbs/sm/beat-tap.webp?v=2",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "rhythm-easy",
@@ -647,7 +683,7 @@
       tag: "리듬 · 50곡",
       href: "/games/rhythm/",
       thumb: "/assets/thumbs/sm/rhythm.webp",
-      category: "rhythm",
+      category: "sports",
     },
     {
       id: "minigolf",
@@ -1113,6 +1149,10 @@
     })
       .filter((shelf) => shelf.games.length > 0)
       .sort((a, b) => {
+        // pin 카테고리(어른이용 게임)는 항상 맨 위
+        const pinA = a.cat.pin ? 1 : 0;
+        const pinB = b.cat.pin ? 1 : 0;
+        if (pinA !== pinB) return pinB - pinA;
         if (a.pops !== b.pops) return b.pops - a.pops;
         return a.seed - b.seed;
       });

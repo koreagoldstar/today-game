@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
@@ -17,7 +17,7 @@
     <main class="stage">
       <canvas id="game" width="390" height="700" aria-label="우주 회피 게임"></canvas>
 
-      <div class="hud">
+      <header class="hud" data-pause-slot>
         <div class="panel">
           <span>STAGE <b id="hud-stage">1</b>/<b id="hud-stage-max">50</b></span>
           <span>점수 <b id="hud-score">0</b> · 생명 <b id="hud-lives">❤️❤️❤️</b></span>
@@ -26,7 +26,7 @@
           <span>실드 <b id="hud-shield">OFF</b></span>
           <span>폭탄 <b id="hud-bomb">💣 x2</b></span>
         </div>
-      </div>
+      </header>
 
       <div class="boss-bar hidden" id="boss-bar">
         <span id="boss-name">우주 거함 보스</span>
@@ -74,12 +74,12 @@
     </main>
 
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="game.js?v=7"></script>
       <!-- seo:game:start -->
 <section class="seo-about" aria-label="우주 회피 소개">

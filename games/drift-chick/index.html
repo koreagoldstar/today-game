@@ -8,18 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=m1" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
     <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
   </head>
   <body data-bgm="drift-chick" data-face="1">
     <div class="stage" id="stage">
       <canvas id="game" aria-label="드리프트 삐약이 화면"></canvas>
-      <div class="hud" id="hud">
+      <header class="hud" id="hud" data-pause-slot>
         <div class="chip stage-chip"><small>거리</small><b><span id="hud-dist">0</span>m</b></div>
         <div class="chip combo"><small>콤보</small><b id="hud-combo">0</b></div>
         <div class="chip"><small>점수</small><b id="hud-score">0</b></div>
-      </div>
+      </header>
       <div class="race-bar" aria-hidden="true"><i id="hud-bar"></i></div>
       <div class="hearts" id="hud-hearts" aria-label="남은 하트"></div>
       <p class="hint" id="hint">커브가 오면 꺾이는 쪽을 꾹 누르세요!</p>
@@ -42,12 +42,12 @@
       </div>
     </div>
     <script src="/js/today-audio.js?v=2"></script>
-    <script src="/js/game-chrome.js?v=5"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
     <script src="/js/bgm.js?v=6"></script>
     <script src="/js/scores.js"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/game-rank.js"></script>
-    <script src="/js/pause.js?v=3"></script>
+    <script src="/js/pause.js?v=4"></script>
     <script src="/js/my-face.js?v=3"></script>
 
     <script src="game.js?v=2"></script>

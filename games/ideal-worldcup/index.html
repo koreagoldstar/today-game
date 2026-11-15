@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15112b" />
+    <title>이상형 월드컵 — 야식·점심·여행지 월드컵 | Today Game</title>
+    <meta name="description" content="야식, 직장인 점심 메뉴, 국내 여행지, 디저트, 주말 계획, 반려동물까지! 16강 이상형 월드컵으로 내 1위를 뽑고 다른 사람들의 1위와 비교해 보세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/ideal-worldcup/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="이상형 월드컵 | 오늘의 게임" />
+    <meta property="og:description" content="야식 월드컵, 점심 메뉴 월드컵, 여행지 월드컵… 내 1위는? 친구랑 비교해 보세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/ideal-worldcup/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/ideal-worldcup.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/adult.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+  </head>
+  <body>
+    <div class="stage">
+      <section class="ad-screen" id="title" aria-labelledby="title-h">
+        <img class="ad-hero" src="/assets/thumbs/sm/ideal-worldcup.webp?v=1" alt="" width="132" height="132" />
+        <p class="ad-kicker">어른이용 게임 · 취향 토너먼트</p>
+        <h1 class="ad-title" id="title-h">이상형 월드컵</h1>
+        <p class="ad-sub">둘 중 더 좋은 쪽만 고르면 끝!<br />마지막에 남는 게 나의 1위예요.</p>
+
+        <div class="wc-friend hidden" id="friend-banner"></div>
+
+        <div class="ad-card">
+          <p class="wc-label">주제 고르기</p>
+          <div class="wc-themes" id="themes"></div>
+        </div>
+
+        <div class="ad-card">
+          <p class="wc-label">몇 강으로 할까요?</p>
+          <div class="ad-chips" id="rounds">
+            <button type="button" class="ad-chip on" data-size="16">16강 (약 2분)</button>
+            <button type="button" class="ad-chip" data-size="8">8강 (1분 컷)</button>
+          </div>
+        </div>
+
+        <button type="button" class="ad-btn" id="start-btn">시작하기</button>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+
+      <section class="ad-screen hidden" id="play" aria-live="polite">
+        <div class="wc-hud ad-hud">
+          <span class="wc-theme-name" id="play-theme"></span>
+          <span class="wc-round ad-badge" id="play-round"></span>
+        </div>
+        <div class="wc-progress ad-progress"><i id="play-bar"></i></div>
+        <div class="wc-match" id="match">
+          <button type="button" class="wc-pick" id="pick-a"></button>
+          <div class="wc-vs ad-vs" aria-hidden="true">VS</div>
+          <button type="button" class="wc-pick" id="pick-b"></button>
+        </div>
+        <button type="button" class="ad-btn soft wc-undo" id="undo-btn" disabled>↶ 방금 선택 취소</button>
+      </section>
+
+      <section class="ad-screen hidden" id="over" aria-labelledby="win-name">
+        <p class="ad-kicker" id="win-theme"></p>
+        <div class="wc-winner ad-prize">
+          <div class="wc-crown" aria-hidden="true">👑</div>
+          <div class="wc-win-emoji" id="win-emoji"></div>
+          <h2 class="wc-win-name" id="win-name"></h2>
+          <p class="wc-win-desc" id="win-desc"></p>
+        </div>
+        <p class="wc-vsfriend hidden" id="vs-friend"></p>
+
+        <div class="ad-card">
+          <p class="wc-label">나의 TOP 4</p>
+          <ol class="wc-top" id="my-top"></ol>
+        </div>
+
+        <div class="ad-card">
+          <p class="wc-label">다른 사람들의 1위</p>
+          <div class="wc-stats" id="stats"><p class="ad-msg">불러오는 중…</p></div>
+        </div>
+
+        <div class="ad-row">
+          <button type="button" class="ad-btn kakao" id="share-kakao">카톡 공유</button>
+          <button type="button" class="ad-btn soft" id="share-link">링크 공유</button>
+        </div>
+        <div class="ad-row">
+          <button type="button" class="ad-btn blue" id="again-btn">다시 하기</button>
+          <button type="button" class="ad-btn soft" id="other-btn">다른 주제</button>
+        </div>
+        <p class="ad-msg" id="share-msg"></p>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+    <div class="ad-toast" id="toast"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/adult-kit.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="이상형 월드컵 소개">
+  <h2>이상형 월드컵 소개</h2>
+  <p>야식, 직장인 점심 메뉴, 국내 여행지, 디저트, 주말 계획, 반려동물까지 6가지 주제로 즐기는 이상형 월드컵입니다. 둘 중 더 좋은 쪽만 고르다 보면 16강에서 결승까지 올라가 나만의 1위가 정해져요. 끝나면 다른 사람들이 가장 많이 뽑은 1위와 비교하고, 카카오톡으로 친구에게 보내 서로의 취향을 확인할 수 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>주제와 16강 또는 8강을 고르고 시작하세요. 두 카드 중 더 마음에 드는 쪽을 누르면 다음 대결로 넘어갑니다. 잘못 눌렀다면 '방금 선택 취소'로 되돌릴 수 있어요. 컴퓨터에서는 방향키 ← → 로도 고를 수 있어요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>다른 사람들의 1위는 어떻게 집계되나요?</dt>
+    <dd>월드컵을 끝까지 마친 사람들의 우승 항목을 주제별로 모아 비율로 보여 줘요. 같은 주제는 하루에 한 번만 집계에 들어가요.</dd>
+    <dt>친구와 결과를 비교할 수 있나요?</dt>
+    <dd>결과 화면에서 카톡이나 링크로 보내면, 친구가 들어왔을 때 내 1위가 먼저 보이고 친구가 끝내면 둘의 1위를 바로 비교해 줘요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

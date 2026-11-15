@@ -285,3 +285,12 @@ a {
 .stage .today-mute-btn {
   top: max(10px, env(safe-area-inset-top)) !important;
 }
+
+/* 일시정지는 정보 줄 맨 왼쪽에 (하늘 · 장애물 위에 따로 뜨지 않게) */
+.hud {
+  justify-content: flex-start;
+  align-items: center;
+}
+.hud > .panel.right {
+  margin-left: auto;
+}

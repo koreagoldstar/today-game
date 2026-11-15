@@ -271,3 +271,22 @@ body {
   box-shadow: none;
   border: 2px solid rgba(255, 255, 255, 0.5);
 }
+
+/* 맨 위 줄: 집 · 일시정지 · 점수 · 최고 (소리 버튼 자리는 오른쪽 끝에 비워 둠) — 서로 겹치지 않게 */
+.top {
+  justify-content: flex-start;
+  padding-right: 52px;
+}
+.top > .today-brand {
+  position: static;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 44px;
+  order: -2;
+}
+.top > .today-pause-btn {
+  order: -1;
+}
+.top > .scores {
+  margin-left: auto;
+}
