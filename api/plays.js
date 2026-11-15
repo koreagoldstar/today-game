@@ -116,6 +116,8 @@ module.exports = async function handler(req, res) {
     "freecell",
     "number-baseball",
     "guess-me",
+    "typing-rain",
+    "chosung-quiz",
   ]);
 
   /** 콜드스타트/폴백 순서 */

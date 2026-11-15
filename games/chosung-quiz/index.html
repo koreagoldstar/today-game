@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15112b" />
+    <title>오늘의 초성퀴즈 — 매일 10문제 초성 맞히기 · 결과 공유 | Today Game</title>
+    <meta name="description" content="ㄱㅊㅉㄱ → 김치찌개! 초성만 보고 정답을 맞히는 오늘의 초성퀴즈. 음식 · 동물 · 직장 생활 · 사자성어 · 속담까지 매일 10문제, 결과는 이모지로 친구에게 공유하세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/chosung-quiz/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="오늘의 초성퀴즈 | 오늘의 게임" />
+    <meta property="og:description" content="초성만 보고 맞혀 봐! 매일 10문제, 나는 몇 점?" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/chosung-quiz/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/chosung-quiz.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/adult.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+  </head>
+  <body>
+    <div class="stage">
+      <section class="ad-screen" id="title" aria-labelledby="title-h">
+        <img class="ad-hero" src="/assets/thumbs/sm/chosung-quiz.webp?v=1" alt="" width="132" height="132" />
+        <p class="ad-kicker">어른이용 게임 · 매일 10문제</p>
+        <h1 class="ad-title" id="title-h">오늘의 초성퀴즈</h1>
+        <p class="ad-sub">초성만 보고 정답을 맞혀요!<br />매일 0시에 새 문제 10개가 나와요.</p>
+
+        <div class="cq-friend hidden" id="friend-banner"></div>
+
+        <div class="ad-card">
+          <p class="cq-today" id="title-today"></p>
+          <div class="cq-sample" aria-label="예시">
+            <span class="cq-tile">ㄱ</span><span class="cq-tile">ㅊ</span><span class="cq-tile">ㅉ</span><span class="cq-tile">ㄱ</span>
+            <span class="cq-arrow">→</span><b>김치찌개</b>
+          </div>
+          <ul class="cq-rules">
+            <li><i>🟩</i>힌트 없이 맞히면 10점</li>
+            <li><i>🟨</i>힌트를 쓰면 7점 · 4점</li>
+            <li><i>🟥</i>넘기면 0점</li>
+          </ul>
+          <p class="ad-msg" id="title-done"></p>
+        </div>
+
+        <button type="button" class="ad-btn hidden" id="friend-btn">⚔️ 친구와 같은 문제 풀기</button>
+        <div class="ad-row">
+          <button type="button" class="ad-btn" id="daily-btn">📅 오늘의 문제</button>
+          <button type="button" class="ad-btn blue" id="random-btn">🎲 연습 세트</button>
+        </div>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+
+      <section class="ad-screen hidden" id="play" aria-live="polite">
+        <div class="ad-hud">
+          <span class="cq-mode" id="cq-mode"></span>
+          <span class="ad-badge" id="cq-num">1 / 10</span>
+        </div>
+        <div class="ad-progress"><i id="cq-bar"></i></div>
+        <div class="cq-card" id="cq-card">
+          <p class="cq-cat" id="cq-cat"></p>
+          <div class="cq-tiles" id="cq-tiles"></div>
+          <div class="cq-hints" id="cq-hints"></div>
+        </div>
+        <form class="cq-form" id="cq-form" autocomplete="off">
+          <input id="cq-input" type="text" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="정답을 써 주세요" aria-label="정답 입력" />
+          <button type="submit" class="ad-btn cq-ok">확인</button>
+        </form>
+        <p class="cq-msg" id="cq-msg" role="status"></p>
+        <div class="ad-row cq-tools">
+          <button type="button" class="ad-btn soft" id="hint-btn">💡 힌트</button>
+          <button type="button" class="ad-btn soft" id="skip-btn">넘기기</button>
+        </div>
+        <button type="button" class="ad-btn blue hidden" id="next-btn">다음 문제</button>
+      </section>
+
+      <section class="ad-screen hidden" id="over" aria-labelledby="done-h">
+        <div class="cq-done ad-prize">
+          <div class="cq-done-emoji" id="done-emoji">🔤</div>
+          <h2 id="done-h">오늘의 초성퀴즈</h2>
+          <p class="cq-done-score" id="done-score"></p>
+          <p class="cq-done-marks" id="done-marks"></p>
+          <p class="ad-msg" id="done-line"></p>
+        </div>
+        <div class="ad-card">
+          <p class="cq-label">결과 자랑하기</p>
+          <div class="ad-row">
+            <button type="button" class="ad-btn kakao" id="share-kakao">카톡 공유</button>
+            <button type="button" class="ad-btn soft" id="share-link">결과 복사</button>
+          </div>
+        </div>
+        <div id="duel-slot"></div>
+        <div class="ad-card">
+          <p class="cq-label">정답 확인</p>
+          <ol class="cq-list" id="done-list"></ol>
+        </div>
+        <div class="ad-row">
+          <button type="button" class="ad-btn blue" id="again-btn">🎲 연습 세트</button>
+          <button type="button" class="ad-btn soft" id="home-btn">처음으로</button>
+        </div>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+    <div class="ad-toast" id="toast"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/adult-kit.js?v=1"></script>
+    <script src="bank.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="오늘의 초성퀴즈 소개">
+  <h2>오늘의 초성퀴즈 소개</h2>
+  <p>ㄱㅊㅉㄱ 처럼 단어의 첫소리(초성)만 보고 정답을 맞히는 퀴즈입니다. 음식, 동물, 물건, 운동, 나라와 도시, 직업, 직장 생활, 사자성어, 속담까지 매일 0시에 10문제가 새로 나와요. 같은 날에는 모두 같은 문제라서 친구와 점수를 비교하기 좋고, 결과는 🟩🟨🟥 이모지로 공유할 수 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>초성 칸과 분야를 보고 정답을 써서 확인을 누르세요. 막히면 힌트를 볼 수 있는데, 첫 힌트는 설명, 두 번째 힌트는 첫 글자를 알려 줘요. 힌트 없이 맞히면 10점, 힌트 하나면 7점, 두 개면 4점, 넘기면 0점이에요. 초성은 맞는데 다른 단어를 쓰면 '초성은 맞아요'라고 알려 줘요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>오늘 문제를 다 풀면 더 할 수 있나요?</dt>
+    <dd>네. '연습 세트'로 다른 10문제를 계속 풀 수 있어요. 오늘의 문제 점수는 하루에 한 번만 기록돼요.</dd>
+    <dt>띄어쓰기도 맞춰야 하나요?</dt>
+    <dd>아니요. 속담처럼 긴 정답도 띄어쓰기는 상관없이 글자만 맞으면 정답이에요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

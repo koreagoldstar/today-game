@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#15112b" />
+    <title>타자 소나기 — 떨어지는 단어 막기 타자 연습 · 타수 측정 | Today Game</title>
+    <meta name="description" content="구름에서 쏟아지는 단어를 타자로 쳐서 터뜨리세요! 한글 · 영어 타자 연습 게임. 내 타수를 재고 친구에게 기록 도전장을 보내 보세요. 설치 없이 PC · 휴대폰에서 바로." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/typing-rain/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="타자 소나기 | 오늘의 게임" />
+    <meta property="og:description" content="쏟아지는 단어를 타자로 막아라! 내 타수는 몇 타?" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/typing-rain/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/typing-rain.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/adult.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+  </head>
+  <body>
+    <div class="stage">
+      <section class="ad-screen" id="title" aria-labelledby="title-h">
+        <img class="ad-hero" src="/assets/thumbs/sm/typing-rain.webp?v=1" alt="" width="132" height="132" />
+        <p class="ad-kicker">어른이용 게임 · 타자 연습</p>
+        <h1 class="ad-title" id="title-h">타자 소나기</h1>
+        <p class="ad-sub">구름에서 쏟아지는 단어를 쳐서 터뜨려요.<br />땅에 닿으면 옥상 정원의 꽃이 시들어요!</p>
+
+        <div class="tr-friend hidden" id="friend-banner"></div>
+
+        <div class="ad-card">
+          <p class="tr-label">어떤 단어로 할까요?</p>
+          <div class="ad-chips" id="langs">
+            <button type="button" class="ad-chip on" data-lang="ko">한글</button>
+            <button type="button" class="ad-chip" data-lang="en">영어</button>
+          </div>
+          <ul class="tr-items">
+            <li><i class="gold">🌈</i><span><b>무지개 단어</b> 점수 3배</span></li>
+            <li><i class="ice">⏸️</i><span><b>멈춤 단어</b> 3초 동안 멈춤</span></li>
+            <li><i class="sweep">🧹</i><span><b>싹쓸이 단어</b> 화면 단어 모두 터짐</span></li>
+            <li><i class="heal">🌱</i><span><b>새싹 단어</b> 시든 꽃 하나 살아남</span></li>
+          </ul>
+          <p class="ad-msg" id="best-line"></p>
+        </div>
+
+        <button type="button" class="ad-btn" id="start-btn">☔ 시작하기</button>
+        <p class="tr-tip">⌨️ PC 키보드로 하면 더 신나요 · 휴대폰도 OK</p>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+
+      <section class="ad-screen hidden" id="over" aria-labelledby="done-h">
+        <div class="tr-done ad-prize">
+          <div class="tr-done-emoji" id="done-emoji">☔</div>
+          <h2 id="done-h">소나기 끝!</h2>
+          <p class="tr-done-score" id="done-score"></p>
+          <div class="tr-stats">
+            <div><b id="st-tpm">0</b><span>평균 타수</span></div>
+            <div><b id="st-level">1</b><span>도달 단계</span></div>
+            <div><b id="st-words">0</b><span>막은 단어</span></div>
+          </div>
+          <p class="ad-msg" id="done-line"></p>
+        </div>
+        <div class="ad-card">
+          <p class="tr-label">결과 자랑하기</p>
+          <div class="ad-row">
+            <button type="button" class="ad-btn kakao" id="share-kakao">카톡 공유</button>
+            <button type="button" class="ad-btn soft" id="share-link">결과 복사</button>
+          </div>
+        </div>
+        <div id="duel-slot"></div>
+        <div class="ad-row">
+          <button type="button" class="ad-btn blue" id="again-btn">☔ 한 판 더</button>
+          <button type="button" class="ad-btn soft" id="home-btn">처음으로</button>
+        </div>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+
+    <!-- 게임 중: 화면 전체 (휴대폰 키보드가 올라와도 입력칸이 보이게 높이를 맞춤) -->
+    <div class="tr-play hidden" id="play">
+      <div class="tr-hud">
+        <div class="tr-chip"><span>점수</span><b id="hud-score">0</b></div>
+        <div class="tr-chip"><span>단계</span><b id="hud-level">1</b></div>
+        <div class="tr-chip"><span>타수</span><b id="hud-tpm">-</b></div>
+        <button type="button" class="tr-pause" id="pause-btn" aria-label="일시정지">⏸</button>
+      </div>
+      <div class="tr-field" id="field">
+        <canvas id="game" aria-label="떨어지는 단어"></canvas>
+        <div class="tr-banner hidden" id="banner"></div>
+        <div class="tr-paused hidden" id="paused">
+          <p>일시정지</p>
+          <button type="button" class="ad-btn" id="resume-btn">계속하기</button>
+          <button type="button" class="ad-btn soft" id="quit-btn">그만하기</button>
+        </div>
+      </div>
+      <form class="tr-input" id="type-form" autocomplete="off">
+        <input id="type-input" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="단어를 치고 Enter" aria-label="단어 입력" />
+        <button type="submit" class="tr-enter">입력</button>
+      </form>
+    </div>
+    <div class="ad-toast" id="toast"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/adult-kit.js?v=1"></script>
+    <script src="words.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="타자 소나기 소개">
+  <h2>타자 소나기 소개</h2>
+  <p>구름에서 비처럼 떨어지는 단어를 타자로 쳐서 터뜨리는 타자 연습 게임입니다. 단어가 땅에 닿으면 옥상 정원의 꽃이 하나씩 시들고, 꽃 5송이가 모두 시들면 끝나요. 단계가 오를수록 단어가 빨라지고 길어져요. 한글과 영어 중에 골라 연습할 수 있고, 끝나면 평균 타수(1분에 친 글자 수)를 알려 줘요.</p>
+  <h3>플레이 방법</h3>
+  <p>떨어지는 단어를 똑같이 치고 Enter(또는 스페이스)를 누르면 터져요. 땅에 가까운 단어부터 막는 게 요령! 무지개 단어는 점수 3배, 멈춤 단어는 3초 동안 모든 단어를 멈추고, 싹쓸이 단어는 화면의 단어를 한 번에 터뜨리고, 새싹 단어는 시든 꽃을 하나 살려요. 휴대폰에서는 화면 아래 입력칸에 치고 입력을 누르면 돼요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>타수는 어떻게 세나요?</dt>
+    <dd>터뜨린 단어의 글자를 실제로 누른 자판 수(한글은 자음 · 모음 단위)로 세어, 게임한 시간 1분당으로 나눈 값이에요.</dd>
+    <dt>친구와 대결할 수 있나요?</dt>
+    <dd>끝나면 나오는 도전장을 보내면, 친구가 같은 모드로 시작해서 누가 더 높은 점수를 냈는지 바로 비교돼요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

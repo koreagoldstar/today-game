@@ -30,6 +30,24 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "chosung-quiz",
+      title: "오늘의 초성퀴즈",
+      tag: "매일 10문제 · 이모지 결과 공유",
+      href: "/games/chosung-quiz/",
+      thumb: "/assets/thumbs/sm/chosung-quiz.webp?v=1",
+      category: "adult",
+      added: "2026-11-16",
+    },
+    {
+      id: "typing-rain",
+      title: "타자 소나기",
+      tag: "단어 막기 타자 연습 · 타수 기록",
+      href: "/games/typing-rain/",
+      thumb: "/assets/thumbs/sm/typing-rain.webp?v=1",
+      category: "adult",
+      added: "2026-11-16",
+    },
+    {
       id: "guess-me",
       title: "나를 맞혀봐",
       tag: "우정 테스트 · 친구가 내 답 맞히기",

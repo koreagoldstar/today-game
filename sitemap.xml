@@ -4,6 +4,8 @@
   <url><loc>https://www.todaygame.co.kr/rankings/</loc><priority>0.8</priority></url>
   <url><loc>https://www.todaygame.co.kr/fame/</loc><priority>0.6</priority></url>
 
+  <url><loc>https://www.todaygame.co.kr/games/chosung-quiz/</loc><priority>0.7</priority></url>
+  <url><loc>https://www.todaygame.co.kr/games/typing-rain/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/guess-me/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/number-baseball/</loc><priority>0.7</priority></url>
   <url><loc>https://www.todaygame.co.kr/games/ideal-worldcup/</loc><priority>0.7</priority></url>

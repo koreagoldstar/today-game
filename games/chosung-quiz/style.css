@@ -1,0 +1,316 @@
+.cq-label {
+  margin: 0 0 10px;
+  font-family: "Jua", sans-serif;
+  font-size: 18px;
+  color: var(--ad-ink);
+}
+
+.cq-friend {
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(170deg, #fff8e4, #ffeccf);
+  border: 1.5px dashed var(--ad-gold-deep);
+  color: var(--ad-ink);
+  text-align: center;
+  line-height: 1.55;
+  box-shadow: var(--ad-shadow);
+}
+
+.cq-today {
+  margin: 0 0 12px;
+  font-family: "Jua", sans-serif;
+  font-size: 19px;
+  text-align: center;
+  color: var(--ad-ink);
+}
+
+.cq-sample {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f7f0e3;
+}
+
+.cq-sample .cq-tile {
+  width: 38px;
+  height: 42px;
+  font-size: 22px;
+}
+
+.cq-arrow {
+  margin: 0 4px;
+  color: var(--ad-sub);
+  font-weight: 900;
+}
+
+.cq-sample b {
+  font-family: "Jua", sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ad-accent-deep);
+}
+
+.cq-rules {
+  list-style: none;
+  margin: 12px 0 2px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--ad-sub);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.cq-rules li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cq-rules i {
+  font-style: normal;
+}
+
+/* 초성 칸 */
+.cq-tile {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 60px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf8, #efe4cf);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 0 #cdbfa8;
+  color: var(--ad-ink);
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.cq-tile.gap {
+  width: 10px;
+  background: none;
+  box-shadow: none;
+}
+
+.cq-tile.open {
+  background: linear-gradient(180deg, #5fe0a6, #2fae74);
+  box-shadow: 0 4px 0 #1f7d52;
+  color: #fff;
+  animation: cq-flip 0.35s ease both;
+}
+
+.cq-tile.peek {
+  background: linear-gradient(180deg, #ffe08a, #ffc94a);
+  box-shadow: 0 4px 0 #c98a12;
+}
+
+.cq-tile.miss {
+  background: linear-gradient(180deg, #ff9a9a, #e2365a);
+  box-shadow: 0 4px 0 #a8203f;
+  color: #fff;
+  animation: cq-flip 0.35s ease both;
+}
+
+@keyframes cq-flip {
+  0% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 문제 카드 */
+.cq-mode {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cq-card {
+  padding: 16px 14px 14px;
+  border-radius: 26px;
+  background: var(--ad-card);
+  color: var(--ad-ink);
+  text-align: center;
+  box-shadow: var(--ad-shadow);
+}
+
+.cq-card.shake {
+  animation: cq-shake 0.35s;
+}
+
+@keyframes cq-shake {
+  25% {
+    transform: translateX(-7px);
+  }
+  75% {
+    transform: translateX(7px);
+  }
+}
+
+.cq-cat {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: #ffe4dc;
+  color: var(--ad-accent-deep);
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.cq-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* 긴 속담은 칸을 작게 */
+.cq-tiles.long .cq-tile {
+  width: 34px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 19px;
+}
+
+.cq-tiles.long .cq-tile.gap {
+  width: 6px;
+}
+
+.cq-hints {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.cq-hints:empty {
+  display: none;
+}
+
+.cq-hint {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fff4d6;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.cq-form {
+  display: flex;
+  gap: 8px;
+}
+
+.cq-form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 54px;
+  padding: 0 16px;
+  border: 2px solid rgba(255, 201, 74, 0.6);
+  border-radius: 16px;
+  background: #fffaf2;
+  color: var(--ad-ink);
+  font: inherit;
+  font-family: "Jua", sans-serif;
+  font-size: 21px;
+}
+
+.cq-form input:focus {
+  outline: none;
+  border-color: var(--ad-gold);
+  box-shadow: 0 0 0 4px rgba(255, 201, 74, 0.25);
+}
+
+.cq-ok {
+  flex: 0 0 auto;
+  padding: 0 20px;
+}
+
+.cq-msg {
+  min-height: 1.4em;
+  margin: -4px 0 0;
+  color: var(--ad-gold);
+  font-weight: 700;
+  text-align: center;
+}
+
+.cq-tools .ad-btn {
+  font-size: 16px;
+  padding: 11px 8px;
+}
+
+/* 결과 */
+.cq-done-emoji {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #fff, #e0f7ee);
+  box-shadow: 0 0 0 5px #ffd766, 0 0 0 10px rgba(255, 215, 102, 0.3), 0 14px 30px rgba(20, 80, 60, 0.25);
+  font-size: 60px;
+  line-height: 1;
+}
+
+.cq-done h2 {
+  margin: 12px 0 2px;
+  font-family: "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ad-sub);
+}
+
+.cq-done-score {
+  margin: 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 50px;
+  line-height: 1.1;
+  color: var(--ad-accent-deep);
+}
+
+.cq-done-marks {
+  margin: 8px 0 6px;
+  font-size: clamp(16px, 5.2vw, 22px);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.cq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cq-list li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f7f0e3;
+  font-size: 15px;
+}
+
+.cq-list .m {
+  grid-row: span 2;
+  align-self: center;
+}
+
+.cq-list .c {
+  color: var(--ad-sub);
+  font-size: 12.5px;
+}
+
+.cq-list .a {
+  font-weight: 900;
+}
