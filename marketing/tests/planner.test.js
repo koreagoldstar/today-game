@@ -55,6 +55,37 @@ test("직전과 같은 게임은 다시 고르지 않음 (점수가 높아도)",
   assert.equal(ranked.find((g) => g.id === "reaction").score, 130, "실패한 건 홍보한 것으로 치지 않음 (홍보한 적 없음 100 + 오래됨 30)");
 });
 
+test("실제로 게시한 게임은 다시 고르지 않음 (14일이 지나도) · 모의 게시는 제외 안 함 · 오래돼 목록에서 빠진 것은 posted:games 로", async () => {
+  const real = { ...made("reaction", 40), posts: { instagram: { status: "PUBLISHED", platformId: "ig1" } } };
+  const mock = { ...made("claw-master", 50), posts: { instagram: { status: "PUBLISHED", platformId: "m1", mock: true } } };
+  const c = ctxWith([real, mock]);
+  await c.seed();
+  await c.store.run("SADD", "posted:games", "sky-island");
+  const by = Object.fromEntries((await scoreGames(c, { now: NOW, runner: "pc" })).map((g) => [g.id, g]));
+  assert.deepEqual([by.reaction.eligible, by.reaction.reasons], [false, ["이미 게시함"]]);
+  assert.equal(by["sky-island"].eligible, false);
+  assert.equal(by["claw-master"].eligible, true, "모의 게시는 인스타에 없음");
+  const { plan } = await planToday(c, { now: NOW, runner: "pc" });
+  assert.ok(!["reaction", "sky-island"].includes(plan.sourceId));
+});
+
+test("게시가 끝나면 그 게임을 posted:games 에 남김 — 실제 게시만", async () => {
+  const { makeCtx, PLAN, WHO } = require("./helpers");
+  const { produce } = require("../core/pipeline");
+  const { publishDue } = require("../core/publisher");
+  for (const mock of [false, true]) {
+    const base = makeCtx();
+    base.registry.register("source", "game", { collect: async () => ({ sourceType: "game", sourceId: "reaction", facts: { title: "번쩍 반응", url: "/games/reaction/" }, assets: {} }) });
+    if (!mock) base.registry.register("channel", "instagram", { name: "instagram", mock: false, capabilities: () => ({ kinds: ["reel"], caption: { maxChars: 2200, maxHashtags: 30 } }), publish: async () => ({ postId: "ig1" }), verify: async () => ({ ok: true }), health: async () => ({ ok: true }), insights: async () => [] });
+    const d = await produce(base.ctx, { ...PLAN, sourceType: "game" });
+    await base.approval.approve(d.id, { version: d.version, ...WHO });
+    base.clock.set("2026-11-09T19:05:00+09:00");
+    await publishDue(base.ctx);
+    assert.equal((await base.store.getContent(d.id)).status, "PUBLISHED");
+    assert.deepEqual(await base.store.run("SMEMBERS", "posted:games"), mock ? [] : ["reaction"]);
+  }
+});
+
 test("하루 1개 · 승인 대기 상한", () => {
   const s = validate(merge(DEFAULTS, {}));
   assert.equal(produceGate([], s, "2026-11-09").ok, true);

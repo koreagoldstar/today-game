@@ -100,6 +100,7 @@ mkt-admin/           (PHASE 9)
 | `games` · `profiles` | HASH | 게임별 홍보 제외 · 마지막 홍보일 · 녹화 프로필 참조 |
 | `settings` | JSON | 편성표 · 게시 시각 · 채널별 하루 상한 · 검수 기준 |
 | `seen:games` · `seen:quiz` | SET / ZSET | 신작 감지용 이전 목록 · 90일 안 쓴 퀴즈 |
+| `posted:games` | SET | 실제 채널에 게시된 게임(모의 제외) — 릴스 · 신작으로 다시 고르지 않음 (publisher 가 게시 때 넣음) |
 | `clip:{id}` / `clips` | JSON / ZSET | PC 가 올린 3D 녹화본 재고 (게임 · 녹화 시각 · 커밋 · fps · 길이 · 파일 주소 · used) — §11 |
 | `logs` | LIST (최근 1,000) | 상태 변경 · API 호출 결과 · 오류 (토큰 가림) |
 | `lock:{name}` | 문자열 (SET NX EX) | 작업 · 콘텐츠 잠금 |

@@ -80,4 +80,10 @@ function isExpired(doc, now = Date.now(), hours = 72) {
   return !!doc.readyAt && now - Date.parse(doc.readyAt) > hours * 3600 * 1000;
 }
 
-module.exports = { STATES, MAKING, TERMINAL, NEXT, KO, TransitionError, canTransition, transition, approvalValid, invalidate, isExpired };
+/** 실제 채널에 게시된(모의 게시 제외) 게임 콘텐츠면 그 게임 id — 봇 녹화는 거의 같은 장면이라 같은 게임을 다시 올리지 않는다 */
+function postedGameId(doc) {
+  if (!doc || !doc.source || !["game", "new-game"].includes(doc.source.sourceType)) return null;
+  return Object.values(doc.posts || {}).some((p) => p && p.status === "PUBLISHED" && !p.mock) ? doc.source.sourceId : null;
+}
+
+module.exports = { STATES, MAKING, TERMINAL, NEXT, KO, TransitionError, canTransition, transition, approvalValid, invalidate, isExpired, postedGameId };

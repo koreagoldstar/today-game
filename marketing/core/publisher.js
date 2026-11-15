@@ -6,7 +6,7 @@
  *  재시도: 횟수 제한 + 지수 백오프. 한 채널 실패가 다른 채널을 막지 않는다.
  * 같은 실행에서 할 일: 승인 기한 지남(EXPIRED) 정리 · 중간에 멈춘 제작 FAILED 정리
  */
-const { transition, approvalValid, isExpired, MAKING } = require("./state");
+const { transition, approvalValid, isExpired, MAKING, postedGameId } = require("./state");
 const { seoulDay } = require("./settings");
 const { LockError } = require("./store");
 
@@ -127,7 +127,11 @@ async function publishContent(ctx, id, now) {
       }
     } else if (d.status === "PUBLISHING") transition(d, "SCHEDULED", { by: "publisher", note: "남은 채널은 다음 실행에서", now });
   });
-  if (after.status === "PUBLISHED") await notify(ctx, "published", after);
+  if (after.status === "PUBLISHED") {
+    // 게시한 게임은 영구 기록 — planner 는 최근 콘텐츠 200개만 보므로
+    if (postedGameId(after)) await store.run("SADD", "posted:games", postedGameId(after));
+    await notify(ctx, "published", after);
+  }
   return after;
 }
 
