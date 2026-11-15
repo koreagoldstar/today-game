@@ -114,6 +114,8 @@ module.exports = async function handler(req, res) {
     "balance-game",
     "sudoku",
     "freecell",
+    "number-baseball",
+    "guess-me",
   ]);
 
   /** 콜드스타트/폴백 순서 */

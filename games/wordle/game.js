@@ -9,7 +9,7 @@
     ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "⌫"],
   ];
 
-  const { VALID, seoulDay, getPuzzle, DAILY_LIMIT } = window.WordleWords;
+  const { seoulDay, getPuzzle, DAILY_LIMIT } = window.WordleWords;
   const day = seoulDay();
   const PROGRESS_KEY = `today-wordle-v2-${day}`;
 
@@ -23,6 +23,7 @@
   const hintExtra = document.getElementById("hint-extra");
   const nextBtn = document.getElementById("next-btn");
   const shareBtn = document.getElementById("share-btn");
+  const giveUpBtn = document.getElementById("give-up");
 
   let puzzleIndex = 0;
   let wins = 0;
@@ -319,17 +320,8 @@
       showMsg("5글자를 모두 입력해요");
       return;
     }
+    // 하기 편하게: 단어 목록(600여 개)에 없는 진짜 단어도 많아서, 5글자면 무엇이든 받아 채점한다
     const guess = rows[row].join("");
-    if (!VALID.has(guess)) {
-      showMsg("목록에 없는 단어예요");
-      const rowEl = boardEl.children[row];
-      if (rowEl) {
-        rowEl.classList.remove("shake");
-        void rowEl.offsetWidth;
-        rowEl.classList.add("shake");
-      }
-      return;
-    }
 
     const g = gradeWord(guess);
     grades[row] = g;
@@ -412,8 +404,30 @@
       hintMore.textContent = letterHints >= 3 ? "글자 힌트 끝" : "끝났어요";
     } else {
       hintMore.disabled = false;
-      hintMore.textContent = `글자 힌트 받기 (${letterHints}/3)`;
+      hintMore.textContent = `글자 힌트 ${letterHints}/3`;
     }
+    giveUpBtn.disabled = done;
+    disarmGiveUp();
+  }
+
+  /** 정답 보기: 실수로 누르지 않게 두 번 눌러야 넘어감 (못 맞힌 판으로 기록) */
+  let giveUpTimer = 0;
+  function disarmGiveUp() {
+    clearTimeout(giveUpTimer);
+    giveUpBtn.classList.remove("armed");
+    giveUpBtn.textContent = "정답 보기";
+  }
+  function giveUp() {
+    if (paused || done) return;
+    if (!giveUpBtn.classList.contains("armed")) {
+      giveUpBtn.classList.add("armed");
+      giveUpBtn.textContent = "한 번 더 누르면 공개";
+      clearTimeout(giveUpTimer);
+      giveUpTimer = setTimeout(disarmGiveUp, 3000);
+      return;
+    }
+    disarmGiveUp();
+    finishPuzzle(false);
   }
 
   function giveLetterHint() {
@@ -428,6 +442,7 @@
   }
 
   hintMore.addEventListener("click", giveLetterHint);
+  giveUpBtn.addEventListener("click", giveUp);
   nextBtn.addEventListener("click", goNextPuzzle);
 
   document.getElementById("help-btn").addEventListener("click", () => help.classList.remove("hidden"));

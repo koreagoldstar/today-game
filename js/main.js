@@ -30,6 +30,24 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "guess-me",
+      title: "나를 맞혀봐",
+      tag: "우정 테스트 · 친구가 내 답 맞히기",
+      href: "/games/guess-me/",
+      thumb: "/assets/thumbs/sm/guess-me.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
+    {
+      id: "number-baseball",
+      title: "숫자야구",
+      tag: "추리 · 오늘의 문제 · 친구 대결",
+      href: "/games/number-baseball/",
+      thumb: "/assets/thumbs/sm/number-baseball.webp?v=1",
+      category: "adult",
+      added: "2026-11-15",
+    },
+    {
       id: "ideal-worldcup",
       title: "이상형 월드컵",
       tag: "야식 · 점심 · 여행지 16강",
@@ -278,7 +296,7 @@
       tag: "퀴즈 · 매일 5문제",
       href: "/games/wisdom-quiz/",
       thumb: "/assets/thumbs/sm/wisdom-quiz.webp",
-      category: "puzzle",
+      category: "adult",
     },
     {
       id: "fortune-draw",
@@ -477,7 +495,7 @@
       tag: "퍼즐 · 하루 100문제",
       href: "/games/wordle/",
       thumb: "/assets/thumbs/sm/wordle.webp",
-      category: "puzzle",
+      category: "adult",
     },
     {
       id: "doodle",

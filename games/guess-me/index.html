@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15112b" />
+    <title>나를 맞혀봐 — 친구 우정 테스트 · 취향 퀴즈 | Today Game</title>
+    <meta name="description" content="내 취향 10문제에 답하고 카톡으로 보내면, 친구가 내 답을 맞혀요. 친구는 나를 얼마나 알까? 설치 없이 바로 하는 우정 테스트." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/guess-me/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="나를 맞혀봐 | 오늘의 게임" />
+    <meta property="og:description" content="내 취향 10문제, 친구는 몇 개나 맞힐까? 우정 테스트 해 보세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/guess-me/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/guess-me.png" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/adult.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+  </head>
+  <body>
+    <div class="stage">
+      <section class="ad-screen" id="title" aria-labelledby="title-h">
+        <img class="ad-hero" src="/assets/thumbs/sm/guess-me.webp?v=1" alt="" width="132" height="132" />
+        <p class="ad-kicker" id="title-kicker">어른이용 게임 · 우정 테스트</p>
+        <h1 class="ad-title" id="title-h">나를 맞혀봐</h1>
+        <p class="ad-sub" id="title-sub">내 취향 10문제에 답하고 친구에게 보내면,<br />친구가 내 답을 맞혀요. 나를 얼마나 알까?</p>
+
+        <!-- 친구 문제를 받았을 때 -->
+        <div class="gm-invite hidden" id="invite">
+          <p class="gm-invite-top" id="invite-top"></p>
+          <p class="gm-invite-name" id="invite-name"></p>
+          <p class="gm-invite-sub">10문제 중 몇 개나 맞힐 수 있을까요?</p>
+          <p class="gm-invite-brag hidden" id="invite-brag"></p>
+        </div>
+        <button type="button" class="ad-btn hidden" id="guess-btn">맞히러 가기</button>
+
+        <!-- 내 문제 만들기 -->
+        <div class="ad-card gm-make" id="make-card">
+          <p class="gm-label">내 이름</p>
+          <input id="my-name" maxlength="8" placeholder="친구에게 보일 이름 (예: 지혁)" autocomplete="nickname" />
+          <ul class="gm-steps">
+            <li><b>1</b> 나에 대한 10문제에 솔직하게 답하기</li>
+            <li><b>2</b> 카톡이나 링크로 친구에게 보내기</li>
+            <li><b>3</b> 친구가 맞힌 개수로 우정 확인!</li>
+          </ul>
+        </div>
+        <button type="button" class="ad-btn" id="make-btn">✍️ 내 문제 만들기</button>
+        <button type="button" class="ad-btn soft hidden" id="mine-btn">내가 만든 문제 다시 보내기</button>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+
+      <section class="ad-screen hidden" id="play" aria-live="polite">
+        <div class="ad-hud">
+          <span class="gm-mode" id="gm-mode"></span>
+          <span class="ad-badge" id="gm-num">1 / 10</span>
+        </div>
+        <div class="ad-progress"><i id="gm-bar"></i></div>
+        <div class="gm-q">
+          <p class="gm-q-who" id="gm-who"></p>
+          <h2 class="gm-q-text" id="gm-text"></h2>
+        </div>
+        <div class="gm-opts" id="gm-opts"></div>
+        <p class="gm-note" id="gm-note"></p>
+        <button type="button" class="ad-btn blue hidden" id="gm-next">다음 문제</button>
+        <button type="button" class="ad-btn soft gm-back" id="gm-back">↶ 이전 문제</button>
+      </section>
+
+      <!-- 문제를 다 만들었을 때 -->
+      <section class="ad-screen hidden" id="made" aria-labelledby="made-h">
+        <div class="ad-prize gm-made">
+          <div class="gm-big-emoji">💌</div>
+          <h2 id="made-h">문제 완성!</h2>
+          <p class="ad-msg">이제 친구에게 보내서<br />나를 얼마나 아는지 확인해 보세요.</p>
+        </div>
+        <div class="ad-card">
+          <p class="gm-label">친구에게 보내기</p>
+          <div class="ad-row">
+            <button type="button" class="ad-btn kakao" id="send-kakao">카톡으로 보내기</button>
+            <button type="button" class="ad-btn soft" id="send-link">링크 복사</button>
+          </div>
+          <p class="ad-msg">친구는 내 답을 볼 수 없고, 맞혀야만 알 수 있어요.</p>
+        </div>
+        <div class="ad-card">
+          <p class="gm-label">내 답</p>
+          <ol class="gm-list" id="made-list"></ol>
+        </div>
+        <button type="button" class="ad-btn soft" id="remake-btn">다른 문제로 다시 만들기</button>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+
+      <!-- 친구 문제를 다 맞혔을 때 -->
+      <section class="ad-screen hidden" id="scored" aria-labelledby="score-h">
+        <div class="ad-prize gm-score">
+          <div class="gm-big-emoji" id="score-emoji">🫶</div>
+          <p class="gm-score-who" id="score-who"></p>
+          <h2 class="gm-score-num" id="score-h"></h2>
+          <p class="gm-score-tier" id="score-tier"></p>
+          <p class="ad-msg" id="score-desc"></p>
+        </div>
+        <div class="ad-card">
+          <p class="gm-label">정답 확인</p>
+          <ol class="gm-list" id="score-list"></ol>
+        </div>
+        <div class="ad-row">
+          <button type="button" class="ad-btn kakao" id="brag-kakao">점수 자랑</button>
+          <button type="button" class="ad-btn soft" id="brag-link">링크 복사</button>
+        </div>
+        <button type="button" class="ad-btn" id="me-too-btn">✍️ 나도 내 문제 만들기</button>
+        <a class="ad-home" href="/">← 오늘의 게임 홈</a>
+      </section>
+    </div>
+    <div class="ad-toast" id="toast"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="/js/adult-kit.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+    <!-- seo:game:start -->
+<section class="seo-about" aria-label="나를 맞혀봐 소개">
+  <h2>나를 맞혀봐 소개</h2>
+  <p>내 취향과 성격에 대한 10문제에 답하고 카카오톡으로 보내면, 친구가 내 답을 맞히는 우정 테스트입니다. 치킨은 양념파인지, 주말엔 집콕인지, 화나면 바로 말하는지… 친구가 몇 개나 맞히는지에 따라 찐친 등급이 나와요.</p>
+  <h3>플레이 방법</h3>
+  <p>이름을 적고 '내 문제 만들기'를 눌러 10문제에 솔직하게 답하세요. 완성되면 카톡이나 링크로 친구에게 보내면 돼요. 친구는 문제를 하나씩 풀면서 바로 정답을 확인하고, 마지막에 점수와 등급을 받아요. 친구도 '나도 내 문제 만들기'로 바로 자기 문제를 만들 수 있어요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>내 답이 서버에 저장되나요?</dt>
+    <dd>아니요. 답은 보내는 링크 안에만 담겨요. 회원가입이나 저장 없이 링크만 있으면 돼요.</dd>
+    <dt>친구가 내 답을 미리 볼 수 있나요?</dt>
+    <dd>링크에는 답이 알아보기 어렵게 섞여 들어가서, 문제를 풀어야만 정답이 보여요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+    <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>

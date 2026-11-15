@@ -547,3 +547,108 @@ body {
 .top > .day-pill {
   margin-left: auto;
 }
+
+/* 하기 편하게 (2026-11-15): 휴대폰 한 화면에 힌트 · 판 · 키보드가 모두 들어오게, 키는 화면 폭을 꽉 채워 크게 */
+.app {
+  --tile: min(58px, calc((100vw - 64px) / 5), calc((100dvh - 430px) / 6));
+}
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 2px 0 8px;
+  text-align: left;
+}
+.hero-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border-width: 2px;
+  box-shadow: 0 3px 0 rgba(200, 120, 150, 0.22);
+}
+.hero h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+}
+.hero p {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+.hint-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  margin: 0 0 8px;
+  text-align: left;
+}
+.hint-label {
+  margin: 0;
+}
+.hint-text {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+.hint-btns {
+  display: flex;
+  gap: 6px;
+}
+.hint-more {
+  padding: 7px 10px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.hint-more.give-up {
+  background: #f3eef8;
+  box-shadow: inset 0 0 0 2px #d9cde6;
+}
+.hint-more.give-up.armed {
+  background: #ff6b9d;
+  color: #fff;
+  box-shadow: none;
+}
+.hint-extra {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  text-align: center;
+}
+.board,
+.row {
+  gap: 6px;
+}
+.tile {
+  width: var(--tile);
+  height: var(--tile);
+  font-size: calc(var(--tile) * 0.46);
+}
+.msg {
+  min-height: 20px;
+  margin: 2px 0 6px;
+}
+.keyboard {
+  width: 100%;
+  gap: 7px;
+}
+.key-row {
+  gap: 5px;
+}
+.key-row:nth-child(2) {
+  padding: 0 5%;
+}
+.key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 54px;
+  padding: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+.key.wide {
+  flex: 1.6 1 0;
+  min-width: 0;
+  font-size: 14px;
+}

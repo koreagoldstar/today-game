@@ -1,0 +1,319 @@
+/* 이 게임은 자체 공유가 있어서 공용 "친구 불러서 같이 하기" 버튼은 숨김 */
+#tduel-invite {
+  display: none !important;
+}
+
+.gm-label {
+  margin: 0 0 10px;
+  font-family: "Jua", sans-serif;
+  font-size: 18px;
+  color: var(--ad-ink);
+}
+
+.gm-make input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--ad-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ad-ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.gm-make input:focus {
+  outline: none;
+  border-color: var(--ad-accent);
+  box-shadow: 0 0 0 3px rgba(255, 107, 94, 0.18);
+}
+
+.gm-make input.shake {
+  animation: gm-shake 0.35s;
+  border-color: var(--ad-accent);
+}
+
+@keyframes gm-shake {
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+.gm-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  color: var(--ad-sub);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.gm-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gm-steps b {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ad-accent-2), var(--ad-accent));
+  color: #fff;
+  font-size: 13px;
+}
+
+/* 받은 초대장 */
+.gm-invite {
+  padding: 18px 16px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #fff6ea, #ffe1ea);
+  color: var(--ad-ink);
+  text-align: center;
+  box-shadow: 0 0 0 3px rgba(255, 201, 74, 0.6), 0 18px 40px rgba(5, 2, 20, 0.4);
+}
+
+.gm-invite-top {
+  margin: 0;
+  color: var(--ad-sub);
+  font-weight: 700;
+}
+
+.gm-invite-name {
+  margin: 4px 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.gm-invite-sub {
+  margin: 0;
+  color: var(--ad-sub);
+  font-size: 14px;
+}
+
+.gm-invite-brag {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+}
+
+/* 문제 */
+.gm-mode {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gm-q {
+  padding: 22px 18px;
+  border-radius: 26px;
+  background: var(--ad-card);
+  color: var(--ad-ink);
+  text-align: center;
+  box-shadow: var(--ad-shadow);
+}
+
+.gm-q-who {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #ffe4dc;
+  color: var(--ad-accent-deep);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.gm-q-text {
+  margin: 0;
+  font-family: "Jua", sans-serif;
+  font-weight: 400;
+  font-size: clamp(24px, 7vw, 30px);
+  line-height: 1.3;
+}
+
+.gm-opts {
+  display: grid;
+  gap: 10px;
+}
+
+.gm-opts.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.gm-opt {
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdf8, #f3ebdd);
+  color: var(--ad-ink);
+  box-shadow: inset 0 1px 0 #fff, 0 5px 0 #cdbfa8, 0 12px 22px rgba(5, 2, 20, 0.3);
+  font: inherit;
+  font-family: "Jua", sans-serif;
+  font-size: 20px;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: transform 0.08s, filter 0.2s;
+}
+
+.gm-opts.two .gm-opt {
+  min-height: 96px;
+}
+
+.gm-opt:active {
+  transform: translateY(4px);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 #cdbfa8;
+}
+
+.gm-opt .gm-emo {
+  font-size: 26px;
+}
+
+.gm-opt.pick {
+  background: linear-gradient(180deg, var(--ad-accent-2), var(--ad-accent));
+  color: #fff;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 5px 0 var(--ad-accent-deep), 0 12px 24px rgba(255, 90, 80, 0.35);
+}
+
+.gm-opt.right {
+  background: linear-gradient(180deg, #5fe0a6, #2fae74);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--ad-gold), 0 5px 0 #1f7d52, 0 0 26px rgba(95, 224, 166, 0.5);
+}
+
+.gm-opt.wrong {
+  background: linear-gradient(180deg, #ff8a8a, #e2365a);
+  color: #fff;
+  box-shadow: 0 5px 0 #a8203f;
+  animation: gm-shake 0.35s;
+}
+
+.gm-opt.dim {
+  filter: grayscale(0.5) opacity(0.45);
+}
+
+.gm-opt .gm-mark {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ad-ink);
+  color: #fff6d6;
+  font-size: 12px;
+}
+
+.gm-note {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--ad-on);
+  font-weight: 700;
+  text-align: center;
+}
+
+.gm-back {
+  font-size: 15px;
+  padding: 10px;
+}
+
+/* 결과 */
+.gm-big-emoji {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #fff, #ffe1ea);
+  box-shadow: 0 0 0 5px #ffd766, 0 0 0 10px rgba(255, 215, 102, 0.3), 0 14px 30px rgba(120, 40, 60, 0.25);
+  font-size: 60px;
+  line-height: 1;
+}
+
+.gm-made h2 {
+  margin: 12px 0 6px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 38px;
+}
+
+.gm-score-who {
+  margin: 12px 0 0;
+  color: var(--ad-sub);
+  font-weight: 700;
+}
+
+.gm-score-num {
+  margin: 2px 0;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1.1;
+  color: var(--ad-accent-deep);
+}
+
+.gm-score-tier {
+  margin: 0 0 6px;
+  font-family: "Jua", sans-serif;
+  font-size: 24px;
+}
+
+.gm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.gm-list li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 4px 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f7f0e3;
+  font-size: 14.5px;
+}
+
+.gm-list .n {
+  grid-row: span 2;
+  align-self: center;
+  color: var(--ad-accent-deep);
+  font-weight: 900;
+}
+
+.gm-list .q {
+  color: var(--ad-sub);
+  font-size: 13px;
+}
+
+.gm-list .a {
+  font-weight: 900;
+}
+
+.gm-list li.ok {
+  background: #e3f6ec;
+}
+
+.gm-list li.no {
+  background: #fde7ea;
+}

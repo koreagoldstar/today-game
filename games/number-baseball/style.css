@@ -1,0 +1,380 @@
+.nb-label {
+  margin: 0 0 10px;
+  font-family: "Jua", sans-serif;
+  font-size: 18px;
+  text-align: center;
+  color: var(--ad-ink);
+}
+
+.nb-friend {
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(170deg, #fff8e4, #ffeccf);
+  border: 1.5px dashed var(--ad-gold-deep);
+  color: var(--ad-ink);
+  text-align: center;
+  line-height: 1.55;
+  box-shadow: var(--ad-shadow);
+}
+
+.nb-example {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 14px 0 2px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #f7f0e3;
+  color: var(--ad-sub);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.nb-example b {
+  color: var(--ad-ink);
+  letter-spacing: 0.08em;
+}
+
+.nb-res {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ad-ink);
+  color: #fff6d6;
+  font-family: "Jua", sans-serif;
+}
+
+/* 게임 화면 */
+.nb-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 17px;
+}
+
+.nb-memo-wrap {
+  padding: 8px 10px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nb-memo-label {
+  margin: 0 0 6px;
+  color: var(--ad-on);
+  font-family: "Jua", sans-serif;
+  font-size: 14px;
+}
+
+.nb-memo-label small {
+  color: var(--ad-on-sub);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 11px;
+}
+
+.nb-memo {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+
+.nb-memo button {
+  appearance: none;
+  position: relative;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ad-on);
+  font: inherit;
+  font-family: "Jua", sans-serif;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.nb-memo button.no {
+  color: rgba(255, 244, 230, 0.32);
+  background: rgba(0, 0, 0, 0.25);
+  text-decoration: line-through;
+}
+
+.nb-memo button.yes {
+  border-color: transparent;
+  background: linear-gradient(180deg, #4fd99a, #2fae74);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(79, 217, 154, 0.45);
+}
+
+/* 던진 기록 */
+.nb-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.nb-history:empty::before {
+  content: "아직 던진 공이 없어요. 아래에서 숫자를 골라 던져 보세요!";
+  display: block;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  color: var(--ad-on-sub);
+  font-size: 14px;
+  text-align: center;
+}
+
+.nb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 14px;
+  background: var(--ad-card);
+  color: var(--ad-ink);
+  box-shadow: 0 6px 14px rgba(5, 2, 20, 0.28);
+  animation: nb-in 0.25s ease;
+}
+
+@keyframes nb-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.nb-try {
+  color: var(--ad-sub);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.nb-digits {
+  display: flex;
+  gap: 5px;
+}
+
+.nb-digits i {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #f1e8d8;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-style: normal;
+  font-size: 17px;
+}
+
+.nb-judge {
+  display: flex;
+  gap: 4px;
+  font-family: "Jua", sans-serif;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.nb-judge b {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 400;
+}
+
+.nb-judge .s {
+  background: #2fae74;
+  color: #fff;
+}
+
+.nb-judge .b {
+  background: #ffc94a;
+  color: #4a3200;
+}
+
+.nb-judge .o {
+  background: #e2365a;
+  color: #fff;
+}
+
+.nb-judge .hr {
+  background: linear-gradient(90deg, #ff9a5a, #ffc94a);
+  color: #4a1a00;
+}
+
+/* 입력 칸 · 숫자판 */
+.nb-slots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.nb-slot {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 64px;
+  border-radius: 16px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff6d6;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 32px;
+}
+
+.nb-slot.full {
+  border: 0;
+  background: var(--ad-card);
+  color: var(--ad-ink);
+  box-shadow: 0 6px 0 #cdbfa8, 0 10px 20px rgba(5, 2, 20, 0.35);
+  animation: nb-pop 0.18s ease;
+}
+
+.nb-slot.next {
+  border-color: var(--ad-gold);
+}
+
+@keyframes nb-pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.nb-msg {
+  min-height: 1.3em;
+  margin: -4px 0 0;
+  color: var(--ad-gold);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.nb-pad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.nb-key {
+  appearance: none;
+  position: relative;
+  height: 54px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf8, #f1e8d8);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 0 #b9a98f, 0 8px 16px rgba(5, 2, 20, 0.3);
+  color: var(--ad-ink);
+  font: inherit;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 24px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.06s;
+}
+
+.nb-key:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 #b9a98f;
+}
+
+.nb-key.no {
+  color: #b9ad9a;
+}
+
+.nb-key.yes::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2fae74;
+}
+
+.nb-key:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nb-key.del {
+  font-family: "Jua", sans-serif;
+  font-size: 16px;
+}
+
+.nb-throw {
+  font-size: 21px;
+}
+
+.nb-quit {
+  font-size: 15px;
+  padding: 10px;
+}
+
+/* 결과 */
+.nb-done-emoji {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #fff, #ffe7c4);
+  box-shadow: 0 0 0 5px #ffd766, 0 0 0 10px rgba(255, 215, 102, 0.3), 0 14px 30px rgba(120, 60, 10, 0.25);
+  font-size: 62px;
+  line-height: 1;
+}
+
+.nb-done h2 {
+  margin: 12px 0 4px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-weight: 400;
+  font-size: 40px;
+}
+
+.nb-done-big {
+  margin: 0 0 6px;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-size: 26px;
+  color: var(--ad-accent-deep);
+}
+
+.nb-answer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nb-answer i {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--ad-ink);
+  color: #fff6d6;
+  font-family: "Bagel Fat One", "Jua", sans-serif;
+  font-style: normal;
+  font-size: 26px;
+  box-shadow: 0 5px 0 #120c22;
+}
+
+.nb-grid {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f7f0e3;
+  color: var(--ad-ink);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  text-align: center;
+}
