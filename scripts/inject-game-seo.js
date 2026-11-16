@@ -89,6 +89,60 @@ function injectBlock(html, block) {
   return `${html}\n${block}\n`;
 }
 
+/* ---------- 머리말(검색 설명 · 대표 주소 · 공유 미리보기) — 비어 있는 것만 채움 ---------- */
+const SITE = "https://www.todaygame.co.kr";
+const mainSrc = fs.readFileSync(path.join(ROOT, "js/main.js"), "utf8");
+const mainMatch = mainSrc.match(/const GAMES = (\[[\s\S]*?\n  \]);/);
+const MAIN = mainMatch ? Function(`"use strict"; return (${mainMatch[1]});`)() : [];
+/** 폴더 이름으로 찾기 (목록 id 와 폴더 이름이 다른 게임이 있음: goindol → sinseokgi) */
+const mainByDir = new Map(MAIN.map((g) => [String(g.href || "").split("/")[2], g]));
+
+function attr(s) {
+  return escapeHtml(String(s).replace(/\s+/g, " ").trim());
+}
+
+/** 소개 글에서 검색 설명 (150자 안쪽, 문장 단위로 자름) */
+function describe(game) {
+  const text = String(game.intro || "").replace(/\s+/g, " ").trim();
+  if (text.length <= 150) return text;
+  const cut = text.slice(0, 150);
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("요. "), cut.lastIndexOf("다. "));
+  return end > 60 ? cut.slice(0, end + 1).trim() : `${cut.slice(0, cut.lastIndexOf(" ")).trim()}…`;
+}
+
+function shareImage(id, entry) {
+  if (fs.existsSync(path.join(ROOT, "assets/thumbs", `${id}.png`))) return `${SITE}/assets/thumbs/${id}.png`;
+  if (entry && entry.thumb) return `${SITE}${String(entry.thumb).split("?")[0]}`;
+  return `${SITE}/assets/og-share.png`;
+}
+
+function ensureHead(html, game) {
+  const entry = mainByDir.get(game.id);
+  const url = `${SITE}/games/${game.id}/`;
+  const desc = describe(game);
+  const add = [];
+  // 제목이 게임 이름뿐이면 무슨 게임인지 · 사이트 이름을 붙임
+  html = html.replace(/<title>([^<]*)<\/title>/i, (m, t) => {
+    if (/[|—]| - /.test(t)) return m;
+    const tag = entry && entry.tag ? ` — ${entry.tag}` : "";
+    return `<title>${escapeHtml(game.title)}${escapeHtml(tag)} | 오늘의 게임</title>`;
+  });
+  const has = (re) => re.test(html);
+  if (!has(/<meta[^>]+name="description"/i) && desc) add.push(`<meta name="description" content="${attr(desc)}" />`);
+  if (!has(/<link[^>]+rel="canonical"/i)) add.push(`<link rel="canonical" href="${url}" />`);
+  if (!has(/property="og:type"/i)) add.push(`<meta property="og:type" content="website" />`);
+  if (!has(/property="og:site_name"/i)) add.push(`<meta property="og:site_name" content="오늘의 게임" />`);
+  if (!has(/property="og:title"/i)) add.push(`<meta property="og:title" content="${attr(`${game.title} | 오늘의 게임`)}" />`);
+  if (!has(/property="og:description"/i) && desc) add.push(`<meta property="og:description" content="${attr(desc)}" />`);
+  if (!has(/property="og:url"/i)) add.push(`<meta property="og:url" content="${url}" />`);
+  if (!has(/property="og:image"/i)) add.push(`<meta property="og:image" content="${shareImage(game.id, entry)}" />`);
+  if (!has(/name="twitter:card"/i)) add.push(`<meta name="twitter:card" content="summary_large_image" />`);
+  if (!add.length) return html;
+  const block = add.map((line) => `    ${line}`).join("\n");
+  if (/<\/title>\s*\n/i.test(html)) return html.replace(/(<\/title>[^\n]*\n)/i, `$1${block}\n`);
+  return html.replace("</head>", `${block}\n  </head>`);
+}
+
 function patchGame(game) {
   const file = path.join(ROOT, "games", game.id, "index.html");
   if (!fs.existsSync(file)) {
@@ -96,6 +150,7 @@ function patchGame(game) {
     return false;
   }
   let html = fs.readFileSync(file, "utf8");
+  html = ensureHead(html, game);
   html = ensureCssLink(html);
   html = injectBlock(html, renderSeo(game));
   html = ensureSeoScript(html);
