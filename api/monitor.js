@@ -21,7 +21,7 @@ const ALL_WINDOW = 60 * 60;
 const VISITS_SINCE = "2026-07-15"; // 날짜별 방문자 기록(외부 카운터)이 시작된 날
 const OWN_VISITS_SINCE = "2026-10-29"; // 이날부터 방문자는 우리 저장소에서만 셈 (그 전 날짜는 외부 카운터 기록)
 const ABACUS_CACHE = "todaygame:monitor:abacus"; // 지난 날 방문자 수 (외부 카운터) 모아 둔 것
-const EXTRA_TITLES = { "bowling-strike": "볼링 스트라이크", goindol: "고인돌" };
+const EXTRA_TITLES = { goindol: "고인돌" };
 
 const sha = (s) => crypto.createHash("sha256").update(String(s)).digest("hex");
 

@@ -28,11 +28,9 @@ const games = [
   "dual-pad",
   "memory",
   "minigolf",
-  "odd-even",
   "omok",
   "rhythm-easy",
   "rhythm",
-  "rps",
   "slide-beat",
   "sokoban",
 ];

@@ -47,7 +47,6 @@ module.exports = async function handler(req, res) {
     "penalty-kick",
     "homerun-derby",
     "basketball-shootout",
-    "bowling-strike",
     "dino-hunt",
     "cosmic-dodge",
     "fruit-catch",
