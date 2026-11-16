@@ -462,7 +462,7 @@
       id: "number-hole",
       face: true,
       title: "넘버 홀",
-      tag: "팩맨 · 30스테이지",
+      tag: "작은 숫자 삼키기 · 30스테이지",
       href: "/games/number-hole/",
       thumb: "/assets/thumbs/sm/number-hole.webp",
       category: "action",
