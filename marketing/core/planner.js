@@ -10,7 +10,11 @@ const { listProfiles, loadProfile } = require("../renderers/reel/record");
 const { availableClips, gameHash } = require("./clips");
 const { readCatalog } = require("../sources/game");
 const { seoulDay, seoulWeekday } = require("./settings");
-const { postedGameId } = require("./state");
+const { postedGameId, GAME_SOURCES } = require("./state");
+const { promotable, thumbOf } = require("../sources/new-game");
+
+// 게임 소개 이미지(spotlight)는 이 칸의 게임부터 (2026-11-16 관리자: "어른이용 게임부터 올리면 반응이 좋을 것")
+const SPOTLIGHT_FIRST = ["adult"];
 
 const ROOT = path.resolve(__dirname, "../..");
 const DAY = 86400000;
@@ -19,6 +23,27 @@ const USED = ["READY_FOR_APPROVAL", "APPROVED", "SCHEDULED", "PUBLISHING", "PUBL
 /** 이미 실제 채널에 올린 게임 — 최근 콘텐츠 + 게시할 때 남긴 영구 기록(posted:games) */
 async function postedGames(store, contents) {
   return new Set([...contents.map(postedGameId).filter(Boolean), ...((await store.run("SMEMBERS", "posted:games")) || [])]);
+}
+
+/** 다시 고르면 안 되는 게임: 이미 게시함 + 지금 승인 대기 · 예약 중인 게임 홍보 */
+async function takenGames(store) {
+  const contents = await store.listContents(200);
+  const taken = await postedGames(store, contents);
+  for (const d of contents) if (d.source && GAME_SOURCES.includes(d.source.sourceType) && USED.includes(d.status)) taken.add(d.source.sourceId);
+  return taken;
+}
+
+/** 게임 소개 이미지로 올릴 다음 게임: 안 올린 게임 중 SPOTLIGHT_FIRST 칸 → 최근 추가 → 홈 순서. 썸네일 있는 것만 */
+async function pickSpotlight(ctx) {
+  const taken = await takenGames(ctx.store);
+  const excluded = ctx.settings.excludeGames || [];
+  const ok = new Set(promotable());
+  const catalog = readCatalog();
+  const rank = (g) => (SPOTLIGHT_FIRST.includes(g.category) ? 0 : 1);
+  const list = catalog
+    .filter((g) => ok.has(g.id) && !taken.has(g.id) && !excluded.includes(g.id) && thumbOf(g.id))
+    .sort((a, b) => rank(a) - rank(b) || String(b.added || "").localeCompare(String(a.added || "")) || catalog.indexOf(a) - catalog.indexOf(b));
+  return list.length ? { id: list[0].id, left: list.length - 1, first: rank(list[0]) === 0 } : null;
 }
 
 async function scoreGames(ctx, { now = Date.now(), runner = process.env.MKT_RUNNER || "pc" } = {}) {
@@ -112,6 +137,7 @@ const TYPES = {
   fortune: { kind: "story", renderer: "image", sourceType: "fortune", daily: true },
   challenge: { kind: "story", renderer: "image", sourceType: "challenge", daily: true },
   recycle: { kind: "story", renderer: "image", sourceType: "recycle" },
+  spotlight: { kind: "image", renderer: "image", sourceType: "spotlight" },
 };
 
 /** 기본 채널 중 이 형식을 받는 채널만 (스토리는 인스타만 등) */
@@ -148,8 +174,8 @@ async function planSlot(ctx, slot, opts = {}) {
       if (r.plan) plans.push({ ...base, sourceId: r.plan.sourceId, reason: r.plan.reason });
     } else if (name === "new-game") {
       // 신작: 녹화할 수 있으면 릴스 (Actions 에서는 PC 재고가 있을 때만), 아니면 썸네일 + 설명 이미지
-      const posted = await postedGames(ctx.store, await ctx.store.listContents(200));
-      const fresh = (await ctx.registry.get("source", "new-game").detect({ store: ctx.store })).fresh.filter((g) => !(ctx.settings.excludeGames || []).includes(g) && !posted.has(g));
+      const taken = await takenGames(ctx.store);
+      const fresh = (await ctx.registry.get("source", "new-game").detect({ store: ctx.store })).fresh.filter((g) => !(ctx.settings.excludeGames || []).includes(g) && !taken.has(g));
       const id = fresh[0];
       if (!id) continue;
       let reel = listProfiles().includes(id);
@@ -158,9 +184,12 @@ async function planSlot(ctx, slot, opts = {}) {
       const kind = reel ? "reel" : "image";
       const ch = channelsFor(ctx, kind);
       if (ch.length) plans.push({ ...base, kind, renderer: reel ? "reel" : "image", channels: ch, sourceId: id, reason: `신작 감지: ${id} (${reel ? "릴스" : "썸네일 이미지"})${fresh.length > 1 ? ` · 대기 신작 ${fresh.length - 1}개` : ""}` });
+    } else if (name === "spotlight") {
+      const pick = await pickSpotlight(ctx);
+      if (pick) plans.push({ ...base, sourceId: pick.id, reason: `게임 소개: ${pick.id} (${pick.first ? "어른이용 먼저 · " : ""}안 올린 게임 ${pick.left}개 더 남음)` });
     } else plans.push({ ...base, sourceId: name, reason: `편성: ${name} (${slot === "story" ? "스토리" : seoulWeekday(now)})` });
   }
   return { plans, ranked };
 }
 
-module.exports = { planToday, planSlot, scoreGames, produceGate, TYPES };
+module.exports = { planToday, planSlot, scoreGames, produceGate, postedGames, pickSpotlight, TYPES };

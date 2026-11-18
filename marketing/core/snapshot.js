@@ -12,7 +12,7 @@ async function writeSnapshot(ctx) {
   const profiles = listProfiles();
   const ids = new Set(promotable());
   const last = {};
-  for (const d of await store.listContents(200)) if (d.source && ["game", "new-game"].includes(d.source.sourceType) && d.status === "PUBLISHED" && !last[d.source.sourceId]) last[d.source.sourceId] = d.createdAt;
+  for (const d of await store.listContents(200)) if (d.source && require("./state").GAME_SOURCES.includes(d.source.sourceType) && d.status === "PUBLISHED" && !last[d.source.sourceId]) last[d.source.sourceId] = d.createdAt;
   const games = [];
   for (const g of readCatalog()) {
     if (!ids.has(g.id)) continue;

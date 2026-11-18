@@ -2,20 +2,21 @@
 /* 설정 — 편성표 · 게시 시각 · 채널별 하루 상한 · 검수 기준. 저장소 `settings` 에 덮어쓸 값만 둔다. */
 
 const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-const FEED_TYPES = ["reel", "new-game", "quiz", "ranking"]; // 편성표에 쓸 수 있는 이름 (core/planner.js TYPES)
+const FEED_TYPES = ["reel", "new-game", "quiz", "ranking", "spotlight"]; // 편성표에 쓸 수 있는 이름 (core/planner.js TYPES)
 const STORY_TYPES = ["fortune", "challenge", "recycle"];
 const CHANNELS = ["instagram", "threads", "facebook", "youtube"];
 
 const DEFAULTS = {
-  // 요일별 피드 편성 (지시서 §8). 데이터가 모자라면 뒤의 유형으로
+  // 요일별 피드 편성 (지시서 §8). 데이터가 모자라면 뒤의 유형으로.
+  // spotlight(안 올린 게임 소개 이미지, 어른이용 먼저)는 녹화 릴스 후보가 거의 없어 피드가 비던 날을 채운다 (2026-11-18)
   schedule: {
-    mon: ["ranking", "reel"],
-    tue: ["reel"],
-    wed: ["quiz"],
-    thu: ["reel"],
-    fri: ["new-game", "reel"],
-    sat: ["reel"],
-    sun: ["quiz"],
+    mon: ["ranking", "spotlight"],
+    tue: ["spotlight", "reel"],
+    wed: ["quiz", "spotlight"],
+    thu: ["reel", "spotlight"],
+    fri: ["new-game", "spotlight"],
+    sat: ["spotlight", "reel"],
+    sun: ["quiz", "spotlight"],
   },
   // 매일 아침 스토리 — 날마다 하나씩 돌아가며 (자료가 없으면 다음 것). recycle(올린 피드 다시 쓰기)은 관리자 요청으로 기본에서 뺌 (2026-11-15)
   story: ["fortune", "challenge"],

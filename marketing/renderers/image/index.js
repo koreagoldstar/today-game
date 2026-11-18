@@ -12,7 +12,9 @@ const T = require("./templates");
 const { checkImages } = require("./qc");
 
 const ROOT = path.resolve(__dirname, "../../..");
-const KIND = { quiz: "carousel", ranking: "image", fortune: "story", challenge: "story", recycle: "story", "new-game": "image" };
+const KIND = { quiz: "carousel", ranking: "image", fortune: "story", challenge: "story", recycle: "story", "new-game": "image", spotlight: "image" };
+/** 게임 소개 이미지 위 띠 글자 */
+const spotlightBadge = (f) => (f.category === "adult" ? `${f.isNew ? "NEW " : ""}어른이용 게임` : f.isNew ? "NEW 신작 게임" : "오늘의 추천 게임");
 const MIME = { ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpg": "image/jpeg" };
 const fileDataUrl = (file) => `data:${MIME[path.extname(file).toLowerCase()] || "image/png"};base64,${fs.readFileSync(file).toString("base64")}`;
 
@@ -42,6 +44,9 @@ async function pagesFor(source, ctx) {
     case "new-game":
       if (!source.assets || !source.assets.thumb) throw new Error(`${f.id}: 썸네일이 없어 신작 이미지를 만들 수 없습니다.`);
       return { pages: [{ html: T.newGameImage(f, fileDataUrl(source.assets.thumb)), role: "image", size: T.FEED }], meta: {} };
+    case "spotlight":
+      if (!source.assets || !source.assets.thumb) throw new Error(`${f.id}: 썸네일이 없어 게임 소개 이미지를 만들 수 없습니다.`);
+      return { pages: [{ html: T.newGameImage(f, fileDataUrl(source.assets.thumb), spotlightBadge(f)), role: "image", size: T.FEED }], meta: {} };
     default:
       throw new Error(`이미지로 그릴 수 없는 종류: ${source.sourceType}`);
   }

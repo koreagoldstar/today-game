@@ -43,7 +43,7 @@ async function setup() {
   const registry = createRegistry();
   const modes = registerChannels(registry, process.env, { store });
   const logger = createLogger(store);
-  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
+  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle", "spotlight"]) registry.register("source", s, require(`./sources/${s}`));
   registry.register("renderer", "image", require("./renderers/image"));
   registry.register("copywriter", "default", createCopywriter({ store, profileTags: (id) => (require("./renderers/reel/record").loadProfile(id).hashtags || []) }));
   if (process.env.BLOB_READ_WRITE_TOKEN) registry.register("media", "default", require("./media/blob").createBlobMedia());
