@@ -8,7 +8,7 @@ const crypto = require("crypto");
 const { utmLink } = require("../core/links");
 
 const MODEL = process.env.LLM_MODEL || "claude-opus-5-5";
-const GENRE_TAG = { arcade: "#아케이드게임", sports: "#스포츠게임", action: "#액션게임", puzzle: "#퍼즐게임", rhythm: "#리듬게임", edu: "#교육게임" };
+const GENRE_TAG = { arcade: "#아케이드게임", sports: "#스포츠게임", action: "#액션게임", puzzle: "#퍼즐게임", rhythm: "#리듬게임", edu: "#교육게임", adult: "#심심풀이" };
 const CLAIMS = /1위|일위|TOP\s*\d|탑\s*\d|랭킹|순위|최초|역대|최고의|무조건|100\s*%|만\s*명|천\s*명/i;
 
 const firstSentence = (s) => (String(s || "").match(/^.*?(?:[.!?]|다\.)(?=\s|$)/) || [String(s || "")])[0].trim();
@@ -35,6 +35,7 @@ const TYPE_TAGS = {
   challenge: ["#오늘의챌린지", "#기록도전"],
   recycle: [],
   "new-game": ["#신작게임", "#새게임"],
+  spotlight: ["#게임추천", "#오늘뭐하지"],
 };
 
 /** 게임이 아닌 유형의 첫 줄 후보 · 본문 (facts 에 있는 것만) */
@@ -48,6 +49,11 @@ function typeLines(type, f, kind) {
   if (type === "fortune") return { openers: [`${f.day} 오늘의 운세 🍀`], body: Object.values(f.items || {}).map((x) => `${x.emoji} ${x.title}: ${x.t}`) };
   if (type === "challenge") return { openers: [`오늘의 챌린지: ${f.game} 🏆`], body: [f.participants ? `지금까지 ${f.participants}명 도전` : "", "오늘 하루만 열리는 기록 대결!"] };
   if (type === "new-game") return { openers: [`NEW! 신작 게임 ${f.title} 🎉`, `새로 나온 게임: ${f.title} 🎉`, `오늘의 게임 신작 — ${f.title} 🎉`], body: [firstSentence(f.intro), f.tag, "오늘의 게임에서 무료로 바로 플레이할 수 있어요."] };
+  if (type === "spotlight")
+    return {
+      openers: f.isNew ? [`NEW! ${f.title} 🎉`, `새로 나온 ${f.title}, 먼저 해 볼 사람? 🎉`] : [`${f.title}, 아직 안 해 보셨나요? 🎮`, `오늘은 이거 한 판: ${f.title} 🎮`, `${f.tag} — ${f.title} 🎮`],
+      body: [firstSentence(f.intro), f.tag, "오늘의 게임에서 무료로 바로 플레이할 수 있어요."],
+    };
   if (type === "recycle") return { openers: [`${kind === "reel" ? "새 영상" : "새 게시물"}: ${f.title}`], body: ["프로필에서 확인해 보세요!"] };
   return null;
 }
@@ -127,15 +133,18 @@ const SCHEMA = (channels) => ({
 });
 
 const SYSTEM = `당신은 웹 미니게임 사이트 "오늘의 게임"(todaygame.co.kr)의 SNS 문구 담당입니다.
+목표: 피드를 넘기던 사람이 첫 줄에서 멈춰 "이거 뭐지?" 하고, 끝까지 읽은 뒤 "나도 한 판 해 볼까" 하게 만드는 것.
+- 첫 줄(훅)이 가장 중요합니다. 질문 · 가벼운 도발 · 의외의 한마디로 궁금하게 만드세요 (예: "이거 고르다 친구랑 싸움 남", "나만 못 깨나요?"). 뻔한 "재밌는 게임 소개합니다" 는 쓰지 않습니다.
+- 둘째 줄부터는 facts 에서 이 게임만의 재미 한두 가지를 골라, 무엇을 하는 게임인지 머릿속에 그려지게 한 문장으로. 친구 · 가족과 겨루거나 같이 할 거리(대결 · 궁합 · 기록 · 도전장)가 facts 에 있으면 살립니다.
+- 말투는 해요체 하나로, 문장은 짧게. 이모지는 1~3개. 낚시 · 과장 금지 — 읽은 내용이 실제 게임과 같아야 합니다.
 사실 근거는 사용자가 준 facts 뿐입니다. facts 에 없는 숫자, 순위, 기록, 기능, 수상, 인원 수는 절대 쓰지 마세요.
-자연스러운 한국어로 짧고 강한 첫 줄을 쓰고, 이모지는 1~3개만 씁니다. 과장하지 않습니다.
 채널별 형식:
 - instagram: 4~6줄, 마지막 줄은 "프로필 링크에서 플레이!" 같은 프로필 링크 유도. 캡션에 URL 을 넣지 않음. hashtags 5~10개, "#오늘의게임" 반드시 포함.
 - threads: 대화체 1~3문장. hashtags 0~1개.
 - facebook: 2~5줄, 끝에 주어진 링크를 그대로 넣어도 됨. hashtags 0~3개.
 - youtube: title 은 60자 이내, caption 은 설명 2~4줄 + 주어진 링크. hashtags 3~8개.
 최근 문구의 첫 문장과 같은 첫 문장은 쓰지 마세요.
-type 별: game 은 게임 플레이 영상 소개, new-game 은 새로 나온 게임 소개(facts.added 날짜 외의 출시 주장 금지), quiz 는 캐러셀 퀴즈(정답은 쓰지 말고 "정답은 첫 댓글" 로 안내), ranking 은 facts 의 점수 · 가린 닉네임 그대로(바꾸지 않음).`;
+type 별: game 은 게임 플레이 영상 소개, new-game 은 새로 나온 게임 소개(facts.added 날짜 외의 출시 주장 금지), spotlight 는 아직 소개하지 않은 게임의 포스터 이미지 소개(facts.isNew 가 true 일 때만 "새로 나온" 이라고 씀, category "adult" 는 어른들이 쉬는 시간에 즐기는 게임), quiz 는 캐러셀 퀴즈(정답은 쓰지 말고 "정답은 첫 댓글" 로 안내), ranking 은 facts 의 점수 · 가린 닉네임 그대로(바꾸지 않음).`;
 
 /**
  * @param {{ store?, env?, client? }} o  client: 시험용으로 바꿔 끼울 수 있는 Claude 클라이언트
@@ -162,7 +171,7 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
       max_tokens: 4000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default", // 안전 분류기가 거절하면 서버가 대신 모델로 다시 시도
-      output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA(channels) } },
+      output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA(channels) } }, // 하루 한두 번이라 문구 품질 쪽으로
       system: SYSTEM,
       messages: [{ role: "user", content: user }],
     });
@@ -178,7 +187,7 @@ function createCopywriter({ store = null, env = process.env, client = null, prof
     async write({ source, render, channels, recent = [], ctx = {}, contentId = null }) {
       const linkOpts = { track: !!(ctx.settings && ctx.settings.trackClicks), contentId };
       let tags = [];
-      if (source.sourceType === "game" || source.sourceType === "new-game") {
+      if (["game", "new-game", "spotlight"].includes(source.sourceType)) {
         try {
           tags = profileTags(source.sourceId);
         } catch (_) {} // 신작은 녹화 프로필이 없을 수 있음

@@ -22,7 +22,7 @@ const { templateCopy, checkAi } = require("../copy/copywriter");
 const { createTelegram } = require("../approval/telegram");
 
 const ROOT = path.resolve(__dirname, "../..");
-const SOURCES = ["quiz", "fortune", "ranking", "challenge", "recycle"];
+const SOURCES = ["quiz", "fortune", "ranking", "challenge", "recycle", "spotlight"];
 const plan = (sourceType, kind, slot = kind === "story" ? "story" : "feed") => ({ slot, kind, sourceType, sourceId: sourceType, renderer: "image", channels: ["instagram"], reason: "시험" });
 
 function withImage(base) {
@@ -86,12 +86,14 @@ test("편성: 월=랭킹→릴스, 수=퀴즈 캐러셀, 금=신작은 Source �
   base.registry.register("source", "game", require("../sources/game"));
   const at = (iso) => ({ now: Date.parse(iso), runner: "pc" });
   const mon = await planSlot(base.ctx, "feed", at("2026-11-09T08:10:00+09:00"));
-  assert.deepEqual(mon.plans.map((p) => [p.sourceType, p.kind]), [["ranking", "image"], ["game", "reel"]]);
+  assert.deepEqual(mon.plans.map((p) => [p.sourceType, p.kind]), [["ranking", "image"], ["spotlight", "image"]]);
   const wed = await planSlot(base.ctx, "feed", at("2026-11-11T08:10:00+09:00"));
-  assert.deepEqual(wed.plans.map((p) => [p.sourceType, p.kind, p.renderer]), [["quiz", "carousel", "image"]]);
+  assert.deepEqual(wed.plans.map((p) => [p.sourceType, p.kind, p.renderer]), [["quiz", "carousel", "image"], ["spotlight", "image", "image"]]);
   assert.deepEqual(wed.plans[0].channels, ["instagram", "threads"]);
+  const thu = await planSlot(base.ctx, "feed", at("2026-11-12T08:10:00+09:00"));
+  assert.deepEqual(thu.plans.map((p) => p.sourceType), ["game", "spotlight"], "릴스 후보가 있으면 릴스, 없으면 게임 소개로");
   const fri = await planSlot(base.ctx, "feed", at("2026-11-13T08:10:00+09:00"));
-  assert.deepEqual(fri.plans.map((p) => p.sourceType), ["game"]);
+  assert.deepEqual(fri.plans.map((p) => p.sourceType), ["spotlight"]);
   const s1 = await planSlot(base.ctx, "story", at("2026-11-09T08:10:00+09:00"));
   const s2 = await planSlot(base.ctx, "story", at("2026-11-10T08:10:00+09:00"));
   assert.equal(s1.plans.length, 2);
@@ -102,6 +104,32 @@ test("편성: 월=랭킹→릴스, 수=퀴즈 캐러셀, 금=신작은 Source �
   const s = validate(merge(DEFAULTS, {}));
   assert.equal(produceGate([{ dateKey: "2026-11-09", slot: "feed", status: "READY_FOR_APPROVAL" }], s, "2026-11-09", "story").ok, true, "피드가 있어도 스토리는 따로");
   assert.equal(produceGate([{ dateKey: "2026-11-09", slot: "story", status: "SCHEDULED" }], s, "2026-11-09", "story").ok, false);
+});
+
+test("게임 소개(spotlight): 안 올린 게임 중 어른이용 먼저 · 이미 올린 · 대기 중 · 제외 게임은 빼고 · 포스터 이미지 · 사실만 쓴 문구", async () => {
+  const base = withImage(makeCtx());
+  const { pickSpotlight } = require("../core/planner");
+  const { readCatalog } = require("../sources/game");
+  const { factProblems } = require("../copy/copywriter");
+  const adult = readCatalog().filter((g) => g.category === "adult").map((g) => g.id);
+  const first = await pickSpotlight(base.ctx);
+  assert.ok(adult.includes(first.id), `어른이용 게임부터 (${first.id})`);
+  await base.store.run("SADD", "posted:games", first.id);
+  const second = await pickSpotlight(base.ctx);
+  assert.notEqual(second.id, first.id, "이미 올린 게임은 건너뜀");
+
+  const d = await produce(base.ctx, { ...plan("spotlight", "image"), sourceId: second.id });
+  assert.equal(d.status, "READY_FOR_APPROVAL", JSON.stringify(d.qc && d.qc.checks.filter((c) => !c.ok)));
+  assert.equal(d.render.kind, "image");
+  assert.equal(d.render.files.length, 1);
+  assert.notEqual((await pickSpotlight(base.ctx)).id, second.id, "승인 대기 중인 게임은 또 고르지 않음");
+  base.ctx.settings.excludeGames = [(await pickSpotlight(base.ctx)).id];
+  assert.ok(!base.ctx.settings.excludeGames.includes((await pickSpotlight(base.ctx)).id), "홍보 제외 게임은 빼기");
+
+  const c = templateCopy({ source: d.source, render: d.render, channels: ["instagram"] }).instagram;
+  assert.match(c.caption, new RegExp(d.source.facts.title));
+  assert.match(c.caption, /프로필 링크/);
+  assert.deepEqual(factProblems(c.caption, d.source.facts), [], "틀 문구의 숫자는 모두 사이트 사실에서");
 });
 
 test("자료가 모자라면(NO_DATA) 실패 알림 없이 취소 — 다음 후보로 넘어갈 수 있게", async () => {
