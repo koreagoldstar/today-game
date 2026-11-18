@@ -319,7 +319,7 @@
     {
       id: "fortune-draw",
       title: "오늘의 운세 뽑기",
-      tag: "운세 · 메뉴 · 행운템",
+      tag: "만세력 사주 운세 · 점심 · 행운템",
       href: "/games/fortune-draw/",
       thumb: "/assets/thumbs/sm/fortune-draw.webp",
       category: "arcade",
