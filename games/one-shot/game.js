@@ -289,8 +289,25 @@
     return a + Math.random() * (b - a);
   }
 
+  const SCOPE_R = Math.min(W, H) * 0.4;
+  // Where the camera centre may sit without showing past the background (phones saw black edges)
+  function camBounds() {
+    const z = viewZoom();
+    if (scoped) {
+      const r = SCOPE_R / z; // only the scope circle is visible
+      return [r, W - r, r, H - r];
+    }
+    return [(W * 0.5) / z, W - (W * 0.5) / z, (H * 0.46) / z, H - (H * 0.54) / z];
+  }
+  function clampAim() {
+    const [x0, x1, y0, y1] = scoped ? camBounds() : [0, W, 0, H];
+    aimX = clamp(aimX, Math.max(16, x0), Math.min(W - 16, x1));
+    aimY = clamp(aimY, Math.max(40, y0), Math.min(H - 100, y1));
+  }
+
   function setZoom(z) {
     zoom = clamp(z, ZOOM_MIN, ZOOM_MAX);
+    clampAim();
     const t = (zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN);
     zoomFill.style.height = `${Math.round(16 + t * 84)}%`;
     zoomLabel.textContent = `${zoom.toFixed(1)}×`;
@@ -300,6 +317,7 @@
     scoped = on;
     scopeBtn.classList.toggle("on", on);
     if (on && zoom < 2.8) setZoom(3.4);
+    clampAim();
   }
 
   function viewZoom() {
@@ -632,8 +650,10 @@
     const dy = p.y - lastPtr.y;
     lastPtr = p;
     const sens = (scoped ? 0.48 : 0.78) / viewZoom();
-    aimX = clamp(aimX - dx * sens * 1.25, 16, W - 16);
-    aimY = clamp(aimY - dy * sens * 1.25, 40, H - 100);
+    const dir = scoped ? -1 : 1; // scope: drag the view · hip: the view is fixed, so the crosshair follows the finger
+    aimX += dir * dx * sens * 1.25;
+    aimY += dir * dy * sens * 1.25;
+    clampAim();
   }
 
   function onUp() {
@@ -943,7 +963,7 @@
     if (!scoped) return;
     const cx = W * 0.5;
     const cy = H * 0.46;
-    const rad = Math.min(W, H) * 0.4;
+    const rad = SCOPE_R;
 
     g.save();
     g.fillStyle = "rgba(0,0,0,0.88)";
@@ -1043,7 +1063,10 @@
     g.save();
     g.translate(cx, cy);
     g.scale(z, z);
-    g.translate(-a.x, -a.y);
+    const [x0, x1, y0, y1] = camBounds();
+    const camX = clamp(a.x, x0, x1);
+    const camY = clamp(a.y, y0, y1);
+    g.translate(-camX, -camY);
 
     drawNest(g);
     const ordered = [...targets].sort((a, b) => a.y - b.y);
@@ -1065,7 +1088,7 @@
 
     drawRifle(g);
     drawScopeOverlay(g);
-    drawCrosshair(g, cx, cy);
+    drawCrosshair(g, cx + (a.x - camX) * z, cy + (a.y - camY) * z);
     drawHudBits(g);
 
     if (flash > 0) {
