@@ -43,7 +43,7 @@ async function setup() {
   const registry = createRegistry();
   const modes = registerChannels(registry, process.env, { store });
   const logger = createLogger(store);
-  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle"]) registry.register("source", s, require(`./sources/${s}`));
+  for (const s of ["game", "new-game", "quiz", "ranking", "fortune", "challenge", "recycle", "spotlight"]) registry.register("source", s, require(`./sources/${s}`));
   registry.register("renderer", "image", require("./renderers/image"));
   registry.register("copywriter", "default", createCopywriter({ store, profileTags: (id) => (require("./renderers/reel/record").loadProfile(id).hashtags || []) }));
   if (process.env.BLOB_READ_WRITE_TOKEN) registry.register("media", "default", require("./media/blob").createBlobMedia());
@@ -113,7 +113,14 @@ async function runProduce() {
 async function runPublish() {
   const { ctx, store, telegram } = await setup();
   const job = await store.jobStart("publish");
-  if (telegram) console.log(`텔레그램: ${JSON.stringify(await telegram.processUpdates())}`);
+  if (telegram) {
+    // 텔레그램이 잠깐 안 닿아도(fetch failed · Bad Gateway) 게시는 계속 — 누른 버튼은 텔레그램에 24시간 남아 다음 실행이 받는다
+    const tg = await telegram.processUpdates().catch(async (e) => {
+      await ctx.logger.warn(`텔레그램 확인 실패 (다음 실행에서 다시): ${e.message}`);
+      return { error: e.message };
+    });
+    console.log(`텔레그램: ${JSON.stringify(tg)}`);
+  }
   // 하루 한 번: 인스타 토큰 만료 확인 · 7일 전부터 갱신 (실패하면 텔레그램)
   if (await store.setJson(`ig:checked:${seoulDay()}`, 1, { nx: true, ex: 2 * 86400 })) {
     const { refreshInstagram } = require("./channels/instagram");

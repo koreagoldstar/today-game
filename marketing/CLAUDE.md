@@ -52,14 +52,14 @@ core/ sources/ renderers/ templates/ channels/ copy/ profiles/ docs/ tests/
 - 같은 게임을 다시 녹화하면 거의 같은 장면 (봇 · 게임이 결정적) — 다시 홍보할 때 다양성 대책 필요.
 - 3D 봇 상태 이름: 클리어 · 체크포인트만 "성공", 게임 오버 · respawn 은 "실패", 보스 등장 등은 자막 없음 (`players/autopilot.js`).
 - 워크플로의 시험용 `push` 트리거는 PHASE 11 에서 지웠다. 브랜치에서 다시 Actions 로 시험하려면 잠깐 되살리고(지난 커밋 참고) 끝나면 지울 것.
-- **녹화는 5개 게임 모두 이 PC(GPU)** — 실제 GitHub 러너는 2배 캡처가 초당 10.6장이라 기준 미달. Actions 는 재고로 편집 · 게시만. 재고 채우기: `node marketing/pc/record-stock.js` (작업 스케줄러 등록은 자동 모드에서 막혀 관리자가 `pc/install-task.ps1` 직접 실행).
+- **녹화는 5개 게임 모두 이 PC(GPU)** — 실제 GitHub 러너는 2배 캡처가 초당 10.6장이라 기준 미달. Actions 는 재고로 편집 · 게시만. 재고 채우기: `node marketing/pc/record-stock.js` (이미 게시한 · 홍보 제외 게임은 건너뜀). **자동 실행(2026-11-18 관리자 "컴퓨터 켰을 때마다 알아서"):** 녹화 전용 사본 `D:\프로젝트\todaygame-stock`(detached worktree · `.stock-recorder` 표시 · 자기 `marketing/.env.local`)에서 작업 스케줄러 `TodayGame-Promo-Clips` 가 로그온 3분 뒤 · 6시간마다 `pc/stock-run.ps1` 실행 → origin/master 로 맞추고 녹화. 기록 `marketing/out/stock-log.txt`. 이 작업 폴더에서 녹화하면 게임 지문이 운영과 달라질 수 있음.
 - 게임 지문(`core/clips.js gameHash`)은 텍스트 파일 줄바꿈을 LF 로 맞춰 계산 — 안 그러면 윈도 PC 와 리눅스 러너 값이 달라 재고를 못 씀.
 - 열쇠: GitHub Secrets 5개 (`UPSTASH_REDIS_REST_URL/TOKEN` · `TG_BOT_TOKEN` · `TG_ADMIN_CHAT_ID` · `BLOB_READ_WRITE_TOKEN`) + 이 PC `marketing/.env.local`. Blob 저장소 `todaygame-mkt-media`(iad1). **Vercel CLI 로 저장소를 만들면 원래 폴더 `.env.local` 에 사이트 Redis 열쇠를 넣으니 지울 것**.
 - 텔레그램은 폴링(getUpdates) — 웹훅을 켜면 getUpdates 가 멈춘다. 웹훅으로 바꿀 때 publish 쪽 폴링을 끌 것.
 - 랭킹은 **지난주** 기록 (월요일 게시). 점수 표시는 사이트 `js/rankable.js formatScore` 를 vm 으로 그대로 씀 — 단위를 직접 만들지 말 것.
 - 운세 · 챌린지 스토리는 `plan.validDay` — 그날만 게시, 날이 지나면 EXPIRED. 퀴즈 정답은 이미지 · 캡션이 아니라 첫 댓글.
 - 신작 감지는 첫 실행 때 기준 목록만 저장 (`seen:games`). 기준을 지우면 다음 실행이 다시 기준만 만든다 (기존 게임 전부 신작 아님).
-- **이미 실제로 게시한 게임은 다시 고르지 않는다** (2026-11-15 관리자 요청: "인스타에 이미 올라간 콘텐츠는 제외"). `posted:games` + 최근 콘텐츠로 판단, 모의 게시는 안 셈. 스토리 재활용(recycle)도 기본 순환에서 뺌. 녹화 프로필이 5개뿐이라 다 쓰면 릴스 요일(화 · 목 · 토)은 비게 된다 — 게임 프로필을 늘릴 것.
+- **이미 실제로 게시한 게임은 다시 고르지 않는다** (2026-11-15 관리자 요청: "인스타에 이미 올라간 콘텐츠는 제외"). `posted:games` + 최근 콘텐츠로 판단, 모의 게시는 안 셈. 스토리 재활용(recycle)도 기본 순환에서 뺌. 녹화 프로필이 5개뿐이라 11-16 · 17 피드가 비었다 → **게임 소개 이미지(spotlight)** 로 채움: 안 올린 게임 중 어른이용(`SPOTLIGHT_FIRST`) → 최근 추가 → 홈 순서, 실제 썸네일 + 사이트 설명. 편성표 모든 요일에 들어감. spotlight 로 올린 게임도 posted:games 에 들어가 다시 안 고름.
 - 설정은 **바꾼 값만** 저장 (`saveSettings`). 전체를 저장하면 기본값 변경이 운영에 안 먹는다.
 - 웹 관리자 · 텔레그램은 같은 `core/approval.js` — 동시에 눌러도 잠금 + 버전으로 한 번만.
 - `.vercelignore` 에 `marketing/out` 이 없으면 배포 때 녹화 파일(수 GB)이 올라간다 — 관리자 승인 받고 추가할 것.

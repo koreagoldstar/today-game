@@ -23,7 +23,18 @@ const dry = process.argv.includes("--dry");
   const store = dry ? null : require("../core/store").createStore();
   const media = dry ? null : require("../media/blob").createBlobMedia();
   const out = path.join(ROOT, "marketing", "out", "clips");
+  // 이미 인스타에 올린 게임 · 홍보 제외 게임은 다시 쓰지 않으니 녹화하지 않는다 (GPU 시간 · Blob 용량 아끼기)
+  const skip = new Set();
+  if (store) {
+    const { postedGames } = require("../core/planner");
+    for (const id of await postedGames(store, await store.listContents(200))) skip.add(id);
+    for (const id of (await require("../core/settings").loadSettings(store)).excludeGames) skip.add(id);
+  }
   for (const id of listProfiles().filter((x) => loadProfile(x).runner === "pc")) {
+    if (skip.has(id)) {
+      console.log(`${id}: 이미 게시했거나 홍보 제외 — 녹화 안 함`);
+      continue;
+    }
     const hash = gameHash(ROOT, id);
     if (store) {
       const have = (await availableClips(store, id, hash)).length;
