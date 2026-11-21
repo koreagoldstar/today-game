@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "the-case-file",
+      title: "오늘의 사건파일",
+      tag: "매일 새 사건 · 현장 조사 · 심문 추리",
+      href: "/games/the-case-file/",
+      thumb: "/assets/thumbs/sm/the-case-file.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
       id: "chosung-quiz",
       title: "오늘의 초성퀴즈",
       tag: "매일 10문제 · 이모지 결과 공유",

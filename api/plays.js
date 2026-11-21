@@ -117,6 +117,7 @@ module.exports = async function handler(req, res) {
     "guess-me",
     "typing-rain",
     "chosung-quiz",
+    "the-case-file",
   ]);
 
   /** 콜드스타트/폴백 순서 */

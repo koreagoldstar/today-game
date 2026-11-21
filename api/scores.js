@@ -58,6 +58,8 @@ module.exports = async function handler(req, res) {
     "minigolf",
     "wordle",
     "sokoban",
+    "the-case-file",
+    "the-case-file-week",
     "reaction",
     "order-memo",
     "wisdom-quiz",

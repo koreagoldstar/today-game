@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e1422" />
+    <title>오늘의 사건파일 - 매일 새로운 추리 게임 | 오늘의 게임</title>
+    <meta name="description" content="매일 새로운 사건을 조사하고 단서를 찾아 범인을 밝혀보세요. 사건 현장 조사, 증거 분석과 단서 연결, 용의자 심문, 최종 추리 보고서까지. 용의자 심문과 논리 추리로 오늘의 명탐정에 도전하세요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/the-case-file/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:title" content="오늘의 사건파일 | 오늘의 게임" />
+    <meta property="og:description" content="진실은 단서 속에 숨어 있다. 매일 새로운 사건, 오늘의 명탐정에 도전하세요." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/the-case-file/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/the-case-file.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
+  </head>
+  <body>
+    <div class="cf-app" id="app">
+      <!-- 메인 -->
+      <section class="cf-screen screen" id="home" aria-labelledby="home-title">
+        <header class="cf-top" data-mute-slot>
+          <a class="cf-back" href="/">← 홈</a>
+          <span class="cf-top-date" id="home-date"></span>
+          <button type="button" class="cf-icon-btn" id="settings-btn" aria-label="설정">설정</button>
+        </header>
+        <div class="cf-logo">
+          <p class="cf-logo-en">THE CASE FILE</p>
+          <h1 class="cf-logo-ko" id="home-title">오늘의 사건파일</h1>
+          <p class="cf-slogan">"진실은 단서 속에 숨어 있다."</p>
+        </div>
+        <div class="cf-rankline">
+          <span class="cf-chip" id="home-rank">견습 탐정</span>
+          <span class="cf-chip" id="home-status">오늘의 사건 미해결</span>
+        </div>
+
+        <article class="cf-casecard" id="today-card">
+          <div class="cf-casecard-art" id="today-art" aria-hidden="true"></div>
+          <div class="cf-casecard-body">
+            <p class="cf-casecard-label">오늘의 사건 · <span id="today-code">CASE-000</span></p>
+            <h2 class="cf-casecard-title" id="today-title">불러오는 중…</h2>
+            <dl class="cf-meta">
+              <div><dt>장소</dt><dd id="today-place">-</dd></div>
+              <div><dt>난이도</dt><dd id="today-diff">-</dd></div>
+              <div><dt>예상 소요</dt><dd id="today-min">-</dd></div>
+            </dl>
+            <p class="cf-teaser" id="today-teaser"></p>
+            <div class="cf-actions">
+              <button type="button" class="cf-btn cf-btn-gold" id="start-btn">사건 조사 시작</button>
+              <button type="button" class="cf-btn" id="archive-btn">사건 보관함</button>
+              <button type="button" class="cf-btn" id="records-btn">나의 추리 기록</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="cf-dash">
+          <div class="cf-stat"><p class="cf-stat-label">오늘의 사건 해결 현황</p><p class="cf-stat-value" id="dash-today">-</p></div>
+          <div class="cf-stat"><p class="cf-stat-label">나의 최고 기록</p><p class="cf-stat-value" id="dash-best">-</p></div>
+          <div class="cf-stat"><p class="cf-stat-label">연속 참여</p><p class="cf-stat-value" id="dash-streak">-</p></div>
+          <div class="cf-stat"><p class="cf-stat-label">이번 주 내 점수</p><p class="cf-stat-value" id="dash-week">-</p></div>
+        </div>
+        <section class="cf-panel" aria-labelledby="weekly-h">
+          <h2 class="cf-panel-h" id="weekly-h">주간 추리왕</h2>
+          <ol class="cf-board" id="weekly-board"><li class="cf-muted">불러오는 중…</li></ol>
+        </section>
+      </section>
+
+      <!-- 보관함 -->
+      <section class="cf-screen screen" id="archive" hidden aria-labelledby="archive-h" data-today-home>
+        <header class="cf-top"><button type="button" class="cf-back-btn" data-go="home" data-back>← 사건파일</button></header>
+        <h2 class="cf-screen-h" id="archive-h">사건 보관함</h2>
+        <p class="cf-muted cf-center">해결한 사건은 언제든 다시 조사할 수 있어요. 다시 해도 처음 기록과 일일 기록은 그대로 남아요.</p>
+        <ul class="cf-archive" id="archive-list"></ul>
+      </section>
+
+      <!-- 기록 -->
+      <section class="cf-screen screen" id="records" hidden aria-labelledby="records-h" data-today-home>
+        <header class="cf-top"><button type="button" class="cf-back-btn" data-go="home" data-back>← 사건파일</button></header>
+        <h2 class="cf-screen-h" id="records-h">나의 추리 기록</h2>
+        <div class="cf-dash" id="records-dash"></div>
+        <section class="cf-panel"><h3 class="cf-panel-h">최근 오늘의 사건</h3><ul class="cf-daylog" id="records-days"></ul></section>
+      </section>
+
+      <!-- 게임 -->
+      <section class="cf-screen screen cf-game" id="game" hidden aria-label="사건 조사">
+        <header class="cf-gamebar" data-mute-slot>
+          <button type="button" class="cf-back-btn" id="leave-btn">← 나가기</button>
+          <div class="cf-gamebar-title"><span id="g-code"></span><b id="g-title"></b></div>
+          <span class="cf-timer" id="g-timer" aria-label="걸린 시간">00:00</span>
+          <button type="button" class="cf-icon-btn" id="hint-btn">힌트</button>
+        </header>
+        <nav class="cf-steps" id="steps" aria-label="조사 단계"></nav>
+        <div class="cf-view" id="view"></div>
+      </section>
+    </div>
+
+    <div class="cf-modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-h">
+      <div class="cf-modal-box">
+        <button type="button" class="cf-modal-x" id="modal-x" aria-label="닫기">✕</button>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+    <div class="cf-toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="cf-flash" id="flash" aria-hidden="true"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="art.js?v=1"></script>
+    <script src="sfx.js?v=1"></script>
+    <script src="store.js?v=1"></script>
+    <script src="cases/index.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="오늘의 사건파일 소개">
+  <h2>오늘의 사건파일 소개</h2>
+  <p>매일 새로운 사건이 열리는 성인 추리 게임입니다. 사건 현장을 조사해 증거를 모으고, 두 증거를 연결해 숨은 사실을 밝히고, 용의자를 심문하며 증거를 들이밀어 진술의 모순을 찾아내세요. 마지막엔 범인 · 동기 · 결정적 증거 · 범행 시간 · 거짓 진술을 고르는 추리 보고서를 제출하고, 사건의 전말과 내가 놓친 단서를 확인해요. 호텔 계약서 도난, 밀실 회의실, 막차 알리바이, 엇갈린 두 목격자 등 사건마다 추리 방식이 달라요.</p>
+  <h3>플레이 방법</h3>
+  <p>사건 개요를 읽고 현장의 빛나는 지점을 눌러 조사하세요. 핵심 증거가 모이면 증거 분석에서 두 증거를 골라 단서 연결을 하고, 용의자 심문에서 질문하고 증거를 제시해 모순을 찾으세요. 최종 추리 보고서는 한 번 내면 바꿀 수 없어요. 점수는 정확도가 대부분이고, 조사한 증거와 찾은 모순, 걸린 시간이 더해지며 힌트를 쓰면 깎여요. 등급은 SSS 전설의 명탐정부터 C 초보 탐정까지예요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>사건은 언제 바뀌나요?</dt>
+    <dd>한국 시각 0시마다 새 사건이 열려요. 같은 날에는 모든 사람이 같은 사건을 풀어요.</dd>
+    <dt>지난 사건도 다시 할 수 있나요?</dt>
+    <dd>사건 보관함에서 언제든 다시 조사할 수 있어요. 다시 해도 처음 기록과 그날의 기록은 바뀌지 않고 최고 점수만 갱신돼요.</dd>
+    <dt>랭킹은 어떻게 정해지나요?</dt>
+    <dd>오늘의 사건을 그날 처음 풀었을 때 이름을 남기면 오늘 랭킹에 오르고, 이번 주에 푼 오늘의 사건 점수를 합쳐 주간 추리왕을 가려요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
