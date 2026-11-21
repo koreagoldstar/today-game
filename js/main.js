@@ -349,7 +349,7 @@
       tag: "만세력 사주 운세 · 점심 · 행운템",
       href: "/games/fortune-draw/",
       thumb: "/assets/thumbs/sm/fortune-draw.webp",
-      category: "arcade",
+      category: "adult",
     },
     {
       id: "edu-vowel-zoo",
