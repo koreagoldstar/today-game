@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#7ec8ff" />
+    <title>게임 요청함 — 만들어 줬으면 하는 게임을 알려 주세요 | 오늘의 게임</title>
+    <meta name="description" content="오늘의 게임에 새 게임을 요청하거나 고쳐 줬으면 하는 점을 남기는 곳이에요. '나도 원해요'가 많이 모인 요청부터 만들고, 완성되면 바로 해 볼 수 있어요." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/board/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:title" content="게임 요청함 | 오늘의 게임" />
+    <meta property="og:description" content="만들어 줬으면 하는 게임을 알려 주세요. 하트가 많이 모인 요청부터 만들어요!" />
+    <meta property="og:url" content="https://www.todaygame.co.kr/board/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/og-share.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/style.css?v=26" />
+    <link rel="stylesheet" href="board.css?v=1" />
+  </head>
+  <body>
+    <div class="sky" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="blob blob-c"></span>
+    </div>
+
+    <main class="page board-page">
+      <header class="rankings-hero">
+        <a class="rankings-back" href="/">← 홈</a>
+        <h1 class="rankings-title">게임 요청함</h1>
+        <p class="rankings-desc">만들어 줬으면 하는 게임을 알려 주세요.<br />하트가 많이 모인 요청부터 만들어요!</p>
+        <button type="button" class="bd-write-btn" id="write-open">✏️ 요청 쓰기</button>
+      </header>
+
+      <form class="bd-form" id="write-form" hidden novalidate>
+        <p class="bd-label">어떤 글인가요?</p>
+        <div class="bd-kinds" role="radiogroup" aria-label="글 종류">
+          <button type="button" class="bd-kind on" data-kind="new" role="radio" aria-checked="true"><span>🎮</span>새 게임</button>
+          <button type="button" class="bd-kind" data-kind="fix" role="radio" aria-checked="false"><span>🔧</span>고쳐 주세요</button>
+          <button type="button" class="bd-kind" data-kind="talk" role="radio" aria-checked="false"><span>💬</span>칭찬 · 수다</button>
+        </div>
+        <label class="bd-label" for="w-title">제목</label>
+        <input id="w-title" maxlength="40" placeholder="공룡 키우기 게임 만들어 주세요" autocomplete="off" />
+        <label class="bd-label" for="w-body">자세히 (안 써도 돼요)</label>
+        <textarea id="w-body" maxlength="300" rows="4" placeholder="공룡알을 부화시켜서 키우고, 다 크면 경주하는 게임"></textarea>
+        <p class="bd-count"><span id="w-count">0</span> / 300</p>
+        <p class="bd-game" id="w-game" hidden></p>
+        <div class="bd-name">
+          <span>내 이름표</span>
+          <b id="w-name"></b>
+          <button type="button" class="bd-link" id="w-rename">바꾸기</button>
+        </div>
+        <p class="bd-safe">🔒 진짜 이름 · 학교 · 전화번호는 쓰지 마세요. 나쁜 말은 자동으로 가려져요.</p>
+        <p class="bd-error" id="w-error" role="alert"></p>
+        <div class="bd-row">
+          <button type="button" class="bd-btn ghost" id="write-cancel">취소</button>
+          <button type="submit" class="bd-btn" id="write-submit">요청 올리기</button>
+        </div>
+      </form>
+
+      <nav class="bd-tabs" id="tabs" aria-label="보기">
+        <button type="button" class="bd-tab on" data-tab="top">🔥 인기순</button>
+        <button type="button" class="bd-tab" data-tab="new">🆕 새 글</button>
+        <button type="button" class="bd-tab" data-tab="kind-new">🎮 새 게임</button>
+        <button type="button" class="bd-tab" data-tab="kind-fix">🔧 고쳐 주세요</button>
+        <button type="button" class="bd-tab" data-tab="kind-talk">💬 수다</button>
+        <button type="button" class="bd-tab" data-tab="done">🎉 완성!</button>
+      </nav>
+
+      <p class="bd-admin-note" id="admin-note" hidden>운영자 모드 — 숨긴 글도 보여요</p>
+      <section class="bd-list" id="list" aria-live="polite">
+        <p class="bd-empty">불러오는 중…</p>
+      </section>
+    </main>
+
+    <div class="bd-toast" id="toast" role="status"></div>
+    <script src="board.js?v=1"></script>
+  </body>
+</html>

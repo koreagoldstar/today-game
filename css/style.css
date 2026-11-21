@@ -2096,3 +2096,9 @@ body {
   color: #2b1300;
   background: linear-gradient(180deg, #ffd23f, #ff7a1a);
 }
+
+/* 게임 요청함 (/board/) */
+.hero-link-board {
+  color: #22a06b;
+  box-shadow: 0 3px 0 rgba(34, 160, 107, 0.28);
+}
