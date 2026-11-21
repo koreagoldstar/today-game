@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "number-war",
+      title: "숫자전쟁",
+      tag: "숫자 전략 퍼즐 · 콤보 · AI 대결",
+      href: "/games/number-war/",
+      thumb: "/assets/thumbs/sm/number-war.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
       id: "the-case-file",
       title: "오늘의 사건파일",
       tag: "매일 새 사건 · 현장 조사 · 심문 추리",

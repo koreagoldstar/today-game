@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>숫자전쟁 NUMBER WAR - 숫자 전략 퍼즐 | 오늘의 게임</title>
+    <meta name="description" content="5×5 숫자판에서 텐(합 10) · 쌍둥이 · 계단 · 배수 조합으로 점수를 쌓는 숫자 전략 퍼즐. 콤보와 특수 타일을 활용해 제한된 턴 안에 최고 점수에 도전하세요. 오늘의 숫자전쟁, 시간 제한, 고난도 전략, AI 대결까지." />
+    <link rel="canonical" href="https://www.todaygame.co.kr/games/number-war/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="오늘의 게임" />
+    <meta property="og:title" content="숫자전쟁 NUMBER WAR | 오늘의 게임" />
+    <meta property="og:description" content="숫자를 읽는 자가 승리한다. 매일 같은 판으로 겨루는 숫자 전략 퍼즐." />
+    <meta property="og:url" content="https://www.todaygame.co.kr/games/number-war/" />
+    <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/number-war.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/assets/pwa-icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=1" />
+    <link rel="stylesheet" href="/css/game-seo.css?v=3" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
+  </head>
+  <body>
+    <div class="nw-app">
+      <!-- 메뉴 -->
+      <section class="nw-screen screen" id="menu" aria-labelledby="menu-h">
+        <header class="nw-top" data-mute-slot>
+          <a class="nw-back" href="/">← 홈</a>
+          <span class="nw-date" id="menu-date"></span>
+          <button type="button" class="nw-pill" id="rules-btn">규칙</button>
+        </header>
+        <div class="nw-logo">
+          <div class="nw-logo-tiles" aria-hidden="true"><i>3</i><i>7</i><i class="g">9</i></div>
+          <h1 id="menu-h"><span>숫자전쟁</span><small>NUMBER WAR</small></h1>
+          <p class="nw-slogan">숫자를 읽는 자가 승리한다.</p>
+        </div>
+        <div class="nw-modes" id="modes"></div>
+        <section class="nw-panel" aria-labelledby="mis-h">
+          <h2 class="nw-panel-h" id="mis-h">오늘의 미션 <span class="nw-muted" id="mis-count"></span></h2>
+          <ul class="nw-missions" id="missions"></ul>
+        </section>
+        <section class="nw-panel" aria-labelledby="rec-h">
+          <h2 class="nw-panel-h" id="rec-h">나의 기록</h2>
+          <div class="nw-stats" id="stats"></div>
+          <h3 class="nw-sub">오늘의 숫자전쟁 순위</h3>
+          <ol class="nw-board-list" id="rank-list"><li class="nw-muted">불러오는 중…</li></ol>
+          <h3 class="nw-sub">최근 기록</h3>
+          <ul class="nw-recent" id="recent"></ul>
+        </section>
+      </section>
+
+      <!-- 게임 -->
+      <section class="nw-screen screen nw-game" id="game" hidden aria-label="숫자전쟁 게임">
+        <header class="nw-hud" data-mute-slot>
+          <button type="button" class="nw-back-btn" id="quit-btn" data-back>← 그만</button>
+          <div class="nw-hud-mode" id="hud-mode"></div>
+          <button type="button" class="nw-pill" id="rules-btn2">규칙</button>
+        </header>
+        <div class="nw-scorebar" id="scorebar"></div>
+        <div class="nw-timebar" id="timebar" hidden><i id="timefill"></i></div>
+        <div class="nw-boardwrap">
+          <div class="nw-board" id="board" role="grid" aria-label="숫자판"></div>
+          <div class="nw-fx" id="fx" aria-hidden="true"></div>
+          <div class="nw-combo" id="combo" aria-live="polite"></div>
+        </div>
+        <p class="nw-hint" id="hint" aria-live="polite"></p>
+        <div class="nw-legend" id="legend"></div>
+      </section>
+    </div>
+
+    <div class="nw-modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-h">
+      <div class="nw-modal-box"><button type="button" class="nw-modal-x" id="modal-x" aria-label="닫기">✕</button><div id="modal-body"></div></div>
+    </div>
+    <div class="nw-toast" id="toast" role="status"></div>
+
+    <script src="/js/today-audio.js?v=2"></script>
+    <script src="/js/game-chrome.js?v=6"></script>
+    <script src="/js/scores.js?v=7"></script>
+    <script src="engine.js?v=1"></script>
+    <script src="game.js?v=1"></script>
+      <!-- seo:game:start -->
+<section class="seo-about" aria-label="숫자전쟁 소개">
+  <h2>숫자전쟁 소개</h2>
+  <p>5×5 숫자판에서 붙어 있는 숫자 타일끼리 조합해 점수를 쌓는 숫자 전략 퍼즐입니다. 합이 10 이면 텐, 같은 수면 쌍둥이, 이어진 수면 계단, 배수면 배수 조합이 되고 규칙마다 결과와 점수가 달라요. 연달아 조합하면 콤보 배율이 오르고, 와일드 · 폭탄 · 더블 · 연쇄 · 잠금 같은 특수 타일이 전략을 바꿔요. 클래식, 모두가 같은 판으로 겨루는 오늘의 숫자전쟁, 120초 시간 제한, 고난도 전략, AI 대결까지 다섯 가지 모드가 있어요.</p>
+  <h3>플레이 방법</h3>
+  <p>타일을 누르면 조합할 수 있는 이웃 칸이 금색으로, 옮길 수 있는 빈칸이 파란색으로 보여요. 금색 칸을 누르면 조합되고 점수가 올라요. 빈칸으로 옮기면 점수는 없고 콤보가 끊겨요. 매 턴 새 타일이 생기니 판이 막히지 않게 공간을 관리하세요. 턴이 다 되면 빈칸 수만큼 보드 정리 보너스가 붙고, 판을 다 비우면 남은 턴 보너스도 받아요. 처음엔 1분짜리 튜토리얼이 실제 판에서 안내해요.</p>
+  <h3>자주 묻는 질문</h3>
+  <dl>
+    <dt>오늘의 숫자전쟁은 무엇이 다른가요?</dt>
+    <dd>한국 시각 0시마다 바뀌는 판으로, 그날은 모두가 같은 시작 판과 같은 새 타일 순서로 겨뤄요. 오늘의 미션 3개와 오늘의 순위가 있어요.</dd>
+    <dt>AI 는 얼마나 강한가요?</dt>
+    <dd>EASY 는 눈앞의 점수만, NORMAL 은 콤보와 특수 타일까지, HARD 는 내 다음 수와 상대의 대응까지 내다보고 둬요. 다음에 나올 타일은 AI 도 미리 보지 못해요.</dd>
+    <dt>기록은 어디에 저장되나요?</dt>
+    <dd>모드별 최고 점수, 최근 기록, 최고 콤보, 연속 참여는 이 기기에 저장되고, 이름을 남기면 오늘 · 이번 주 랭킹에 올라가요.</dd>
+  </dl>
+</section>
+<!-- seo:game:end -->
+      <script src="/js/game-seo.js?v=1"></script>
+  </body>
+</html>
