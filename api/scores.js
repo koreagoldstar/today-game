@@ -61,6 +61,8 @@ module.exports = async function handler(req, res) {
     "the-case-file",
     "number-war",
     "number-war-daily",
+    "traffic-hell",
+    "traffic-hell-daily",
     "the-case-file-week",
     "reaction",
     "order-memo",

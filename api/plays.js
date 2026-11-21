@@ -119,6 +119,7 @@ module.exports = async function handler(req, res) {
     "chosung-quiz",
     "the-case-file",
     "number-war",
+    "traffic-hell",
   ]);
 
   /** 콜드스타트/폴백 순서 */

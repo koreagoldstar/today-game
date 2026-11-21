@@ -30,6 +30,15 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "traffic-hell",
+      title: "교통지옥",
+      tag: "교통 전략 시뮬레이션 · 난이도 ★★★★",
+      href: "/games/traffic-hell/",
+      thumb: "/assets/thumbs/sm/traffic-hell.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
       id: "number-war",
       title: "숫자전쟁",
       tag: "숫자 전략 퍼즐 · 콤보 · AI 대결",
