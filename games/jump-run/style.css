@@ -182,7 +182,7 @@ canvas {
   color: #5a4018;
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;
   font-weight: 400;

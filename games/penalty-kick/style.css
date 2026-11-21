@@ -349,14 +349,14 @@ body.in-match .keep-pad {
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
   object-fit: cover;
 }
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 2px 0 0;
   font: 400 clamp(38px, 12vw, 54px) / 1.06 var(--head) !important;
   color: #fff;
   letter-spacing: 0;
   text-shadow: 0 3px 16px rgba(0, 0, 0, 0.6);
 }
-.overlay h1 em {
+.overlay :is(h1, h2:where([data-h1])) em {
   color: var(--gold);
   font-style: normal;
 }
@@ -488,7 +488,7 @@ body.in-match .keep-pad {
     height: 118px;
     border-radius: 16px;
   }
-  .overlay h1 {
+  .overlay :is(h1, h2:where([data-h1])) {
     font-size: 32px !important;
   }
   .overlay {

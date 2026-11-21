@@ -233,7 +233,7 @@ body:not(.in-play) .controls {
   box-shadow: 0 8px 0 rgba(38, 50, 77, 0.35), 0 14px 30px rgba(0, 0, 0, 0.3);
   object-fit: cover;
 }
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 4px 0 0;
   font: 400 clamp(36px, 11vw, 46px) / 1.1 "Bagel Fat One", "Jua", sans-serif !important;
   color: #ffd339;
@@ -372,7 +372,7 @@ body:not(.in-play) .controls {
     height: 120px;
     border-radius: 18px;
   }
-  .overlay h1 {
+  .overlay :is(h1, h2:where([data-h1])) {
     font-size: 30px !important;
   }
   .pad-btn {

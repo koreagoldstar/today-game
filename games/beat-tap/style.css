@@ -200,7 +200,7 @@ body .stage .today-mute-btn {
   font-weight: 700;
   letter-spacing: 0.14em;
 }
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", sans-serif;
   font-size: clamp(38px, 11vw, 50px);
@@ -426,7 +426,7 @@ body .stage .today-mute-btn {
   background: rgba(14, 8, 44, 0.86);
   box-shadow: 0 0 34px rgba(139, 92, 255, 0.4);
 }
-.card h1 {
+.card :is(h1, h2:where([data-h1])) {
   font-size: 32px;
 }
 .stars {

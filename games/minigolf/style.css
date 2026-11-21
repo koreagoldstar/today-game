@@ -643,7 +643,7 @@ body {
   letter-spacing: 0.06em;
   color: var(--gold);
 }
-body.golf #title h1.logo {
+body.golf #title :is(h1, h2:where([data-h1])).logo {
   margin: 10px 0 0;
   font: 400 clamp(46px, 14vw, 62px) / 1.06 var(--head) !important;
   color: #fff;
@@ -827,7 +827,7 @@ body.golf #result .btn {
   font-weight: 700;
   color: var(--gold);
 }
-body.golf #result h1.res-h {
+body.golf #result :is(h1, h2:where([data-h1])).res-h {
   margin: 3px 0 0;
   font: 400 30px / 1.15 var(--head) !important;
   color: #fff;
@@ -954,7 +954,7 @@ body.golf #result h1.res-h {
     width: min(470px, 100%);
     padding-top: 12px;
   }
-  body.golf #title h1.logo {
+  body.golf #title :is(h1, h2:where([data-h1])).logo {
     font-size: 38px !important;
   }
 }

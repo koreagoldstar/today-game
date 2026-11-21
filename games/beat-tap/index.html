@@ -16,9 +16,9 @@
     <meta property="og:description" content="버튼 하나로 즐기는 네온 리듬 · 20곡" />
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/beat-tap.png" />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Chakra+Petch:wght@500;700&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=7" />
+    <link rel="stylesheet" href="style.css?v=7h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body>
     <div class="stage">
@@ -61,7 +61,7 @@
       <div class="overlay hidden" id="clear">
         <div class="card">
           <div class="badge" id="clear-badge">CLEAR</div>
-          <h1 id="clear-title">곡 이름</h1>
+          <h2 data-h1 id="clear-title">곡 이름</h2>
           <div class="stars" id="clear-stars"></div>
           <p id="clear-detail"></p>
           <button type="button" class="btn" id="next-btn">다음 곡</button>
@@ -74,7 +74,7 @@
       <div class="overlay hidden" id="over">
         <div class="card">
           <div class="badge">FAILED</div>
-          <h1>아쉬워요</h1>
+          <h2 data-h1>아쉬워요</h2>
           <p id="over-detail"></p>
           <button type="button" class="btn" id="retry-btn">다시 도전</button>
           <button type="button" class="btn ghost" id="menu-btn2">곡 고르기</button>
@@ -84,7 +84,7 @@
       <div class="overlay hidden" id="allclear">
         <div class="card">
           <div class="badge">ALL CLEAR</div>
-          <h1>펄스 마스터!</h1>
+          <h2 data-h1>펄스 마스터!</h2>
           <p id="all-detail"></p>
           <button type="button" class="btn" id="again-btn">곡 고르기</button>
           <a href="/">← 홈</a>

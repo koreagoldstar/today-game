@@ -275,7 +275,7 @@ body {
   border-radius: 22px;
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 2px 0 0;
   font-family: "Bagel Fat One", "Jua", cursive;
   font-weight: 400;

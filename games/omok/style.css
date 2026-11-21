@@ -434,7 +434,7 @@ canvas {
   }
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 0;
   font-weight: 400;
   font-size: clamp(40px, 12vw, 52px);
@@ -619,7 +619,7 @@ canvas {
   }
 }
 
-.result-card h1 {
+.result-card :is(h1, h2:where([data-h1])) {
   font-size: 38px;
 }
 

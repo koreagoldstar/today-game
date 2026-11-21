@@ -17,9 +17,9 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png" />
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@500;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=4h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-face="1">
     <main class="stage" id="stage">
@@ -68,7 +68,7 @@
 
       <section class="overlay result hidden" id="win">
         <div class="trophy hidden" id="win-trophy" aria-hidden="true"></div>
-        <h1 id="win-title">승리!</h1>
+        <h2 data-h1 id="win-title">승리!</h2>
         <p id="win-detail"></p>
         <div id="win-rank" class="hidden"></div>
         <button type="button" class="btn" id="win-btn"><span id="win-next">다음 경기</span></button>
@@ -76,7 +76,7 @@
       </section>
 
       <section class="overlay result hidden" id="lose">
-        <h1>탈락…</h1>
+        <h2 data-h1>탈락…</h2>
         <p id="lose-detail"></p>
         <div id="lose-rank"></div>
         <button type="button" class="btn" id="lose-btn">이 경기 다시</button>

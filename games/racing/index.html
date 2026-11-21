@@ -17,9 +17,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=m1" />
+    <link rel="stylesheet" href="style.css?v=m1h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="racing" data-face="1">
     <div class="stage" id="stage">
@@ -49,7 +49,7 @@
       </div>
 
       <div class="overlay result hidden" id="clear">
-        <h1 id="clear-title">스테이지 완주!</h1>
+        <h2 data-h1 id="clear-title">스테이지 완주!</h2>
         <div class="stars3" id="clear-stars"><i></i><i></i><i></i></div>
         <p id="clear-detail"></p>
         <p class="next-world" id="clear-next"></p>
@@ -57,14 +57,14 @@
       </div>
 
       <div class="overlay result hidden" id="over">
-        <h1>부딪혔어요!</h1>
+        <h2 data-h1>부딪혔어요!</h2>
         <p id="over-detail"></p>
         <button type="button" class="btn" id="retry-btn">다시 달리기</button>
         <a href="/">← 홈</a>
       </div>
 
       <div class="overlay result hidden" id="allclear">
-        <h1>50스테이지 완주!</h1>
+        <h2 data-h1>50스테이지 완주!</h2>
         <p id="all-detail"></p>
         <p>이제 끝없이 달려 볼까요?</p>
         <button type="button" class="btn" id="endless-btn">무한 질주</button>

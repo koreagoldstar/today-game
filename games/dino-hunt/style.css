@@ -475,14 +475,14 @@ body.dh .today-mute-btn {
   letter-spacing: 0.16em;
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 0 0 12px;
   color: #fff;
   font: 400 clamp(36px, 10vw, 48px)/0.95 "Bagel Fat One", sans-serif;
   text-shadow: 0 4px 0 #1a4a28, 0 12px 28px rgba(0, 0, 0, 0.4);
 }
 
-.overlay h1 em {
+.overlay :is(h1, h2:where([data-h1])) em {
   color: var(--amber);
   font-style: normal;
 }

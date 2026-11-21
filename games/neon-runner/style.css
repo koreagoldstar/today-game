@@ -216,7 +216,7 @@ canvas {
   margin-bottom: 8px;
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", cursive;
   font-weight: 400;

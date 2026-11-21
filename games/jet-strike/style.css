@@ -212,7 +212,7 @@ canvas {
   border: 2px solid rgba(126, 200, 255, 0.45);
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   font-family: "Bagel Fat One", "Jua", sans-serif;
   font-size: 36px;
   margin: 4px 0 10px;

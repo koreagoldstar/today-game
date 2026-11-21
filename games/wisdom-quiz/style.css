@@ -91,7 +91,7 @@ body {
   margin: 0 auto 4px;
 }
 
-.quiz h1 {
+.quiz :is(h1, h2:where([data-h1])) {
   font-size: 22px;
 }
 
@@ -100,7 +100,7 @@ body {
   font-size: 13px;
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", sans-serif;
   font-weight: 400;
