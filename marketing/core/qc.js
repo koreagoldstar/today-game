@@ -25,7 +25,8 @@ async function runQc(doc, { registry, store, settings }) {
 
   const recent = (await store.listContents(30)).filter((d) => d.id !== doc.id);
   const seen = new Set(recent.flatMap((d) => ((d.render && d.render.files) || []).map((f) => f.sha256)).filter(Boolean));
-  const dup = files.find((f) => f.sha256 && seen.has(f.sha256));
+  // 모든 파일이 이미 있던 것일 때만 중복 — 퀴즈 캐러셀은 표지 · 마지막 장이 늘 같아서 한 장만 같아도 막으면 두 번째 퀴즈부터 늘 불합격
+  const dup = files.length && files.every((f) => f.sha256 && seen.has(f.sha256)) ? files[0] : null;
   add("duplicate", "직전 콘텐츠와 다른 파일", !dup, dup && `같은 파일이 이미 있음 (${dup.role || dup.path})`);
 
   const facts = (doc.source && doc.source.facts) || {};

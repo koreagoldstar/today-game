@@ -1,0 +1,16 @@
+{
+  "id": "typing-rain",
+  "note": "Canvas 2D + 입력칸. ?test=1 은 화면에 떠 있는 단어 목록만 읽기 전용으로 열어 줌 (게임 화면 · 규칙은 그대로). 실제 키 입력으로만 친다",
+  "path": "/games/typing-rain/?test=1",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": { "width": 405, "height": 720 },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "ready": "!!window.__trTest && !!document.getElementById('start-btn')",
+  "player": "typing-rain",
+  "hooks": ["단어가 땅에 닿기 전에!", "한컴타자 기억나요?", "몇 타까지 버틸 수 있어?"],
+  "hashtags": ["#타자연습", "#산성비"]
+}
