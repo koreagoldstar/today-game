@@ -132,6 +132,14 @@ test("게임 소개(spotlight): 안 올린 게임 중 어른이용 먼저 · 이
   assert.deepEqual(factProblems(c.caption, d.source.facts), [], "틀 문구의 숫자는 모두 사이트 사실에서");
 });
 
+test("두 번째 퀴즈도 통과: 표지 · 마지막 장이 지난 퀴즈와 같아도 문제 장이 다르면 중복 아님", async () => {
+  const base = withImage(makeCtx());
+  const a = await produce(base.ctx, plan("quiz", "carousel"));
+  const b = await produce(base.ctx, plan("quiz", "carousel"));
+  assert.equal(a.status, "READY_FOR_APPROVAL");
+  assert.equal(b.status, "READY_FOR_APPROVAL", JSON.stringify(b.qc && b.qc.checks.filter((c) => !c.ok)));
+});
+
 test("자료가 모자라면(NO_DATA) 실패 알림 없이 취소 — 다음 후보로 넘어갈 수 있게", async () => {
   const base = withImage(makeCtx());
   const d = await produce(base.ctx, plan("ranking", "image"));
