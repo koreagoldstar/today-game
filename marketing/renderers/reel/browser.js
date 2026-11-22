@@ -108,7 +108,8 @@ async function launch({ headless = true, render = "gpu", scale = DPR } = {}) {
     channel: "chrome",
     headless,
     // force-device-scale-factor: 없으면 화면 캡처가 CSS 크기(1배)로 와서 릴스 화질이 반으로 떨어진다
-    args: ["--autoplay-policy=no-user-gesture-required", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", `--force-device-scale-factor=${scale}`, ...GPU_ARGS[render]],
+    // mute-audio: 녹화 중 게임 소리가 PC 스피커로 나오지 않게 (소리는 페이지 안에서 MediaRecorder 로 따로 담는다)
+    args: ["--mute-audio", "--autoplay-policy=no-user-gesture-required", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", `--force-device-scale-factor=${scale}`, ...GPU_ARGS[render]],
   });
 }
 
