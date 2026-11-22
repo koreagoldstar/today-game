@@ -1,0 +1,1795 @@
+/* 오늘의 사건파일 — 프리미엄 다크 미스터리 (남색 · 차콜 · 짙은 갈색 + 금 · 짙은 빨강) */
+:root {
+  --bg: #0b1019;
+  --bg2: #121a28;
+  --panel: #171f2e;
+  --panel2: #1e2738;
+  --line: rgba(201, 163, 90, 0.28);
+  --line2: rgba(255, 255, 255, 0.08);
+  --gold: #c9a35a;
+  --gold2: #e7c886;
+  --red: #8e1f2a;
+  --red2: #c23a48;
+  --paper: #efe6d2;
+  --paper2: #e2d6bb;
+  --ink: #2a2420;
+  --text: #e9e3d6;
+  --muted: #9aa3b2;
+  --ok: #6fcf97;
+  --serif: "Noto Serif KR", "Nanum Myeongjo", serif;
+  --sans: "Noto Sans KR", system-ui, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 70% -10%, rgba(201, 163, 90, 0.16), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(142, 31, 42, 0.14), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.012) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #0e1524, #0a0e16 60%, #120d0c);
+  background-attachment: fixed;
+}
+body.cf-noscroll {
+  overflow: hidden;
+}
+button {
+  font-family: inherit;
+}
+.cf-app {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+}
+.cf-screen[hidden] {
+  display: none !important;
+}
+.cf-muted {
+  color: var(--muted);
+}
+.cf-small {
+  font-size: 13px;
+}
+.cf-center {
+  text-align: center;
+}
+
+/* 상단 줄 */
+.cf-top,
+.cf-gamebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+}
+.cf-top {
+  justify-content: space-between;
+}
+.cf-back,
+.cf-back-btn {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.cf-top-date {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-left: auto;
+}
+.cf-icon-btn {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--gold2);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.cf-top .today-mute-btn,
+.cf-gamebar .today-mute-btn {
+  position: static !important;
+}
+
+/* 로고 */
+.cf-logo {
+  text-align: center;
+  margin: 12px 0 10px;
+}
+.cf-logo-en {
+  margin: 0;
+  font-family: var(--serif);
+  letter-spacing: 0.5em;
+  font-size: 12px;
+  color: var(--gold);
+}
+.cf-logo-ko {
+  margin: 6px 0 4px;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(34px, 8vw, 54px);
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #fff6df, var(--gold) 70%, #8d6a2c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 30px rgba(201, 163, 90, 0.18);
+}
+.cf-slogan {
+  margin: 0;
+  font-family: var(--serif);
+  color: var(--muted);
+  font-size: 14px;
+}
+.cf-rankline {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+.cf-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: var(--gold2);
+  background: rgba(201, 163, 90, 0.06);
+}
+.cf-chip.is-done {
+  border-color: rgba(111, 207, 151, 0.5);
+  color: var(--ok);
+}
+
+/* 오늘의 사건 카드 = 서류철 */
+.cf-casecard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  background: linear-gradient(160deg, #2a2118, #1a1511);
+  border: 1px solid rgba(201, 163, 90, 0.35);
+  border-radius: 6px 22px 22px 22px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+.cf-casecard::before {
+  content: "TOP SECRET";
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  font-family: var(--serif);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--red2);
+  border: 1.5px solid var(--red2);
+  padding: 3px 8px;
+  transform: rotate(4deg);
+  opacity: 0.85;
+  z-index: 2;
+}
+.cf-casecard-art {
+  min-height: 220px;
+  background: #0d1118;
+}
+.cf-casecard-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cf-casecard-body {
+  padding: 24px 22px 22px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(42, 36, 32, 0.07) 27px 28px),
+    linear-gradient(180deg, var(--paper), var(--paper2));
+  color: var(--ink);
+}
+.cf-casecard-label {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: #7a5a2c;
+  font-weight: 700;
+}
+.cf-casecard-title {
+  margin: 6px 0 12px;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(26px, 5vw, 34px);
+  color: #1d1712;
+}
+.cf-meta {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.cf-meta div {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 14px;
+}
+.cf-meta dt {
+  color: #8a7458;
+  font-weight: 700;
+}
+.cf-meta dd {
+  margin: 0;
+}
+.cf-meta-col div {
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+.cf-teaser {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+  color: #3b3027;
+}
+.cf-diff {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.cf-diff-normal {
+  background: #2f5d50;
+  color: #dff5ea;
+}
+.cf-diff-hard {
+  background: #8a5a1c;
+  color: #fff1d6;
+}
+.cf-diff-expert {
+  background: var(--red);
+  color: #ffe3e6;
+}
+.cf-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.cf-actions .cf-btn-gold {
+  grid-column: 1 / -1;
+}
+
+/* 버튼 */
+.cf-btn {
+  border: 1px solid rgba(201, 163, 90, 0.45);
+  background: rgba(20, 26, 38, 0.85);
+  color: var(--gold2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 46px;
+  transition: transform 0.12s, background 0.2s, border-color 0.2s;
+}
+.cf-casecard .cf-btn:not(.cf-btn-gold) {
+  background: rgba(42, 36, 32, 0.06);
+  color: #4a3620;
+  border-color: rgba(42, 36, 32, 0.35);
+}
+.cf-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.cf-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.cf-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cf-btn-gold {
+  background: linear-gradient(180deg, #e2c27d, #b38a3e);
+  color: #1d160c;
+  border-color: #f0d79b;
+  box-shadow: 0 6px 20px rgba(201, 163, 90, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.cf-btn-red {
+  background: linear-gradient(180deg, #b3343f, #7c1a24);
+  color: #ffeef0;
+  border-color: #d75a66;
+}
+.cf-btn-small {
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+.cf-btn-wide {
+  width: 100%;
+}
+
+/* 대시보드 */
+.cf-dash {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.cf-stat {
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  padding: 14px;
+}
+.cf-stat-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cf-stat-value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold2);
+}
+.cf-panel {
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 14px 0;
+}
+.cf-panel-h {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--gold2);
+}
+.cf-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cf-board li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line2);
+}
+.cf-board-rank {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(201, 163, 90, 0.15);
+  color: var(--gold2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.cf-board-name {
+  flex: 1;
+}
+.cf-board-score {
+  color: var(--gold2);
+  font-weight: 700;
+}
+
+/* 보관함 */
+.cf-screen-h {
+  font-family: var(--serif);
+  font-size: 28px;
+  text-align: center;
+  margin: 10px 0 6px;
+  color: var(--gold2);
+}
+.cf-archive {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+.cf-arch {
+  background: linear-gradient(170deg, var(--paper), var(--paper2));
+  color: var(--ink);
+  border-radius: 4px 14px 14px 14px;
+  padding: 16px;
+  position: relative;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.cf-arch.is-locked {
+  background: linear-gradient(170deg, #2a2a30, #1c1c22);
+  color: var(--muted);
+}
+.cf-arch.is-solved::after {
+  content: "해결";
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  color: var(--red);
+  border: 2px solid var(--red);
+  padding: 2px 8px;
+  font-weight: 900;
+  transform: rotate(-8deg);
+  font-family: var(--serif);
+}
+.cf-arch-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cf-arch-code {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #7a5a2c;
+}
+.cf-arch-title {
+  font-family: var(--serif);
+  margin: 8px 0 4px;
+  font-size: 20px;
+}
+.cf-arch-meta,
+.cf-arch-rec {
+  margin: 2px 0;
+  font-size: 13px;
+}
+.cf-arch .cf-btn {
+  margin-top: 10px;
+  background: rgba(42, 36, 32, 0.08);
+  color: #3b2a14;
+  border-color: rgba(42, 36, 32, 0.35);
+}
+.cf-daylog {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cf-daylog li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line2);
+  font-size: 14px;
+}
+
+/* 게임 상단 · 단계 */
+.cf-gamebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 16, 25, 0.92);
+  backdrop-filter: blur(8px);
+  margin: 0 -16px;
+  padding: max(6px, env(safe-area-inset-top)) 16px 6px;
+  border-bottom: 1px solid var(--line2);
+}
+.cf-gamebar-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.cf-gamebar-title span {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+}
+.cf-gamebar-title b {
+  font-family: var(--serif);
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cf-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  color: var(--muted);
+}
+.cf-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin: 10px 0 14px;
+}
+.cf-step {
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 6px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  min-height: 48px;
+}
+.cf-step:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.cf-step-n {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 15px;
+}
+.cf-step-t {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.cf-step.is-done {
+  color: var(--gold);
+  border-color: rgba(201, 163, 90, 0.3);
+}
+.cf-step.is-on {
+  background: linear-gradient(180deg, #e2c27d, #b38a3e);
+  color: #1d160c;
+  border-color: #f0d79b;
+}
+.cf-view {
+  animation: cf-in 0.35s ease-out;
+}
+@keyframes cf-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.cf-view-h {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin: 0 0 6px;
+  color: var(--gold2);
+}
+.cf-sub {
+  font-family: var(--serif);
+  color: #5a3d1e;
+  margin: 20px 0 10px;
+}
+.cf-navrow {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin: 18px 0;
+}
+.cf-navrow .cf-btn {
+  flex: 1;
+}
+
+/* STEP 1 서류철 */
+.cf-file {
+  animation: cf-open 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: top center;
+}
+@keyframes cf-open {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateX(-12deg) translateY(20px);
+  }
+}
+.cf-file-tab {
+  display: inline-block;
+  background: #b38a3e;
+  color: #1d160c;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 10px 10px 0 0;
+  letter-spacing: 0.06em;
+}
+.cf-file-inner {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 29px, rgba(42, 36, 32, 0.06) 29px 30px),
+    linear-gradient(180deg, var(--paper), var(--paper2));
+  color: var(--ink);
+  border-radius: 0 16px 16px 16px;
+  padding: 24px clamp(16px, 4vw, 36px) 28px;
+  position: relative;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+.cf-stamp-small {
+  position: absolute;
+  right: 22px;
+  top: 18px;
+  margin: 0;
+  color: var(--red2);
+  border: 2px solid var(--red2);
+  padding: 3px 10px;
+  font-family: var(--serif);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  transform: rotate(5deg);
+  opacity: 0.8;
+}
+.cf-file-title {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(26px, 6vw, 38px);
+  margin: 0 0 12px;
+}
+.cf-story p {
+  font-family: var(--serif);
+  line-height: 1.85;
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+.cf-people {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.cf-person {
+  display: flex;
+  gap: 10px;
+  background: rgba(42, 36, 32, 0.06);
+  border: 1px solid rgba(42, 36, 32, 0.15);
+  border-radius: 12px;
+  padding: 8px;
+  font-size: 14px;
+}
+.cf-person p {
+  margin: 2px 0;
+}
+.cf-person-pic {
+  width: 64px;
+  flex: 0 0 64px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cf-person-pic svg,
+.cf-sustab-pic svg,
+.cf-int-pic svg,
+.cf-culprit-pic svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cf-problem {
+  margin: 20px 0;
+  border-left: 4px solid var(--red);
+  background: rgba(142, 31, 42, 0.08);
+  padding: 12px 14px;
+}
+.cf-problem span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.1em;
+}
+.cf-problem p {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* STEP 2 현장 */
+.cf-view-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.cf-scene {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  aspect-ratio: 8 / 5;
+}
+.cf-scene > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cf-scene-cap {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cf-spot {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+.cf-spot-ring {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--gold2);
+  background: radial-gradient(circle, rgba(255, 216, 146, 0.55), rgba(255, 216, 146, 0.1) 60%, transparent 70%);
+  box-shadow: 0 0 14px rgba(255, 216, 146, 0.8);
+  animation: cf-pulse 1.8s ease-in-out infinite;
+}
+.cf-spot.is-part .cf-spot-ring {
+  border-color: #9fd0ff;
+  background: radial-gradient(circle, rgba(159, 208, 255, 0.45), transparent 70%);
+  box-shadow: 0 0 12px rgba(159, 208, 255, 0.7);
+}
+.cf-spot.is-done .cf-spot-ring {
+  animation: none;
+  border-color: rgba(111, 207, 151, 0.8);
+  background: rgba(111, 207, 151, 0.18);
+  box-shadow: none;
+}
+.cf-spot.is-done .cf-spot-ring::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ok);
+  font-weight: 900;
+  font-size: 14px;
+}
+@keyframes cf-pulse {
+  50% {
+    transform: scale(1.18);
+    opacity: 0.75;
+  }
+}
+.cf-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 14px;
+}
+.cf-progress b {
+  color: var(--gold2);
+}
+.cf-bar {
+  flex: 1 0 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.cf-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #b38a3e, #f0d79b);
+  transition: width 0.4s;
+}
+.cf-pointlist {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+  display: grid;
+  gap: 6px;
+}
+.cf-pointrow {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.cf-pointrow.is-done {
+  color: var(--muted);
+}
+.cf-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--ok);
+  font-weight: 900;
+  font-size: 13px;
+  flex: 0 0 22px;
+}
+
+/* 모달 */
+.cf-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cf-fade 0.2s;
+}
+.cf-modal[hidden] {
+  display: none;
+}
+@keyframes cf-fade {
+  from {
+    opacity: 0;
+  }
+}
+.cf-modal-box {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: linear-gradient(180deg, #1d2536, #141b29);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 20px 20px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+  animation: cf-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes cf-pop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+}
+.cf-modal-x {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 2;
+}
+.cf-modal-h {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin: 4px 40px 10px 0;
+  color: var(--gold2);
+}
+.cf-type {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.cf-fact {
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 163, 90, 0.08);
+  padding: 10px 12px;
+  border-radius: 0 10px 10px 0;
+  line-height: 1.65;
+}
+.cf-fact span {
+  display: block;
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+.cf-inspect {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+}
+.cf-inspect-art svg {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  display: block;
+}
+.cf-inspect-body p {
+  line-height: 1.7;
+}
+.cf-evmini {
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 10px 0 6px;
+  display: grid;
+  gap: 3px;
+  font-size: 14px;
+}
+.cf-evmini.is-key {
+  border-color: rgba(201, 163, 90, 0.55);
+}
+.cf-got {
+  margin: 0 0 8px;
+  color: var(--ok);
+  font-size: 13px;
+}
+.cf-deeper {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.cf-howto {
+  padding-left: 20px;
+  line-height: 1.7;
+}
+.cf-howto li {
+  margin-bottom: 8px;
+}
+.cf-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 15px;
+}
+.cf-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--gold);
+}
+
+/* STEP 3 증거 */
+.cf-linkbar {
+  position: sticky;
+  top: 62px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  background: rgba(23, 31, 46, 0.95);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 10px 8px 14px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.cf-linkbar span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cf-evgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.cf-evcard {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.cf-evcard.is-derived {
+  border-color: rgba(159, 208, 255, 0.4);
+}
+.cf-evcard.is-picked {
+  border-color: var(--gold2);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(231, 200, 134, 0.35);
+}
+.cf-evcard-open {
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  padding: 10px;
+  display: grid;
+  gap: 3px;
+  cursor: pointer;
+  flex: 1;
+}
+.cf-evcard-art {
+  height: 110px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1118;
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+.cf-evcard-art svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cf-evcard-pick {
+  border: 0;
+  border-top: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--gold2);
+  padding: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 42px;
+}
+.cf-evcard.is-picked .cf-evcard-pick {
+  background: rgba(201, 163, 90, 0.2);
+}
+.cf-evdetail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+.cf-evdetail-art {
+  cursor: zoom-in;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  align-self: start;
+}
+.cf-evdetail-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cf-evdetail-art.is-zoom {
+  position: fixed;
+  inset: 8px;
+  z-index: 200;
+  background: #0b0f16;
+  cursor: zoom-out;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+}
+.cf-evdetail-art.is-zoom svg {
+  width: min(1200px, 100%);
+  max-height: 100%;
+}
+.cf-evdetail .cf-meta dt {
+  color: var(--gold);
+}
+.cf-linklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.cf-linklist li {
+  border-left: 3px solid #9fd0ff;
+  background: rgba(159, 208, 255, 0.06);
+  padding: 10px 12px;
+  border-radius: 0 10px 10px 0;
+}
+.cf-linklist li.is-contra {
+  border-left-color: var(--red2);
+  background: rgba(194, 58, 72, 0.08);
+}
+.cf-linklist p {
+  margin: 4px 0 0;
+  line-height: 1.6;
+  font-size: 14px;
+  color: #cdd3dd;
+}
+.cf-linkshow .cf-linkpair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+}
+.cf-linkpair span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.cf-linkpair i {
+  font-style: normal;
+  color: var(--gold2);
+  font-weight: 900;
+}
+.cf-linkshow p {
+  line-height: 1.75;
+}
+.cf-newev {
+  margin-top: 12px;
+}
+
+/* STEP 4 심문 */
+.cf-sustabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.cf-sustab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 4px 14px 4px 4px;
+  cursor: pointer;
+  position: relative;
+  min-height: 48px;
+  font-size: 14px;
+}
+.cf-sustab.is-on {
+  border-color: var(--gold);
+  background: rgba(201, 163, 90, 0.14);
+}
+.cf-sustab-pic {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.cf-dot {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red2);
+}
+.cf-int {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+.cf-int-profile {
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  padding: 12px;
+  align-self: start;
+}
+.cf-int-pic {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.cf-int-name {
+  font-family: var(--serif);
+  margin: 10px 0 2px;
+  font-size: 20px;
+}
+.cf-int-job {
+  margin: 0 0 10px;
+  color: var(--gold2);
+  font-size: 14px;
+}
+.cf-int-profile .cf-meta dt {
+  color: var(--gold);
+  font-size: 12px;
+}
+.cf-int-profile .cf-meta dd {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.cf-chat {
+  background: rgba(5, 8, 13, 0.55);
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  padding: 14px;
+  height: min(46vh, 420px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cf-msg {
+  max-width: 86%;
+  border-radius: 14px;
+  padding: 10px 13px;
+  line-height: 1.6;
+  font-size: 15px;
+}
+.cf-msg p {
+  margin: 0;
+}
+.cf-msg b {
+  display: block;
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+.cf-msg-them {
+  align-self: flex-start;
+  background: #232d40;
+  border-top-left-radius: 4px;
+  animation: cf-in 0.3s;
+}
+.cf-msg-them.is-typing p {
+  animation: cf-type 0.4s steps(6);
+}
+@keyframes cf-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+.cf-msg-me {
+  align-self: flex-end;
+  background: rgba(201, 163, 90, 0.2);
+  border: 1px solid rgba(201, 163, 90, 0.35);
+  border-top-right-radius: 4px;
+  font-size: 14px;
+}
+.cf-msg-them.is-contra {
+  border: 1px solid var(--red2);
+  background: rgba(142, 31, 42, 0.3);
+}
+.cf-contra-tag,
+.cf-gave-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--red2);
+  color: #fff;
+}
+.cf-gave-tag {
+  background: #2f5d50;
+}
+.cf-qs {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+.cf-q {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: rgba(201, 163, 90, 0.06);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.cf-q::before {
+  content: "Q. ";
+  color: var(--gold);
+  font-weight: 700;
+}
+.cf-q.is-asked {
+  color: var(--muted);
+  border-color: var(--line2);
+  background: transparent;
+}
+.cf-pickgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.cf-pickev {
+  text-align: left;
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  min-height: 56px;
+  font-size: 14px;
+}
+.cf-pickev:hover {
+  border-color: var(--gold);
+}
+.cf-contrashow {
+  text-align: center;
+}
+.cf-contrashow p {
+  line-height: 1.75;
+}
+.cf-bigstamp {
+  display: inline-block;
+  margin: 6px 0 10px;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 28px;
+  color: var(--red2);
+  border: 4px double var(--red2);
+  padding: 4px 18px;
+  transform: rotate(-6deg);
+  animation: cf-stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.cf-bigstamp.is-fail {
+  color: var(--muted);
+  border-color: var(--muted);
+}
+@keyframes cf-stamp {
+  from {
+    transform: rotate(-6deg) scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* STEP 5 보고서 */
+.cf-report {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 29px, rgba(42, 36, 32, 0.06) 29px 30px),
+    linear-gradient(180deg, var(--paper), var(--paper2));
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 22px clamp(14px, 4vw, 30px);
+  position: relative;
+}
+.cf-report .cf-view-h {
+  color: #3b2a14;
+}
+.cf-report-head .cf-muted,
+.cf-report .cf-muted {
+  color: #7a6a58;
+}
+.cf-report fieldset {
+  border: 0;
+  border-top: 1px solid rgba(42, 36, 32, 0.2);
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+}
+.cf-report legend {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 17px;
+  padding: 0;
+  margin-bottom: 8px;
+}
+.cf-opt {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(42, 36, 32, 0.18);
+  margin: 6px 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.35);
+  line-height: 1.5;
+  font-size: 15px;
+}
+.cf-opt input,
+.cf-culprit input {
+  accent-color: var(--red);
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex: 0 0 18px;
+}
+.cf-opt:has(input:checked) {
+  border-color: var(--red);
+  background: rgba(142, 31, 42, 0.1);
+}
+.cf-culprits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.cf-culprit {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(42, 36, 32, 0.2);
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+}
+.cf-culprit:has(input:checked) {
+  border: 2px solid var(--red);
+  background: rgba(142, 31, 42, 0.12);
+}
+.cf-culprit-pic {
+  width: 80px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cf-error {
+  color: var(--red);
+  font-weight: 700;
+  min-height: 1.2em;
+}
+.cf-review {
+  display: grid;
+  gap: 8px;
+}
+.cf-review div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line2);
+}
+.cf-review dt {
+  color: var(--gold);
+  font-weight: 700;
+}
+.cf-review dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* STEP 6 결과 */
+.cf-result-head {
+  text-align: center;
+}
+.cf-grade {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin: 10px auto 18px;
+  padding: 18px;
+  width: min(360px, 100%);
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 30%, rgba(201, 163, 90, 0.3), rgba(20, 26, 38, 0.9) 70%);
+  border: 1px solid var(--line);
+}
+.cf-grade-letter {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 72px;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff6df, var(--gold) 70%, #8d6a2c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  transform: scale(1.8);
+  transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.cf-grade.is-on .cf-grade-letter {
+  opacity: 1;
+  transform: none;
+}
+.cf-grade-name {
+  color: var(--gold2);
+  font-weight: 700;
+}
+.cf-grade-score b {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.cf-res-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.cf-res-rows li {
+  display: grid;
+  grid-template-columns: 52px 96px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cf-res-mark {
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  border-radius: 6px;
+  padding: 2px 0;
+}
+.is-ok .cf-res-mark {
+  background: rgba(111, 207, 151, 0.18);
+  color: var(--ok);
+}
+.is-ng .cf-res-mark {
+  background: rgba(194, 58, 72, 0.2);
+  color: #ff8d98;
+}
+.cf-res-rows em {
+  display: block;
+  font-style: normal;
+  color: var(--gold2);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.cf-dash-4 {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+.cf-rankrow {
+  display: flex;
+  gap: 8px;
+}
+.cf-rankrow input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0f1520;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 16px;
+}
+.cf-truth {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 29px, rgba(42, 36, 32, 0.06) 29px 30px),
+    linear-gradient(180deg, var(--paper), var(--paper2));
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 22px clamp(16px, 4vw, 34px);
+  margin: 18px 0;
+}
+.cf-truth-h {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: #3b2a14;
+}
+.cf-truth-lead {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--red);
+  margin: 0 0 12px;
+}
+.cf-truth h4 {
+  font-family: var(--serif);
+  margin: 18px 0 6px;
+  color: #5a3d1e;
+}
+.cf-truth p {
+  line-height: 1.8;
+  margin: 0;
+}
+.cf-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-left: 2px solid rgba(142, 31, 42, 0.4);
+}
+.cf-timeline li {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  padding: 6px 0 6px 12px;
+  position: relative;
+}
+.cf-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.cf-timeline time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--red);
+}
+.cf-missed {
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.cf-missed li {
+  line-height: 1.6;
+  font-size: 14px;
+}
+.cf-missed .cf-type {
+  color: var(--red);
+  margin-right: 6px;
+}
+.cf-hints {
+  line-height: 1.7;
+  padding-left: 20px;
+}
+
+/* 토스트 · 번쩍 */
+.cf-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translate(-50%, 20px);
+  background: rgba(30, 39, 56, 0.97);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 300;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+.cf-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.cf-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 250;
+  opacity: 0;
+}
+.cf-flash.on {
+  animation: cf-flash 0.6s ease-out;
+}
+.cf-flash.red {
+  background: radial-gradient(circle, rgba(194, 58, 72, 0.15), rgba(142, 31, 42, 0.55));
+}
+.cf-flash.gold {
+  background: radial-gradient(circle, rgba(255, 216, 146, 0.35), transparent 70%);
+}
+.cf-flash.dim {
+  background: rgba(0, 0, 0, 0.35);
+}
+@keyframes cf-flash {
+  20% {
+    opacity: 1;
+  }
+}
+
+/* 움직임 줄이기 */
+.cf-calm *,
+.cf-calm *::before,
+.cf-calm *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.cf-calm .cf-grade-letter {
+  opacity: 1;
+  transform: none;
+}
+
+/* 휴대폰 */
+@media (max-width: 860px) {
+  .cf-view-2,
+  .cf-int,
+  .cf-evdetail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cf-int-profile {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 4px 12px;
+  }
+  .cf-int-pic {
+    grid-row: span 3;
+  }
+  .cf-int-profile .cf-meta {
+    grid-column: 1 / -1;
+  }
+  .cf-int-name {
+    margin-top: 4px;
+  }
+}
+@media (max-width: 640px) {
+  .cf-app {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .cf-gamebar {
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .cf-casecard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cf-casecard-art {
+    min-height: 0;
+    aspect-ratio: 8 / 5;
+  }
+  .cf-step-t {
+    font-size: 10px;
+  }
+  .cf-steps {
+    gap: 3px;
+  }
+  .cf-inspect {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cf-inspect-art {
+    width: 150px;
+    margin: 0 auto;
+  }
+  .cf-evgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .cf-evcard-art {
+    height: 86px;
+  }
+  .cf-res-rows li {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+  .cf-res-rows li > span:last-child {
+    grid-column: 1 / -1;
+  }
+  .cf-timeline li {
+    grid-template-columns: 70px minmax(0, 1fr);
+  }
+  .cf-spot {
+    width: 38px;
+    height: 38px;
+  }
+  .cf-chat {
+    height: 52vh;
+  }
+  .cf-daylog li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+@media (max-width: 380px) {
+  .cf-step-t {
+    display: none;
+  }
+  .cf-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 공용 '친구 도전장' 떠 있는 버튼은 숨김 — 이 게임은 오늘 · 주간 랭킹으로 겨룬다 */
+#tduel-invite {
+  display: none !important;
+}
+
+/* 공용 집 모양 홈 버튼(왼쪽 위 고정) 자리를 비워 둔다 — 나가기 · 뒤로 버튼이 가려지지 않게 */
+.cf-top,
+.cf-gamebar {
+  padding-left: 70px;
+}
+@media (min-width: 1260px) {
+  .cf-top,
+  .cf-gamebar {
+    padding-left: 16px;
+  }
+}
+
+/* 보관함 · 기록 화면: 공용 집 버튼이 '← 사건파일' 바로 옆에 들어온다 */
+.cf-top:has(> .today-home-btn.is-inline) {
+  padding-left: 70px;
+  justify-content: flex-start;
+  gap: 10px;
+}

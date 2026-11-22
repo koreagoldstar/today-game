@@ -452,7 +452,7 @@ canvas {
   box-shadow: 0 0 28px rgba(200, 255, 0, 0.4);
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   position: relative;
   margin: 0;
   font-family: "Bagel Fat One", "Chakra Petch", cursive;

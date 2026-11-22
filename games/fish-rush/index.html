@@ -15,9 +15,9 @@
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/fish-rush.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=m1" />
+    <link rel="stylesheet" href="style.css?v=m1h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="fish-rush">
     <div class="stage">
@@ -48,14 +48,14 @@
 
       <div class="overlay hidden" id="clear">
         <div class="badge soft">CLEAR</div>
-        <h1 id="clear-title">어획 성공!</h1>
+        <h2 data-h1 id="clear-title">어획 성공!</h2>
         <p id="clear-detail"></p>
         <button type="button" class="btn" id="next-btn">다음 바다</button>
       </div>
 
       <div class="overlay hidden" id="over">
         <div class="badge">TIME UP</div>
-        <h1>출항 종료</h1>
+        <h2 data-h1>출항 종료</h2>
         <p id="over-detail"></p>
         <button type="button" class="btn" id="retry-btn">다시 낚시</button>
         <a href="/">← 오늘의 게임</a>
@@ -63,7 +63,7 @@
 
       <div class="overlay hidden" id="allclear">
         <div class="badge">ALL CLEAR</div>
-        <h1>전설의 낚시왕!</h1>
+        <h2 data-h1>전설의 낚시왕!</h2>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
         <a href="/">← 오늘의 게임</a>

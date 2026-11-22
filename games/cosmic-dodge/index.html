@@ -17,9 +17,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=m1" />
+    <link rel="stylesheet" href="style.css?v=m1h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="jet-strike">
     <main class="stage">
@@ -66,14 +66,14 @@
 
       <div class="overlay hidden" id="clear">
         <div class="badge soft">STAGE CLEAR</div>
-        <h1 id="clear-title">스테이지 클리어!</h1>
+        <h2 data-h1 id="clear-title">스테이지 클리어!</h2>
         <p id="clear-detail">다음 우주 구역으로 진입합니다</p>
         <button type="button" class="primary" id="next-btn">다음 스테이지</button>
       </div>
 
       <div class="overlay hidden" id="over">
         <div class="badge">MISSION FAILED</div>
-        <h1>탐사선 파괴!</h1>
+        <h2 data-h1>탐사선 파괴!</h2>
         <p id="over-detail">최종 점수: 0점</p>
         <div id="rank-form-container"></div>
         <button type="button" class="primary soft" id="retry-btn">재출격</button>

@@ -15,9 +15,9 @@
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/pinball.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=m1" />
+    <link rel="stylesheet" href="style.css?v=m1h" />
       <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="pinball">
     <div class="stage">
@@ -56,14 +56,14 @@
 
       <div class="overlay hidden" id="clear">
         <div class="badge">CLEAR</div>
-        <h1>스테이지 클리어!</h1>
+        <h2 data-h1>스테이지 클리어!</h2>
         <p id="clear-detail"></p>
         <button type="button" class="btn" id="next-btn">다음 스테이지</button>
       </div>
 
       <div class="overlay hidden" id="over">
         <div class="badge soft">GAME OVER</div>
-        <h1>괜찮아요!</h1>
+        <h2 data-h1>괜찮아요!</h2>
         <p id="over-detail"></p>
         <button type="button" class="btn" id="retry-btn">다시 해 볼래요</button>
         <a href="/">← 오늘의 게임</a>
@@ -71,7 +71,7 @@
 
       <div class="overlay hidden" id="allclear">
         <div class="badge">ALL CLEAR</div>
-        <h1>핀볼왕 탄생!</h1>
+        <h2 data-h1>핀볼왕 탄생!</h2>
         <p id="all-detail"></p>
         <button type="button" class="btn" id="again-btn">처음부터</button>
         <a href="/">← 오늘의 게임</a>

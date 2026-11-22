@@ -461,7 +461,7 @@ body {
   background: linear-gradient(90deg, var(--lime), var(--cyan));
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", cursive;
   font-weight: 400;

@@ -137,7 +137,7 @@ canvas { display: block; width: 100%; height: 100%; }
   letter-spacing: 0.16em;
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 0 0 12px;
   color: #fff;
   font: 400 clamp(36px, 10vw, 48px)/0.94 "Bagel Fat One", sans-serif;

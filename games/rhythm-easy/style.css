@@ -340,7 +340,7 @@ canvas {
   box-shadow: 0 0 24px rgba(0, 232, 255, 0.4);
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   position: relative;
   margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;

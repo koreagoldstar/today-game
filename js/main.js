@@ -30,6 +30,33 @@
   /** @type {GameEntry[]} — 새 게임은 배열 맨 앞에 추가하고 added(출시일)를 적음 → 30일 동안 칸 맨 위 */
   const GAMES = [
     {
+      id: "traffic-hell",
+      title: "교통지옥",
+      tag: "교통 전략 시뮬레이션 · 난이도 ★★★★",
+      href: "/games/traffic-hell/",
+      thumb: "/assets/thumbs/sm/traffic-hell.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
+      id: "number-war",
+      title: "숫자전쟁",
+      tag: "숫자 전략 퍼즐 · 콤보 · AI 대결",
+      href: "/games/number-war/",
+      thumb: "/assets/thumbs/sm/number-war.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
+      id: "the-case-file",
+      title: "오늘의 사건파일",
+      tag: "매일 새 사건 · 현장 조사 · 심문 추리",
+      href: "/games/the-case-file/",
+      thumb: "/assets/thumbs/sm/the-case-file.webp?v=1",
+      category: "adult",
+      added: "2026-11-21",
+    },
+    {
       id: "chosung-quiz",
       title: "오늘의 초성퀴즈",
       tag: "매일 10문제 · 이모지 결과 공유",
@@ -319,10 +346,10 @@
     {
       id: "fortune-draw",
       title: "오늘의 운세 뽑기",
-      tag: "운세 · 메뉴 · 행운템",
+      tag: "만세력 사주 운세 · 점심 · 행운템",
       href: "/games/fortune-draw/",
       thumb: "/assets/thumbs/sm/fortune-draw.webp",
-      category: "arcade",
+      category: "adult",
     },
     {
       id: "edu-vowel-zoo",

@@ -242,7 +242,7 @@ canvas {
     linear-gradient(180deg, rgba(255, 220, 236, 0.98), rgba(234, 228, 255, 0.98) 60%, rgba(220, 238, 255, 0.98));
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;
   font-weight: 400;

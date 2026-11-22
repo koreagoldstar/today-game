@@ -1,8 +1,8 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v82`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v82`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v89`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v89`;
 // 방문자 기기에 쌓아 두는 파일 수 상한 (넘으면 오래된 것부터 지움)
 const RUNTIME_MAX = 150;
 // 음악 · 영상은 크고 브라우저가 따로 잘 기억하니 여기 담지 않음
@@ -15,8 +15,8 @@ const APP_SHELL = [
   "/index.html",
   "/offline.html",
   "/manifest.webmanifest",
-  "/css/style.css?v=25",
-  "/css/game-chrome.css?v=5",
+  "/css/style.css?v=26",
+  "/css/game-chrome.css?v=6",
   "/js/today-audio.js?v=2",
   "/js/game-chrome.js?v=6",
   "/js/bgm.js?v=6",
@@ -27,7 +27,7 @@ const APP_SHELL = [
   "/js/edu-speech.js?v=11",
   "/js/game-rank.js?v=2",
   "/js/my-face.js?v=3",
-  "/js/main.js?v=64",
+  "/js/main.js?v=69",
   "/js/record-cards.js?v=1",
   "/js/pwa.js?v=2",
   "/assets/pwa-icon-192.png",

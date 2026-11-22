@@ -375,7 +375,7 @@ canvas {
   height: auto;
 }
 
-.overlay h1 {
+.overlay :is(h1, h2:where([data-h1])) {
   font-family: "Black Han Sans", "Jua", sans-serif;
   font-size: clamp(22px, 6vw, 28px);
   margin: 0 0 8px;
@@ -383,7 +383,7 @@ canvas {
   color: #ffe8cc;
 }
 
-.overlay h1 em {
+.overlay :is(h1, h2:where([data-h1])) em {
   display: block;
   font-style: normal;
   font-size: 0.72em;

@@ -72,7 +72,7 @@
       href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=25" />
+    <link rel="stylesheet" href="css/style.css?v=26" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -90,7 +90,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="hub">
     <div class="sky" aria-hidden="true">
@@ -130,6 +130,7 @@
           <a class="hero-link" href="/rankings/">전체 게임 랭킹</a>
           <a class="hero-link hero-link-fame" href="/fame/">🏆 Hall of Fame</a>
           <button class="hero-link hero-link-face" id="face-open" type="button">🙂 내 얼굴 캐릭터</button>
+          <a class="hero-link hero-link-board" href="/board/">💬 게임 요청함</a>
           <button class="hero-link pwa-install" id="pwa-install" type="button">📲 홈 화면에 추가</button>
         </p>
         <p class="pwa-install-hint" id="pwa-install-hint" role="status" hidden></p>
@@ -223,9 +224,30 @@
               <h3 class="cat-title" id="cat-title-adult">어른이용 게임</h3>
               <p class="cat-desc">출근길 · 점심시간 · 퇴근 후 한 판</p>
             </div>
-            <span class="cat-count">11개</span>
+            <span class="cat-count">15개</span>
           </div>
           <div class="game-grid">
+            <a class="slot has-photo" href="/games/traffic-hell/" aria-label="교통지옥 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/sm/traffic-hell.webp?v=1" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">교통지옥</p>
+                <p class="slot-tag">교통 전략 시뮬레이션 · 난이도 ★★★★</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
+            <a class="slot has-photo" href="/games/number-war/" aria-label="숫자전쟁 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/sm/number-war.webp?v=1" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">숫자전쟁</p>
+                <p class="slot-tag">숫자 전략 퍼즐 · 콤보 · AI 대결</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
+            <a class="slot has-photo" href="/games/the-case-file/" aria-label="오늘의 사건파일 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/sm/the-case-file.webp?v=1" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">오늘의 사건파일</p>
+                <p class="slot-tag">매일 새 사건 · 현장 조사 · 심문 추리</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
             <a class="slot has-photo" href="/games/chosung-quiz/" aria-label="오늘의 초성퀴즈 플레이">
               <div class="slot-art"><img src="/assets/thumbs/sm/chosung-quiz.webp?v=1" alt="" width="220" height="220" loading="lazy" /></div>
               <div class="slot-meta">
@@ -287,6 +309,13 @@
               <div class="slot-meta">
                 <p class="slot-name">오늘의 상식퀴즈</p>
                 <p class="slot-tag">퀴즈 · 매일 5문제</p><span class="slot-play">플레이</span>
+              </div>
+            </a>
+            <a class="slot has-photo" href="/games/fortune-draw/" aria-label="오늘의 운세 뽑기 플레이">
+              <div class="slot-art"><img src="/assets/thumbs/sm/fortune-draw.webp" alt="" width="220" height="220" loading="lazy" /></div>
+              <div class="slot-meta">
+                <p class="slot-name">오늘의 운세 뽑기</p>
+                <p class="slot-tag">만세력 사주 운세 · 점심 · 행운템</p><span class="slot-play">플레이</span>
               </div>
             </a>
             <a class="slot has-photo" href="/games/wordle/" aria-label="오늘의 워들 플레이">
@@ -691,7 +720,7 @@
               <h3 class="cat-title" id="cat-title-arcade">아케이드 · 캐치</h3>
               <p class="cat-desc">짧게 중독되는 캐주얼</p>
             </div>
-            <span class="cat-count">19개</span>
+            <span class="cat-count">18개</span>
           </div>
           <div class="game-grid">
             <a class="slot has-photo" href="/games/claw-master/" aria-label="인형뽑기 마스터 플레이">
@@ -734,13 +763,6 @@
               <div class="slot-meta">
                 <p class="slot-name">10초 정확히 맞추기</p>
                 <p class="slot-tag">정확도 · 기록 챌린지</p><span class="slot-play">플레이</span>
-              </div>
-            </a>
-            <a class="slot has-photo" href="/games/fortune-draw/" aria-label="오늘의 운세 뽑기 플레이">
-              <div class="slot-art"><img src="/assets/thumbs/sm/fortune-draw.webp" alt="" width="220" height="220" loading="lazy" /></div>
-              <div class="slot-meta">
-                <p class="slot-name">오늘의 운세 뽑기</p>
-                <p class="slot-tag">운세 · 메뉴 · 행운템</p><span class="slot-play">플레이</span>
               </div>
             </a>
             <a class="slot has-photo" href="/games/lava-monster/" aria-label="용암괴물을 물리쳐라 (지혁요청) 플레이">
@@ -1020,7 +1042,7 @@
     <script src="js/edu-speech.js?v=11"></script>
     <script src="js/game-rank.js?v=2"></script>
     <script src="js/my-face.js?v=3"></script>
-    <script src="js/main.js?v=64"></script>
+    <script src="js/main.js?v=69"></script>
     <script src="js/record-cards.js?v=1"></script>
     <script src="js/pwa.js?v=2"></script>
 </body>

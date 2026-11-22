@@ -145,7 +145,164 @@
     },
   };
 
+  /* ---------- 사주 운세 풀이: 오늘 일진의 천간이 내 일간에게 어떤 십신인지로 풀이 ---------- */
+  const S = window.Saju;
+  const AREAS = ["총운", "일 · 공부", "재물", "관계 · 연애", "건강"];
+  const READ = {
+    비견: {
+      title: ["내 힘으로 밀고 가는 날", "자신감이 차오르는 날"],
+      total: ["나와 같은 기운이 들어와 마음이 단단해져요. 남에게 기대기보다 내 방식대로 밀고 갈 때 일이 풀려요.", "주관이 뚜렷해지는 하루예요. 고집과 소신 사이, 한 끗만 유연하게 가져가면 좋아요."],
+      area: ["혼자 맡은 일에 집중하면 성과가 커요. 협업에선 내 의견을 한 번만 더 부드럽게.", "친구 · 동료와 어울리며 나가는 돈이 생기기 쉬워요. 더치페이가 마음 편해요.", "비슷한 사람끼리 잘 통해요. 다만 자존심 대결은 피하세요.", "체력이 좋은 날. 가볍게 땀 흘리면 기분까지 상쾌해져요."],
+      tip: "오늘은 '내가 먼저' 시작해 보세요.",
+      stars: [3, 4, 2, 4, 4],
+    },
+    겁재: {
+      title: ["승부욕이 불타는 날", "지갑 단속이 필요한 날"],
+      total: ["경쟁심이 살아나 추진력이 붙어요. 대신 욱하는 마음에 큰 결정을 내리지 않도록 조심하세요.", "남과 비교하는 마음이 올라오기 쉬운 날이에요. 내 속도만 지키면 충분히 잘하고 있어요."],
+      area: ["라이벌이 자극이 돼요. 실력으로 보여 주되 말다툼은 손해예요.", "충동구매 · 내기 · 빌려주는 돈은 오늘 피하세요. 새는 돈을 막는 게 버는 거예요.", "질투나 서운함이 생기기 쉬워요. 솔직하게 한 마디 하면 금방 풀려요.", "과격한 운동보다 스트레칭이 좋아요. 무리하면 다치기 쉬워요."],
+      tip: "결제 버튼 앞에서 10초만 쉬어 가세요.",
+      stars: [3, 3, 2, 3, 3],
+    },
+    식신: {
+      title: ["먹을 복 터지는 날", "여유와 재주가 빛나는 날"],
+      total: ["마음에 여유가 생기고 좋은 기운이 술술 흘러나와요. 맛있는 걸 먹고 좋아하는 일을 하면 운이 더 올라요.", "타고난 재주가 자연스럽게 드러나는 날이에요. 만들고, 쓰고, 요리하는 일이 다 잘 풀려요."],
+      area: ["아이디어와 손재주가 빛나요. 결과물을 보여 주기 좋은 날.", "꾸준히 해 온 일에서 작은 수입이나 보너스가 들어올 수 있어요.", "함께 밥 먹는 자리에서 사이가 가까워져요. 맛집 약속 추천!", "입맛이 도는 날. 과식만 조심하면 컨디션 최고예요."],
+      tip: "오늘 점심은 먹고 싶은 걸로 마음껏!",
+      stars: [5, 4, 4, 4, 4],
+    },
+    상관: {
+      title: ["말솜씨가 반짝이는 날", "아이디어가 톡톡 튀는 날"],
+      total: ["재치와 표현력이 넘쳐 주목받기 쉬운 날이에요. 대신 윗사람 앞에서는 말을 한 번 고르고 하세요.", "틀을 깨는 생각이 잘 떠올라요. 새로운 시도는 좋지만, 규칙은 지키는 선에서."],
+      area: ["기획 · 발표 · 글쓰기에 강한 날. 비판은 부드럽게 바꿔 말하면 점수가 올라요.", "재주로 버는 돈 운이 있어요. 다만 기분 따라 쓰는 돈은 조심.", "농담이 지나치면 오해가 생겨요. 칭찬 한 마디가 더 강해요.", "생각이 많아 쉽게 피곤해질 수 있어요. 잠깐씩 눈을 쉬게 해 주세요."],
+      tip: "보내기 전에 메시지를 한 번만 다시 읽어 보세요.",
+      stars: [3, 4, 3, 2, 3],
+    },
+    편재: {
+      title: ["뜻밖의 기회가 오는 날", "발이 넓어지는 날"],
+      total: ["움직이는 만큼 기회가 생기는 날이에요. 새로운 사람 · 새로운 장소에서 좋은 소식이 들어와요.", "통 크게 움직이고 싶은 하루예요. 기회는 잡되 계산은 한 번 더 해 보세요."],
+      area: ["영업 · 외근 · 사람 만나는 일이 잘 풀려요.", "뜻밖의 수입이나 할인 · 이벤트 운이 있어요. 다만 큰 투자는 한 번 더 따져 보세요.", "활발한 분위기로 인기가 올라가요. 새로운 만남에도 좋은 날.", "바쁘게 움직이다 끼니를 거르기 쉬워요. 물과 간식을 챙기세요."],
+      tip: "평소 안 가던 길로 한 번 가 보세요.",
+      stars: [4, 3, 5, 3, 3],
+    },
+    정재: {
+      title: ["차곡차곡 쌓이는 날", "성실함이 보상받는 날"],
+      total: ["꾸준히 해 온 일이 결실을 맺는 안정적인 하루예요. 계획대로 차근차근 하면 다 잘 풀려요.", "작은 것부터 정리하고 아끼는 마음이 복을 불러요. 무리하지 않아도 되는 날이에요."],
+      area: ["정리 · 마감 · 꼼꼼한 확인이 빛나요. 미뤄 둔 서류를 처리하기 좋아요.", "고정 수입이 든든하고 저축 운이 좋아요. 가계부를 쓰면 더 모여요.", "믿음직한 모습이 호감을 줘요. 약속을 잘 지키면 관계가 단단해져요.", "규칙적인 식사와 잠이 최고의 보약인 날이에요."],
+      tip: "오늘 쓴 돈을 한 줄만 적어 보세요.",
+      stars: [4, 4, 4, 4, 4],
+    },
+    편관: {
+      title: ["버티면 강해지는 날", "책임이 무거운 날"],
+      total: ["해야 할 일과 부담이 한꺼번에 몰릴 수 있어요. 한 번에 하나씩 처리하면 생각보다 금방 끝나요.", "압박이 오는 만큼 실력도 늘어나는 날이에요. 무리하게 다 떠안지 말고 도움을 청하세요."],
+      area: ["급한 일 · 갑작스러운 지시가 생길 수 있어요. 우선순위를 먼저 정하세요.", "갑자기 나가는 돈이 생기기 쉬워요. 꼭 필요한 데만 쓰세요.", "피곤함이 말투에 묻어나기 쉬워요. 가까운 사람에게 더 다정하게.", "긴장으로 어깨 · 목이 뭉치기 쉬워요. 일찍 쉬는 게 이기는 날."],
+      tip: "오늘 할 일 중 하나는 내일로 미뤄도 괜찮아요.",
+      stars: [2, 3, 2, 3, 2],
+    },
+    정관: {
+      title: ["인정받는 날", "반듯하게 풀리는 날"],
+      total: ["노력이 눈에 띄고 인정받기 좋은 날이에요. 원칙대로, 약속대로 하면 술술 풀려요.", "질서 있게 움직이면 운이 따라오는 하루예요. 공적인 일 · 중요한 약속에 좋아요."],
+      area: ["평가 · 면접 · 보고에 강한 날. 단정한 차림이 플러스예요.", "정해진 수입이 안정적이에요. 계약 · 서류는 꼼꼼히 보면 이득이에요.", "진지한 대화가 잘 통해요. 믿음을 주는 말이 마음을 움직여요.", "생활 리듬이 잘 잡히는 날. 규칙적인 운동을 시작하기 좋아요."],
+      tip: "약속 시간 5분 전에 도착해 보세요.",
+      stars: [4, 5, 3, 4, 4],
+    },
+    편인: {
+      title: ["직감이 날카로운 날", "혼자만의 시간이 약인 날"],
+      total: ["직감과 아이디어가 번뜩이는 날이에요. 남들이 못 보는 걸 보지만, 생각이 많아 결정은 늦어질 수 있어요.", "조용히 혼자 집중할 때 운이 열려요. 새로운 공부나 취미를 시작하기 좋아요."],
+      area: ["남다른 해결책이 떠올라요. 메모해 두면 나중에 큰 도움이 돼요.", "돈보다 배움에 쓰는 게 이득인 날. 큰 지출 결정은 미뤄도 좋아요.", "속마음을 잘 안 드러내게 되는 날. 먼저 안부를 물어 보세요.", "잡생각에 잠이 늦어질 수 있어요. 자기 전 휴대폰은 멀리."],
+      tip: "떠오른 생각은 바로 메모!",
+      stars: [3, 3, 2, 3, 3],
+    },
+    정인: {
+      title: ["도움의 손길이 오는 날", "배움과 문서운이 좋은 날"],
+      total: ["주변의 도움과 응원이 따라오는 따뜻한 날이에요. 혼자 끙끙대지 말고 물어보면 금방 풀려요.", "배우고 정리하는 일에 운이 붙어요. 자격증 · 공부 · 계약 같은 문서 일에 좋아요."],
+      area: ["선배나 윗사람의 조언이 큰 힘이 돼요. 배운 걸 바로 써 보세요.", "큰돈보다 든든한 지원이 들어오는 날. 어른의 도움 운이 있어요.", "따뜻하게 챙겨 주는 사람이 곁에 있어요. 고맙다는 말을 전해 보세요.", "몸과 마음이 편안한 날. 푹 쉬면 회복이 빨라요."],
+      tip: "고마운 사람에게 짧은 메시지를 보내 보세요.",
+      stars: [4, 4, 3, 4, 5],
+    },
+  };
+  const RELATION = {
+    hap: { text: "오늘 일진이 내 일지와 합(合)을 이뤄 사람과 기회가 잘 맞물려요.", add: [1, 0, 0, 1, 0] },
+    samhap: { text: "오늘 일진과 내 일지가 삼합(三合)으로 이어져 함께하는 일이 잘 풀려요.", add: [0, 1, 0, 0, 0] },
+    chung: { text: "오늘 일진이 내 일지와 충(沖)해서 변동이 생기기 쉬워요. 이동 · 계약 · 중요한 말은 한 번 더 확인하세요.", add: [-1, 0, 0, 0, -1] },
+    same: { text: "오늘 일진이 내 일지와 같아 익숙한 흐름이에요. 하던 일을 이어가기 좋아요.", add: [0, 0, 0, 0, 0] },
+    none: { text: "", add: [0, 0, 0, 0, 0] },
+  };
+  const DAY_MASTER = [
+    "곧게 자라는 큰 나무 · 곧은 마음과 추진력",
+    "바람에도 꺾이지 않는 풀꽃 · 유연함과 끈기",
+    "세상을 비추는 태양 · 밝음과 열정",
+    "어둠을 밝히는 촛불 · 따뜻함과 섬세함",
+    "듬직한 큰 산 · 믿음직함과 포용력",
+    "곡식을 키우는 너른 밭 · 다정함과 실속",
+    "단단한 바위와 쇠 · 결단력과 의리",
+    "반짝이는 보석 · 섬세함과 자존심",
+    "넓은 바다와 큰 강 · 지혜와 큰 그릇",
+    "땅을 적시는 이슬비 · 총명함과 감수성",
+  ];
+  const LUCK = [
+    { color: "초록", hex: "#3cb371", num: "3 · 8", dir: "동쪽" },
+    { color: "빨강", hex: "#ff5a4f", num: "2 · 7", dir: "남쪽" },
+    { color: "노랑", hex: "#f5b82e", num: "5 · 10", dir: "가운데 (집 · 회사 근처)" },
+    { color: "흰색", hex: "#ffffff", num: "4 · 9", dir: "서쪽" },
+    { color: "남색", hex: "#2c3e8f", num: "1 · 6", dir: "북쪽" },
+  ];
+  /** 오늘 들어온 기운을 부드럽게 풀어 주는 오행 (관성 → 인성, 재성 → 비겁, 식상 → 재성, 비겁 → 식상, 인성 → 관성) */
+  const LUCK_SHIFT = { 비견: 1, 겁재: 1, 식신: 2, 상관: 2, 편재: 0, 정재: 0, 편관: 4, 정관: 4, 편인: 3, 정인: 3 };
+
+  function readToday(profile) {
+    const p = S.pillars(profile);
+    const today = S.todayPillar(todayKey);
+    const dm = p.day.s;
+    const god = S.tenGod(dm, today.s);
+    const rel = S.branchRelation(p.day.b, today.b);
+    const r = READ[god];
+    const pick = mulberry32(seedFromString(`${todayKey}_${personKey()}_saju`));
+    const v = pick() < 0.5 ? 0 : 1;
+    const stars = r.stars.map((n, i) => Math.max(1, Math.min(5, n + RELATION[rel].add[i])));
+    const luck = LUCK[(S.STEM_EL[dm] + LUCK_SHIFT[god]) % 5];
+    return { p, today, dm, god, rel, title: r.title[v], total: r.total[v], area: r.area, tip: r.tip, stars, luck };
+  }
+
+  const starText = (n) => "★".repeat(n) + "☆".repeat(5 - n);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  function pillarChip(label, pl) {
+    if (!pl) return `<div class="pillar empty"><span class="pl-label">${label}</span><b>?</b><span class="pl-ko">모름</span></div>`;
+    const el = S.STEM_EL[pl.s];
+    return `<div class="pillar el${el}"><span class="pl-label">${label}</span><b>${S.STEMS_H[pl.s]}${S.BRANCHES_H[pl.b]}</b><span class="pl-ko">${S.name(pl)}</span></div>`;
+  }
+
+  /* ---------- 상태 · 저장 (생년월일은 이 기기에만) ---------- */
   const todayKey = new Date().toLocaleString("en-CA", { timeZone: "Asia/Seoul" }).slice(0, 10);
+  const PROFILE_KEY = "tg_fortune_profile";
+  const DEVICE_KEY = "tg_fortune_device";
+
+  function readStore(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || "null");
+    } catch (_) {
+      return null;
+    }
+  }
+  function writeStore(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (_) {
+      /* 저장 불가 환경: 이번 화면에서만 */
+    }
+  }
+
+  let profile = readStore(PROFILE_KEY);
+  if (!profile || !(profile.y >= 1900 && profile.m >= 1 && profile.m <= 12 && profile.d >= 1 && profile.d <= 31)) profile = null;
+  let device = readStore(DEVICE_KEY);
+  if (!device) {
+    device = Math.random().toString(36).slice(2, 10);
+    writeStore(DEVICE_KEY, device);
+  }
+  /** 사람마다 다른 결과를 내는 열쇠: 생년월일(+시진), 없으면 기기마다 다른 값 */
+  function personKey() {
+    return profile ? `${profile.y}-${profile.m}-${profile.d}-${profile.h == null ? "x" : profile.h}` : `dev-${device}`;
+  }
 
   function seedFromString(str) {
     let h = 0;
@@ -163,18 +320,11 @@
     };
   }
 
-  function storageKey(cat) {
-    return `tg_fortune_${cat}_${todayKey}`;
-  }
+  const drawnKey = (cat) => `tg_fortune_${cat}_${todayKey}_${seedFromString(personKey())}`;
 
   function nextResetTime() {
     const now = new Date();
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Seoul",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(now);
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
     const hour = Number((parts.find((p) => p.type === "hour") || {}).value);
     const minute = Number((parts.find((p) => p.type === "minute") || {}).value);
     const remain = (23 - hour) * 60 + (60 - minute);
@@ -182,44 +332,127 @@
   }
 
   let currentCat = "fortune";
+  const $ = (id) => document.getElementById(id);
   const els = {
-    title: document.getElementById("page-title"),
-    draw: document.getElementById("draw"),
-    result: document.getElementById("result"),
-    egg: document.getElementById("egg"),
-    hint: document.getElementById("hint"),
-    emoji: document.getElementById("r-emoji"),
-    rTitle: document.getElementById("r-title"),
-    rDesc: document.getElementById("r-desc"),
-    timer: document.getElementById("timer"),
-    share: document.getElementById("share-btn"),
-    next: document.getElementById("next-btn"),
+    title: $("page-title"),
+    lead: $("lead"),
+    birth: $("birth"),
+    draw: $("draw"),
+    result: $("result"),
+    egg: $("egg"),
+    hint: $("hint"),
+    emoji: $("r-emoji"),
+    rTitle: $("r-title"),
+    rDesc: $("r-desc"),
+    saju: $("r-saju"),
+    timer: $("timer"),
+    share: $("share-btn"),
+    next: $("next-btn"),
+    edit: $("edit-birth"),
     tabs: [...document.querySelectorAll(".tab")],
   };
 
-  function renderResult(catKey, item) {
+  /* ---------- 생년월일 입력 ---------- */
+  function fillSelect(sel, from, to, unit, selected) {
+    sel.innerHTML = "";
+    for (let v = from; v <= to; v += 1) {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = `${v}${unit}`;
+      if (v === selected) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+  function fillDays() {
+    const y = Number($("b-year").value);
+    const m = Number($("b-month").value);
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const cur = Number($("b-day").value) || (profile ? profile.d : 1);
+    fillSelect($("b-day"), 1, last, "일", Math.min(cur, last));
+  }
+  function setupForm() {
+    const thisYear = Number(todayKey.slice(0, 4));
+    fillSelect($("b-year"), 1930, thisYear, "년", profile ? profile.y : 1990);
+    fillSelect($("b-month"), 1, 12, "월", profile ? profile.m : 1);
+    fillDays();
+    const hour = $("b-hour");
+    hour.innerHTML = `<option value="">태어난 시각 모름</option>${S.BRANCHES.map((b, i) => `<option value="${i}">${b}시 (${S.HOURS[i]})</option>`).join("")}`;
+    hour.value = profile && profile.h != null ? String(profile.h) : "";
+    $("b-year").addEventListener("change", fillDays);
+    $("b-month").addEventListener("change", fillDays);
+    els.birth.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const h = $("b-hour").value;
+      profile = { y: Number($("b-year").value), m: Number($("b-month").value), d: Number($("b-day").value), h: h === "" ? null : Number(h) };
+      writeStore(PROFILE_KEY, profile);
+      switchTab("fortune");
+    });
+  }
+
+  /* ---------- 화면 ---------- */
+  function renderResult(catKey) {
     const cat = CATS[catKey];
+    els.birth.hidden = true;
+    els.draw.classList.add("hide");
+    els.result.classList.add("show");
+    els.result.classList.toggle("detail", catKey === "fortune");
+    els.edit.hidden = catKey !== "fortune";
+    els.timer.textContent = `이 항목은 ${nextResetTime()} 후에 다시 열려요`;
+    if (catKey === "fortune") {
+      const f = readToday(profile);
+      els.emoji.textContent = f.stars[0] >= 5 ? "🌟" : f.stars[0] >= 4 ? "😊" : f.stars[0] >= 3 ? "🙂" : "💪";
+      els.rTitle.textContent = f.title;
+      els.rDesc.textContent = [f.total, RELATION[f.rel].text].filter(Boolean).join(" ");
+      const [y, m, d] = todayKey.split("-").map(Number);
+      els.saju.hidden = false;
+      els.saju.innerHTML = `
+        <p class="today-line">${y}년 ${m}월 ${d}일 · <b>${S.name(f.today)}(${S.hanja(f.today)})일</b> · 나에게는 <b>${f.god}</b>의 날</p>
+        <div class="pillars">${pillarChip("시주", f.p.hour)}${pillarChip("일주", f.p.day)}${pillarChip("월주", f.p.month)}${pillarChip("연주", f.p.year)}</div>
+        <p class="dm-line">내 일간 <b>${S.STEMS[f.dm]}${S.EL[S.STEM_EL[f.dm]]}(${S.STEMS_H[f.dm]}${S.EL_H[S.STEM_EL[f.dm]]})</b> — ${DAY_MASTER[f.dm]} · ${S.ANIMALS[f.p.year.b]}띠</p>
+        <ul class="areas">
+          <li><span>총운</span><i>${starText(f.stars[0])}</i></li>
+          ${f.area.map((t, i) => `<li><span>${AREAS[i + 1]}</span><i>${starText(f.stars[i + 1])}</i><p>${esc(t)}</p></li>`).join("")}
+        </ul>
+        <div class="lucky">
+          <div><span>행운의 색</span><b><i class="swatch" style="background:${f.luck.hex}"></i>${f.luck.color}</b></div>
+          <div><span>행운의 숫자</span><b>${f.luck.num}</b></div>
+          <div><span>행운의 방향</span><b>${f.luck.dir}</b></div>
+        </div>
+        <p class="tip">💡 ${esc(f.tip)}</p>
+        <p class="privacy">생년월일은 이 기기에만 저장되고 어디에도 보내지 않아요</p>`;
+      return;
+    }
+    els.saju.hidden = true;
+    els.saju.innerHTML = "";
+    const rand = mulberry32(seedFromString(`${todayKey}_${catKey}_${personKey()}`));
+    const item = cat.pool[Math.floor(rand() * cat.pool.length)];
     els.emoji.textContent = cat.emoji;
     els.rTitle.textContent = item.t;
     els.rDesc.textContent = item.d;
-    els.draw.classList.add("hide");
-    els.result.classList.add("show");
-    els.timer.textContent = `이 항목은 ${nextResetTime()} 후에 다시 열려요`;
   }
 
   function renderDraw(catKey) {
+    els.birth.hidden = true;
     els.result.classList.remove("show");
     els.draw.classList.remove("hide");
     els.timer.textContent = "";
     els.hint.textContent = CATS[catKey].hint;
   }
 
+  function renderBirth() {
+    els.result.classList.remove("show");
+    els.draw.classList.add("hide");
+    els.birth.hidden = false;
+    els.timer.textContent = "";
+  }
+
   function switchTab(catKey) {
     currentCat = catKey;
     els.tabs.forEach((t) => t.classList.toggle("active", t.dataset.cat === catKey));
     els.title.textContent = CATS[catKey].title;
-    const saved = localStorage.getItem(storageKey(catKey));
-    if (saved) renderResult(catKey, JSON.parse(saved));
+    els.lead.textContent = catKey === "fortune" ? "생년월일로 만세력을 짚어 보는 나만의 오늘 운세" : "알을 톡 누르면 삐약이가 알려줘요";
+    if (catKey === "fortune" && !profile) renderBirth();
+    else if (localStorage.getItem(drawnKey(catKey))) renderResult(catKey);
     else renderDraw(catKey);
   }
 
@@ -228,21 +461,26 @@
     els.egg.classList.add("shaking");
     window.setTimeout(() => {
       els.egg.classList.remove("shaking");
-      const cat = CATS[currentCat];
-      const rand = mulberry32(seedFromString(`${todayKey}_${currentCat}`));
-      const item = cat.pool[Math.floor(rand() * cat.pool.length)];
-      localStorage.setItem(storageKey(currentCat), JSON.stringify(item));
-      renderResult(currentCat, item);
+      try {
+        localStorage.setItem(drawnKey(currentCat), "1");
+      } catch (_) {
+        /* 저장 불가 */
+      }
+      renderResult(currentCat);
     }, 500);
   });
 
   els.tabs.forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.cat)));
-
   els.next.addEventListener("click", () => {
     const keys = Object.keys(CATS);
     switchTab(keys[(keys.indexOf(currentCat) + 1) % keys.length]);
   });
+  els.edit.addEventListener("click", () => {
+    setupForm();
+    renderBirth();
+  });
 
+  // 공유: 생년월일 · 사주는 넣지 않음 (결과 문구만)
   els.share.addEventListener("click", async () => {
     if (!window.TodayScores || !TodayScores.shareToKakao) return;
     const title = els.rTitle.textContent || "오늘의 운세";
@@ -266,7 +504,7 @@
       score: 0,
       scoreLabel: title,
       canvas,
-      buttonTitle: "나도 뽑아보기",
+      buttonTitle: "내 운세 보기",
     });
     const prev = els.share.textContent;
     els.share.textContent = result.ok ? "공유 창 열림" : "공유 실패";
@@ -275,5 +513,6 @@
     }, 1600);
   });
 
+  setupForm();
   switchTab("fortune");
 })();

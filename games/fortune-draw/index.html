@@ -4,22 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#ffd4e4" />
-    <title>오늘의 운세 뽑기 — 운세 · 메뉴 · 행운템 | 오늘의 게임</title>
-    <meta name="description" content="알을 톡 눌러 오늘의 운세, 점심 메뉴, 행운 아이템을 뽑는 귀여운 하루 한 번 놀이입니다." />
+    <title>오늘의 운세 뽑기 — 만세력 사주 운세 · 점심 · 행운템 | 오늘의 게임</title>
+    <meta name="description" content="생년월일을 넣으면 만세력으로 내 사주(연 · 월 · 일 · 시주)를 계산하고, 오늘의 일진과 맞춰 나만의 오늘 운세를 알려 주는 운세 놀이입니다." />
+    <meta property="og:description" content="생년월일을 넣으면 만세력으로 내 사주(연 · 월 · 일 · 시주)를 계산하고, 오늘의 일진과 맞춰 나만의 오늘 운세를 알려 주는 운세 놀이입니다." />
     <link rel="canonical" href="https://www.todaygame.co.kr/games/fortune-draw/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="오늘의 게임" />
     <meta property="og:title" content="오늘의 운세 뽑기 | 오늘의 게임" />
-    <meta property="og:description" content="알을 톡 눌러 오늘의 운세, 점심 메뉴, 행운 아이템을 뽑는 귀여운 하루 한 번 놀이입니다." />
     <meta property="og:url" content="https://www.todaygame.co.kr/games/fortune-draw/" />
     <meta property="og:image" content="https://www.todaygame.co.kr/assets/thumbs/fortune-draw.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=5" />
     <link rel="stylesheet" href="/css/game-seo.css?v=3" />
-    <link rel="stylesheet" href="/css/game-chrome.css?v=5" />
+    <link rel="stylesheet" href="/css/game-chrome.css?v=6" />
   </head>
   <body data-bgm="fortune-draw">
     <div class="stage">
@@ -29,12 +29,24 @@
       </header>
       <main class="play">
         <h1 id="page-title">오늘의 운세</h1>
-        <p class="lead">알을 톡 누르면 삐약이가 알려줘요</p>
+        <p class="lead" id="lead">알을 톡 누르면 삐약이가 알려줘요</p>
         <div class="tabs">
           <button type="button" class="tab active" data-cat="fortune">운세</button>
           <button type="button" class="tab" data-cat="lunch">점심</button>
           <button type="button" class="tab" data-cat="item">행운템</button>
         </div>
+
+        <form class="birth" id="birth" hidden>
+          <p class="birth-lead">생년월일을 넣으면 <b>만세력</b>으로 내 사주를 짚어<br />나만의 오늘 운세를 알려 줘요</p>
+          <div class="birth-row">
+            <select id="b-year" aria-label="태어난 해"></select>
+            <select id="b-month" aria-label="태어난 달"></select>
+            <select id="b-day" aria-label="태어난 날"></select>
+          </div>
+          <select id="b-hour" class="birth-hour" aria-label="태어난 시각"></select>
+          <p class="birth-note">양력 생일로 넣어 주세요 (음력 생일은 양력으로 바꿔서)<br />생년월일은 이 기기에만 저장되고 어디에도 보내지 않아요</p>
+          <button type="submit" class="btn">🔮 내 운세 보기</button>
+        </form>
 
         <div class="draw" id="draw">
           <button type="button" class="egg" id="egg" aria-label="알 깨기">
@@ -58,10 +70,12 @@
           <p class="emoji" id="r-emoji">🌟</p>
           <h2 class="title" id="r-title"></h2>
           <p class="desc" id="r-desc"></p>
+          <div class="saju" id="r-saju" hidden></div>
           <div class="row">
             <button type="button" class="btn kakao" id="share-btn">카카오톡 공유</button>
             <button type="button" class="btn soft" id="next-btn">다른 항목</button>
           </div>
+          <button type="button" class="link-btn" id="edit-birth" hidden>생년월일 바꾸기</button>
           <a class="link" href="/">← 오늘의 게임</a>
         </div>
         <p class="timer" id="timer"></p>
@@ -74,17 +88,22 @@
     <script src="/js/scores.js?v=7"></script>
     <script src="/js/retention.js"></script>
     <script src="/js/pause.js?v=3"></script>
-    <script src="game.js?v=2"></script>
+    <script src="saju.js?v=1"></script>
+    <script src="game.js?v=3"></script>
     <!-- seo:game:start -->
 <section class="seo-about" aria-label="오늘의 운세 뽑기 소개">
   <h2>오늘의 운세 뽑기 소개</h2>
-  <p>알을 톡 눌러 오늘의 운세, 점심 메뉴, 행운 아이템을 뽑는 귀여운 하루 한 번 놀이입니다.</p>
+  <p>생년월일을 넣으면 만세력으로 내 사주(연 · 월 · 일 · 시주)를 계산하고, 오늘의 일진과 맞춰 나만의 오늘 운세를 알려 주는 운세 놀이입니다. 총운과 일 · 재물 · 관계 · 건강 별점, 행운의 색 · 숫자 · 방향을 보여 주고, 점심 메뉴와 행운 아이템도 사람마다 다르게 뽑아 줘요.</p>
   <h3>플레이 방법</h3>
-  <p>세 탭 중 하나를 고른 뒤 알을 누르세요. 항목마다 하루에 한 번씩 결과가 정해집니다.</p>
+  <p>양력 생년월일과 태어난 시각(모르면 비워 두기)을 넣고 알을 누르세요. 내 일간이 오늘 일진과 어떤 관계(십신)인지, 일지와 합 · 충이 있는지로 풀이해요. 운세 · 점심 · 행운템은 하루에 한 번씩 정해져요.</p>
   <h3>자주 묻는 질문</h3>
   <dl>
+    <dt>음력 생일도 되나요?</dt>
+    <dd>지금은 양력 생일만 받아요. 음력 생일은 양력으로 바꿔서 넣어 주세요.</dd>
+    <dt>생년월일이 어딘가에 저장되나요?</dt>
+    <dd>이 기기(브라우저)에만 저장되고 서버나 공유 카드로는 보내지 않아요. '생년월일 바꾸기'로 언제든 바꿀 수 있어요.</dd>
     <dt>다시 뽑을 수 있나요?</dt>
-    <dd>같은 항목은 다음 날까지 기다려야 합니다. 다른 탭은 아직 안 뽑았다면 바로 할 수 있습니다.</dd>
+    <dd>같은 날 같은 사람의 결과는 한 번 정해지면 그대로예요. 0시가 지나면 새 운세가 열려요.</dd>
   </dl>
 </section>
 <!-- seo:game:end -->

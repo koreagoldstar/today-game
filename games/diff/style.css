@@ -279,7 +279,7 @@ body {
   border: 5px solid #fff;
   box-shadow: 0 8px 0 var(--frame2), 0 14px 30px rgba(0, 0, 0, 0.35);
 }
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", sans-serif;
   font-weight: 400;

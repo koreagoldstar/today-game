@@ -3,7 +3,7 @@
 
   if (window.TodayChrome) return;
 
-  const STYLE_HREF = "/css/game-chrome.css?v=5";
+  const STYLE_HREF = "/css/game-chrome.css?v=6";
   const FONT_HREF = "https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap";
   const HOME_LABEL = "홈으로 가기 (오늘의 게임)";
   /** 아이들도 바로 알아보는 집 모양 홈 버튼 (분홍 지붕 · 굴뚝 · '홈' 글자) */

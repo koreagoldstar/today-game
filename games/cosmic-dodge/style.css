@@ -243,7 +243,7 @@ canvas#game {
   color: #3d2a00;
 }
 
-h1 {
+:is(h1, h2:where([data-h1])) {
   margin: 0 0 6px;
   font-family: "Bagel Fat One", "Jua", cursive;
   font-size: 36px;
@@ -251,7 +251,7 @@ h1 {
   text-shadow: 0 4px 16px rgba(0, 240, 255, 0.5);
 }
 
-h1 em {
+:is(h1, h2:where([data-h1])) em {
   font-style: normal;
   color: #00f0ff;
 }
