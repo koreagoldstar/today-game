@@ -30,7 +30,7 @@ test("GitHub Actions: PC 에서 녹화하는 게임(지금은 5개 모두)은 �
   ranked = await scoreGames(c, { now: NOW, runner: "actions" });
   assert.ok(ranked.find((g) => g.id === "lava-surfers").score > 0);
   ranked = await scoreGames(c, { now: NOW, runner: "pc" });
-  assert.equal(ranked.filter((g) => g.score >= 0).length, 5, "PC 에서는 모두 후보");
+  assert.equal(ranked.filter((g) => g.score >= 0).length, ranked.length, "PC 에서는 모두 후보");
 });
 
 test("최근 14일 안에 홍보한 게임은 뒤로 · 직전 게임은 제외 · 오래된 게임이 먼저", async () => {

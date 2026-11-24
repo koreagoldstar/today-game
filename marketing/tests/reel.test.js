@@ -13,11 +13,11 @@ const ROOT = path.resolve(__dirname, "../..");
 const PROFILES = path.join(ROOT, "marketing", "profiles");
 const profiles = fs.readdirSync(PROFILES).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(fs.readFileSync(path.join(PROFILES, f), "utf8")));
 
-test("녹화 프로필: 대상 5개 · 필수 값 · 실제 게임 폴더 · 원본 40~60초", () => {
-  assert.deepEqual(profiles.map((p) => p.id).sort(), ["claw-master", "dragon-statue", "lava-surfers", "reaction", "sky-island"]);
+test("녹화 프로필: 대상 6개 · 필수 값 · 실제 게임 폴더 · 원본 40~60초", () => {
+  assert.deepEqual(profiles.map((p) => p.id).sort(), ["claw-master", "dragon-statue", "lava-surfers", "reaction", "sky-island", "typing-rain"]);
   for (const p of profiles) {
     assert.ok(fs.existsSync(path.join(ROOT, "games", p.id, "index.html")), `${p.id} 게임 폴더`);
-    assert.equal(p.path, `/games/${p.id}/`);
+    assert.match(p.path, new RegExp(`^/games/${p.id}/(\\?test=1)?$`), `${p.id} 주소 (읽기 전용 점검 표시만 허용)`);
     assert.ok(p.rawSec >= 40 && p.rawSec <= 60, `${p.id} rawSec`);
     assert.ok(["pc", "actions"].includes(p.runner), `${p.id} runner`);
     if (p.needsGpu) assert.equal(p.runner, "pc", `${p.id}: GPU 가 필요한 게임은 PC 에서`);
