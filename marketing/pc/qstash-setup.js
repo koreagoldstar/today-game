@@ -17,7 +17,7 @@ const { loadEnvFile } = require("../core/env");
 const ENV_FILE = path.join(__dirname, "..", ".env.local");
 const REPO = "koreagoldstar/today-game";
 const JOBS = [
-  { id: "todaygame-mkt-publish", workflow: "mkt-publish.yml", cron: "13,43 * * * *", what: "게시 · 텔레그램 답 처리 (30분마다)" },
+  { id: "todaygame-mkt-publish", workflow: "mkt-publish.yml", cron: "3,13,23,33,43,53 * * * *", what: "게시 · 텔레그램 답 처리 (10분마다 — 2026-11-26 관리자: 승인이 늦게 반영돼 답답함)" },
   { id: "todaygame-mkt-produce", workflow: "mkt-produce.yml", cron: "7 23 * * *", what: "제작 (매일 08:07 서울 = 23:07 UTC)" },
 ];
 
