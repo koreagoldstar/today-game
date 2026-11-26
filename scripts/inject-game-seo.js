@@ -104,6 +104,17 @@ function attr(s) {
 /** 소개 글에서 검색 설명 (150자 안쪽, 문장 단위로 자름) */
 function describe(game) {
   const text = String(game.intro || "").replace(/\s+/g, " ").trim();
+  if (text.length < 70) {
+    // 소개가 짧으면 플레이 방법 문장을 150자 안에서 이어 붙인다 (게임마다 다른 실제 내용)
+    const sent = (t) => String(t || "").replace(/\s+/g, " ").trim().match(/.+?[.!?](?=\s|$)/g) || [];
+    let out = text;
+    for (const s2 of sent(game.how)) {
+      const n = `${out} ${s2.trim()}`.trim();
+      if (n.length > 150) break;
+      out = n;
+    }
+    return out;
+  }
   if (text.length <= 150) return text;
   const cut = text.slice(0, 150);
   const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("요. "), cut.lastIndexOf("다. "));

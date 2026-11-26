@@ -267,6 +267,7 @@ body.bk .today-mute-btn {
   box-shadow: 0 4px 0 #5a3fd4;
 }
 
+.overlay h1,
 .overlay h2 {
   margin: 0;
   font-family: "Bagel Fat One", "Jua", cursive;
@@ -494,6 +495,7 @@ body.bk .today-mute-btn {
     width: 96px;
     height: 96px;
   }
+  .overlay h1,
   .overlay h2 {
     font-size: 26px;
   }
