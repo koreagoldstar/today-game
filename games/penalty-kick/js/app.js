@@ -9,8 +9,8 @@ import { THREE, clamp, lerp, std } from "../../oneshot-elite/js/kit.js";
 import { Engine, ATMOS } from "../../oneshot-elite/js/engine.js";
 import { Sfx } from "../../oneshot-elite/js/sfx.js";
 import { Particles, Trail, ArcDots } from "../../minigolf/js/props.js";
-import { buildStadium, buildGoal, Net, ballTexture, GOAL, SPOT, BALL_R } from "./scene.js";
-import { makePlayer, setPose, blendPose, runPose, aimArm, makeColliders, updateColliders, POSE, KITS } from "./people.js?v=2";
+import { buildStadium, buildGoal, Net, ballTexture, GOAL, SPOT, BALL_R } from "./scene.js?v=3";
+import { makePlayer, setPose, blendPose, runPose, aimArm, makeColliders, updateColliders, POSE, KITS } from "./people.js?v=3";
 
 const $ = (id) => document.getElementById(id);
 const G = 9.8;
@@ -41,13 +41,17 @@ const CUPS = ["동네 리그", "전국 대회", "세계 챔피언스컵"];
 const STAGE_NAME = ["8강", "4강", "결승"];
 const OUR_NUMBERS = [10, 7, 9, 11, 19, 14, 8];
 
+const SLOW_KEY = "penalty-hero-slow";
 function pickQuality() {
   const q = new URLSearchParams(location.search).get("q");
   if (q === "high" || q === "mid" || q === "low") return q;
-  const coarse = matchMedia("(pointer: coarse)").matches;
+  try {
+    if (localStorage.getItem(SLOW_KEY) === "1") return "low";
+  } catch (_) {}
+  // 휴대폰 · 패드는 늘 가벼운 화질 (그림자 · 후처리 없음 · 해상도 1배)
+  if (matchMedia("(pointer: coarse)").matches) return "low";
   const mem = navigator.deviceMemory || 8;
   const cores = navigator.hardwareConcurrency || 8;
-  if (coarse) return cores >= 6 && mem >= 4 ? "mid" : "low";
   return mem >= 6 && cores >= 6 ? "high" : "mid";
 }
 
@@ -1492,6 +1496,11 @@ class Game {
           E.scale = (E.scale || 1) * 0.82;
           E.resize();
           this.slowSec = 0;
+        } else if (this.slowSec >= 4 && this.quality !== "low") {
+          // 해상도를 끝까지 낮춰도 느리면 다음부터는 가벼운 화질로 시작
+          try {
+            localStorage.setItem(SLOW_KEY, "1");
+          } catch (_) {}
         }
       } else this.slowSec = 0;
       this.fpsAcc = 0;

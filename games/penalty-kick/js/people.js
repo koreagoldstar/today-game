@@ -792,12 +792,15 @@ export function makePlayer(kit, look = {}) {
     /** 내 얼굴을 켰으면 우리 팀 선수 머리에 얼굴 카드 */
     setFace(on) {
       faceCard.visible = false;
+      const showHead = (v) => j.head.children.forEach((c) => c !== faceCard && c.isMesh && (c.visible = v));
+      showHead(true);
       if (!on || !window.TodayFace || !window.TodayFace.ready || !window.TodayFace.ready()) return;
       const g = fc.getContext("2d");
       g.clearRect(0, 0, 128, 128);
       if (window.TodayFace.drawHead(g, 64, 64, 54, { ring: 6, ringColor: "#fff" })) {
         fTex.needsUpdate = true;
         faceCard.visible = true;
+        showHead(false); // 사진 얼굴과 캐릭터 얼굴이 겹치지 않게 머리는 사진 카드만
       }
     },
   };

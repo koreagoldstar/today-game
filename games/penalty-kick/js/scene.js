@@ -96,8 +96,10 @@ export function buildStadium(scene, quality) {
   const uT = { value: 0 };
   const uJump = { value: 0.05 };
 
+  const low = quality === "low";
+  const lit = (o) => (low ? new THREE.MeshLambertMaterial({ color: o.color }) : std(o));
   // 잔디: 깎은 줄무늬 + 결
-  const pitchMat = std({ color: 0xffffff, roughness: 0.92 });
+  const pitchMat = lit({ color: 0xffffff, roughness: 0.92 });
   pitchMat.onBeforeCompile = (sh) => {
     sh.uniforms.detailMap = { value: noiseTex() };
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWPos;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;");
@@ -154,12 +156,12 @@ diffuseColor.rgb = mix(grassA, grassB, stripe) * (0.66 + 0.46 * dA + 0.26 * dB);
   const r = rng(77);
   const bodyGeo = new THREE.BoxGeometry(0.4, 0.58, 0.28);
   bodyGeo.translate(0, 0.31, 0);
-  const headGeo = new THREE.IcosahedronGeometry(0.135, 1);
+  const headGeo = new THREE.IcosahedronGeometry(0.135, quality === "high" ? 1 : 0);
   headGeo.translate(0, 0.72, 0);
   const seatMat = std({ color: 0x1a2340, roughness: 0.9 });
   const steps = new Batch();
   const people = [];
-  const density = quality === "high" ? 1 : quality === "mid" ? 0.6 : 0.3;
+  const density = quality === "high" ? 1 : quality === "mid" ? 0.6 : 0.2;
   const addStand = (cx, cz, rotY, width, rows, baseH) => {
     const c = Math.cos(rotY);
     const s = Math.sin(rotY);
@@ -188,8 +190,8 @@ diffuseColor.rgb = mix(grassA, grassB, stripe) * (0.66 + 0.46 * dA + 0.26 * dB);
   addStand(0, 62, Math.PI, 110, 16, 1.6);
   steps.build(root, { cast: false, receive: false });
 
-  const bodies = new THREE.InstancedMesh(bodyGeo, std({ roughness: 0.85 }), people.length);
-  const headsM = new THREE.InstancedMesh(headGeo, std({ roughness: 0.8 }), people.length);
+  const bodies = new THREE.InstancedMesh(bodyGeo, lit({ roughness: 0.85 }), people.length);
+  const headsM = new THREE.InstancedMesh(headGeo, lit({ roughness: 0.8 }), people.length);
   const col = new THREE.Color();
   const dummy = new THREE.Object3D();
   people.forEach((p, i) => {
@@ -288,6 +290,15 @@ diffuseColor.rgb = mix(grassA, grassB, stripe) * (0.66 + 0.46 * dA + 0.26 * dB);
   const flashes = new THREE.Points(fg, new THREE.PointsMaterial({ size: 0.9, vertexColors: true, transparent: true, depthWrite: false, sizeAttenuation: true, fog: false, blending: THREE.AdditiveBlending }));
   flashes.frustumCulled = false;
   root.add(flashes);
+
+  // 저사양: 화면을 넓게 덮는 관중석 · 지붕 · 조명탑은 계산이 싼 재질로 (잔디 · 선수는 그대로)
+  if (quality === "low") {
+    root.traverse((o) => {
+      const m = o.material;
+      if (!o.isMesh || !m || !m.isMeshStandardMaterial || m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return;
+      o.material = new THREE.MeshLambertMaterial({ color: m.color, map: m.map, vertexColors: m.vertexColors, emissive: m.emissive, emissiveMap: m.emissiveMap, side: m.side, transparent: m.transparent, opacity: m.opacity });
+    });
+  }
 
   let cheer = 0.08;
   let cheerTarget = 0.08;
