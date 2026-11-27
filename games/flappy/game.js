@@ -90,14 +90,16 @@
   }
 
   function difficulty() {
-    // 점수가 오를수록 더 가혹하게 (틈은 플레이 가능하게 유지)
-    const t = Math.min(1, score / 40);
+    // 점수가 오를수록 조금씩 어려워지되 30점쯤에서 멈춘다 (예전엔 끝없이 빨라지고 무거워져 진도가 막혔음)
+    const s = Math.min(score, 30);
+    const gravity = 1680 + s * 6;
+    const speed = 168 + s * 3.6;
     return {
-      speed: 168 + score * 5.2 + t * 40,
-      gap: Math.max(128, 178 - score * 1.1),
-      gravity: 1680 + score * 18,
-      flap: -390 - Math.min(40, score * 0.8),
-      spawnEvery: Math.max(1.05, 1.55 - score * 0.012),
+      speed,
+      gap: Math.max(146, 182 - s * 1.2),
+      gravity,
+      flap: -Math.sqrt(2 * gravity * 46), // 한 번 날갯짓으로 오르는 높이는 늘 46px
+      spawnEvery: Math.max(1.25, 265 / speed), // 기둥 사이 가로 간격 약 265px 이상
       pipeW: 64,
     };
   }
@@ -145,7 +147,10 @@
     const d = difficulty();
     const margin = 70;
     const gap = d.gap;
-    const topH = margin + Math.random() * (H - GROUND - margin * 2 - gap);
+    let topH = margin + Math.random() * (H - GROUND - margin * 2 - gap);
+    // 바로 앞 기둥과 틈 높이 차이를 줄여 날갯짓으로 늘 닿을 수 있게
+    const prev = pipes.length ? pipes[pipes.length - 1] : null;
+    if (prev) topH = Math.max(prev.top - 150, Math.min(prev.top + 170, topH));
     pipes.push({
       x: W + 20,
       w: d.pipeW,
