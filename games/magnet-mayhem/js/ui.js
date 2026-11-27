@@ -1,11 +1,11 @@
 /*
  * 자석 대소동 · 화면 (HTML 버튼 · 창 · 위쪽 정보 · 화면 버튼 · 안내)
  */
-import { STAGES } from "./levels.js?v=1";
+import { STAGES } from "./levels.js?v=2";
 import { specialText, MAT, starsOf, cond } from "./sim.js?v=1";
 import { SKINS, drawObject, drawRobot } from "./render.js?v=1";
 import { seoulDate } from "./save.js?v=1";
-import { dailyFor } from "./game.js?v=1";
+import { dailyFor } from "./game.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const sec = (t) => `${t.toFixed(1)}초`;

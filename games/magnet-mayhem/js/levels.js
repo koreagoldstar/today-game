@@ -237,10 +237,9 @@ export const STAGES = [
   },
   {
     id: 10,
-    name: "에너지 위기",
-    goal: "에너지를 아껴 철 공 두 개를 칸에 · 몸으로 밀 수 있는 건 밀어요",
+    name: "두 칸의 철 공",
+    goal: "철 공 두 개를 칸에 · 몸으로 밀 수 있는 건 밀어요",
     start: { x: 110, y: 479 },
-    energy: { max: 100, drain: 26, regen: 0 },
     walls: [
       FLOOR,
       [600, 440, 360, 60], // 오른쪽 단
@@ -256,11 +255,10 @@ export const STAGES = [
     ],
     exit: { x: 880, y: 360, w: 62, h: 80, open: ["g1", "g2"] },
     gear: { x: 690, y: 330 },
-    stars: { time: 35, special: { type: "energy", n: 35 } },
+    stars: { time: 35, special: { type: "gear" } },
     tips: [
-      { id: "energy", when: "start", text: "⚡ 에너지는 다시 차지 않아요! 자석은 꼭 필요할 때만" },
+      { id: "high", when: "start", text: "높은 선반의 공은 자석으로 끌어 내려요" },
       { id: "push", when: "moved", text: "철 공은 몸으로 밀어서 굴릴 수도 있어요" },
-      { id: "low", when: "energy<35", text: "에너지가 얼마 안 남았어요!" },
     ],
   },
   {
@@ -438,10 +436,9 @@ export const DAILY = [
   {
     id: "d6",
     daily: true,
-    name: "에너지 두 공",
-    goal: "에너지를 아껴 철 공 두 개를 칸에 넣어요",
+    name: "두 공 배달",
+    goal: "철 공 두 개를 각자 칸에 넣어요",
     start: { x: 80, y: 479 },
-    energy: { max: 100, drain: 30, regen: 0 },
     walls: [FLOOR],
     objects: [
       { id: "ballA", mat: "iron", shape: "ball", x: 260, y: 485 },
@@ -453,8 +450,8 @@ export const DAILY = [
     ],
     exit: { x: 880, y: 420, w: 62, h: 80, open: ["gA", "gB"] },
     gear: { x: 560, y: 370 },
-    stars: { time: 22, special: { type: "energy", n: 40 } },
-    tips: [{ id: "energy", when: "start", text: "자석을 켜 둔 동안 에너지가 줄어요 · 다 옮기면 바로 꺼요" }],
+    stars: { time: 22, special: { type: "gear" } },
+    tips: [{ id: "two", when: "start", text: "공을 붙인 채 걸어가 칸 위에서 자석을 꺼요" }],
   },
   {
     id: "d7",

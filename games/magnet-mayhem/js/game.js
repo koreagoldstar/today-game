@@ -4,7 +4,7 @@
  */
 import { DT } from "./physics.js?v=1";
 import { createGame, stepGame, starsOf, MAG } from "./sim.js?v=1";
-import { STAGES, DAILY } from "./levels.js?v=1";
+import { STAGES, DAILY } from "./levels.js?v=2";
 import { drawBackdrop, drawWalls, drawObject, drawDevices, drawMagnetField, drawRobot, drawFx, SKINS, C } from "./render.js?v=1";
 import { Input } from "./input.js?v=1";
 import { MagAudio } from "./audio.js?v=1";

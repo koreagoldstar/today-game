@@ -2,7 +2,7 @@
 const fallback = () => {
   document.getElementById("fallback").hidden = false;
 };
-import("./js/game.js?v=1")
+import("./js/game.js?v=2")
   .then(({ Game }) => {
     try {
       window.MagnetMayhem = new Game({ canvas: document.getElementById("game"), field: document.getElementById("field") });

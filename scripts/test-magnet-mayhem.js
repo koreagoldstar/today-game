@@ -225,7 +225,7 @@ async function openStageByUI(p, id) {
       best: document.getElementById("title-best").textContent,
       home: !!document.querySelector(".today-brand, .today-home-btn"),
     }));
-    check("M2", "불러오기 → 첫 화면 (플레이 · 스테이지 선택 · 오늘의 자석 실험 · 마그 꾸미기 · 도움말 · 설정 · 기록 줄 · 홈 버튼) · 게임 칸은 숨김", t.buttons.join("|") === "플레이|스테이지 선택|오늘의 자석 실험|마그 꾸미기|도움말|설정" && !t.hud && !t.pad && /자석/.test(t.h1) && /별 0 \/ 36/.test(t.best) && t.home, `${(ms / 1000).toFixed(1)}초 · ${t.buttons.join(", ")} · "${t.best}"`);
+    check("M2", "불러오기 → 첫 화면 (플레이 · 스테이지 선택 · 오늘의 자석 실험 · 마그 꾸미기 · 도움말 · 설정 · 기록 줄 · 홈 버튼) · 게임 칸은 숨김", t.buttons.filter((b) => !/친구 불러서/.test(b)).join("|") === "플레이|스테이지 선택|오늘의 자석 실험|마그 꾸미기|도움말|설정" && !t.hud && !t.pad && /자석/.test(t.h1) && /별 0 \/ 36/.test(t.best) && t.home, `${(ms / 1000).toFixed(1)}초 · ${t.buttons.join(", ")} · "${t.best}"`);
   }
 
   /* ---------- M3: 스테이지 목록 · 안내 ---------- */
@@ -239,7 +239,7 @@ async function openStageByUI(p, id) {
     await sleep(400);
     const s2 = await S(p);
     const tip = await G(p, () => (document.getElementById("tip").hidden ? "" : document.getElementById("tip-t").textContent));
-    const names = "자석과의 첫 만남|극성을 바꿔라|금속과 나무|철구 대소동|자석 발판|컨베이어 혼란|스프링 실험|두 개의 자석|움직이는 출구|에너지 위기|공장 연쇄 사고|거대 자석 장치";
+    const names = "자석과의 첫 만남|극성을 바꿔라|금속과 나무|철구 대소동|자석 발판|컨베이어 혼란|스프링 실험|두 개의 자석|움직이는 출구|두 칸의 철 공|공장 연쇄 사고|거대 자석 장치";
     check("M3", "스테이지 목록 12칸 (기획한 이름 그대로 · 처음엔 1번만 열림) → 1번 → 안내 (이름 · 목표 · 별 기준 3개) → 시작 → 위 칸 · 첫 안내 말풍선 · 시간이 흐름", list.n === 12 && list.names.join("|") === names && list.open.join() === "1" && intro.h === "자석과의 첫 만남" && intro.goal.length > 5 && intro.stars.length === 3 && /14초/.test(intro.stars[1]) && s0.mode !== "play" && s1.id === 1 && s2.t > s1.t && /걸어요/.test(tip), `${list.n}칸 · 열린 칸 ${list.open} · "${intro.h}" · ${intro.stars.join(" / ")} · 안내 "${tip}"`);
   }
 
@@ -349,7 +349,7 @@ async function openStageByUI(p, id) {
     const m = await G(p, async () => {
       const g = window.MagnetMayhem;
       const sim = await import("/games/magnet-mayhem/js/sim.js?v=1");
-      const L = await import("/games/magnet-mayhem/js/levels.js?v=1");
+      const L = await import("/games/magnet-mayhem/js/levels.js?v=2");
       // 재질: 같은 거리에 철 · 합금 · 나무 · 고무를 두고 0.4초 끌어당김
       const pull = (mat, shape) => {
         const G = sim.createGame({ id: 98, name: "t", start: { x: 200, y: 479 }, walls: [[0, 500, 960, 40]], objects: [{ id: "o", mat, shape, x: 330, y: shape === "ball" ? 485 : 476 }], stars: { time: 9 } });
@@ -376,41 +376,30 @@ async function openStageByUI(p, id) {
 
   /* ---------- M7: 에너지 (10번) — 켜면 줄고 다시 안 참 · 다 쓰면 자석 꺼짐 · 못 깨면 실패 화면 ---------- */
   if (want("M7")) {
+    // 2026-11-27 사용자 요청: 자석 켜는 시간 제한(에너지) 없음
     await G(p, () => window.MagnetMayhem.ui.toMenu());
-    const before = JSON.stringify(((await saved(p)) || { stages: {} }).stages["10"] || null);
     const locked = await G(p, () => !window.MagnetMayhem.ui.unlocked(10));
     let intro;
     if (locked) {
-      // M5 를 건너뛰어 10번이 잠겨 있으면 안내 창을 바로 엶
       await G(p, async () => {
-        const L = await import("/games/magnet-mayhem/js/levels.js?v=1");
+        const L = await import("/games/magnet-mayhem/js/levels.js?v=2");
         window.MagnetMayhem.ui.openIntro(L.STAGES[9]);
       });
-      intro = { energy: await G(p, () => document.getElementById("intro-energy").textContent) };
+      intro = { energy: await G(p, () => (document.getElementById("intro-energy").hidden ? "" : document.getElementById("intro-energy").textContent)) };
     } else intro = await openStageByUI(p, 10);
+    const introShown = await G(p, () => !document.getElementById("intro-energy").hidden);
     await p.click("#intro-go");
     await until(p, (s) => s.mode === "play" && s.id === 10 && !s.stack.length, 4000, "10번");
-    const e0 = await S(p);
-    const bar0 = await G(p, () => ({ shown: !document.getElementById("hud-energy").hidden, n: document.getElementById("hud-energy-n").textContent }));
+    const barShown = await G(p, () => !document.getElementById("hud-energy").hidden);
     await G(p, () => (window.MagnetMayhem.speed = 4));
     await p.keyboard.press("k");
-    await sleep(500);
-    const e1 = await S(p);
-    await p.keyboard.press("k");
-    await sleep(500);
-    const e2 = await S(p);
-    await p.keyboard.press("k");
-    const e3 = await until(p, (s) => !s.mag.on && s.energy <= 0.01, 10000, "에너지 바닥");
-    const toast = await G(p, () => document.getElementById("toast").textContent);
-    await p.keyboard.press("k");
-    await sleep(100);
-    const e4 = await S(p);
-    const end = await until(p, (s) => s.failed, 10000, "실패");
-    await p.waitForSelector("#result:not([hidden])");
-    const r = await G(p, () => ({ h: document.getElementById("r-h").textContent, stars: !document.getElementById("r-stars").hidden, next: !document.getElementById("r-next").hidden }));
-    const sv = await saved(p);
+    const on = await until(p, (s) => s.t > 40, 15000, "40초 켜 두기");
     await G(p, () => (window.MagnetMayhem.speed = 1));
-    check("M7", "에너지(10번): 안내에 '다시 차지 않아요' · 위 칸 에너지 막대 · 켜 두면 줄고 꺼도 안 참 · 0 이 되면 자석이 저절로 꺼지고 다시 안 켜짐 · 3초 뒤 '에너지가 바닥났어요' 실패 화면 (별 · 다음 없음 · 기록은 그대로)", /다시 차지 않아요/.test(intro.energy) && bar0.shown && bar0.n === "100%" && e1.energy < e0.energy && Math.abs(e2.energy - e1.energy) < 9 && e2.energy <= e1.energy && e3.energy <= 0.01 && /에너지/.test(toast) && !e4.mag.on && end.failed === "energy" && /에너지가 바닥/.test(r.h) && !r.stars && !r.next && JSON.stringify((sv.stages || {})["10"] || null) === before, `에너지 ${e0.energy}→${e1.energy.toFixed(1)}→${e2.energy.toFixed(1)}→${e3.energy.toFixed(1)} · 알림 "${toast}" · 다시 켬 ${e4.mag.on} · "${r.h}" · 기록 그대로 ${before}`);
+    const noLimit = await G(p, async () => {
+      const L = await import("/games/magnet-mayhem/js/levels.js?v=2");
+      return [...L.STAGES, ...L.DAILY].filter((d) => d.energy).map((d) => d.id);
+    });
+    check("M7", "자석 시간 제한 없음: 안내 · 위 칸에 에너지 없음 · 40초 넘게 켜 둬도 계속 켜짐 · 실패 없음 · 모든 판에 에너지 설정 없음", !introShown && !barShown && on.mag.on && on.energy == null && !on.failed && noLimit.length === 0, `켜 둔 시간 ${on.t.toFixed(1)}초 · 자석 ${on.mag.on} · 에너지 ${on.energy} · 에너지 판 ${JSON.stringify(noLimit)}`);
     await G(p, () => window.MagnetMayhem.ui.toMenu());
   }
 
@@ -464,10 +453,10 @@ async function openStageByUI(p, id) {
     const c = await day("2026-10-26T08:00:00");
     // 7일 동안 판 이름 (모음이 돌아가며 나옴)
     const week = [];
-    for (let d = 25; d <= 31; d++) week.push(await G(a.q, async (iso) => (await import("/games/magnet-mayhem/js/game.js?v=1")).dailyFor(iso).id, `2026-10-${d}`));
+    for (let d = 25; d <= 31; d++) week.push(await G(a.q, async (iso) => (await import("/games/magnet-mayhem/js/game.js?v=2")).dailyFor(iso).id, `2026-10-${d}`));
     // a 에서 실제로 풀기
     const q = a.q;
-    const did = await G(q, async () => (await import("/games/magnet-mayhem/js/game.js?v=1")).dailyFor("2026-10-25").id);
+    const did = await G(q, async () => (await import("/games/magnet-mayhem/js/game.js?v=2")).dailyFor("2026-10-25").id);
     await q.click("#daily-go");
     await until(q, (s) => s.mode === "play" && s.kind === "daily" && !s.stack.length, 4000, "실험 시작");
     const hudK = await G(q, () => document.getElementById("hud-k").textContent);
