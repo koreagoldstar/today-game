@@ -1,0 +1,25 @@
+{
+  "id": "puzzle-bubble",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/puzzle-bubble/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "puzzle-bubble",
+  "hooks": [
+    "한 번에 몇 개 터질까?",
+    "같은 색 3개면 팡!",
+    "이거 한 방에 가능?"
+  ],
+  "hashtags": [
+    "#버블슈터",
+    "#퍼즐게임"
+  ]
+}

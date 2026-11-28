@@ -1,0 +1,25 @@
+{
+  "id": "suika",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/suika/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "suika",
+  "hooks": [
+    "수박까지 갈 수 있을까?",
+    "같은 과일끼리 합체!",
+    "이거 은근 중독됩니다"
+  ],
+  "hashtags": [
+    "#수박게임",
+    "#수박합치기"
+  ]
+}

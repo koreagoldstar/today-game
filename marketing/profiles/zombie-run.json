@@ -1,0 +1,25 @@
+{
+  "id": "zombie-run",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/zombie-run/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "zombie-run",
+  "hooks": [
+    "여기서 피할 수 있으면 인정",
+    "좀비 몇 마리 잡을까?",
+    "끝까지 살아남기"
+  ],
+  "hashtags": [
+    "#좀비게임",
+    "#러너게임"
+  ]
+}
