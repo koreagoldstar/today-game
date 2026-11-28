@@ -26,6 +26,8 @@ const DEFAULTS = {
   approvalExpiryHours: 72,
   maxPending: 3, // 승인 대기가 이만큼 쌓이면 새로 만들지 않음 (비용 · 혼동 방지)
   repeatDays: 14, // 이 기간 안에 홍보한 게임은 뒤로
+  // 콘텐츠 유형 목표 비율(%) — 성장 실험 초기값. 그날 편성 후보 중 가장 모자란 유형을 만들 수 있는 것을 앞으로 (core/strategy.js)
+  typeMix: { challenge: 40, fail: 25, record: 25, discover: 10 },
   excludeGames: [], // 홍보하지 않을 게임 id (웹 관리자 "게임별 설정")
   trackClicks: false, // 링크를 /api/mkt-go 로 거쳐 클릭 세기 — api/mkt-go.js 를 운영에 배포한 뒤에만 켤 것
   weights: { max: 2, min: 0.5 }, // 성과(조회 수) 가중치 범위 — 게임 고르기 점수에 곱함
@@ -63,6 +65,8 @@ function validate(s) {
   if (!Array.isArray(s.channels) || !s.channels.length || s.channels.some((c) => !CHANNELS.includes(c))) bad("채널을 하나 이상 골라야 합니다 (instagram · threads · facebook · youtube).");
   if (!(s.approvalExpiryHours >= 1 && s.approvalExpiryHours <= 24 * 14)) bad("승인 기한은 1시간~14일 입니다.");
   if (!(Number.isInteger(s.maxPending) && s.maxPending >= 1 && s.maxPending <= 14)) bad("승인 대기 상한은 1~14 입니다.");
+  const mix = s.typeMix || {};
+  if (["challenge", "fail", "record", "discover"].some((t) => !(Number.isInteger(mix[t]) && mix[t] >= 0)) || Object.values(mix).reduce((a, b) => a + b, 0) !== 100) bad("콘텐츠 유형 비율은 도전 · 실패 · 기록 · 발견 네 개, 합 100 이어야 합니다.");
   if (!(Number.isInteger(s.repeatDays) && s.repeatDays >= 0 && s.repeatDays <= 90)) bad("같은 게임 다시 홍보 간격은 0~90일 입니다.");
   if (!(s.qc.maxRedo >= 0 && s.qc.maxRedo <= 2)) bad("다시 만들기는 0~2회 입니다.");
   if (!(s.qc.minMotion >= 0.05 && s.qc.minMotion <= 0.9)) bad("움직임 하한은 0.05~0.9 입니다.");
