@@ -1,0 +1,25 @@
+{
+  "id": "jump-run",
+  "note": "2026-11-28 새로 만든 조종 코드. 화면 상태를 읽어 실제 플레이, 치트 옵션 없음",
+  "path": "/games/jump-run/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "jump-run",
+  "hooks": [
+    "떨어지기 전에 뛰어!",
+    "몇 미터까지 갈 수 있어?",
+    "길게 누르면 더 높이"
+  ],
+  "hashtags": [
+    "#점프게임",
+    "#러너게임"
+  ]
+}

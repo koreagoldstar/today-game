@@ -13,8 +13,8 @@ const ROOT = path.resolve(__dirname, "../..");
 const PROFILES = path.join(ROOT, "marketing", "profiles");
 const profiles = fs.readdirSync(PROFILES).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(fs.readFileSync(path.join(PROFILES, f), "utf8")));
 
-test("녹화 프로필: 대상 14개 · 필수 값 · 실제 게임 폴더 · 원본 40~60초", () => {
-  assert.deepEqual(profiles.map((p) => p.id).sort(), ["basketball-shootout", "claw-master", "dragon-statue", "homerun-derby", "lava-surfers", "neon-runner", "ocean-blaster", "puzzle-bubble", "reaction", "sky-island", "slide-2048", "suika", "typing-rain", "zombie-run"]);
+test("녹화 프로필: 대상 21개 · 필수 값 · 실제 게임 폴더 · 원본 40~60초", () => {
+  assert.deepEqual(profiles.map((p) => p.id).sort(), ["basketball-shootout", "brick", "claw-master", "crossy", "dragon-statue", "drift-chick", "homerun-derby", "jump-run", "lava-surfers", "neon-runner", "ocean-blaster", "puzzle-bubble", "racing", "reaction", "sky-island", "slide-2048", "snake", "suika", "typing-rain", "whack-mole", "zombie-run"]);
   for (const p of profiles) {
     assert.ok(fs.existsSync(path.join(ROOT, "games", p.id, "index.html")), `${p.id} 게임 폴더`);
     assert.match(p.path, new RegExp(`^/games/${p.id}/(\\?test=1)?$`), `${p.id} 주소 (읽기 전용 점검 표시만 허용)`);
