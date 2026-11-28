@@ -1,0 +1,25 @@
+{
+  "id": "drift-chick",
+  "note": "2026-11-28 scripts/test-chick-games.js 봇을 실시간으로 옮김. 게임 입력 함수로 조작, 치트 옵션 없음",
+  "path": "/games/drift-chick/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "drift-chick",
+  "hooks": [
+    "커브에서 미끄러져라!",
+    "드리프트 몇 콤보?",
+    "이 각도 실화?"
+  ],
+  "hashtags": [
+    "#드리프트",
+    "#레이싱게임"
+  ]
+}

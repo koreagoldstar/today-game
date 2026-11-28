@@ -1,0 +1,25 @@
+{
+  "id": "snake",
+  "note": "2026-11-28 새로 만든 조종 코드. 화면 상태를 읽어 실제 플레이, 치트 옵션 없음",
+  "path": "/games/snake/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "snake",
+  "hooks": [
+    "사과 하나 더 먹으면 끝?",
+    "뱀이 길어질수록 손이 떨린다",
+    "몇 단계까지 가 봤어요?"
+  ],
+  "hashtags": [
+    "#스네이크게임",
+    "#뱀게임"
+  ]
+}

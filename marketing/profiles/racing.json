@@ -1,0 +1,25 @@
+{
+  "id": "racing",
+  "note": "2026-11-28 scripts/test-chick-games.js 봇을 실시간으로 옮김. 게임 입력 함수로 조작, 치트 옵션 없음",
+  "path": "/games/racing/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "racing",
+  "hooks": [
+    "차 사이로 쏙쏙!",
+    "몇 대나 피할 수 있어?",
+    "속도가 점점 빨라진다"
+  ],
+  "hashtags": [
+    "#레이싱게임",
+    "#자동차게임"
+  ]
+}
