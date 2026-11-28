@@ -1,0 +1,26 @@
+{
+  "id": "homerun-derby",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/homerun-derby/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "homerun-derby",
+  "hooks": [
+    "10구 안에 홈런 몇 개?",
+    "이거 홈런 칠 수 있어?",
+    "타이밍만 맞추면 홈런",
+    "홈런 타이밍 테스트"
+  ],
+  "hashtags": [
+    "#홈런게임",
+    "#야구게임"
+  ]
+}

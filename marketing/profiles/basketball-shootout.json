@@ -1,0 +1,26 @@
+{
+  "id": "basketball-shootout",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/basketball-shootout/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "basketball-shootout",
+  "hooks": [
+    "10초 동안 몇 골?",
+    "이거 다 넣을 수 있어?",
+    "농구 슛 감 테스트",
+    "몇 골 연속 가능?"
+  ],
+  "hashtags": [
+    "#농구게임",
+    "#슛게임"
+  ]
+}

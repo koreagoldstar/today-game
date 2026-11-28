@@ -1,0 +1,25 @@
+{
+  "id": "slide-2048",
+  "note": "tools/game-reels 조종 코드 (2026-11-28 옮김). 실제 입력으로만 플레이, 치트 옵션 없음",
+  "path": "/games/slide-2048/",
+  "needsGpu": true,
+  "runner": "pc",
+  "viewport": {
+    "width": 405,
+    "height": 720
+  },
+  "dpr": 2,
+  "mobile": true,
+  "rawSec": 50,
+  "minFps": 20,
+  "player": "slide-2048",
+  "hooks": [
+    "2048 만들 수 있어?",
+    "숫자 합치기 챌린지",
+    "머리 좀 쓰는 게임"
+  ],
+  "hashtags": [
+    "#2048",
+    "#숫자퍼즐"
+  ]
+}
