@@ -131,7 +131,7 @@ module.exports = {
           genre,
           template: L.template,
           hook,
-          captions: moments.map((m) => ({ at: m.rel, text: m.text })),
+          captions: moments.map((m) => ({ at: m.rel, text: m.text, type: m.type })),
           highlight: { start: hl.start, end: hl.end, score: hl.score },
           clip: { id: clip.meta.id, render: clip.meta.render, captureFps: clip.meta.captureFps, gameHash: clip.meta.gameHash },
           coverAt: +at.toFixed(2),

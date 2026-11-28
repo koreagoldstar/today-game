@@ -8,6 +8,7 @@
 const crypto = require("crypto");
 const { transition, MAKING } = require("./state");
 const { runQc } = require("./qc");
+const { classify } = require("./strategy");
 const { seoulDay } = require("./settings");
 
 class Abort extends Error {}
@@ -115,7 +116,7 @@ async function runFrom(ctx, id) {
       if (qc.passed) {
         // 검수 때 계산한 파일 해시를 남기고, 승인 화면 · 플랫폼이 볼 공개 주소로 올린다
         const files = await uploadMedia(ctx, doc);
-        doc = await advance(ctx, id, "QC", "READY_FOR_APPROVAL", { qc, render: { ...doc.render, files } });
+        doc = await advance(ctx, id, "QC", "READY_FOR_APPROVAL", { qc, render: { ...doc.render, files }, strategy: classify(doc) }); // 유형별 성과 비교용
         await notify(ctx, "ready", doc);
         return doc;
       }

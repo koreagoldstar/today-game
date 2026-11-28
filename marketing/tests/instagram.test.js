@@ -189,3 +189,25 @@ test("통합 로그인(시스템 사용자 토큰): graph.facebook.com 으로 �
   assert.equal(h.ok, true);
   assert.equal(h.login, "facebook");
 });
+
+test("지표: 릴스는 시청 시간, 이미지는 프로필 방문까지 묻고 · 계정 하루 지표는 period=day", async () => {
+  const mem = createFakeUpstash({ jitter: false });
+  const store = createStore({ url: mem.url, token: mem.token, fetchImpl: mem.fetchImpl });
+  const asked = [];
+  const fetchImpl = async (url) => {
+    const u = new URL(url);
+    if (u.pathname.endsWith("/me")) return { ok: true, status: 200, json: async () => ({ id: "9001" }) };
+    if (u.pathname.endsWith("/1784")) return { ok: true, status: 200, json: async () => ({ id: "1784", username: "todaygame.co.kr" }) };
+    asked.push(u.pathname + "?" + [...u.searchParams].filter(([k]) => k !== "access_token").map(([k, v]) => `${k}=${v}`).join("&"));
+    return { ok: true, status: 200, json: async () => ({ data: [{ name: "views", values: [{ value: 10 }] }, { name: "profile_views", total_value: { value: 2 } }] }) };
+  };
+  await ig.connectInstagram(store, "EAAXfake", { env: ENV, fetchImpl, igUserId: "1784" });
+  const ch = ig.create({ env: ENV, store, fetchImpl, sleep: async () => {} });
+  assert.deepEqual(await ch.insights("111", "reel"), [{ metric: "views", value: 10 }, { metric: "profile_views", value: 2 }]);
+  await ch.insights("222", "image");
+  await ch.accountInsights({ since: 1, until: 2 });
+  assert.match(asked[0], /ig_reels_avg_watch_time/);
+  assert.doesNotMatch(asked[0], /profile_visits/);
+  assert.match(asked[1], /profile_visits/);
+  assert.match(asked[2], /\/1784\/insights\?.*profile_views.*period=day/);
+});

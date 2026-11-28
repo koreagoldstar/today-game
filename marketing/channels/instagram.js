@@ -16,6 +16,10 @@ const HOST = "https://graph.instagram.com";
 const FB_HOST = "https://graph.facebook.com";
 const DAY = 86400000;
 const METRICS = ["views", "reach", "likes", "comments", "saved", "shares", "total_interactions"];
+// 형식마다 더 주는 지표 (2026-11-28 실제 확인: 릴스는 시청 시간 ms, 이미지 · 캐러셀은 프로필 방문 · 팔로우. 반대 형식에는 오류)
+const EXTRA = { reel: ["ig_reels_avg_watch_time", "ig_reels_video_view_total_time"], image: ["profile_visits", "profile_activity", "follows"], carousel: ["profile_visits", "profile_activity", "follows"] };
+// 계정 하루 지표 (follows_and_unfollows 는 팔로워가 적으면 값이 비어 옴)
+const ACCOUNT_METRICS = ["reach", "views", "profile_views", "website_clicks", "profile_links_taps", "accounts_engaged", "total_interactions", "follows_and_unfollows"];
 
 function classify(status, err) {
   const code = err && Number(err.code);
@@ -241,15 +245,28 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
       return { id: (await call("POST", `/${postId}/comments`, { message: String(text).slice(0, 2200) })).id };
     },
     /** 실제로 주는 지표만. 하나라도 지원 안 되면 요청 전체가 오류일 수 있어 지표별로 다시 묻는다 */
-    async insights(postId) {
+    async insights(postId, kind) {
       const { call } = await session();
-      const parse = (r) => (r.data || []).map((x) => ({ metric: x.name, value: x.values ? x.values[0].value : x.total_value ? x.total_value.value : null })).filter((x) => x.value != null);
+      const list = [...METRICS, ...(EXTRA[kind] || [])];
       try {
-        return parse(await call("GET", `/${postId}/insights`, { metric: METRICS.join(",") }));
+        return parseInsights(await call("GET", `/${postId}/insights`, { metric: list.join(",") }));
       } catch (e) {
         if (e.kind !== "INVALID") throw e;
         const out = [];
-        for (const m of METRICS) out.push(...(await call("GET", `/${postId}/insights`, { metric: m }).then(parse).catch(() => [])));
+        for (const m of list) out.push(...(await call("GET", `/${postId}/insights`, { metric: m }).then(parseInsights).catch(() => [])));
+        return out;
+      }
+    },
+    /** 계정 하루 지표 (since ~ until, 초). 지원 안 되는 지표는 빼고 다시 묻는다 */
+    async accountInsights({ since, until }) {
+      const { call, uid } = await session();
+      const ask = (ms) => call("GET", `/${uid}/insights`, { metric: ms.join(","), period: "day", metric_type: "total_value", since, until }).then(parseInsights);
+      try {
+        return await ask(ACCOUNT_METRICS);
+      } catch (e) {
+        if (e.kind !== "INVALID") throw e;
+        const out = [];
+        for (const m of ACCOUNT_METRICS) out.push(...(await ask([m]).catch(() => [])));
         return out;
       }
     },
@@ -265,6 +282,11 @@ function create({ env = process.env, store, fetchImpl = fetch, sleep = (ms) => n
       }
     },
   };
+}
+
+/** 지표 응답 → [{ metric, value }] (값이 없는 지표는 뺌) */
+function parseInsights(r) {
+  return (r.data || []).map((x) => ({ metric: x.name, value: x.values ? x.values[0].value : x.total_value ? x.total_value.value : null })).filter((x) => x.value != null);
 }
 
 module.exports = { FB_HOST, create, classify, connectInstagram, refreshInstagram, instagramStatus, finalCaption, METRICS };
