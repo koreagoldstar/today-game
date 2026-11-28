@@ -334,7 +334,7 @@ async function browserChecks(chromium) {
   await p.click("#login-btn");
   await p.waitForFunction(() => window.__monitor && window.__monitor.data, null, { timeout: 10000 });
   const dash = await p.evaluate(() => ({
-    tiles: [...document.querySelectorAll(".tile")].map((t) => t.textContent.replace(/\s+/g, " ").trim()),
+    tiles: [...document.querySelectorAll("#tiles .tile")].map((t) => t.textContent.replace(/\s+/g, " ").trim()),
     visitBars: document.querySelectorAll("#chart-visit path.bar").length,
     playBars: document.querySelectorAll("#chart-play path.bar").length,
     top: [...document.querySelectorAll("#chart-top .hrow .name")].map((n) => n.textContent),
@@ -346,7 +346,7 @@ async function browserChecks(chromium) {
 
   // 기간 · 정렬 · 찾기 · 표 보기 · 툴팁
   await p.click('#range button[data-days="7"]');
-  const r7 = await p.evaluate(() => ({ bars: document.querySelectorAll("#chart-visit path.bar").length, tile: document.querySelectorAll(".tile")[1].textContent }));
+  const r7 = await p.evaluate(() => ({ bars: document.querySelectorAll("#chart-visit path.bar").length, tile: document.querySelectorAll("#tiles .tile")[1].textContent }));
   await p.click('#range button[data-days="90"]');
   const r90 = await p.evaluate(() => document.querySelectorAll("#chart-visit path.bar").length);
   await p.click('#games-table th:nth-child(5) button'); // 누적 → 내림차순
@@ -386,7 +386,7 @@ async function browserChecks(chromium) {
   const mob = await m.evaluate(() => ({
     overflow: document.documentElement.scrollWidth - innerWidth,
     bg: getComputedStyle(document.body).backgroundColor,
-    tilesInView: [...document.querySelectorAll(".tile")].every((t) => t.getBoundingClientRect().right <= innerWidth + 1),
+    tilesInView: [...document.querySelectorAll("#tiles .tile")].every((t) => t.getBoundingClientRect().right <= innerWidth + 1),
   }));
   await m.screenshot({ path: path.join(ROOT, "test-results", "monitor-mobile-dark.png"), fullPage: true }).catch(() => {});
   check("B4", "휴대폰(390px) · 어두운 화면: 옆으로 넘치지 않음 · 어두운 배경", mob.overflow <= 1 && mob.tilesInView && mob.bg === "rgb(13, 13, 13)", mob);

@@ -162,6 +162,11 @@
     renderTop(v);
     renderGames(v);
     renderDayTables(v);
+    try {
+      renderAct();
+    } catch (e) {
+      $("act-sub").textContent = "분석을 그리지 못했어요.";
+    }
   }
   const shortDayFull = (day) => {
     const p = dayParts(day);
@@ -520,6 +525,275 @@
     }
   }
 
+  /* ---------------- 이용자 행동 분석 (api/act 집계) ---------------- */
+  let cmpDays = 7;
+  let actKey = "game_view";
+  const pct = (a, b) => (b > 0 ? `${((a / b) * 100).toFixed(1)}%` : "–");
+  const secText = (ms) => (ms == null ? "–" : ms >= 60000 ? `${Math.floor(ms / 60000)}분 ${Math.round((ms % 60000) / 1000)}초` : `${Math.round(ms / 1000)}초`);
+  const SRC_NAME = { direct: "직접 · 즐겨찾기", internal: "사이트 안 이동", naver: "네이버", google: "구글", daum: "다음", kakao: "카카오", sns: "SNS", youtube: "유튜브", bing: "빙", other: "기타 사이트" };
+  const DEV_NAME = { mobile: "휴대폰", tablet: "태블릿", desktop: "PC", other: "기타" };
+  function actSum(rows, field) {
+    let n = 0;
+    for (const r of rows) n += Number(r.cnt[field]) || 0;
+    return n;
+  }
+  function addHash(rows, key) {
+    const o = {};
+    for (const r of rows) for (const [k, n] of Object.entries(r[key] || {})) o[k] = (o[k] || 0) + n;
+    return o;
+  }
+  /** 기간이 다 지난 첫 방문 날짜 무리만 모아 재방문율 */
+  function retention(A, win, field) {
+    const lastOk = new Date(`${data.today}T00:00:00Z`);
+    lastOk.setUTCDate(lastOk.getUTCDate() - win);
+    const cut = lastOk.toISOString().slice(0, 10);
+    let all = 0;
+    let got = 0;
+    for (const c of A.cohorts) {
+      if (!A.since || c.day < A.since || c.day > cut || !c.all) continue;
+      all += c.all;
+      got += c[field];
+    }
+    return all ? { rate: got / all, all } : null;
+  }
+  function hbarList(box, obj, names, color) {
+    box.textContent = "";
+    const list = Object.entries(obj)
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+    if (!list.length) {
+      const p = document.createElement("p");
+      p.className = "act-empty";
+      p.textContent = "아직 기록이 없어요.";
+      box.appendChild(p);
+      return;
+    }
+    const total = list.reduce((a, [, n]) => a + n, 0);
+    const max = list[0][1];
+    for (const [k, n] of list) {
+      const row = document.createElement("div");
+      row.className = "hrow";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = `${names[k] || k} · ${pct(n, total)}`;
+      const W = 400;
+      const svg = svgEl("svg", { viewBox: `0 0 ${W} 22`, preserveAspectRatio: "none", role: "img", "aria-label": `${names[k] || k} ${num(n)}` });
+      const bw = Math.max(2, ((W - 64) * n) / max);
+      const rad = Math.min(4, bw);
+      svgEl("path", { d: `M0,3 H${bw - rad} Q${bw},3 ${bw},${3 + rad} V${19 - rad} Q${bw},19 ${bw - rad},19 H0 Z`, fill: color }, svg);
+      row.append(name, wrapBar(svg, n, bw / W));
+      box.appendChild(row);
+    }
+  }
+  function cell(tr, text, cls) {
+    const td = document.createElement("td");
+    td.textContent = text;
+    if (cls) td.className = cls;
+    tr.appendChild(td);
+  }
+  function renderAct() {
+    const A = data.act;
+    const tilesBox = $("act-tiles");
+    tilesBox.textContent = "";
+    if (!A) {
+      $("act-sub").textContent = "저장소에서 읽지 못했어요.";
+      return;
+    }
+    const rows = A.days;
+    const today = rows[rows.length - 1];
+    const rangeN = Math.min(days, rows.length);
+    const range = rows.slice(-rangeN);
+    $("act-sub").textContent = A.since ? `${shortDayFull(A.since)}부터 측정 · 위쪽 기존 방문자 · 참여 숫자와 집계 기준이 달라요 (아래 '집계 기준과 한계')` : "아직 받은 이벤트가 없어요 · 배포한 뒤부터 쌓여요";
+
+    // 요약
+    tilesBox.appendChild(tile("오늘 방문 브라우저", num(today.uv), { hero: true, key: "var(--visit)", note: `세션 ${num(today.cnt.site_visit || 0)}번` }));
+    tilesBox.appendChild(tile("신규", num(today.nu), { note: "오늘이 첫 방문" }));
+    tilesBox.appendChild(tile("재방문", num(Math.max(0, today.uv - today.nu)), { note: "전에 온 적 있는 브라우저" }));
+    for (const [win, f, label] of [
+      [1, "d1", "1일 재방문율"],
+      [7, "w7", "7일 재방문율"],
+      [30, "w30", "30일 재방문율"],
+    ]) {
+      const r = retention(A, win, f);
+      tilesBox.appendChild(tile(label, r ? `${(r.rate * 100).toFixed(1)}%` : "측정 중", { note: r ? `첫 방문 ${num(r.all)}명 기준` : `첫 방문 뒤 ${win}일이 지난 날짜가 생기면 계산` }));
+    }
+    tilesBox.appendChild(tile("오늘 게임 시작", num((today.cnt.game_start || 0) + (today.cnt.game_replay || 0)), { key: "var(--play)", note: `완료 ${num(today.cnt.game_complete || 0)}번` }));
+
+    // 퍼널
+    const steps = [
+      ["방문 (세션)", actSum(range, "site_visit")],
+      ["게임 조회", actSum(range, "game_view")],
+      ["게임 시작", actSum(range, "game_start")],
+      ["게임 완료", actSum(range, "game_complete")],
+      ["재플레이", actSum(range, "game_replay")],
+    ];
+    $("funnel-sub").textContent = `최근 ${rangeN}일 · 오른쪽은 앞 단계 대비 전환율`;
+    const fb = $("act-funnel");
+    fb.textContent = "";
+    const fmax = Math.max(1, ...steps.map((x) => x[1]));
+    steps.forEach(([label, n], i) => {
+      const row = document.createElement("div");
+      row.className = "fstep";
+      const l = document.createElement("span");
+      l.className = "lab";
+      l.textContent = label;
+      const barWrap = document.createElement("div");
+      barWrap.style.display = "flex";
+      barWrap.style.alignItems = "center";
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.width = `${Math.max(0.5, (n / fmax) * 100)}%`;
+      bar.style.background = i === 0 ? "var(--visit)" : "var(--play)";
+      const nn = document.createElement("span");
+      nn.className = "n";
+      nn.textContent = num(n);
+      barWrap.append(bar, nn);
+      const c = document.createElement("span");
+      c.className = "conv";
+      c.textContent = i === 0 ? "" : i === 4 ? `완료의 ${pct(n, steps[3][1])}` : pct(n, steps[i - 1][1]);
+      row.append(l, barWrap, c);
+      fb.appendChild(row);
+    });
+
+    // 기간 비교 (표 + 그래프)
+    const N = cmpDays;
+    const cur = rows.slice(-N);
+    const prev = rows.slice(-2 * N, -N);
+    const metric = (rs) => {
+      const t = addHash(rs, "time");
+      let ms = 0;
+      let n = 0;
+      for (const [k, v] of Object.entries(t)) {
+        if (k.endsWith("|ms")) ms += v;
+        else if (k.endsWith("|n")) n += v;
+      }
+      return [
+        ["방문 (세션)", actSum(rs, "site_visit")],
+        ["방문 브라우저 (날마다 센 수의 합)", rs.reduce((a, r) => a + r.uv, 0)],
+        ["신규 브라우저", rs.reduce((a, r) => a + r.nu, 0)],
+        ["게임 조회", actSum(rs, "game_view")],
+        ["게임 시작", actSum(rs, "game_start")],
+        ["게임 완료", actSum(rs, "game_complete")],
+        ["재플레이", actSum(rs, "game_replay")],
+        ["점수 등록", actSum(rs, "score_submit")],
+        ["챌린지 시작", actSum(rs, "challenge_start")],
+        ["챌린지 완료", actSum(rs, "challenge_complete")],
+        ["공유", actSum(rs, "share_click")],
+        ["평균 플레이 시간", n ? ms / n : null, true],
+      ];
+    };
+    const mc = metric(cur);
+    const mp = metric(prev);
+    const tb = $("act-cmp-table");
+    tb.textContent = "";
+    const table = document.createElement("table");
+    table.innerHTML = `<thead><tr><th>항목</th><th>최근 ${N}일</th><th>직전 ${N}일</th><th>변화</th></tr></thead>`;
+    const body = document.createElement("tbody");
+    mc.forEach(([k, a, isT], i) => {
+      const b = mp[i][1];
+      const ch = a != null && b ? (a - b) / b : null;
+      const tr = document.createElement("tr");
+      cell(tr, k);
+      cell(tr, isT ? secText(a) : num(a));
+      cell(tr, isT ? secText(b) : num(b));
+      cell(tr, ch == null ? "–" : `${ch > 0 ? "▲ +" : ch < 0 ? "▼ " : ""}${(ch * 100).toFixed(1)}%`, ch == null ? "" : `chg ${ch > 0 ? "up" : ch < 0 ? "down" : ""}`);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    tb.appendChild(table);
+
+    const box = $("act-cmp-chart");
+    box.textContent = "";
+    const leg = document.createElement("div");
+    leg.className = "legend";
+    leg.innerHTML = `<span><i style="background:var(--visit)"></i>방문 · 최근 ${N}일</span><span><i style="background:var(--visit);opacity:.35"></i>방문 · 직전 ${N}일</span><span><i style="background:var(--play)"></i>게임 시작 · 최근</span><span><i style="background:var(--play);opacity:.35"></i>게임 시작 · 직전</span>`;
+    box.appendChild(leg);
+    const W = Math.max(280, box.clientWidth || 600);
+    const H = 200;
+    const pad = { l: 40, r: 10, t: 12, b: 24 };
+    const series = [
+      { v: cur.map((r) => r.cnt.site_visit || 0), c: "var(--visit)", o: 1 },
+      { v: prev.map((r) => r.cnt.site_visit || 0), c: "var(--visit)", o: 0.35, dash: "4 4" },
+      { v: cur.map((r) => (r.cnt.game_start || 0) + (r.cnt.game_replay || 0)), c: "var(--play)", o: 1 },
+      { v: prev.map((r) => (r.cnt.game_start || 0) + (r.cnt.game_replay || 0)), c: "var(--play)", o: 0.35, dash: "4 4" },
+    ];
+    const max = Math.max(1, ...series.flatMap((x) => x.v));
+    const step = niceStep(max);
+    const top = Math.max(step, Math.ceil(max / step) * step);
+    const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `최근 ${N}일과 직전 ${N}일 방문 · 게임 시작 비교 그래프` }, box);
+    const ph = H - pad.t - pad.b;
+    const pw = W - pad.l - pad.r;
+    const y = (v) => pad.t + ph - (v / top) * ph;
+    const x = (i) => pad.l + (N <= 1 ? 0 : (pw * i) / (N - 1));
+    for (let t = 0; t <= top + 1e-9; t += step) {
+      svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y(t), y2: y(t), class: t === 0 ? "base-line" : "grid-line" }, svg);
+      const tx = svgEl("text", { x: pad.l - 6, y: y(t) + 4, "text-anchor": "end", class: "axis-text" }, svg);
+      tx.textContent = compact(t);
+    }
+    cur.forEach((r, i) => {
+      if (N > 10 && i % Math.ceil(N / 8) && i !== N - 1) return;
+      const tx = svgEl("text", { x: x(i), y: H - 6, "text-anchor": "middle", class: "axis-text" }, svg);
+      tx.textContent = shortDay(r.day);
+    });
+    for (const sr of series) {
+      if (!sr.v.length) continue;
+      const d = sr.v.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+      const attrs = { d, fill: "none", stroke: sr.c, "stroke-width": 2, "stroke-opacity": sr.o, "stroke-linejoin": "round" };
+      if (sr.dash) attrs["stroke-dasharray"] = sr.dash;
+      svgEl("path", attrs, svg);
+    }
+
+    // 유입 · 기기
+    hbarList($("act-src"), addHash(range, "src"), SRC_NAME, "var(--visit)");
+    hbarList($("act-dev"), addHash(range, "dev"), DEV_NAME, "var(--rank)");
+
+    // 게임별
+    const g = {};
+    const get = (id) => (g[id] = g[id] || { id, game_view: 0, game_start: 0, game_complete: 0, game_replay: 0, score_submit: 0, ms: 0, n: 0 });
+    for (const r of range) {
+      for (const [k, n] of Object.entries(r.cnt)) {
+        const [e, id] = k.split("|");
+        if (id && e in get(id)) get(id)[e] += n;
+      }
+      for (const [k, n] of Object.entries(r.time || {})) {
+        const [id, f] = k.split("|");
+        get(id)[f === "ms" ? "ms" : "n"] += n;
+      }
+    }
+    const list = Object.values(g).map((o) => ({
+      ...o,
+      avg: o.n ? o.ms / o.n : null,
+      rate: o.game_start + o.game_replay ? o.game_complete / (o.game_start + o.game_replay) : null,
+      rr: o.game_complete ? o.game_replay / o.game_complete : null,
+    }));
+    list.sort((a, b) => (b[actKey] || 0) - (a[actKey] || 0));
+    const top10 = list.filter((o) => (o[actKey] || 0) > 0).slice(0, 10);
+    const gb = $("act-games");
+    gb.textContent = "";
+    if (!top10.length) {
+      const p = document.createElement("p");
+      p.className = "act-empty";
+      p.textContent = "아직 기록이 없어요.";
+      gb.appendChild(p);
+      return;
+    }
+    const t2 = document.createElement("table");
+    t2.innerHTML = "<thead><tr><th>게임</th><th>조회</th><th>시작</th><th>완료</th><th>재플레이</th><th>점수 등록</th><th>평균 플레이 시간</th><th>시작 대비 완료율</th><th>완료 대비 재플레이율</th></tr></thead>";
+    const b2 = document.createElement("tbody");
+    for (const o of top10) {
+      const tr = document.createElement("tr");
+      cell(tr, title(o.id));
+      for (const v of [o.game_view, o.game_start, o.game_complete, o.game_replay, o.score_submit]) cell(tr, num(v));
+      cell(tr, secText(o.avg));
+      cell(tr, o.rate == null ? "–" : `${(o.rate * 100).toFixed(0)}%`);
+      cell(tr, o.rr == null ? "–" : `${(o.rr * 100).toFixed(0)}%`);
+      b2.appendChild(tr);
+    }
+    t2.appendChild(b2);
+    gb.appendChild(t2);
+  }
+
   /* ---------------- 조작 ---------------- */
   function bindSeg(id, attr, onPick) {
     const seg = $(id);
@@ -533,6 +807,14 @@
   bindSeg("range", "days", (d) => {
     days = Number(d) || 30;
     render();
+  });
+  bindSeg("cmp-range", "cmp", (n) => {
+    cmpDays = Number(n) || 7;
+    if (data) renderAct();
+  });
+  bindSeg("act-game-key", "key", (k) => {
+    actKey = k;
+    if (data) renderAct();
   });
   bindSeg("top-range", "top", (m) => {
     topMode = m;

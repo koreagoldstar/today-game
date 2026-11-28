@@ -536,3 +536,104 @@ td.spark {
     grid-template-columns: minmax(80px, 38%) 1fr;
   }
 }
+
+/* ---------------- 이용자 행동 분석 ---------------- */
+.act-tiles {
+  margin: 4px 0 14px;
+}
+.act-h {
+  font-size: 15px;
+  margin: 18px 0 8px;
+}
+.act-h .card-sub {
+  font-weight: 400;
+  margin-left: 6px;
+}
+.act-h-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.act-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 720px) {
+  .act-two {
+    grid-template-columns: 1fr;
+  }
+}
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fstep {
+  display: grid;
+  grid-template-columns: minmax(110px, 160px) 1fr minmax(70px, 110px);
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.fstep .bar {
+  height: 22px;
+  border-radius: 4px;
+  background: var(--visit);
+  min-width: 2px;
+}
+.fstep .lab {
+  color: var(--ink2);
+}
+.fstep .conv {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fstep .n {
+  font-variant-numeric: tabular-nums;
+  margin-left: 8px;
+  color: var(--ink);
+}
+.chg.up {
+  color: var(--up);
+}
+.chg.down {
+  color: var(--down);
+}
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink2);
+  margin: 2px 0 4px;
+}
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.act-note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+.act-note summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.act-note ul {
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.act-empty {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 10px 0;
+}

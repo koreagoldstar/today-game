@@ -1,8 +1,8 @@
 "use strict";
 
 const CACHE_PREFIX = "today-game-";
-const SHELL_CACHE = `${CACHE_PREFIX}shell-v89`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v89`;
+const SHELL_CACHE = `${CACHE_PREFIX}shell-v90`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-v90`;
 // 방문자 기기에 쌓아 두는 파일 수 상한 (넘으면 오래된 것부터 지움)
 const RUNTIME_MAX = 150;
 // 음악 · 영상은 크고 브라우저가 따로 잘 기억하니 여기 담지 않음
@@ -18,7 +18,7 @@ const APP_SHELL = [
   "/css/style.css?v=26",
   "/css/game-chrome.css?v=6",
   "/js/today-audio.js?v=2",
-  "/js/game-chrome.js?v=6",
+  "/js/game-chrome.js?v=7",
   "/js/bgm.js?v=6",
   "/js/scores.js?v=7",
   "/js/rankable.js?v=10",

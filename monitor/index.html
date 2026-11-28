@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="referrer" content="no-referrer" />
     <title>모니터실 | 오늘의 게임</title>
-    <link rel="stylesheet" href="monitor.css?v=1" />
+    <link rel="stylesheet" href="monitor.css?v=2" />
   </head>
   <body>
     <!-- 잠금 화면 -->
@@ -48,6 +48,62 @@
       </nav>
 
       <section class="tiles" id="tiles" aria-label="요약"></section>
+
+      <!-- 이용자 행동 분석 (api/act 집계 · 기존 방문자 숫자와 따로 셈) -->
+      <section class="card act" aria-labelledby="c-act-h" id="act-card">
+        <div class="card-head">
+          <div>
+            <h2 id="c-act-h">이용자 행동 분석</h2>
+            <p class="card-sub" id="act-sub">불러오는 중…</p>
+          </div>
+        </div>
+        <div class="tiles act-tiles" id="act-tiles"></div>
+        <h3 class="act-h">이용자 퍼널 <span class="card-sub" id="funnel-sub"></span></h3>
+        <div class="funnel" id="act-funnel"></div>
+        <div class="act-h-row">
+          <h3 class="act-h">기간 비교</h3>
+          <div class="seg small" role="radiogroup" aria-label="비교 기간" id="cmp-range">
+            <button type="button" role="radio" data-cmp="7" aria-checked="true">최근 7일 ↔ 직전 7일</button>
+            <button type="button" role="radio" data-cmp="30">최근 30일 ↔ 직전 30일</button>
+          </div>
+        </div>
+        <div class="chart" id="act-cmp-chart"></div>
+        <div class="table-wrap" id="act-cmp-table"></div>
+        <div class="act-two">
+          <div>
+            <h3 class="act-h">유입 경로 <span class="card-sub">세션 수 · 기간</span></h3>
+            <div class="hbars" id="act-src"></div>
+          </div>
+          <div>
+            <h3 class="act-h">기기 <span class="card-sub">세션 수 · 기간</span></h3>
+            <div class="hbars" id="act-dev"></div>
+          </div>
+        </div>
+        <div class="act-h-row">
+          <h3 class="act-h">게임 분석 TOP 10 <span class="card-sub">기간</span></h3>
+          <div class="seg small" role="radiogroup" aria-label="정렬 기준" id="act-game-key">
+            <button type="button" role="radio" data-key="game_view" aria-checked="true">조회</button>
+            <button type="button" role="radio" data-key="game_start">시작</button>
+            <button type="button" role="radio" data-key="game_complete">완료</button>
+            <button type="button" role="radio" data-key="game_replay">재플레이</button>
+            <button type="button" role="radio" data-key="avg">평균 시간</button>
+            <button type="button" role="radio" data-key="rate">완료율</button>
+          </div>
+        </div>
+        <div class="table-wrap" id="act-games"></div>
+        <details class="act-note">
+          <summary>집계 기준과 한계</summary>
+          <ul>
+            <li><b>방문(세션)</b> 30분 넘게 쉬거나 날짜가 바뀌면 새 세션. 같은 탭 새로고침은 같은 세션이라 다시 세지 않아요.</li>
+            <li><b>방문 브라우저</b> 그날 이벤트를 보낸 익명 브라우저 수(근사 집계, 오차 약 1%). 위쪽 '오늘 방문자'(하루 한 번 세는 기존 숫자)와 기준이 달라 값이 다를 수 있어요.</li>
+            <li><b>신규 · 재방문</b> 브라우저에 저장한 첫 방문 날짜 기준. 브라우저 데이터를 지우거나, 다른 기기 · 시크릿 창으로 오면 새 사람으로 세요.</li>
+            <li><b>N일 재방문율</b> 그날 처음 온 브라우저 중 1일째(다음 날) · 7일 안 · 30일 안에 다시 온 비율. 기간이 다 지난 날짜만 계산해요.</li>
+            <li><b>조회</b> 게임 페이지를 연 것(세션당 게임마다 한 번). <b>시작</b> 시작 · 플레이 · 다시 하기 버튼을 누른 것(시작 버튼이 없는 게임은 끝날 때 함께 셈). <b>완료</b> 결과 화면이 열리거나 점수를 등록한 것. <b>재플레이</b> 완료 뒤 같은 페이지에서 다시 시작한 것.</li>
+            <li><b>평균 플레이 시간</b> 시작 버튼부터 결과 화면까지 잰 판만. 결과 화면이 없는 게임은 완료 · 시간이 잡히지 않을 수 있어요.</li>
+            <li>광고 차단 · 네트워크 오류로 못 보낸 이벤트는 빠져요. 이름 · IP 같은 개인정보는 받지 않아요.</li>
+          </ul>
+        </details>
+      </section>
 
       <section class="card" aria-labelledby="c-visit-h">
         <div class="card-head">
@@ -109,6 +165,6 @@
     </div>
 
     <div class="tip" id="tip" role="status" hidden></div>
-    <script src="monitor.js?v=1"></script>
+    <script src="monitor.js?v=2"></script>
   </body>
 </html>

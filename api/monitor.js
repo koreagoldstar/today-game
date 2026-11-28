@@ -106,6 +106,33 @@ function hashToObject(result) {
   return o;
 }
 
+const ACT = "todaygame:act"; // api/act.js 의 이용자 행동 집계 (기존 방문자 · 참여 숫자와 따로)
+const ACT_DAYS = 60; // 최근 30일 ↔ 직전 30일 비교에 필요한 만큼
+
+/** 이용자 행동 집계 읽기 (날짜별 이벤트 수 · 고유 브라우저 · 신규 · 유입 · 기기 · 플레이 시간 · 재방문 무리) */
+async function collectAct(today) {
+  const list = lastDays(ACT_DAYS, today);
+  const cmds = [];
+  for (const d of list) {
+    cmds.push(["HGETALL", `${ACT}:cnt:${d}`], ["PFCOUNT", `${ACT}:uv:${d}`], ["PFCOUNT", `${ACT}:new:${d}`], ["HGETALL", `${ACT}:src:${d}`], ["HGETALL", `${ACT}:dev:${d}`], ["HGETALL", `${ACT}:time:${d}`]);
+  }
+  for (const d of list) for (const w of ["all", "d1", "w7", "w30"]) cmds.push(["PFCOUNT", `${ACT}:coh:${d}:${w}`]);
+  const res = await stats.pipeline(cmds);
+  if (!res) return null;
+  const r = (i) => (res[i] && res[i].result != null ? res[i].result : null);
+  const daysOut = list.map((day, k) => {
+    const b = k * 6;
+    return { day, cnt: hashToObject(r(b)), uv: Number(r(b + 1)) || 0, nu: Number(r(b + 2)) || 0, src: hashToObject(r(b + 3)), dev: hashToObject(r(b + 4)), time: hashToObject(r(b + 5)) };
+  });
+  const base = list.length * 6;
+  const cohorts = list.map((day, k) => {
+    const b = base + k * 4;
+    return { day, all: Number(r(b)) || 0, d1: Number(r(b + 1)) || 0, w7: Number(r(b + 2)) || 0, w30: Number(r(b + 3)) || 0 };
+  });
+  const first = daysOut.find((x) => Object.keys(x.cnt).length);
+  return { since: first ? first.day : null, days: daysOut, cohorts };
+}
+
 async function collect(days) {
   const today = stats.seoulDay();
   const list = lastDays(days, today);
@@ -149,6 +176,7 @@ async function collect(days) {
     days: daysOut,
     titles: titles(),
     visitsSince: VISITS_SINCE,
+    act: await collectAct(today).catch(() => null),
   };
 }
 

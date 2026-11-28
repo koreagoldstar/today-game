@@ -292,6 +292,19 @@
     }
   }
 
+  /** 이용자 행동 측정 (js/act.js · 익명 · 비동기 — 실패해도 페이지에 영향 없음) */
+  function loadAct() {
+    try {
+      if (window.TodayAct || document.querySelector("script[data-today-act]")) return;
+      const s = document.createElement("script");
+      s.src = "/js/act.js?v=1";
+      s.async = true;
+      s.dataset.todayAct = "1";
+      document.head.appendChild(s);
+    } catch (_) {}
+  }
+  loadAct();
+
   window.TodayChrome = { mount, sync: paintMute };
 
   /** 친구 도전장 (모든 게임 공용) */
