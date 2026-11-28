@@ -58,3 +58,39 @@
 7. **30일 실험 보고 (11장):** 시작일 기준값을 지금 저장해 두고 30일 뒤 비교.
 
 2 · 3 은 권한 없이도 코드 · 시험은 만들 수 있지만, 실제 숫자로 확인하는 것은 권한 뒤다.
+
+---
+
+# 성장 최적화 1 · 2단계 결과 (2026-11-28)
+
+## 1단계 — 지표 권한 (실제 실행)
+
+- 원인: 비즈니스 설정 → 시스템 사용자의 **Instagram 계정 자산 할당이 "권한 없음"**. 관리자가 자산(인사이트 포함)을 할당하고 `instagram_manage_insights` 를 넣어 토큰을 다시 만듦 → `ig-connect`.
+- 확인: 권한 목록에 `instagram_manage_insights: granted`, 게시물 · 계정 지표 HTTP 200.
+
+## 2단계 — 성과 수집 넓히기 (실제 실행)
+
+형식별로 API 가 **실제로 주는 지표**(지표 하나씩 물어 확인):
+
+| 형식 | 받음 | 안 줌 |
+|---|---|---|
+| 릴스 | views · reach · likes · comments · saved · shares · total_interactions · **ig_reels_avg_watch_time** · **ig_reels_video_view_total_time** (ms) | profile_visits · follows |
+| 이미지 · 캐러셀 | 위 7개 + **profile_visits** · profile_activity · follows | 시청 시간 |
+| 계정(하루) | reach · views · **profile_views** · **website_clicks** · profile_links_taps · accounts_engaged · total_interactions | follows_and_unfollows (빈 값) |
+
+- 게시물: 형식에 맞는 지표를 1 · 3 · 7일 뒤에 수집 (`channels/instagram.js insights(postId, kind)`).
+- 계정: 매일 그제(확정) · 어제(임시)를 다시 읽어 `account:instagram:{날짜}` 에 저장 — 메타 계정 지표가 하루 이틀 늦게 채워짐(실제 확인).
+- 콘텐츠 유형: 승인 대기로 넘어갈 때 `doc.strategy = { type, label, hook, durationSec, reason }` (`core/strategy.js`). 영상에 실제로 있는 실패 장면 · 첫 문구 · 소재로만 정함.
+- 시험 98/98.
+
+## 지금 숫자 (실제 API, 2026-10-30 ~ 11-26 · 29일)
+
+- 계정: 조회 **418** · 도달 357 · 프로필 방문 **11** · 링크 클릭 6 · 참여 계정 20 — 지시서의 앱 숫자(조회 418 · 프로필 방문 11)와 같음. **30일 실험의 기준값**으로 저장해 둠.
+- 릴스 3개: 조회 120~136 · 도달 106~121 · 평균 시청 **3.0~7.5초 / 18초** (드래곤 석상 7.5초가 가장 김).
+- 이미지 · 캐러셀 5개: 조회 3~12 · 도달 **3** — 팔로워에게만 닿음.
+- 공유 · 저장 0, 팔로워 4.
+
+## 숫자가 말하는 것 (다음 단계 근거)
+
+1. 새 사람에게 닿는 것은 릴스뿐이다 → 녹화 가능한 게임을 늘려 릴스 비중을 높이는 것이 가장 큰 개선.
+2. 평균 시청이 18초 중 3~8초 → 첫 2초 훅과 앞부분 장면이 가장 중요 (지시서 4장 구조 개선의 근거).

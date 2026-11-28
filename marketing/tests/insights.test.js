@@ -134,3 +134,20 @@ test("클릭 세기: 설정을 켜야 링크가 /api/mkt-go 를 거침 · 사이
     globalThis.fetch = saved.fetch;
   }
 });
+
+test("성장 2단계: 계정 하루 지표(어제) 저장 · 콘텐츠 유형 근거", async () => {
+  const { classify } = require("../core/strategy");
+  // 계정 지표: 어제 서울 하루로 저장
+  const ctx = makeCtx();
+  ctx.registry.register("channel", "instagram", { ...liveFake("instagram"), accountInsights: async ({ since, until }) => [{ metric: "profile_views", value: until - since === 86400 ? 3 : -1 }] });
+  const r = await insights.recordAccount(ctx.ctx, Date.parse("2026-11-28T09:00:00+09:00"));
+  assert.deepEqual(r.instagram, { "2026-11-26": { profile_views: 3 }, "2026-11-27": { profile_views: 3 } }, "서울 하루(24시간) 구간 · 그제 · 어제");
+  assert.equal((await ctx.store.getJson("account:instagram:2026-11-26")).settled, true);
+  assert.equal((await ctx.store.getJson("account:instagram:2026-11-27")).settled, false);
+
+  // 유형: 결과물에 실제로 있는 것만 근거
+  assert.equal(classify({ source: { sourceType: "spotlight" } }).type, "discover");
+  assert.equal(classify({ source: { sourceType: "game" }, render: { meta: { hook: "단어가 땅에 닿기 전에!", captions: [{ type: "fail", text: "놓쳤다!" }] } } }).type, "fail");
+  assert.equal(classify({ source: { sourceType: "game" }, render: { meta: { hook: "몇 ms 나올까?", captions: [] } } }).type, "record");
+  assert.equal(classify({ source: { sourceType: "game" }, render: { meta: { hook: "초록불에 바로 탭!", captions: [] } } }).type, "challenge");
+});

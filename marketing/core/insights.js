@@ -30,7 +30,7 @@ async function collectInsights(ctx, now = Date.now()) {
       let metrics;
       let unavailable = null;
       try {
-        metrics = await channel.insights(p.platformId);
+        metrics = await channel.insights(p.platformId, d.render && d.render.kind);
       } catch (e) {
         if (logger) await logger.warn(`${d.id} ${ch} 지표 수집 실패: ${e.message}`);
         if (e.kind !== "PERMISSION") continue; // 일시 오류는 다음 실행에서 다시
@@ -65,6 +65,32 @@ async function recordFollowers(ctx, now = Date.now()) {
       await store.setJson(`followers:${ch}:${day}`, { n, at: new Date(now).toISOString() }, { ex: 400 * 86400 });
       out[ch] = n;
     } catch (_) {}
+  }
+  return out;
+}
+
+/**
+ * 서울 하루 단위 계정 지표 — 프로필 방문 · 링크 클릭 · 도달 등. 실제 연결 채널 중 accountInsights 가 있는 것만, 하루 한 번.
+ * 메타 계정 지표는 하루 이틀 늦게 채워져서(2026-11-28 실제: 전날 값이 0 으로 옴) 어제(임시) · 그제(확정) 둘 다 다시 읽어 덮어쓴다.
+ */
+async function recordAccount(ctx, now = Date.now()) {
+  const { store, registry, logger } = ctx;
+  const today = atSeoul(seoulDay(now), "00:00");
+  const out = {};
+  for (const ch of registry.names("channel")) {
+    const channel = liveChannel(registry, ch);
+    if (!channel || typeof channel.accountInsights !== "function") continue;
+    for (const back of [2, 1]) {
+      const start = today - back * DAY;
+      const day = seoulDay(start + DAY / 2);
+      try {
+        const metrics = await channel.accountInsights({ since: Math.floor(start / 1000), until: Math.floor((start + DAY) / 1000) });
+        await store.setJson(`account:${ch}:${day}`, { day, metrics, settled: back === 2, at: new Date(now).toISOString() }, { ex: 400 * 86400 });
+        out[ch] = { ...(out[ch] || {}), [day]: Object.fromEntries(metrics.map((m) => [m.metric, m.value])) };
+      } catch (e) {
+        if (logger) await logger.warn(`${ch} 계정 지표 수집 실패 (${day}): ${e.message}`);
+      }
+    }
   }
   return out;
 }
@@ -122,4 +148,4 @@ async function weeklyReport(ctx, now = Date.now()) {
   return report;
 }
 
-module.exports = { collectInsights, recordFollowers, performanceWeights, weeklyReport, viewsOf, CHECKS };
+module.exports = { collectInsights, recordFollowers, recordAccount, performanceWeights, weeklyReport, viewsOf, CHECKS };
