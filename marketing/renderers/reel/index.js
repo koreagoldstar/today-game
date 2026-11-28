@@ -13,6 +13,7 @@ const { pickHighlight, pickCaptionMoments, HOOK_S, CTA_S } = require("./highligh
 const { makeFinal, makeCover, motionSeries, motionFn } = require("./edit");
 const ovl = require("./overlays");
 const { checkReel } = require("./qc");
+const { hookOptions: hookOptionsFor } = require("../../core/strategy");
 
 // 사건 자막: 게임이 남긴 짧은 한국어 이름이면 그대로, 아니면 종류별 반응 (사실을 지어내지 않는 감탄만)
 const REACT = { score: ["좋아!", "나이스!"], combo: ["계속 간다!", "또 획득!"], near: ["아슬아슬!", "앗!"], miss: ["아깝다!"], fail: ["앗!", "아깝다!"], clear: ["해냈다!"], drop: ["간다!"] };
@@ -76,14 +77,21 @@ module.exports = {
     const avoid = store
       ? (await store.listContents(30)).filter((d) => d.id !== doc.id && d.source && d.source.sourceId === source.sourceId && d.render && d.render.meta.highlight).map((d) => [d.render.meta.highlight.start, d.render.meta.highlight.end])
       : [];
-    const hl = pickHighlight({ events: clip.meta.events, duration: clip.meta.durationSec }, motionFn(motionSeries(clip.file)), { min, max, target: Math.min(max, 18), avoid });
+    // 실패·반전형이 모자라면 실패 장면이 든 구간을 더 쳐준다 (실패 장면이 없으면 결과 유형도 실패형이 아님 — 지어내지 않음)
+    const want = doc.plan.wantType;
+    const events = want === "fail" ? clip.meta.events.map((e) => (e.type === "fail" ? { ...e, weight: e.weight * 2.5 } : e)) : clip.meta.events;
+    const hl = pickHighlight({ events, duration: clip.meta.durationSec }, motionFn(motionSeries(clip.file)), { min, max, target: Math.min(max, 18), avoid });
     if (!hl) throw new Error("하이라이트 구간을 찾지 못했습니다 (플레이 시간이 너무 짧음).");
 
     // 3) 템플릿 · 문구 (같은 장르에서 최근에 쓴 것은 피함)
     const genre = source.facts.category;
     const L = ovl.look(genre, template && ovl.TEMPLATES.includes(template) ? template : ovl.pickTemplate(await recentOf(store, "template", genre)));
     const usedHooks = await recentOf(store, "hook");
-    const hook = (profile.hooks || [source.facts.title]).find((h) => !usedHooks.includes(h)) || profile.hooks[0];
+    // 후킹 문구 5개(서로 다른 관점) 중 최근에 안 쓴 첫 번째. 영상에 실패 장면이 실제로 있을 때만 실패형 문구
+    const hasFail = hl.events.some((e) => e.type === "fail");
+    const hookType = want === "fail" && !hasFail ? "challenge" : want && want !== "discover" ? want : null;
+    const hookOptions = hookType ? hookOptionsFor({ type: hookType, facts: source.facts, profileHooks: profile.hooks || [], used: usedHooks }) : null;
+    const hook = hookOptions ? hookOptions[0] : (profile.hooks || [source.facts.title]).find((h) => !usedHooks.includes(h)) || profile.hooks[0];
     const used = [];
     const moments = pickCaptionMoments(hl)
       .map((e) => {
@@ -131,6 +139,7 @@ module.exports = {
           genre,
           template: L.template,
           hook,
+          ...(hookOptions ? { hookOptions } : {}),
           captions: moments.map((m) => ({ at: m.rel, text: m.text, type: m.type })),
           highlight: { start: hl.start, end: hl.end, score: hl.score },
           clip: { id: clip.meta.id, render: clip.meta.render, captureFps: clip.meta.captureFps, gameHash: clip.meta.gameHash },

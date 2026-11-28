@@ -11,6 +11,7 @@ const { availableClips, gameHash } = require("./clips");
 const { readCatalog } = require("../sources/game");
 const { seoulDay, seoulWeekday } = require("./settings");
 const { postedGameId, GAME_SOURCES } = require("./state");
+const { wantedType, canMake } = require("./strategy");
 const { promotable, thumbOf } = require("../sources/new-game");
 
 // 게임 소개 이미지(spotlight)는 이 칸의 게임부터 (2026-11-16 관리자: "어른이용 게임부터 올리면 반응이 좋을 것")
@@ -188,6 +189,13 @@ async function planSlot(ctx, slot, opts = {}) {
       const pick = await pickSpotlight(ctx);
       if (pick) plans.push({ ...base, sourceId: pick.id, reason: `게임 소개: ${pick.id} (${pick.first ? "어른이용 먼저 · " : ""}안 올린 게임 ${pick.left}개 더 남음)` });
     } else plans.push({ ...base, sourceId: name, reason: `편성: ${name} (${slot === "story" ? "스토리" : seoulWeekday(now)})` });
+  }
+  if (slot === "feed" && plans.length) {
+    // 유형 비율: 최근 피드 20개의 실제 유형과 목표 비율을 비교해 가장 모자란 유형을 만들 수 있는 후보를 앞으로 (그날 편성 안에서만)
+    const recent = (await ctx.store.listContents(60)).filter((d) => d.slot === "feed" && d.strategy && d.strategy.type).slice(0, 20).map((d) => d.strategy.type);
+    const want = wantedType(recent, ctx.settings.typeMix);
+    for (const p of plans) Object.assign(p, { wantType: want.type, wantReason: want.reason });
+    plans.sort((a, b) => Number(canMake(b, want.type)) - Number(canMake(a, want.type)));
   }
   return { plans, ranked };
 }
